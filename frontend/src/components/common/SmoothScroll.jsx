@@ -5,8 +5,20 @@ import Lenis from 'lenis';
 export const SmoothScroll = ({ children }) => {
   const location = useLocation();
 
+  const isDashboardOrAdmin = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/login');
+
   useEffect(() => {
-    // Initialize Lenis for luxurious buttery smooth scrolling across the entire site
+    // If on dashboard/admin, completely disable Lenis for instant snappy native scrolling
+    if (isDashboardOrAdmin) {
+      if (window.lenis) {
+        window.lenis.destroy();
+        window.lenis = null;
+      }
+      document.documentElement.classList.remove('lenis');
+      return;
+    }
+
+    // Initialize Lenis for luxurious buttery smooth scrolling ONLY on customer end website
     const lenis = new Lenis({
       duration: 1.25,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -50,10 +62,15 @@ export const SmoothScroll = ({ children }) => {
       lenis.destroy();
       window.lenis = null;
     };
-  }, [location.pathname]);
+  }, [location.pathname, isDashboardOrAdmin]);
 
   // When route changes, reset scroll smoothly to top or jump to hash
   useEffect(() => {
+    if (isDashboardOrAdmin) {
+      window.scrollTo(0, 0);
+      return;
+    }
+
     if (window.lenis) {
       if (location.hash) {
         const id = location.hash.slice(1);
@@ -70,7 +87,7 @@ export const SmoothScroll = ({ children }) => {
     } else {
       window.scrollTo(0, 0);
     }
-  }, [location.pathname, location.hash]);
+  }, [location.pathname, location.hash, isDashboardOrAdmin]);
 
   return <>{children}</>;
 };
