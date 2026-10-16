@@ -392,12 +392,18 @@ export const ReportsPage = () => {
           <div className="space-y-4 p-4 text-xs">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-200 pb-3">
-              <div>
-                <h3 className="font-black text-purple-950 text-base">VAANI CLINIC</h3>
-                <p className="text-[11px] text-purple-800 font-bold">
-                  Speech &amp; Hearing Rehabilitation Center, Satara
-                </p>
-                <p className="text-[10px] text-slate-500">RCI CRR Registration No: {activeReport.rci_number || 'A79214'}</p>
+              <div className="flex items-start gap-3">
+                <img
+                  src="/vaani-logo.png"
+                  alt="Vaani Speech and Hearing Clinic"
+                  className="h-12 w-auto object-contain"
+                />
+                <div>
+                  <span className="text-[11px] text-purple-800 font-bold block">
+                    Speech &amp; Hearing Rehabilitation Center, Satara
+                  </span>
+                  <p className="text-[10px] text-slate-500">RCI CRR Registration No: {activeReport.rci_number || 'A79214'}</p>
+                </div>
               </div>
               <div className="text-right">
                 <span className="font-mono font-bold text-slate-800 block text-xs">{activeReport.report_number}</span>

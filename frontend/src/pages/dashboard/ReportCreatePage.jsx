@@ -6,7 +6,7 @@ import {
   Save,
   ArrowLeft,
   User,
-  AlertTriangle,
+  Sparkles,
   CheckCircle2,
   Phone,
   Calendar,
@@ -14,13 +14,16 @@ import {
   Award,
   ShieldCheck,
   Stethoscope,
-  Sparkles,
   QrCode,
-  RotateCcw,
+  Eye,
+  Sliders,
+  Activity,
+  X,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
+import Modal from '../../components/common/Modal';
 
 export const ReportCreatePage = () => {
   const navigate = useNavigate();
@@ -49,6 +52,7 @@ export const ReportCreatePage = () => {
 
   const [selectedServiceCode, setSelectedServiceCode] = useState(initialTypeCode);
   const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId || allPatients[0]?.id || '');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Active Service definition
   const activeService = useMemo(() => {
@@ -85,7 +89,7 @@ export const ReportCreatePage = () => {
     }
   }, [selectedServiceCode]);
 
-  // Keyboard shortcut handler (Cmd/Ctrl + S to save, Cmd/Ctrl + P to print)
+  // Keyboard shortcut handler (Cmd/Ctrl + S to save, Cmd/Ctrl + P to preview/print)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
@@ -94,7 +98,7 @@ export const ReportCreatePage = () => {
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        handlePrintReport();
+        setIsPreviewOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -127,7 +131,7 @@ export const ReportCreatePage = () => {
     };
   }, [activeService.code, formData.parameters]);
 
-  // Parameter updater helper
+  // Parameter updater helpers
   const handleParamChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -190,17 +194,18 @@ export const ReportCreatePage = () => {
     }
   };
 
-  // Print report
-  const handlePrintReport = () => {
-    notify.info('Opening Print Spooler...');
+  // Print execution
+  const handlePrint = () => {
+    notify.info('Opening print spooler...');
     setTimeout(() => {
       window.print();
     }, 150);
   };
 
   return (
-    <div className="space-y-4 pb-12 print:p-0 print:m-0 print:space-y-0">
-      {/* ── TOP ACTION & BREADCRUMB BAR (Hidden on Print) ── */}
+    <div className="space-y-3.5 pb-10 print:p-0 print:m-0 print:space-y-0">
+      
+      {/* ── TOP ACTION BAR (Hidden in Print) ── */}
       <div className="print:hidden flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-2xs">
         <div className="flex items-center gap-3">
           <button
@@ -214,10 +219,10 @@ export const ReportCreatePage = () => {
           <div>
             <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-700" />
-              Clinical Report Generator
+              Clinical Report Data Entry
             </h1>
             <p className="text-[10px] text-slate-500">
-              RCI Act 1992 • CRR No. {formData.rciNumber} • Section 4.11 Single-Page Clinical Proforma
+              Input patient assessment metrics • Auto-computes norms • Print with official clinic logo &amp; RCI seal
             </p>
           </div>
         </div>
@@ -236,26 +241,26 @@ export const ReportCreatePage = () => {
 
           <button
             type="button"
-            onClick={handlePrintReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
-            title="Print or Export to PDF (Ctrl/Cmd + P)"
+            onClick={() => setIsPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+            title="Preview report with official logo & letterhead (Ctrl/Cmd + P)"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Official PDF</span>
-            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
+            <Eye className="w-3.5 h-3.5 text-purple-700" />
+            <span>Preview &amp; Print</span>
+            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-200 text-[9px] rounded font-mono">⌘P</kbd>
           </button>
         </div>
       </div>
 
-      {/* ── SERVICE SELECTOR HORIZONTAL SCROLL (Hidden on Print) ── */}
+      {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR (Hidden in Print) ── */}
       <div className="print:hidden bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-            Select Clinical Service / Report Template ({CLINICAL_SERVICES.length} Master Proformas)
+            1. Select Clinical Service / Proforma Template ({CLINICAL_SERVICES.length} Available)
           </span>
           <span className="text-[10px] font-mono font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-            Selected: {activeService.code}
+            Active: {activeService.code} — {activeService.shortName}
           </span>
         </div>
 
@@ -279,7 +284,7 @@ export const ReportCreatePage = () => {
                   </span>
                   <span className="text-xs font-bold whitespace-nowrap">{srv.shortName}</span>
                 </div>
-                <span className={`text-[10px] block truncate max-w-[140px] ${isSelected ? 'text-purple-200' : 'text-slate-500'}`}>
+                <span className={`text-[10px] block truncate max-w-[130px] ${isSelected ? 'text-purple-200' : 'text-slate-500'}`}>
                   {srv.discipline}
                 </span>
               </button>
@@ -288,30 +293,30 @@ export const ReportCreatePage = () => {
         </div>
       </div>
 
-      {/* ── PATIENT SELECTOR & AUTO-POPULATION BANNER (Hidden on Print) ── */}
-      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2.5">
+      {/* ── STEP 2: SELECT PATIENT & AUTO-POPULATION (Data Entry Form View) ── */}
+      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-purple-700" />
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              Step 1: Select Patient / Customer (Auto-Populates Clinical Dossier)
+              2. Patient Selection &amp; Consultation Context
             </span>
           </div>
           <span className="text-[10px] text-slate-500">
-            {allPatients.length} Registered Patients in System
+            {allPatients.length} Registered Patients
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Patient Dropdown */}
-          <div className="md:col-span-1">
+          {/* Patient Selector */}
+          <div>
             <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Select Registered Patient *
+              Select Patient *
             </label>
             <select
               value={selectedPatientId}
               onChange={(e) => setSelectedPatientId(e.target.value)}
-              className="w-full text-xs font-semibold text-slate-900 bg-purple-50/50 border border-purple-300 rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-700 cursor-pointer"
+              className="w-full text-xs font-bold text-slate-900 bg-purple-50/60 border border-purple-300 rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-700 cursor-pointer"
             >
               {allPatients.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -321,10 +326,10 @@ export const ReportCreatePage = () => {
             </select>
           </div>
 
-          {/* Report Date & Number */}
+          {/* Doc ID & Date */}
           <div>
             <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Report Ref ID &amp; Date
+              Report Reference &amp; Date
             </label>
             <div className="grid grid-cols-2 gap-1.5">
               <input
@@ -342,23 +347,23 @@ export const ReportCreatePage = () => {
             </div>
           </div>
 
-          {/* Examiner & RCI Registration */}
+          {/* Clinician */}
           <div>
             <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
               Attending Clinician (RCI CRR)
             </label>
             <input
               type="text"
-              value={`${formData.examinerName} (CRR: ${formData.rciNumber})`}
+              value={`${formData.examinerName} • CRR: ${formData.rciNumber}`}
               readOnly
               className="w-full text-xs font-semibold text-purple-900 bg-purple-50/40 border border-purple-200 rounded px-2.5 py-1.5"
             />
           </div>
         </div>
 
-        {/* Auto-Populated Demographics Summary Banner */}
+        {/* Auto-Populated Demographics Summary Card */}
         {selectedPatient && (
-          <div className="bg-slate-50 border border-slate-200 rounded p-2.5 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 text-[11px]">
+          <div className="bg-slate-50 border border-slate-200 rounded-md p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
             <div>
               <span className="text-[10px] text-slate-400 block font-bold uppercase">UHID</span>
               <span className="font-mono font-black text-purple-800">{selectedPatient.uhid}</span>
@@ -375,7 +380,7 @@ export const ReportCreatePage = () => {
             </div>
             <div>
               <span className="text-[10px] text-slate-400 block font-bold uppercase">Contact</span>
-              <span className="font-semibold text-slate-700">{selectedPatient.phone}</span>
+              <span className="font-semibold text-slate-700 font-mono">{selectedPatient.phone}</span>
             </div>
             <div>
               <span className="text-[10px] text-slate-400 block font-bold uppercase">Guardian</span>
@@ -393,32 +398,769 @@ export const ReportCreatePage = () => {
         )}
       </div>
 
-      {/* ── THE OFFICIAL CLINICAL REPORT PAPER (Both Screen & Print View) ── */}
-      <div className="bg-white border border-slate-300 rounded-lg p-6 shadow-sm print:shadow-none print:border-none print:p-0 max-w-5xl mx-auto space-y-4">
-        
-        {/* ── CLINIC LETTERHEAD (Mandated under Section 4.11 FR-DOC-002) ── */}
-        <div className="border-b-2 border-purple-900 pb-3 flex items-start justify-between">
+      {/* ── STEP 3: CLINICAL PARAMETERS ENTRY FORM (Clean form, NOT document preview) ── */}
+      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-purple-700" />
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              3. Clinical Parameters Entry: {activeService.title} ({activeService.code})
+            </h2>
+          </div>
+          <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            {activeService.discipline} Module
+          </span>
+        </div>
+
+        {/* 1. AUDIOLOGY EVALUATION (PTA) ENTRY */}
+        {activeService.code === 'RP-CLN-AUD' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-700 uppercase">
+                Air Conduction (AC) &amp; Bone Conduction (BC) Thresholds (dB HL)
+              </span>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-[10px] font-bold text-slate-500">Transducer:</span>
+                <input
+                  type="text"
+                  value={formData.parameters.transducer || 'TDH-39 Supra-aural'}
+                  onChange={(e) => handleParamChange('transducer', e.target.value)}
+                  className="px-2 py-0.5 text-xs border border-slate-200 rounded bg-slate-50 w-44"
+                />
+              </div>
+            </div>
+
+            {/* PTA Input Grid */}
+            <div className="overflow-x-auto border border-slate-200 rounded">
+              <table className="w-full text-center text-xs">
+                <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Ear &amp; Conduction</th>
+                    <th className="px-2 py-2">250 Hz</th>
+                    <th className="px-2 py-2">500 Hz</th>
+                    <th className="px-2 py-2">1000 Hz</th>
+                    <th className="px-2 py-2">2000 Hz</th>
+                    <th className="px-2 py-2">4000 Hz</th>
+                    <th className="px-2 py-2">8000 Hz</th>
+                    <th className="px-2 py-2 bg-purple-50 text-purple-900">Computed PTA Avg</th>
+                    <th className="px-2 py-2 bg-purple-50 text-purple-900">Classification</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {/* Right Ear AC (Red) */}
+                  <tr className="bg-rose-50/40">
+                    <td className="px-3 py-1.5 text-left font-bold text-rose-700">Right Ear (AC)</td>
+                    {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
+                      <td key={freq} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={formData.parameters.rightEarAC?.[freq] ?? ''}
+                          onChange={(e) => handleNestedParamChange('rightEarAC', freq, Number(e.target.value))}
+                          className="w-14 text-center py-1 text-xs font-bold text-rose-800 border border-rose-300 rounded bg-white focus:ring-1 focus:ring-rose-500"
+                        />
+                      </td>
+                    ))}
+                    <td className="px-2 py-1 font-mono font-black text-rose-800 bg-rose-50">
+                      {computedPTA?.rightAvg} dB HL
+                    </td>
+                    <td className="px-2 py-1 text-[11px] font-bold text-rose-800 bg-rose-50">
+                      {computedPTA?.rightDegree}
+                    </td>
+                  </tr>
+
+                  {/* Right Ear BC (Red) */}
+                  <tr className="bg-rose-50/10">
+                    <td className="px-3 py-1.5 text-left font-semibold text-rose-600">Right Ear (BC)</td>
+                    {['250', '500', '1000', '2000', '4000'].map((freq) => (
+                      <td key={freq} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={formData.parameters.rightEarBC?.[freq] ?? ''}
+                          onChange={(e) => handleNestedParamChange('rightEarBC', freq, Number(e.target.value))}
+                          className="w-14 text-center py-1 text-xs font-semibold text-rose-700 border border-rose-200 rounded bg-white"
+                        />
+                      </td>
+                    ))}
+                    <td className="text-slate-300">—</td>
+                    <td colSpan={2} className="text-[10px] text-slate-400">Bone Conduction Unmasked/Masked</td>
+                  </tr>
+
+                  {/* Left Ear AC (Blue) */}
+                  <tr className="bg-blue-50/40">
+                    <td className="px-3 py-1.5 text-left font-bold text-blue-700">Left Ear (AC)</td>
+                    {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
+                      <td key={freq} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={formData.parameters.leftEarAC?.[freq] ?? ''}
+                          onChange={(e) => handleNestedParamChange('leftEarAC', freq, Number(e.target.value))}
+                          className="w-14 text-center py-1 text-xs font-bold text-blue-800 border border-blue-300 rounded bg-white focus:ring-1 focus:ring-blue-500"
+                        />
+                      </td>
+                    ))}
+                    <td className="px-2 py-1 font-mono font-black text-blue-800 bg-blue-50">
+                      {computedPTA?.leftAvg} dB HL
+                    </td>
+                    <td className="px-2 py-1 text-[11px] font-bold text-blue-800 bg-blue-50">
+                      {computedPTA?.leftDegree}
+                    </td>
+                  </tr>
+
+                  {/* Left Ear BC (Blue) */}
+                  <tr className="bg-blue-50/10">
+                    <td className="px-3 py-1.5 text-left font-semibold text-blue-600">Left Ear (BC)</td>
+                    {['250', '500', '1000', '2000', '4000'].map((freq) => (
+                      <td key={freq} className="px-1 py-1">
+                        <input
+                          type="number"
+                          value={formData.parameters.leftEarBC?.[freq] ?? ''}
+                          onChange={(e) => handleNestedParamChange('leftEarBC', freq, Number(e.target.value))}
+                          className="w-14 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-200 rounded bg-white"
+                        />
+                      </td>
+                    ))}
+                    <td className="text-slate-300">—</td>
+                    <td colSpan={2} className="text-[10px] text-slate-400">Bone Conduction Unmasked/Masked</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Speech Audiometry & Immittance Form Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-2">
+                <span className="text-[10px] font-bold text-slate-600 uppercase block">Speech Audiometry</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="text-[10px] text-rose-700 font-bold block">Right SRT (dB)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.rightSRT ?? 35}
+                      onChange={(e) => handleParamChange('rightSRT', Number(e.target.value))}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-blue-700 font-bold block">Left SRT (dB)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.leftSRT ?? 25}
+                      onChange={(e) => handleParamChange('leftSRT', Number(e.target.value))}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-rose-700 font-bold block">Right WRS (%)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.rightWRS ?? 84}
+                      onChange={(e) => handleParamChange('rightWRS', Number(e.target.value))}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-blue-700 font-bold block">Left WRS (%)</label>
+                    <input
+                      type="number"
+                      value={formData.parameters.leftWRS ?? 96}
+                      onChange={(e) => handleParamChange('leftWRS', Number(e.target.value))}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-2 md:col-span-2">
+                <span className="text-[10px] font-bold text-slate-600 uppercase block">Tympanometry &amp; Acoustic Reflexes</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="text-[10px] text-rose-700 font-bold block">Right Ear Tympanogram</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.tympanometryRight || ''}
+                      onChange={(e) => handleParamChange('tympanometryRight', e.target.value)}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-blue-700 font-bold block">Left Ear Tympanogram</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.tympanometryLeft || ''}
+                      onChange={(e) => handleParamChange('tympanometryLeft', e.target.value)}
+                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. OAE SCREENING ENTRY */}
+        {activeService.code === 'RP-CLN-OAE' && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Stage</label>
+                <select
+                  value={formData.parameters.stage}
+                  onChange={(e) => handleParamChange('stage', e.target.value)}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded bg-slate-50"
+                >
+                  <option value="SCREEN_1 (Newborn 0-48h)">SCREEN_1 (Newborn 0-48h)</option>
+                  <option value="SCREEN_2 (Rescreen 2-4 wks)">SCREEN_2 (Rescreen 2-4 wks)</option>
+                  <option value="DIAGNOSTIC (Confirmatory)">DIAGNOSTIC (Confirmatory)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Technology</label>
+                <select
+                  value={formData.parameters.technology}
+                  onChange={(e) => handleParamChange('technology', e.target.value)}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded bg-slate-50"
+                >
+                  <option value="TEOAE (Transient Evoked)">TEOAE (Transient Evoked)</option>
+                  <option value="DPOAE (Distortion Product)">DPOAE (Distortion Product)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Gestation (Weeks)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={formData.parameters.gestationWeeks}
+                  onChange={(e) => handleParamChange('gestationWeeks', Number(e.target.value))}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded bg-slate-50"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Birth Weight (g)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.birthWeightG}
+                  onChange={(e) => handleParamChange('birthWeightG', Number(e.target.value))}
+                  className="w-full px-2 py-1.5 border border-slate-300 rounded bg-slate-50"
+                />
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded overflow-hidden">
+              <table className="w-full text-center text-xs">
+                <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase">
+                  <tr>
+                    <th className="px-3 py-1.5 text-left">Frequency</th>
+                    <th className="px-3 py-1.5 text-rose-700">Right SNR (dB)</th>
+                    <th className="px-3 py-1.5 text-blue-700">Left SNR (dB)</th>
+                    <th className="px-3 py-1.5">Right Result</th>
+                    <th className="px-3 py-1.5">Left Result</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {(formData.parameters.frequencies || []).map((f, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-1.5 text-left font-bold">{f.freq}</td>
+                      <td className="px-3 py-1.5">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={f.rightSNR}
+                          onChange={(e) => {
+                            const updated = [...formData.parameters.frequencies];
+                            updated[idx].rightSNR = Number(e.target.value);
+                            handleParamChange('frequencies', updated);
+                          }}
+                          className="w-16 text-center py-0.5 border border-slate-300 rounded font-mono font-bold text-rose-800"
+                        />
+                      </td>
+                      <td className="px-3 py-1.5">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={f.leftSNR}
+                          onChange={(e) => {
+                            const updated = [...formData.parameters.frequencies];
+                            updated[idx].leftSNR = Number(e.target.value);
+                            handleParamChange('frequencies', updated);
+                          }}
+                          className="w-16 text-center py-0.5 border border-slate-300 rounded font-mono font-bold text-blue-800"
+                        />
+                      </td>
+                      <td className="px-3 py-1.5">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${f.rightSNR >= 6 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                          {f.rightSNR >= 6 ? 'PASS' : 'REFER'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-1.5">
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${f.leftSNR >= 6 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                          {f.leftSNR >= 6 ? 'PASS' : 'REFER'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* 3. VOICE DISORDERS ENTRY */}
+        {activeService.code === 'RP-CLN-VOI' && (
+          <div className="space-y-3 text-xs">
+            <span className="text-[10px] font-bold uppercase text-amber-900 block">CAPE-V Scores (0-100 Visual Analog)</span>
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              {['capeV_overall', 'capeV_roughness', 'capeV_breathiness', 'capeV_strain', 'capeV_pitch', 'capeV_loudness'].map((k) => (
+                <div key={k} className="p-2 border border-slate-200 rounded bg-slate-50 text-center">
+                  <label className="text-[10px] text-slate-500 font-bold block uppercase">{k.replace('capeV_', '')}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.parameters[k] ?? 40}
+                    onChange={(e) => handleParamChange(k, Number(e.target.value))}
+                    className="w-16 text-center py-1 mt-1 border border-slate-300 rounded font-black text-amber-800 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">MPT /a/ (sec)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.parameters.mptA ?? 9.2}
+                  onChange={(e) => handleParamChange('mptA', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">s/z Ratio</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.parameters.szRatio ?? 1.58}
+                  onChange={(e) => handleParamChange('szRatio', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">GRBAS Grade (0-3)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="3"
+                  value={formData.parameters.grbas_grade ?? 2}
+                  onChange={(e) => handleParamChange('grbas_grade', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">VHI-10 Score (/40)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.vhi10Score ?? 24}
+                  onChange={(e) => handleParamChange('vhi10Score', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. FLUENCY SSI-4 ENTRY */}
+        {activeService.code === 'RP-CLN-FLU' && (
+          <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Total Syllables Spoken</label>
+                <input
+                  type="number"
+                  value={formData.parameters.totalSyllables ?? 450}
+                  onChange={(e) => handleParamChange('totalSyllables', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">% Syllables Stuttered (%SS)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.parameters.percentageSS ?? 9.3}
+                  onChange={(e) => handleParamChange('percentageSS', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Longest Block (sec)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.parameters.longestBlock1 ?? 2.8}
+                  onChange={(e) => handleParamChange('longestBlock1', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Overall Severity</label>
+                <select
+                  value={formData.parameters.severityClassification ?? 'MODERATE'}
+                  onChange={(e) => handleParamChange('severityClassification', e.target.value)}
+                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800 bg-rose-50"
+                >
+                  <option value="VERY MILD">VERY MILD</option>
+                  <option value="MILD">MILD</option>
+                  <option value="MODERATE">MODERATE</option>
+                  <option value="SEVERE">SEVERE</option>
+                  <option value="VERY SEVERE">VERY SEVERE</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. SPEECH-LANGUAGE (ALD-MM) ENTRY */}
+        {activeService.code === 'RP-CLN-SLA' && (
+          <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Chronological Age (CA mo)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.chronologicalAgeMonths ?? 34}
+                  onChange={(e) => handleParamChange('chronologicalAgeMonths', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Receptive Age (RLA mo)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.receptiveLanguageAge ?? 28}
+                  onChange={(e) => handleParamChange('receptiveLanguageAge', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Expressive Age (ELA mo)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.expressiveLanguageAge ?? 20}
+                  onChange={(e) => handleParamChange('expressiveLanguageAge', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 font-bold block">Calculated Delay (mo)</label>
+                <input
+                  type="number"
+                  value={formData.parameters.languageDelayMonths ?? 14}
+                  onChange={(e) => handleParamChange('languageDelayMonths', Number(e.target.value))}
+                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. OTHER CLINICAL SERVICES (CBT, DYS, HAF, PRG, DSC) */}
+        {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA'].includes(activeService.code) && (
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
+            <span className="text-[10px] font-bold text-slate-600 uppercase block">Proforma Parameters &amp; Clinical Notes</span>
+            <p className="text-slate-600 leading-relaxed">
+              Standard clinical parameters for {activeService.title} are pre-loaded with baseline norms. Edit diagnosis and recommendations below.
+            </p>
+          </div>
+        )}
+
+        {/* Clinical Impression & Recommendations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-black text-purple-950 tracking-tight">VAANI</span>
-              <span className="text-xs font-bold text-purple-800 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded">
+            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide block mb-1">
+              Clinical Impression &amp; Diagnosis *
+            </label>
+            <textarea
+              rows={3}
+              value={formData.parameters.provisionalDiagnosis || ''}
+              onChange={(e) => handleParamChange('provisionalDiagnosis', e.target.value)}
+              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
+              placeholder="Enter clinical impression and diagnosis..."
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide block mb-1">
+              Clinical Recommendations &amp; Follow-up Protocol *
+            </label>
+            <textarea
+              rows={3}
+              value={formData.parameters.recommendations || ''}
+              onChange={(e) => handleParamChange('recommendations', e.target.value)}
+              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
+              placeholder="Enter management plan, therapy frequency, and follow-up..."
+            />
+          </div>
+        </div>
+
+        {/* Action Button Bar */}
+        <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Digital stamp linked to RCI CRR No. {formData.rciNumber}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSaveReport}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Clinical Report</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Preview &amp; Print Official PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MODAL: OFFICIAL CLINICAL REPORT PREVIEW & PRINT VIEW ── */}
+      {/* (Also used as the exact layout rendered during window.print()) */}
+      {isPreviewOpen && (
+        <Modal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          title={`Official Clinical Report: ${formData.reportNumber}`}
+          size="xl"
+        >
+          <div className="space-y-4 p-4 text-xs">
+            {/* Modal Top Control Bar */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+              <span className="text-[11px] font-bold text-slate-600 uppercase">
+                Official Letterhead View (Print Preview)
+              </span>
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-2xs cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Document</span>
+              </button>
+            </div>
+
+            {/* Official Report Sheet Container */}
+            <div className="bg-white border border-slate-300 rounded p-6 space-y-4 shadow-xs">
+              
+              {/* LETTERHEAD WITH ACTUAL CLINIC LOGO */}
+              <div className="border-b-2 border-purple-900 pb-3 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <img
+                    src="/vaani-logo.png"
+                    alt="Vaani Speech and Hearing Clinic"
+                    className="h-14 w-auto object-contain"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-purple-900 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded inline-block">
+                      Speech &amp; Hearing Rehabilitation Center
+                    </span>
+                    <p className="text-[10px] text-slate-600 mt-1">
+                      Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Phone: +91 2162 234567
+                    </p>
+                    <p className="text-[9px] text-slate-500">
+                      RCI Act 1992 Approved Center • CRR No. {formData.rciNumber} • ISO 9001:2015 Certified
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-900 text-white rounded inline-block">
+                    {activeService.code}
+                  </span>
+                  <span className="block text-[10px] font-mono font-bold text-slate-700 mt-1">
+                    Doc: {formData.reportNumber}
+                  </span>
+                  <span className="block text-[10px] text-slate-500">
+                    Date: {formData.reportDate}
+                  </span>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="text-center py-1 bg-purple-50/70 border border-purple-200 rounded">
+                <h3 className="text-sm font-black text-purple-950 uppercase tracking-wider">
+                  {activeService.title}
+                </h3>
+                <span className="text-[10px] text-purple-800 font-semibold">
+                  {activeService.discipline} Evaluation &amp; Diagnostic Service
+                </span>
+              </div>
+
+              {/* Patient Demographics Table */}
+              <div className="border border-slate-300 rounded overflow-hidden text-xs">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-slate-200">
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">Patient Name:</td>
+                      <td className="px-3 py-1 font-bold text-slate-900 w-2/6">{selectedPatient.full_name}</td>
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">UHID:</td>
+                      <td className="px-3 py-1 font-mono font-bold text-purple-800 w-2/6">{selectedPatient.uhid}</td>
+                    </tr>
+                    <tr className="border-b border-slate-200">
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Age / Sex:</td>
+                      <td className="px-3 py-1 text-slate-800">{selectedPatient.gender} • DOB {selectedPatient.date_of_birth}</td>
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Mobile:</td>
+                      <td className="px-3 py-1 text-slate-800 font-mono">{selectedPatient.phone}</td>
+                    </tr>
+                    <tr className="border-b border-slate-200">
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Guardian:</td>
+                      <td className="px-3 py-1 text-slate-800">{selectedPatient.guardian_name || 'Self'}</td>
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">City:</td>
+                      <td className="px-3 py-1 text-slate-800">{selectedPatient.city}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Referring Doctor:</td>
+                      <td className="px-3 py-1 text-purple-950 font-bold" colSpan={3}>
+                        {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni, MS (ENT), Civil Hospital Satara'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Dynamic Summary of Results */}
+              {activeService.code === 'RP-CLN-AUD' && (
+                <div className="border border-slate-300 rounded overflow-hidden">
+                  <div className="bg-slate-100 px-3 py-1 font-bold text-[10px] text-slate-700 uppercase border-b border-slate-300">
+                    Pure Tone Audiogram Thresholds (dB HL)
+                  </div>
+                  <table className="w-full text-center text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-600">
+                      <tr>
+                        <th className="px-2 py-1 text-left">Ear</th>
+                        <th>250Hz</th>
+                        <th>500Hz</th>
+                        <th>1kHz</th>
+                        <th>2kHz</th>
+                        <th>4kHz</th>
+                        <th>8kHz</th>
+                        <th className="bg-purple-50 text-purple-900">PTA Avg</th>
+                        <th className="bg-purple-50 text-purple-900">Degree</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      <tr className="text-rose-700 font-bold bg-rose-50/20">
+                        <td className="px-2 py-1 text-left">Right Ear (AC)</td>
+                        {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
+                          <td key={f}>{formData.parameters.rightEarAC?.[f]}</td>
+                        ))}
+                        <td className="bg-rose-50 font-mono font-black">{computedPTA?.rightAvg} dB</td>
+                        <td className="bg-rose-50 text-[10px]">{computedPTA?.rightDegree}</td>
+                      </tr>
+                      <tr className="text-blue-700 font-bold bg-blue-50/20">
+                        <td className="px-2 py-1 text-left">Left Ear (AC)</td>
+                        {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
+                          <td key={f}>{formData.parameters.leftEarAC?.[f]}</td>
+                        ))}
+                        <td className="bg-blue-50 font-mono font-black">{computedPTA?.leftAvg} dB</td>
+                        <td className="bg-blue-50 text-[10px]">{computedPTA?.leftDegree}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Diagnosis Box */}
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
+                  Clinical Impression &amp; Findings:
+                </span>
+                <div className="p-2.5 bg-purple-50/50 border border-purple-200 rounded text-slate-900 font-medium leading-relaxed">
+                  {formData.parameters.provisionalDiagnosis}
+                </div>
+              </div>
+
+              {/* Recommendations Box */}
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
+                  Clinical Recommendations &amp; Follow-up Protocol:
+                </span>
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 leading-relaxed">
+                  {formData.parameters.recommendations}
+                </div>
+              </div>
+
+              {/* Official Seal and Sign-off */}
+              <div className="pt-3 border-t-2 border-slate-200 flex items-end justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center bg-slate-50">
+                    <QrCode className="w-8 h-8 text-purple-950" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono font-bold text-purple-900 block">
+                      QR VERIFIED • DPDP COMPLIANT
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">
+                      https://vaaniclinic.com/verify-doc/{formData.reportNumber}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <p className="font-serif italic font-bold text-purple-900 text-sm">
+                    Shreeharsh M. Shivpuje
+                  </p>
+                  <p className="font-black text-slate-900 text-xs">
+                    {formData.examinerName}
+                  </p>
+                  <p className="text-[10px] font-mono font-bold text-purple-900">
+                    RCI CRR No: {formData.rciNumber}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── NATIVE PRINT-ONLY DOCUMENT CONTAINER (Hidden on Screen, visible on Print) ── */}
+      <div className="hidden print:block bg-white text-xs p-0 m-0 space-y-4">
+        {/* Printable Official Header */}
+        <div className="border-b-2 border-purple-900 pb-3 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <img
+              src="/vaani-logo.png"
+              alt="Vaani Speech and Hearing Clinic"
+              className="h-14 w-auto object-contain"
+            />
+            <div>
+              <span className="text-xs font-bold text-purple-900 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded inline-block">
                 Speech &amp; Hearing Rehabilitation Center
               </span>
+              <p className="text-[10px] text-slate-600 mt-1">
+                Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Phone: +91 2162 234567
+              </p>
+              <p className="text-[9px] text-slate-500">
+                RCI Act 1992 Approved Center • CRR No. {formData.rciNumber} • ISO 9001:2015 Certified
+              </p>
             </div>
-            <p className="text-[10px] text-slate-600 mt-1">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Phone: +91 2162 234567 • Email: clinic@vaaniclinic.com
-            </p>
-            <p className="text-[9px] text-slate-500">
-              Approved Practice Center under Rehabilitation Council of India (RCI Act 1992) • ISO 9001:2015 Certified Audiology Unit
-            </p>
           </div>
 
           <div className="text-right">
-            <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-900 text-white rounded">
+            <span className="px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-900 text-white rounded inline-block">
               {activeService.code}
             </span>
-            <span className="block text-[10px] font-mono font-bold text-slate-600 mt-1">
-              Doc ID: {formData.reportNumber}
+            <span className="block text-[10px] font-mono font-bold text-slate-700 mt-1">
+              Doc: {formData.reportNumber}
             </span>
             <span className="block text-[10px] text-slate-500">
               Date: {formData.reportDate}
@@ -426,56 +1168,41 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* ── REPORT TITLE BANNER ── */}
-        <div className="text-center py-1 bg-purple-50/70 border border-purple-200 rounded">
-          <h2 className="text-sm font-black text-purple-950 uppercase tracking-wider">
+        {/* Title */}
+        <div className="text-center py-1 bg-purple-50 border border-purple-200 rounded">
+          <h3 className="text-sm font-black text-purple-950 uppercase tracking-wider">
             {activeService.title}
-          </h2>
+          </h3>
           <span className="text-[10px] text-purple-800 font-semibold">
-            {activeService.discipline} Diagnostic &amp; Rehabilitation Evaluation Service
+            {activeService.discipline} Evaluation &amp; Diagnostic Service
           </span>
         </div>
 
-        {/* ── PATIENT DEMOGRAPHIC MATRIX ── */}
+        {/* Demographics Table */}
         <div className="border border-slate-300 rounded overflow-hidden text-xs">
-          <div className="bg-slate-100 px-3 py-1 font-bold text-[10px] text-slate-700 uppercase tracking-wider border-b border-slate-300">
-            Patient Identification &amp; Referral Demographics
-          </div>
           <table className="w-full border-collapse">
             <tbody>
               <tr className="border-b border-slate-200">
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50 w-1/6">Patient Name:</td>
-                <td className="px-3 py-1.5 font-bold text-slate-900 w-2/6">
-                  {selectedPatient.full_name}
-                </td>
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50 w-1/6">UHID:</td>
-                <td className="px-3 py-1.5 font-mono font-bold text-purple-800 w-2/6">
-                  {selectedPatient.uhid}
-                </td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">Patient Name:</td>
+                <td className="px-3 py-1 font-bold text-slate-900 w-2/6">{selectedPatient.full_name}</td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">UHID:</td>
+                <td className="px-3 py-1 font-mono font-bold text-purple-800 w-2/6">{selectedPatient.uhid}</td>
               </tr>
               <tr className="border-b border-slate-200">
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50">Age / Sex:</td>
-                <td className="px-3 py-1.5 text-slate-800">
-                  {selectedPatient.gender} • DOB: {selectedPatient.date_of_birth}
-                </td>
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50">Contact Mobile:</td>
-                <td className="px-3 py-1.5 text-slate-800 font-mono">
-                  {selectedPatient.phone}
-                </td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Age / Sex:</td>
+                <td className="px-3 py-1 text-slate-800">{selectedPatient.gender} • DOB {selectedPatient.date_of_birth}</td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Mobile:</td>
+                <td className="px-3 py-1 text-slate-800 font-mono">{selectedPatient.phone}</td>
               </tr>
               <tr className="border-b border-slate-200">
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50">Guardian / Escort:</td>
-                <td className="px-3 py-1.5 text-slate-800">
-                  {selectedPatient.guardian_name || 'Self'}
-                </td>
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50">Residential Locality:</td>
-                <td className="px-3 py-1.5 text-slate-800">
-                  {selectedPatient.city}
-                </td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Guardian:</td>
+                <td className="px-3 py-1 text-slate-800">{selectedPatient.guardian_name || 'Self'}</td>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">City:</td>
+                <td className="px-3 py-1 text-slate-800">{selectedPatient.city}</td>
               </tr>
               <tr>
-                <td className="px-3 py-1.5 font-bold text-slate-600 bg-slate-50">Referring Consultant:</td>
-                <td className="px-3 py-1.5 text-purple-950 font-bold" colSpan={3}>
+                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Referring Doctor:</td>
+                <td className="px-3 py-1 text-purple-950 font-bold" colSpan={3}>
                   {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni, MS (ENT), Civil Hospital Satara'}
                 </td>
               </tr>
@@ -483,517 +1210,77 @@ export const ReportCreatePage = () => {
           </table>
         </div>
 
-        {/* ── DYNAMIC SERVICE PARAMETERS SECTION ── */}
-        <div className="space-y-3">
-          
-          {/* 1. AUDIOLOGY EVALUATION (PTA) */}
-          {activeService.code === 'RP-CLN-AUD' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide">
-                  1. Bilateral Behavioral Thresholds (Air &amp; Bone Conduction dB HL)
-                </span>
-                <span className="text-[10px] text-slate-500 font-semibold">
-                  Transducer: {formData.parameters.transducer || 'TDH-39'}
-                </span>
-              </div>
-
-              {/* Bilateral PTA Table */}
-              <div className="overflow-x-auto border border-slate-300 rounded">
-                <table className="w-full text-center text-xs">
-                  <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider border-b border-slate-300">
-                    <tr>
-                      <th className="px-2 py-1 text-left">Ear &amp; Conduction</th>
-                      <th className="px-2 py-1">250 Hz</th>
-                      <th className="px-2 py-1">500 Hz</th>
-                      <th className="px-2 py-1">1000 Hz</th>
-                      <th className="px-2 py-1">2000 Hz</th>
-                      <th className="px-2 py-1">4000 Hz</th>
-                      <th className="px-2 py-1">8000 Hz</th>
-                      <th className="px-2 py-1 bg-purple-50 text-purple-900">PTA Avg (dB HL)</th>
-                      <th className="px-2 py-1 bg-purple-50 text-purple-900">Degree of Loss</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {/* Right Ear AC (Red) */}
-                    <tr className="bg-rose-50/30">
-                      <td className="px-2 py-1 text-left font-bold text-rose-700">Right Ear (AC - O)</td>
-                      {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
-                        <td key={freq} className="px-1 py-1">
-                          <input
-                            type="number"
-                            value={formData.parameters.rightEarAC?.[freq] ?? ''}
-                            onChange={(e) => handleNestedParamChange('rightEarAC', freq, Number(e.target.value))}
-                            className="w-12 text-center py-0.5 text-xs font-bold text-rose-800 border border-rose-200 rounded bg-white print:border-none"
-                          />
-                        </td>
-                      ))}
-                      <td className="px-2 py-1 font-mono font-black text-rose-800 bg-rose-50">
-                        {computedPTA?.rightAvg} dB
-                      </td>
-                      <td className="px-2 py-1 text-[10px] font-bold text-rose-800 bg-rose-50">
-                        {computedPTA?.rightDegree}
-                      </td>
-                    </tr>
-
-                    {/* Right Ear BC (Red) */}
-                    <tr className="bg-rose-50/10">
-                      <td className="px-2 py-1 text-left font-bold text-rose-600">Right Ear (BC - &lt;)</td>
-                      {['250', '500', '1000', '2000', '4000'].map((freq) => (
-                        <td key={freq} className="px-1 py-1">
-                          <input
-                            type="number"
-                            value={formData.parameters.rightEarBC?.[freq] ?? ''}
-                            onChange={(e) => handleNestedParamChange('rightEarBC', freq, Number(e.target.value))}
-                            className="w-12 text-center py-0.5 text-xs font-semibold text-rose-700 border border-rose-100 rounded bg-white print:border-none"
-                          />
-                        </td>
-                      ))}
-                      <td className="px-1 py-1 text-slate-300">—</td>
-                      <td colSpan={2} className="px-2 py-1 text-[10px] text-slate-500">Unmasked / Masked</td>
-                    </tr>
-
-                    {/* Left Ear AC (Blue) */}
-                    <tr className="bg-blue-50/30">
-                      <td className="px-2 py-1 text-left font-bold text-blue-700">Left Ear (AC - X)</td>
-                      {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
-                        <td key={freq} className="px-1 py-1">
-                          <input
-                            type="number"
-                            value={formData.parameters.leftEarAC?.[freq] ?? ''}
-                            onChange={(e) => handleNestedParamChange('leftEarAC', freq, Number(e.target.value))}
-                            className="w-12 text-center py-0.5 text-xs font-bold text-blue-800 border border-blue-200 rounded bg-white print:border-none"
-                          />
-                        </td>
-                      ))}
-                      <td className="px-2 py-1 font-mono font-black text-blue-800 bg-blue-50">
-                        {computedPTA?.leftAvg} dB
-                      </td>
-                      <td className="px-2 py-1 text-[10px] font-bold text-blue-800 bg-blue-50">
-                        {computedPTA?.leftDegree}
-                      </td>
-                    </tr>
-
-                    {/* Left Ear BC (Blue) */}
-                    <tr className="bg-blue-50/10">
-                      <td className="px-2 py-1 text-left font-bold text-blue-600">Left Ear (BC - &gt;)</td>
-                      {['250', '500', '1000', '2000', '4000'].map((freq) => (
-                        <td key={freq} className="px-1 py-1">
-                          <input
-                            type="number"
-                            value={formData.parameters.leftEarBC?.[freq] ?? ''}
-                            onChange={(e) => handleNestedParamChange('leftEarBC', freq, Number(e.target.value))}
-                            className="w-12 text-center py-0.5 text-xs font-semibold text-blue-700 border border-blue-100 rounded bg-white print:border-none"
-                          />
-                        </td>
-                      ))}
-                      <td className="px-1 py-1 text-slate-300">—</td>
-                      <td colSpan={2} className="px-2 py-1 text-[10px] text-slate-500">Unmasked / Masked</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Speech Audiometry & Immittance Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Speech Reception Threshold (SRT)</span>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-rose-700 font-bold">R: {formData.parameters.rightSRT} dB</span>
-                    <span className="text-blue-700 font-bold">L: {formData.parameters.leftSRT} dB</span>
-                  </div>
-                </div>
-
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Word Recognition Score (WRS %)</span>
-                  <div className="flex gap-2 mt-1">
-                    <span className="text-rose-700 font-bold">R: {formData.parameters.rightWRS}%</span>
-                    <span className="text-blue-700 font-bold">L: {formData.parameters.leftWRS}%</span>
-                  </div>
-                </div>
-
-                <div className="p-2 border border-slate-200 rounded bg-slate-50 col-span-2">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Immittance &amp; Tympanometry (Jerger)</span>
-                  <p className="text-[11px] text-slate-800 mt-1 font-medium">
-                    <strong className="text-rose-700">Right:</strong> {formData.parameters.tympanometryRight} | <strong className="text-blue-700">Left:</strong> {formData.parameters.tympanometryLeft}
-                  </p>
-                </div>
-              </div>
+        {/* Dynamic Parameters summary for Print */}
+        {activeService.code === 'RP-CLN-AUD' && (
+          <div className="border border-slate-300 rounded overflow-hidden">
+            <div className="bg-slate-100 px-3 py-1 font-bold text-[10px] text-slate-700 uppercase border-b border-slate-300">
+              Pure Tone Audiogram Thresholds (dB HL)
             </div>
-          )}
-
-          {/* 2. OAE SCREENING */}
-          {activeService.code === 'RP-CLN-OAE' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs border border-slate-200 p-2.5 rounded bg-slate-50">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Screening Protocol</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.stage}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Technology Type</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.technology}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Gestation / Weight</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.gestationWeeks} wks • {formData.parameters.birthWeightG} g</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">JCIH Risk Status</span>
-                  <span className="font-bold text-emerald-800">{formData.parameters.jcihRiskFactors}</span>
-                </div>
-              </div>
-
-              {/* Frequency SNR Table */}
-              <div className="border border-slate-300 rounded overflow-hidden">
-                <table className="w-full text-center text-xs">
-                  <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider border-b border-slate-300">
-                    <tr>
-                      <th className="px-3 py-1.5 text-left">Stimulus Frequency</th>
-                      <th className="px-3 py-1.5 text-rose-700">Right Ear SNR (dB)</th>
-                      <th className="px-3 py-1.5 text-rose-700">Right Outcome</th>
-                      <th className="px-3 py-1.5 text-blue-700">Left Ear SNR (dB)</th>
-                      <th className="px-3 py-1.5 text-blue-700">Left Outcome</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {(formData.parameters.frequencies || []).map((f, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="px-3 py-1.5 text-left font-bold text-slate-700">{f.freq}</td>
-                        <td className="px-3 py-1.5 font-mono font-bold text-rose-800">{f.rightSNR} dB</td>
-                        <td className="px-3 py-1.5">
-                          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">
-                            PASS
-                          </span>
-                        </td>
-                        <td className="px-3 py-1.5 font-mono font-bold text-blue-800">{f.leftSNR} dB</td>
-                        <td className="px-3 py-1.5">
-                          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">
-                            PASS
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded">
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-emerald-900 block">Overall Screening Verdict</span>
-                  <span className="text-sm font-black text-emerald-900">{formData.parameters.overallOutcome}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold uppercase text-emerald-900 block">Next Clinical Action</span>
-                  <span className="text-xs font-semibold text-emerald-800">{formData.parameters.nextAction}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3. VOICE DISORDERS PROFORMA */}
-          {activeService.code === 'RP-CLN-VOI' && (
-            <div className="space-y-3 text-xs">
-              <div className="border border-slate-300 rounded p-3 bg-amber-50/30 space-y-2">
-                <span className="text-[11px] font-black text-amber-950 uppercase tracking-wide block">
-                  Consensus Auditory-Perceptual Evaluation of Voice (CAPE-V Scores 0-100 mm Visual Analog)
-                </span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Overall</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_overall}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Roughness</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_roughness}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Breathiness</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_breathiness}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Strain</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_strain}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Pitch</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_pitch}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded border border-amber-200">
-                    <span className="text-[10px] text-slate-500 font-bold block">Loudness</span>
-                    <span className="text-sm font-black text-amber-800">{formData.parameters.capeV_loudness}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Max Phonation Time (MPT)</span>
-                  <span className="text-xs font-bold text-slate-900 mt-1 block">
-                    /a/: {formData.parameters.mptA}s | /i/: {formData.parameters.mptI}s
-                  </span>
-                </div>
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">s/z Ratio</span>
-                  <span className="text-xs font-bold text-purple-900 mt-1 block">
-                    {formData.parameters.szRatio} (Norm ≤ 1.4)
-                  </span>
-                </div>
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">GRBAS Scale Rating</span>
-                  <span className="text-xs font-bold text-slate-900 mt-1 block">
-                    G{formData.parameters.grbas_grade} R{formData.parameters.grbas_roughness} B{formData.parameters.grbas_breathiness} A{formData.parameters.grbas_asthenia} S{formData.parameters.grbas_strain}
-                  </span>
-                </div>
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Voice Handicap Index (VHI-10)</span>
-                  <span className="text-xs font-bold text-rose-800 mt-1 block">
-                    {formData.parameters.vhi10Score} / 40 (Moderate Handicap)
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 4. FLUENCY SSI-4 */}
-          {activeService.code === 'RP-CLN-FLU' && (
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 bg-rose-50/40 border border-rose-200 rounded">
-                <div>
-                  <span className="text-[10px] font-bold text-rose-900 uppercase block">Total Syllables Spoken</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.totalSyllables} syllables</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-rose-900 uppercase block">% Syllables Stuttered (%SS)</span>
-                  <span className="text-sm font-black text-rose-800">{formData.parameters.percentageSS}% SS</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-rose-900 uppercase block">Longest Blocks (Seconds)</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.longestBlock1}s, {formData.parameters.longestBlock2}s</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-rose-900 uppercase block">Physical Concomitants</span>
-                  <span className="font-bold text-slate-800">Score: {formData.parameters.totalConcomitantScore} / 20</span>
-                </div>
-              </div>
-
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-purple-900 uppercase block">SSI-4 Total Score</span>
-                  <span className="text-lg font-black text-purple-950">{formData.parameters.overallSSIScore} Points</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold text-purple-900 uppercase block">Clinical Severity Rating</span>
-                  <span className="px-3 py-1 bg-rose-700 text-white font-black text-xs uppercase rounded">
-                    {formData.parameters.severityClassification}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 5. SPEECH-LANGUAGE (ALD-MM) */}
-          {activeService.code === 'RP-CLN-SLA' && (
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 bg-teal-50/40 border border-teal-200 rounded">
-                <div>
-                  <span className="text-[10px] font-bold text-teal-900 uppercase block">Chronological Age (CA)</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.chronologicalAgeMonths} Months</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-teal-900 uppercase block">Receptive Age (RLA)</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.receptiveLanguageAge} Months</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-teal-900 uppercase block">Expressive Age (ELA)</span>
-                  <span className="text-sm font-black text-rose-800">{formData.parameters.expressiveLanguageAge} Months</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-teal-900 uppercase block">Calculated Delay</span>
-                  <span className="text-sm font-black text-rose-700">{formData.parameters.languageDelayMonths} Months Delay</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Oral-Peripheral Exam (OPME)</span>
-                  <p className="text-[11px] text-slate-800 mt-1">{formData.parameters.opmeTongue}; {formData.parameters.opmePalate}</p>
-                </div>
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-600 uppercase block">Diadochokinetic (DDK) Syllable Rates</span>
-                  <p className="text-[11px] text-slate-800 mt-1">/pa/: {formData.parameters.ddkPa} | /pataka/: {formData.parameters.ddkPataka}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 6. CBT CLINICAL FORMULATION */}
-          {activeService.code === 'RP-CLN-CBT' && (
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-2 p-2.5 bg-indigo-50/50 border border-indigo-200 rounded">
-                <div>
-                  <span className="text-[10px] font-bold text-indigo-950 uppercase block">PHQ-9 Depression Screener</span>
-                  <span className="text-sm font-black text-indigo-900">{formData.parameters.phq9Score} / 27 — {formData.parameters.phq9Severity}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-indigo-950 uppercase block">GAD-7 Anxiety Screener</span>
-                  <span className="text-sm font-black text-indigo-900">{formData.parameters.gad7Score} / 21 — {formData.parameters.gad7Severity}</span>
-                </div>
-              </div>
-
-              <div className="border border-slate-200 rounded p-2.5 bg-slate-50 space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-600 uppercase block">Cognitive 5-Aspects Formulation (Padesky)</span>
-                <p className="text-[11px] text-slate-800"><strong>Automatic Thoughts:</strong> {formData.parameters.automaticThoughts}</p>
-                <p className="text-[11px] text-slate-800"><strong>Emotions &amp; Sensations:</strong> {formData.parameters.emotionalResponses} • {formData.parameters.physicalSensations}</p>
-                <p className="text-[11px] text-slate-800"><strong>Safety Behaviors:</strong> {formData.parameters.safetyBehaviors}</p>
-              </div>
-            </div>
-          )}
-
-          {/* 7. DYSPHAGIA SWALLOWING */}
-          {activeService.code === 'RP-CLN-DYS' && (
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-3 gap-2 p-2.5 bg-cyan-50/50 border border-cyan-200 rounded text-center">
-                <div className="bg-white p-2 rounded border border-cyan-200">
-                  <span className="text-[10px] text-slate-500 font-bold block">Water Swallow Test</span>
-                  <span className="font-bold text-cyan-900">{formData.parameters.spoonWaterTest}</span>
-                </div>
-                <div className="bg-white p-2 rounded border border-cyan-200">
-                  <span className="text-[10px] text-slate-500 font-bold block">Functional Oral Intake (FOIS)</span>
-                  <span className="font-bold text-cyan-900">{formData.parameters.foisLevel}</span>
-                </div>
-                <div className="bg-white p-2 rounded border border-cyan-200">
-                  <span className="text-[10px] text-slate-500 font-bold block">IDDSI Recommended Diet</span>
-                  <span className="font-bold text-cyan-900">{formData.parameters.iddsiLiquids}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 8. HEARING AID FITTING */}
-          {activeService.code === 'RP-CLN-HAF' && (
-            <div className="space-y-3 text-xs">
-              <div className="border border-slate-300 rounded p-3 bg-sky-50/40 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-sky-950 uppercase tracking-wide">
-                    Prescribed Instrument: {formData.parameters.instrumentMake}
-                  </span>
-                  <span className="text-[10px] font-mono bg-sky-100 text-sky-900 px-2 py-0.5 rounded font-bold">
-                    Warranty: {formData.parameters.warrantyPeriodMonths} Months
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 bg-white rounded border border-sky-200">
-                    <span className="text-[10px] font-bold text-rose-700 block uppercase">Right Ear Serial No.</span>
-                    <span className="font-mono font-bold text-slate-800">{formData.parameters.rightSerial}</span>
-                  </div>
-                  <div className="p-2 bg-white rounded border border-sky-200">
-                    <span className="text-[10px] font-bold text-blue-700 block uppercase">Left Ear Serial No.</span>
-                    <span className="font-mono font-bold text-slate-800">{formData.parameters.leftSerial}</span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-slate-700">
-                  <strong>Verification Match:</strong> Real-Ear Measurement (REM) {formData.parameters.remTargetMatch1000}; Functional Gain: {formData.parameters.functionalGainPTA}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* 9. THERAPY PROGRESS NOTE */}
-          {activeService.code === 'RP-CLN-PRG' && (
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-3 gap-2 p-2.5 bg-emerald-50/50 border border-emerald-200 rounded text-center">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Sessions Prescribed</span>
-                  <span className="font-bold text-slate-800">{formData.parameters.totalSessionsPrescribed} Sessions</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Sessions Attended</span>
-                  <span className="font-bold text-emerald-800">{formData.parameters.sessionsAttended} ({formData.parameters.attendanceRate})</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Goal 1 Mastery</span>
-                  <span className="font-bold text-purple-900">{formData.parameters.goal1Mastery}</span>
-                </div>
-              </div>
-              <div className="p-2.5 border border-slate-200 rounded bg-slate-50">
-                <span className="text-[10px] font-bold text-slate-600 uppercase block">SOAP Synthesis</span>
-                <p className="text-[11px] text-slate-800 mt-1"><strong>Objective:</strong> {formData.parameters.soapObjective}</p>
-              </div>
-            </div>
-          )}
-
-          {/* 10. DISCHARGE SUMMARY */}
-          {activeService.code === 'RP-CLN-DSC' && (
-            <div className="space-y-3 text-xs">
-              <div className="p-2.5 bg-violet-50/50 border border-violet-200 rounded">
-                <span className="text-[10px] font-bold text-violet-950 uppercase block">Reason for Clinical Discharge</span>
-                <span className="text-xs font-bold text-violet-900">{formData.parameters.dischargeReason}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Baseline Presentation</span>
-                  <p className="text-[11px] text-slate-800 mt-1">{formData.parameters.baselineSummary}</p>
-                </div>
-                <div className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Final Clinical Outcome</span>
-                  <p className="text-[11px] text-slate-800 mt-1">{formData.parameters.outcomeSummary}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* ── CLINICAL IMPRESSION / DIAGNOSIS (Editable on screen, rendered clean on print) ── */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
-            Clinical Impression &amp; Diagnosis:
-          </label>
-          <div className="print:hidden">
-            <textarea
-              rows={2}
-              value={formData.parameters.provisionalDiagnosis || ''}
-              onChange={(e) => handleParamChange('provisionalDiagnosis', e.target.value)}
-              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
-            />
+            <table className="w-full text-center text-xs">
+              <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-600">
+                <tr>
+                  <th className="px-2 py-1 text-left">Ear</th>
+                  <th>250Hz</th>
+                  <th>500Hz</th>
+                  <th>1kHz</th>
+                  <th>2kHz</th>
+                  <th>4kHz</th>
+                  <th>8kHz</th>
+                  <th className="bg-purple-50 text-purple-900">PTA Avg</th>
+                  <th className="bg-purple-50 text-purple-900">Degree</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                <tr className="text-rose-700 font-bold bg-rose-50/20">
+                  <td className="px-2 py-1 text-left">Right Ear (AC)</td>
+                  {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
+                    <td key={f}>{formData.parameters.rightEarAC?.[f]}</td>
+                  ))}
+                  <td className="bg-rose-50 font-mono font-black">{computedPTA?.rightAvg} dB</td>
+                  <td className="bg-rose-50 text-[10px]">{computedPTA?.rightDegree}</td>
+                </tr>
+                <tr className="text-blue-700 font-bold bg-blue-50/20">
+                  <td className="px-2 py-1 text-left">Left Ear (AC)</td>
+                  {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
+                    <td key={f}>{formData.parameters.leftEarAC?.[f]}</td>
+                  ))}
+                  <td className="bg-blue-50 font-mono font-black">{computedPTA?.leftAvg} dB</td>
+                  <td className="bg-blue-50 text-[10px]">{computedPTA?.leftDegree}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div className="hidden print:block p-2 border border-slate-300 rounded bg-slate-50 text-xs font-semibold text-slate-900">
+        )}
+
+        {/* Diagnosis Box */}
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
+            Clinical Impression &amp; Findings:
+          </span>
+          <div className="p-2.5 bg-purple-50/50 border border-purple-200 rounded text-slate-900 font-medium leading-relaxed">
             {formData.parameters.provisionalDiagnosis}
           </div>
         </div>
 
-        {/* ── CLINICAL RECOMMENDATIONS / REHABILITATION PLAN ── */}
-        <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
+        {/* Recommendations Box */}
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
             Clinical Recommendations &amp; Follow-up Protocol:
-          </label>
-          <div className="print:hidden">
-            <textarea
-              rows={2}
-              value={formData.parameters.recommendations || ''}
-              onChange={(e) => handleParamChange('recommendations', e.target.value)}
-              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
-            />
-          </div>
-          <div className="hidden print:block p-2 border border-slate-300 rounded bg-slate-50 text-xs font-semibold text-slate-900">
+          </span>
+          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 leading-relaxed">
             {formData.parameters.recommendations}
           </div>
         </div>
 
-        {/* ── FOOTER & RCI DIGITAL STAMP BLOCK (Section 4.11 FR-DOC-005) ── */}
-        <div className="pt-4 border-t-2 border-slate-200 flex items-end justify-between text-xs">
-          {/* QR Verification */}
+        {/* Official Seal and Sign-off */}
+        <div className="pt-3 border-t-2 border-slate-200 flex items-end justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-12 h-12 border border-slate-300 rounded flex items-center justify-center bg-slate-50">
-              <QrCode className="w-9 h-9 text-purple-950" />
+            <div className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center bg-slate-50">
+              <QrCode className="w-8 h-8 text-purple-950" />
             </div>
             <div>
               <span className="text-[9px] font-mono font-bold text-purple-900 block">
                 QR VERIFIED • DPDP COMPLIANT
-              </span>
-              <span className="text-[9px] text-slate-500 block">
-                Scan to verify document authenticity
               </span>
               <span className="text-[9px] font-mono text-slate-400">
                 https://vaaniclinic.com/verify-doc/{formData.reportNumber}
@@ -1001,28 +1288,18 @@ export const ReportCreatePage = () => {
             </div>
           </div>
 
-          {/* Clinician Signature Stamp */}
-          <div className="text-right space-y-0.5">
-            <div className="inline-block border-b border-purple-900 pb-1 mb-1 px-4 text-center">
-              <span className="font-serif italic font-bold text-purple-900 text-sm block">
-                Shreeharsh M. Shivpuje
-              </span>
-              <span className="text-[9px] text-slate-500 uppercase tracking-wider block">
-                Electronically Authenticated &amp; Stamped
-              </span>
-            </div>
+          <div className="text-right">
+            <p className="font-serif italic font-bold text-purple-900 text-sm">
+              Shreeharsh M. Shivpuje
+            </p>
             <p className="font-black text-slate-900 text-xs">
               {formData.examinerName}
             </p>
             <p className="text-[10px] font-mono font-bold text-purple-900">
-              RCI CRR Registration No: {formData.rciNumber}
-            </p>
-            <p className="text-[9px] text-slate-500">
-              Consultant Audiologist &amp; Speech-Language Pathologist
+              RCI CRR No: {formData.rciNumber}
             </p>
           </div>
         </div>
-
       </div>
 
     </div>
