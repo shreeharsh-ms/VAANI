@@ -23,8 +23,8 @@ import Modal from '../../components/common/Modal';
 import PatientForm from '../../components/forms/PatientForm';
 import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
-import { formatDate } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
+import PatientProfileModal from '../../components/patients/PatientProfileModal';
 
 // Seed Fallback Patients if none in local database
 const SEED_PATIENTS = [
@@ -463,12 +463,19 @@ export const PatientsPage = () => {
                 </tr>
               ) : (
                 paginated.map((p) => (
-                  <tr key={p.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-1.5 px-3 font-mono font-bold text-purple-950">
-                      {p.uhid}
+                  <tr
+                    key={p.id}
+                    onClick={() => setSelectedPatientForView(p)}
+                    className="hover:bg-purple-50/50 cursor-pointer transition-colors group select-none"
+                    title="Click row to open complete Clinical Dossier & EMR Profile"
+                  >
+                    <td className="py-1.5 px-3 font-mono font-bold text-purple-950 group-hover:text-purple-700">
+                      <div className="flex items-center gap-1.5">
+                        <span className="hover:underline">{p.uhid}</span>
+                      </div>
                     </td>
                     <td className="py-1.5 px-3">
-                      <span className="font-bold text-slate-800 block">{p.full_name}</span>
+                      <span className="font-bold text-slate-800 group-hover:text-purple-900 block">{p.full_name}</span>
                       <span className="text-[10px] text-slate-400 truncate block">{p.city}</span>
                     </td>
                     <td className="py-1.5 px-2.5 text-slate-600 font-mono">
@@ -501,14 +508,30 @@ export const PatientsPage = () => {
                       {p.created_at ? p.created_at.substring(0, 10) : '-'}
                     </td>
                     <td className="py-1.5 px-2.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(p.id)}
-                        className="p-1 rounded text-slate-400 hover:text-red-600 transition-colors"
-                        title="Delete patient record"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPatientForView(p);
+                          }}
+                          className="p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors"
+                          title="Open Clinical Dossier & EMR Record"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(p.id);
+                          }}
+                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete patient record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -578,6 +601,13 @@ export const PatientsPage = () => {
           onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      {/* ── MODAL: COMPLETE CLINICAL DOSSIER & EMR PROFILE ── */}
+      <PatientProfileModal
+        patient={selectedPatientForView}
+        isOpen={Boolean(selectedPatientForView)}
+        onClose={() => setSelectedPatientForView(null)}
+      />
 
     </div>
   );

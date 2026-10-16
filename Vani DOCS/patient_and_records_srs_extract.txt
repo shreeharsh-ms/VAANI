@@ -1,0 +1,322 @@
+
+--- PAGE 11 ---
+4.8 PATIENT MANAGEMENT (PAT)
+ID REQUIREMENT PRI PH
+FR-PAT-001 Registration form capturing: salutation, first, middle,last name; sex; date of birth (or approximate age withflag); preferred language(s); primary and alternatemobile; email; address (line, locality/village, taluka,district, state, PIN); occupation; education; maritalstatus; referral source; guardian(s) for minors ordependent adults; medical alerts; photo (optional);communication consent.
+M P1
+FR-PAT-002 A UHID shall be generated automatically using theconfigured scheme (default {PREFIX}-{YY}-{000000} such as PGC-27-000001), unique,immutable, sequential via the counters collection.
+M P1
+FR-PAT-003 Duplicate detection: on create, the system comparesnormalised name (phonetic and transliteration-aware forMarathi/English), DOB and mobile, and shows probablematches with scores before saving; the user may openthe existing record.
+M P1
+FR-PAT-004 Guardian management: multiple guardians withrelationship, phone, email, isPrimaryContact,isLegalGuardian, canConsent, pick-upauthorisation. For patients under 18, at least oneguardian with canConsent is required.
+M P1
+FR-PAT-005 Family linking: siblings and family groups for sharedcontact details (one mobile used for several patients iscommon in India) with an explicit sharedContact flagso that duplicate detection does not treat them asduplicates.
+S P1
+FR-PAT-006 Medical alerts/flags: hearing aid user, cochlearimplant, dysphagia risk (aspiration), seizure disorder,allergies, latex allergy, communication needs (signlanguage, large print), behaviour notes. Alerts show asbadges on the profile, appointment card and clinicalscreens.
+M P1
+FR-PAT-007 Patient profile with tabs: Overview, Appointments,Clinical (Speech-Language, Audiology, CBT), HearingAids, Plans and Goals, Documents, Billing, Recalls,Communication log, Consents, Audit (owner only).(visible with CBT permission).
+M P1
+FR-PAT-008 Timeline: chronological stream of visits, assessments,notes, documents, payments, and recalls. S P1
+FR-PAT-009 Search: by UHID, name (partial, case-insensitive,Marathi/English), mobile, guardian name, DOB; resultsin under 1 second for up to 100,000 patients.
+M P1
+FR-PAT-010 Edit with field-level audit; change of DOB or sexrequires a reason. M P1
+FR-PAT-011 Merge duplicate records (permissionpatient.merge): choose master, mergeappointments, visits, invoices and documents; mergedrecord keeps a redirect mapping; irreversible withoutaudit-backed restore.
+S P2
+FR-PAT-012 Archive/deactivate patient (for example deceased ormoved); archived patients are excluded from defaultsearches but retained per retention policy.
+M P1
+FR-PAT-013 Deceased status with date; stops recalls. S P1
+FR-PAT-014 Tags (for example "Stroke", "AVT", "School referral","VIP") for filtering. S P1
+FR-PAT-015 Quick registration (name, age, mobile, concern) forwalk-ins and phone requests, completed later. M P1
+FR-PAT-016 Age computation shall display age inyears/months/days appropriate to context (for childrenunder 5 show months).
+M P1
+FR-PAT-017 Patient ID card/label printable (UHID barcode/QR). C P2
+FR-PAT-018 Patient communication log: manual entries (calls,messages) and system notifications. S P1
+FR-PAT-019 Consent status visible on the profile (treatmentconsent, data use, communication consent, photo/videoconsent, research/case-study consent).
+M P1
+FR-PAT-020 Referral tracking: referring doctor/hospital recordedand used for reports (for example referrals by source)and for automatic referral-letter reply drafting.
+S P1
+FR-PAT-021 Unique constraints: UHID unique; mobile numbersneed not be unique. M P1
+4.9 CLINICAL RECORDS (CLN)
+4.9.1 CLINICAL DATA ARCHITECTUREEncounter-centred model. Every clinical contact creates a visit (encounter). Assessments, session notes, plans and documents hang off the visit and the patient.Templates. Each assessment type has a typed schema (Section 5.5.20 to 5.5.34). The form UI is generated from a template definition so fields can be added without code changes (configurable fieldsstored in clinicalTemplates).Versioning. Clinical documents are versioned. Finalising (FINAL) makes the document read-only; edits after finalisation create a new version with a reason (addendum), retaining the old one.Signature. Finalisation records the clinician, timestamp, and optionally an e-signature image on the PDF.
+4.9.2 GENERAL CLINICAL REQUIREMENTS
+ID REQUIREMENT PRI PH
+FR-CLN-001 The system shall create a visit for each appointment orwalk-in with: patient, provider, date/time, service(s), visittype (new, follow-up, review, screening, camp), chiefcomplaint, and links to the documents created.
+M P1
+FR-CLN-002 Case history (first visit): demographic summary, chiefcomplaint, history of presenting complaint, prenatal,natal and postnatal history, developmentalmilestones, medical and surgical history, medications,hearing history, speech-language history, feeding andswallowing history, family history, educational and socialhistory, behavioural observations, previous evaluationsand therapy, languages used at home and school. Pre-filled from earlier data where available.
+M P1
+FR-CLN-003 Document status workflow: DRAFT (autosaved every 30seconds) then FINAL (signed) then AMENDED (newversion). Only the author or OWNER can finalise.
+M P1
+FR-CLN-004 Autosave and conflict handling: optimisticconcurrency using a version field; a conflicting save M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 11 of 43
+--- PAGE 12 ---
+ID REQUIREMENT PRI PHprompts a merge/overwrite choice.
+FR-CLN-005 Attachments to any clinical document: audiogramimage, scan, previous report, video clip (max 100 MB;S3 pre-signed upload), audio recordings of speechsamples (max 50 MB) with patient consent flag.
+M P1
+FR-CLN-006 Unit and range validation on every numeric field(Section 13), with clear inline messages and a "confirmunusual value" override that is logged.
+M P1
+FR-CLN-007 Computed fields (PTA averages, degree of loss, PCC,%SS, THI category, GRBAS total, PHQ-9 total, IDDSImapping) shall be computed by the server anddisplayed read-only; the formula versions are recorded.
+M P1
+FR-CLN-008 Clinical templates can be copied as a "prefill from lastvisit" to speed up follow-up documentation. S P1
+FR-CLN-009 Standard phrase library (macros) per clinician forimpressions and recommendations, in English andMarathi.
+S P2
+FR-CLN-010 Amendment of a final document requires a reason andcreates a visible "Amended" marker with history. M P1
+FR-CLN-011 Clinical access is logged: every open/read of a clinicaldocument writes an access audit entry (who, what,when, purpose if break-glass).
+M P1
+FR-CLN-012 Problem list/diagnoses: structured list with description,ICD-10 code (optional lookup subset forhearing/speech/voice/swallowing/mental-health codes),onset, status (active/resolved).
+S P1
+FR-CLN-013 Outcome measures captured at intervals and shownas trend charts. S P1
+FR-CLN-014 Impression and recommendations fields with bilingualoutput option for patient-facing reports. M P1
+FR-CLN-015 Referral out: record referral to ENT, neurologist,psychiatrist, paediatrician with letter generation. S P1
+FR-CLN-016 Clinical alerts: for example "No response at limits inright ear: medical referral advised" shown as rule-basedprompts (never automatic diagnoses).
+C P2
+4.9.3 SPEECH AND LANGUAGE THERAPY RECORDS
+Assessment forms
+ID REQUIREMENT PRI PH
+FR-CLN-100 Oral peripheral mechanism examination: face, lips(symmetry, mobility, strength), tongue (size, protrusion,lateralisation, elevation, tongue-tie flag), jaw, hard andsoft palate (cleft, submucous cleft signs, rise), uvula,teeth/occlusion, dentition, breathing pattern, drooling,with normal/abnormal/not tested and notes;diadochokinetic (DDK) rates (/pa/, /ta/, /ka/, /pataka/)in syllables per second.
+M P1
+FR-CLN-101 Articulation and phonology assessment: test nameand version (configurable list, including locally used andcustom checklists), language of assessment, per-targetrecord: phoneme, word position (initial/medial/final),level (word/phrase/sentence/conversation), responsestatus (CORRECT, SUBSTITUTION, OMISSION,DISTORTION, ADDITION), substituted sound,stimulability (yes/no), notes; computed PCC, PCC-R,PVC, and speech intelligibility % (conversation,context-free); phonological processes checklist(fronting, backing, stopping, gliding, cluster reduction,final consonant deletion, initial consonant deletion, weaksyllable deletion, assimilation, affrication, deaffrication,voicing errors) with occurrence and age-appropriateness.
+M P1
+FR-CLN-102 Language assessment: tests used (configurable: forexample REELS, LPT, PLS-5, CELF, locally adaptedMarathi/Hindi tools), subtests, raw score, standardscore, percentile, age equivalent, receptive languageage and expressive language age (months), languagedelay in months (computed), MLU, vocabulary(receptive/expressive counts), syntax and morphologynotes, narrative skills, pragmatics/socialcommunication (eye contact, turn-taking, topicmaintenance, joint attention, requesting, commenting),bilingual/multilingual profile.
+M P1
+FR-CLN-103 Fluency assessment: speech samples (conversation,reading, monologue) with counts: part-word repetitions,whole-word repetitions, phrase repetitions,prolongations, blocks, interjections, revisions; totalsyllables; %SS computed; SSI-4 (frequency, duration,physical concomitants, total score and severity); speechrate (syllables per minute) and articulation rate;secondary behaviours (eye blink, head movement,tension); avoidance and situation fears; OASES score;onset age, duration, family history, variability, previoustherapy; severity grade.
+M P1
+FR-CLN-104 Voice assessment: perceptual GRBAS (each 0 to 3),CAPE-V (visual-analogue 0 to 100 for overall severity,roughness, breathiness, strain, pitch, loudness, plusresonance, notes), acoustic measures (mean F0 in Hz,F0 range, jitter %, shimmer %, HNR dB, intensity dBSPL), aerodynamic/phonation: MPT for /a/, /s/, /z/(best of three), s/z ratio; VHI-30 and VHI-10 (itemscores and totals with severity); vocal hygiene anddemand history (teacher, singer, call-centre worker),laryngeal findings from the ENT report (text andattachment), reflux symptoms.
+M P1
+FR-CLN-105 Aphasia assessment: onset date, etiology (ischaemicstroke, haemorrhagic stroke, TBI, tumour, other), lesionside and site (text), premorbid languages andhandedness; type (global, Broca, Wernicke, conduction,anomic, transcortical motor/sensory/mixed, other);severity; test used (for example WAB-R and adaptedlanguage versions) with Aphasia Quotient and subtestscores (spontaneous speech, auditory comprehension,repetition, naming); modality profile (listening, speaking,reading, writing, calculation, gesture) on a 0 to 10 scale;apraxia of speech and dysarthria co-occurrence;cognition screen; functional communication(communication needs checklist, ASHA FACS if used);caregiver burden notes.
+M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 12 of 43
+--- PAGE 13 ---
+ID REQUIREMENT PRI PH
+FR-CLN-106 Dysarthria assessment: etiology; type (flaccid, spastic,ataxic, hypokinetic, hyperkinetic, mixed, unilateral uppermotor neuron); Frenchay Dysarthria Assessmentdomains (reflex, respiration, lips, palate, laryngeal,tongue, intelligibility) each graded a to e with total;speech subsystem analysis (respiration, phonation,resonance, articulation, prosody) with severity 0 to 4;intelligibility % (words, sentences); speaking rate;MPT; AMR/SMR; AAC need.
+M P1
+FR-CLN-107 Dysphagia (swallowing) assessment (clinical):history (weight loss, choking, coughing during meals,recurrent chest infections, tube feeding), oral stage (lipseal, mastication, bolus control, residue), pharyngealsigns, trials (water swallow test volumes 3 ml, 90 ml;textures per IDDSI levels 0 to 7 for drinks and foods),observed signs (cough, wet voice, throat clearing,delayed swallow, SpO2 drop with baseline), positioning,FOIS (1 to 7), recommended diet and fluid levels(IDDSI), strategies (chin tuck, supraglottic swallow,effortful swallow), supervision level, instrumentalreferral (VFSS/FEES) with result attachment, risk rating(low, moderate, high), caregiver training given.
+M P1
+FR-CLN-108 Augmentative and alternative communication (AAC)record: device/system, access method, vocabulary set,training given, outcomes.
+S P2
+FR-CLN-109 Developmental screening (for infants and toddlers):milestones checklist for hearing, speech, language,motor, social; red flags and referral advice.
+S P1
+Therapy plan, goals and sessions
+ID REQUIREMENT PRI PH
+FR-CLN-120 A therapy plan per patient and problem with:diagnosis/impression, long-term goals, short-termobjectives (SMART), baseline, target, mastery criterion(for example 80% accuracy over 3 consecutivesessions), planned frequency and duration, start andreview dates, status (active, on hold, achieved,discontinued), assigned clinician.
+M P1
+FR-CLN-121 Goal tracking: each goal has status (not started, inprogress, achieved, modified, discontinued), progressdata points per session (trials, correct, % accuracy,cueing levelINDEPENDENT/VERBAL/VISUAL/MODEL/HAND_OVER_HAND), with a trend line and "mastery reached" auto-detection.
+M P1
+FR-CLN-122 Session note (SOAP): Subjective (parent/patientreport), Objective (activities, materials, data, observedbehaviours), Assessment (performance, response), Plan(next steps, home programme); structured fields foractivities, targets, trial data, reinforcement used, patientparticipation, attendance, session duration.
+M P1
+FR-CLN-123 Home practice assignments: description, frequency,materials, due date; compliance tracked at the next visit(completed, partial, not done). The assignment text canbe printed or sent through future channels.
+M P1
+FR-CLN-124 Progress summary auto-draft from goal data over achosen period, editable. S P2
+FR-CLN-125 Parent/caregiver training log: topics, strategies taught,understanding. S P1
+FR-CLN-126 Discharge summary: reason for discharge, final status,recommendations, follow-up advice. M P1
+FR-CLN-127 Therapy materials library (optional): tagged activitysheets and files linked to goals. C P3
+4.9.4 AUDIOLOGY RECORDS
+ID REQUIREMENT PRI PH
+FR-CLN-200 Audiology case history: onset, duration andprogression of hearing loss, laterality, noise exposure,ototoxic medication, ear discharge/pain/vertigo, tinnitus,family history, previous hearing evaluations, hearingaids used, newborn risk factors (family history, NICU >5 days, hyperbilirubinaemia needing exchangetransfusion, ototoxic drugs, craniofacial anomalies,infections such as CMV/rubella, mechanical ventilation,syndromes, birth weight, gestational age), and a shortear examination (otoscopy): pinna, canal, tympanicmembrane, wax, discharge (per ear).
+M P1
+FR-CLN-201 Pure tone audiometry (PTA) per ear (right, left): airconduction thresholds in dB HL at 250, 500, 1000,2000, 4000, 8000 Hz (optional interoctaves 125, 750,1500, 3000, 6000 Hz); bone conduction thresholds at250 (optional), 500, 1000, 2000, 4000 Hz; per-pointflags masked, no response (NR) with the limit of theaudiometer, unmasked/masked symbol selection;transducer (supra-aural, insert, bone vibrator, freefield); audiometer (make/model, calibration date);reliability (good/fair/poor); test conditions (booth,noise level); client response type (hand-raise, button,play audiometry, VRA, CORA); tester. The UI shall drawthe audiogram with standard symbols (O right airunmasked, triangle right masked, X left air unmasked,square left masked, [ and ] bone conduction) and allowclicking on the graph or typing values.
+M P1
+FR-CLN-202 Computed PTA results per ear: PTA(500, 1000, 2000),PTA(500, 1000, 2000, 4000), high-frequency average(4000, 6000, 8000), air-bone gap per frequency,degree of hearing loss from the configured scale(default: normal -10 to 15, slight 16 to 25, mild 26 to 40,moderate 41 to 55, moderately severe 56 to 70, severe71 to 90, profound 91 and above dB HL), type (normal,conductive, sensorineural, mixed; suggested by rules,confirmed by clinician), configuration (flat, gentlysloping, sloping, steeply sloping, rising, cookie-bite,notched, corner, ski-slope, other).
+M P1
+FR-CLN-203 Speech audiometry per ear (unaided and aidedoptionally): SRT (dB HL), SDT (speech detectionthreshold), speech recognition/discrimination score(SDS/WRS) % with presentation level (dB HL or dB SL)and material (language: English/Marathi/Hindi; listname; monosyllabic/bisyllabic), MCL, UCL/LDL,
+M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 13 of 43
+--- PAGE 14 ---
+ID REQUIREMENT PRI PHdynamic range (computed), masking level, test mode(live voice, recorded), PI-PB rollover (optional), speechin noise (SNR-50, noise type) optional.
+FR-CLN-204 Immittance audiometry: tympanometry per ear (probetone 226 Hz; 1000 Hz for infants): type (A, As, Ad, B,C), peak pressure (daPa), static admittance/compliance(mL or mmho), ear canal volume (mL), tympanometricwidth/gradient (daPa); acoustic reflexes ipsilateral andcontralateral at 500, 1000, 2000, 4000 Hz (threshold dBHL or "absent"/"not tested"), reflex decay result.
+M P1
+FR-CLN-205 Otoacoustic emissions (OAE) per ear: type(TEOAE/DPOAE), protocol/equipment, stimulus level,result (PASS, REFER, INCONCLUSIVE), SNR per band(1, 1.5, 2, 3, 4, 5 kHz for TEOAE; DP-gram levels at F2for DPOAE), noise level, probe fit, test duration;screening stage (1st screen, 2nd screen, diagnostic),screener, overall result (both ears pass, referunilateral/bilateral). For newborn screening: birth details,risk indicators, hospital/birth place, referral pathway(rescreen date, ENT/diagnostic ABR), parentcounselling documented.
+M P1
+FR-CLN-206 ABR/BERA: stimulus (click, tone-burst), polarity, rate(per second), intensity series, wave I, III, V absolutelatencies (ms), interpeak latencies (I-III, III-V, I-V),amplitude (V and I/V ratio), wave V threshold (dBnHL), sedation/sleep state, electrode montage,interpretation, and attachment of waveform images.
+S P1
+FR-CLN-207 ASSR and electrophysiology notes (optional). C P3
+FR-CLN-208 Tinnitus evaluation: side/laterality (R, L, bilateral,head), onset, duration, nature (ringing, buzzing, hissing,pulsatile), constancy, associated symptoms (hearingloss, vertigo, hyperacusis, sleep disturbance, anxiety,depression), pitch match (Hz), loudness match (dBHL/dB SL), minimum masking level (MML), loudnessdiscomfort levels, residual inhibition test, THI (25items) with item scoring (0/2/4) and total with grade(slight 0-16, mild 18-36, moderate 38-56, severe 58-76,catastrophic 78-100), TFI optional, VASannoyance/loudness (0 to 10), TRT category (0 to 4),counselling topics covered, sound therapy device andsettings, follow-up schedule.
+M P1
+FR-CLN-209 CAPD evaluation: referral reason/behaviours (difficultyin noise, following instructions, etc.), prerequisiteperipheral hearing normal check, test battery with per-test, per-ear scores and norms: speech in noise,dichotic digits, dichotic CV, filtered speech, gaps-in-noise or random gap detection, duration pattern andfrequency pattern tests, masking level difference,(configurable test library); computed deviation fromnorms; diagnosis (CAPD subprofile), questionnaires(for example CHAPS), management plan:environmental modification, auditory training goals,FM/DM system recommendation.
+M P1
+FR-CLN-210 Hearing aid trial, fitting and programming (see 4.9.5for the register): selection rationale, candidacy,counselling, earmould impression details, trial (device,dates, duration, outcome), fitting verification (real-earmeasurement targets and achieved values perfrequency; aided thresholds; functional gain),programming record (number of channels, programmemories, gain settings per band, compression, noisereduction, feedback manager settings, directionality,volume control, telecoil), patient comfort, fittingoutcome measures (APHAB, IOI-HA, GHABP),orientation checklist (insertion/removal, batterychange, cleaning, use in noise, phone use, care),warranty and servicing terms.
+M P1
+FR-CLN-211 Auditory Verbal Therapy (AVT) record: child profile(age at identification, age at amplification/implantation,device type and wearing time), Ling six-sound test(/m, ah, oo, ee, sh, s/ detection and identification atdistances), auditory development level per goal(detection, discrimination, identification, comprehension)tracked with CAP, SIR, LittlEARS or MAIS/IT-MAISscores, language age, session plan following the AVTprinciples (guidance, coaching of parents, auditoryhierarchy), session data, home practice and parentengagement ratings.
+M P1
+FR-CLN-212 Cochlear implant (CI) record: ear, manufacturer,model, processor, surgery date and centre, activationdate, MAP/programming sessions (date, comments,electrode impedances optional), aided thresholds withimplant, speech perception scores, therapy referrals.
+S P1
+FR-CLN-213 Newborn hearing screening register: list of screenedinfants with result status, rescreen due, and referralcompletion tracking, supporting camp/hospital screeningmode with fast data entry (batch mode, tablet-friendly)and summary export.
+M P1
+FR-CLN-214 Vestibular/balance basic bedside notes (optionaltemplate). C P3
+FR-CLN-215 Audiogram printing and PDF with symbols, legend,patient identity, audiometer details, results table andinterpretation.
+M P1
+FR-CLN-216 Comparison view of audiograms across dates (overlaywith colour per date) and trend of PTA and WRS. S P1
+4.9.5 HEARING AID REGISTER
+ID REQUIREMENT PRI PH
+FR-CLN-230 Register each device issued, loaned or trialled to apatient: ear, make, model, style (BTE, RIC/RITE, ITE,ITC, CIC, IIC, body-worn, bone conduction,CROS/BiCROS), technology level, serial number(s),battery size or rechargeable, earmould/dome type,date of trial, date of fitting, warranty expiry, loss-and-damage cover expiry, purchase invoice link, price,status (TRIAL, DISPENSED, RETURNED, UPGRADED,LOST, DAMAGED, UNDER_REPAIR).
+M P1
+FR-CLN-231 Servicing and repair log: date, type (cleaning, tubingchange, repair, reprogramming, re-fit, loan devicegiven), fault description, outcome, cost, next service duedate.
+M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 14 of 43
+--- PAGE 15 ---
+ID REQUIREMENT PRI PH
+FR-CLN-232 Reprogramming history: each fitting session as adated entry with settings summary and the audiogramused.
+M P1
+FR-CLN-233 Service due and warranty alerts feed the recall engine(Section 4.10). M P1
+FR-CLN-234 Link to inventory serial item when the device is soldfrom stock (Section 4.13). S P2
+FR-CLN-235 Warranty certificate / fitting slip PDF with devicedetails and clinic terms. M P1
+4.9.6 COGNITIVE BEHAVIOURAL THERAPY (CBT) RECORDS (RESTRICTED)
+ID REQUIREMENT PRI PH
+FR-CLN-300 CBT records are available only ifcbtQualificationVerified and the user hascbt.read / cbt.write. All CBT fields shall be field-level encrypted (ADR-04), excluded from searchindexes, and excluded from general exports.
+M P1
+FR-CLN-301 CBT intake: presenting problems (list), onset, duration,triggers, severity, functional impact (work/school,relationships, sleep, appetite), history of previoustreatment, current medication (name only as reported),substance use, medical conditions, family history, socialsupport, strengths and values, treatment goals in thepatient's words.
+M P1
+FR-CLN-302 Risk assessment at intake and each session: suicidalideation, plan, intent, means; self-harm; harm to others;protective factors; risk level (none, low, moderate,high); safety plan record (warning signs, coping steps,contacts, professional and crisis contacts); mandatoryreferral prompt to apsychiatrist/psychologist/emergency services atmoderate or high risk; the system displays a banner butnever makes autonomous clinical decisions.
+M P1
+FR-CLN-303 Standardised scales with item-level entry andcomputed totals/severity: PHQ-9 (0 to 27: minimal 0-4,mild 5-9, moderate 10-14, moderately severe 15-19,severe 20-27; item 9 positive triggers a risk prompt),GAD-7 (0 to 21: minimal 0-4, mild 5-9, moderate 10-14,severe 15-21); configurable others: PCL-5, PSS-10, ISI(insomnia), SPIN, OCI-R, CORE-10, BDI-II (licensedinstruments are included only if the Client holds thelicence).
+M P1
+FR-CLN-304 Case formulation (cognitive model: situation, thoughts,emotions, physical sensations, behaviours;predisposing, precipitating, perpetuating, protectivefactors) as structured text fields.
+S P1
+FR-CLN-305 Treatment plan: problem list, goals, planned number ofsessions, interventions (cognitive restructuring,behavioural activation, exposure, relaxation, problemsolving, graded tasks), review dates.
+M P1
+FR-CLN-306 Session record: agenda items, mood check (0 to 10),homework review, content, techniques used, patientinsights, new homework, session rating (SRS/ORSoptional), risk check, next session plan, duration.
+M P1
+FR-CLN-307 Thought record entries: date/situation, automaticthoughts with belief % (0 to 100), emotions with intensity%, evidence for/against, balanced thought, outcome re-rating; cognitive-distortion tags (all-or-nothing,catastrophising, mind reading, overgeneralisation,personalisation, emotional reasoning, shouldstatements, labelling, mental filter, discountingpositives).
+S P1
+FR-CLN-308 Behavioural experiments and activity schedulerecords. S P2
+FR-CLN-309 Outcome tracking: scale scores plotted over time withreliable-change indicator. S P1
+FR-CLN-310 Consent specific to psychological therapy(confidentiality limits, risk disclosure, record keeping)captured before the first CBT session; blockedotherwise.
+M P1
+FR-CLN-311 Break-glass: access to a CBT record by someone otherthan the author requires an emergency justification andis audited and notified to the OWNER.
+M P1
+FR-CLN-312 Disclaimer logic: CBT features must be hidden entirelywhen cbtQualificationVerified = false. M P1
+4.10 FOLLOW-UP AND RECALL MANAGEMENT (REC)
+ID REQUIREMENT PRI PH
+FR-REC-001 A recall is a task to contact a patient or schedule afuture service, with: patient, type, due date, source (ruleor manual), related record, priority, status (PENDING,CONTACTED, SCHEDULED, COMPLETED, DISMISSED,OVERDUE), assigned to, notes.
+M P1
+FR-REC-002 Recall rules are configurable and shall include at least:therapy review after N sessions (default 12), re-evaluation every N months by service (default speech-language 6 months), annual audiometry for hearing aidusers, hearing aid servicing every 6 months, warrantyexpiry reminder 30 days prior, newborn re-screen perprotocol dates, tinnitus/TRT review at 1, 3, 6 months,missed-appointment follow-up after a no-show, post-assessment follow-up call, CBT review at session 6and 12, recall after discharge at 3 months.
+M P1
+FR-REC-003 Recalls shall be generated automatically when a visit isfinalised or an event occurs, and by a nightly job tocatch time-based rules.
+M P1
+FR-REC-004 The recall worklist shows overdue, due today, due thisweek and upcoming, filterable by type and assignee,with one-click actions: mark contacted (with outcome),schedule appointment (prefilled), dismiss with reason,snooze.
+M P1
+FR-REC-005 Recall notifications go through the outbox (Section 4.17)to the available channels. M P1
+FR-REC-006 A recall is auto-closed when a matching appointment iscompleted. M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 15 of 43
+--- PAGE 16 ---
+ID REQUIREMENT PRI PH
+FR-REC-007 Patients flagged deceased or archived shall notgenerate recalls. M P1
+FR-REC-008 Recall effectiveness report: due vs contacted vsreturned. S P2
+FR-REC-009 Missed-session policy: after N consecutive no-shows(default 3) the system flags the therapy plan "at risk ofdiscontinuation" for clinician review.
+S P1
+FR-REC-010 Per-patient do-not-contact and channel preferencesare honoured. M P1
+4.11 REPORTS AND DOCUMENTS (DOC)
+ID REQUIREMENT PRI PH
+FR-DOC-001 The system shall generate PDF documents from HTMLtemplates with the clinic letterhead, logo, practitionerdetails (RCI number if verified), digital signature image,date, document number and page numbers.
+M P1
+FR-DOC-002 Master Clinical Reports Suite: The software shallnatively generate the complete suite of 10 specializedclinical assessment reports plus practice documents,featuring automated metric calculations, bilateralgraphs, ear graphics, and RCI clinical signature blocks.
+M P1
+FR-DOC-002A Otoacoustic Emission (OAE) Screening Report (RP-CLN-OAE): Generates standardized OAE screeningreports for TEOAE and DPOAE. Displays patientmetadata, OAE No., Date of Birth, tested frequencies(1000, 1500, 2000, 3000, 4000 Hz) with SNR (dB) andreproducibility (%). Includes prominent visual eargraphics for Right Ear (Red) and Left Ear (Blue) withbinary Pass [ ] / Refer [ ] checkboxes. Auto-evaluates pass criteria (SNR ≥ 6 dB and Reproducibility> 70% across ≥ 3 frequencies). Features structuredclinical sections for IMPRESSION andRECOMMENDATION, plus RCI Audiologist signatureblock.
+M P1
+FR-DOC-002B Audiological Evaluation Report (RP-CLN-AUD):Generates comprehensive bilateral pure tone andspeech audiometry reports. Displays Reg. No., PTA No.,Audiometer model, patient response consistency(Consistent / Fairly Consistent /Inconsistent). Renders Two Separate AudiogramGraphs Side-by-Side (Right Ear in Red with circles Oand Left Ear in Blue with crosses X) across 125 Hz to8000 Hz and -10 dB to 120 dB HL with standardunmasked/masked/bone-conduction symbol legend.Includes a full-width measurement grid containing PTA1(500, 1k, 2k Hz), PTA2 (500, 1k, 2k, 4kHz), SDT (dB HL), SRT (dB HL), WRS % at dBHL, MCL (dB HL), UCL (dB HL), Rinne (512Hz), and Weber (512 Hz). Below the audiograms,renders a full-width Tympanogram & Middle EarImmittance table (Type A/As/Ad/B/C, Peak PressuredaPa, Static Compliance ml, Ear Canal Volume ml,Clinical Norms). Features clinical interpretation,recommendations, and stamped RCI signature footer.
+M P1
+FR-DOC-002C Proforma for Voice Disorders (RP-CLN-VOI):Generates multidimensional clinical voice assessmentreports and diagnostic proformas. Form captures vocalabuse/misuse history, phonotrauma, and hydration.Evaluates perceptual voice quality using CAPE-Vvisual-analogue ratings (0-100 mm scale for OverallSeverity, Roughness, Breathiness, Strain, Pitch,Loudness; Consistent vs Intermittent) and GRBASScale (Grade, Roughness, Breathiness, Asthenia,Strain each graded 0 to 3). Calculates MaximumPhonation Time (MPT in seconds for sustained /a/, /i/,/u/, best of 3 trials) and s/z Ratio (with clinical pathologyflag for ratio > 1.4). Records Fundamental Frequency($F_0$), Jitter, Shimmer, and HNR (Harmonics-to-NoiseRatio in dB). Incorporates VHI-30 / VHI-10 (VoiceHandicap Index) total score and severity classificationwith personalized vocal hygiene recommendations.
+M P1
+FR-DOC-002D Fluency Disorders Assessment Report (RP-CLN-FLU): Generates stuttering and cluttering assessmentreports and clinical proformas. Implements the SSI-4(Stuttering Severity Instrument, 4th Edition) protocol:auto-calculates percentage of syllables stuttered (%SS)across reading and conversational speech samples,measures average duration of 3 longest stutteringblocks in seconds, and rates physical concomitants(secondary struggle behaviors: facial grimaces, headmovements, distracting noises, extremity movements on0-20 scale). Auto-sums total SSI-4 score, mapspercentile rank, and assigns clinical severity (Very Mild,Mild, Moderate, Severe, Very Severe). CalculatesSpeech Rate in Syllables Per Minute (SPM) and WordsPer Minute (WPM). Records covert avoidancebehaviors, situational anxiety ratings, and OASESimpact scores.
+M P1
+FR-DOC-002E Comprehensive Speech & Language AssessmentReport (RP-CLN-SLA): Generates complete pediatricand adult speech-language evaluation reports.Compiles Oral Peripheral Mechanism Examination(OPME) and DDK rates (/pa/, /ta/, /ka/, /pataka/).Integrates standardized test batteries: ALD-MM(Assessment of Language Development - MukeshMohan) calculating Receptive Language Age (RLA),Expressive Language Age (ELA), and DevelopmentalQuotient (DQ %); LPT (Linguistic Profile Test) analyzingphonological, semantic, syntactic, and morphologicalmastery; CAPC-M (Clinical Assessment of Pragmatics &Communication) rating eye contact, turn-taking, andcommunicative intent; DALI (Dyslexia Assessment forIndian Children) evaluating phonological awareness andrapid naming; and PCC (Percentage of ConsonantsCorrect) phonology error profiling. Evaluates AACreadiness and AVT Erber hierarchy tracking with Ling 6-Sound detection distances. Formulates SMART therapygoals.
+M P1
+FR-DOC-002F Psychological & Cognitive Behavioural Therapy(CBT) Report (RP-CLN-CBT): Generates psychometricscreening and CBT clinical formulation reports secured
+M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 16 of 43
+--- PAGE 17 ---
+ID REQUIREMENT PRI PHunder AES-256 field-level encryption. Compilesstandardized scales with item-by-item scoring and auto-summed totals: PHQ-9 (Depression scale 0-27; Item #9positive triggers mandatory clinical safety prompt),GAD-7 (Anxiety scale 0-21), and PSS-10 (PerceivedStress Scale 0-40). Synthesizes a structured ClinicalRisk Assessment & Safety Plan Matrix evaluatingsuicide/self-harm ideation, intent, plans, and protectivefactors with a 5-step Stanley-Brown Safety Plan(warning signs, coping strategies, crisis contacts).Formulates Beck's Cognitive Model ABC analysis(Activating Event, Automatic Thoughts,Emotional/Behavioral Consequences) and cognitivedistortion tagging. Restricted bycbtQualificationVerified flag.
+FR-DOC-002G Swallowing & Dysphagia Evaluation Report (RP-CLN-DYS): Generates clinical bedside swallowingevaluation (CSE) reports. Captures oral-pharyngealexamination, cough reflex, and wet-voice signs duringwater swallow tests (3 ml, 5 ml, 90 ml continuous).Maps functional dietary levels using the FOIS(Functional Oral Intake Scale, Levels 1 to 7) and IDDSIFramework (International Dysphagia DietStandardisation Initiative, Levels 0 to 7 for drinks andfoods). Specifies compensatory swallowing maneuvers(Mendelsohn, supraglottic swallow, effortful swallow),postural adjustments (chin tuck, head rotation), andaspiration prevention guidelines.
+M P1
+FR-DOC-002H Hearing Aid Fitting, Trial & Verification Certificate(RP-CLN-HAF): Generates amplification dispensing andacoustic verification certificates. Records ear laterality(Right, Left, Bilateral), make, model, style (RIC, BTE,CIC, ITE), technology level, and unique hardware serialnumbers. Captures Real-Ear Measurement (REM) /Coupler Gain target curve matching (NAL-NL2 / DSLv5), Aided Sound Field thresholds vs Unaidedthresholds, and functional gain. Details device warrantyduration, trial period conditions, loss-and-damage terms,battery care instructions, and recall maintenanceschedules.
+M P1
+FR-DOC-002I Periodic Clinical Therapy Progress Summary (RP-CLN-PRG): Generates periodic progress review reportssynthesized from SOAP session notes and goal trackingdata. Compares baseline scores against currentperformance metrics (Goal Mastery %, Ling 6-sounddetection distance, MLU increase, %SS reduction).Displays session attendance rate (% sessions attendedvs scheduled), home program adherence, parentcoaching milestones, and updated SMART objectivesfor the next treatment phase.
+M P1
+FR-DOC-002J Clinical Discharge Summary & Home MaintenancePlan (RP-CLN-DSC): Generates formal clinicaldischarge reports upon completion of therapy.Documents initial vs discharge performancebenchmarks, treatment duration and total attendedsessions, discharge criteria met, individualized homemaintenance strategies, and scheduled annualaudiological / speech re-evaluation recall date.
+M P1
+FR-DOC-003 Documents shall be produced in English, Marathi, orbilingual (patient-facing parts), with Devanagari fontsembedded.
+M P1
+FR-DOC-004 Each generated document is stored as a documentsrecord with file pointer, type, version, hash (SHA-256),generated by, linked visit/patient, and can beregenerated from data or frozen (final versionretained).
+M P1
+FR-DOC-005 Final documents shall display a verification code/QRlinking to a verification page that confirms documentauthenticity (document number, issue date, clinic)without revealing medical content.
+S P2
+FR-DOC-006 Share/download: download PDF, print, email (viaoutbox) with a link that expires in 7 days; no clinicalPDFs are attached to emails by default (link with PIN).
+M P1
+FR-DOC-007 Document upload: patients' external documents(previous reports, scans, certificates, consent scans)with type, date, description and tags.
+M P1
+FR-DOC-008 Digital consent capture on touch devices: renderconsent text (bilingual), capture signature on canvas,store signature image, signer identity (patient/guardian),witness, timestamp, IP/device, consent text versionhash, and produce a signed PDF.
+M P1
+FR-DOC-009 Template management (HTML with placeholders andconditionals) editable by OWNER/Admin with preview andversioning.
+S P2
+FR-DOC-010 Document access is permission-controlled and auditedper document. M P1
+FR-DOC-011 Watermark "DRAFT" for non-final documents; "COPY"for reprints. S P1
+FR-DOC-012 Bulk export of a patient's documents as a ZIP(permission patient.export) for transfer requests. S P2
+4.12 BILLING AND PAYMENTS (BIL)
+ID REQUIREMENT PRI PH
+FR-BIL-001 Price list per service variant and product, with effectivedates and optional concession categories (seniorcitizen, BPL, staff, camp).
+M P1
+FR-BIL-002 Invoice creation from an appointment/visit or manually:line items (service, product, package, other),description, quantity, unit price, discount (percentage oramount, with reason and approver), tax treatment andrate, HSN/SAC, line total; header discount; round-off;totals in paise.
+M P1
+FR-BIL-003 Invoice numbering sequential per financial year (forexample INV/2026-27/00001), gap-free for issuedinvoices, with a separate series for credit notes(CN/...) and receipts (RCT/...).
+M P1
+FR-BIL-004 Invoice statuses: DRAFT, ISSUED, PARTIALLY_PAID,PAID, CANCELLED, REFUNDED, CREDIT_NOTED. M P1
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 17 of 43
+--- PAGE 18 ---
+ID REQUIREMENT PRI PHIssued invoices are immutable; corrections usecancellation with reason or credit note.
+FR-BIL-005 Payments: record one or more payments per invoicewith mode (cash, UPI, card, bank transfer, cheque,other), reference/UTR/cheque number, amount,received date/time, received by; advance paymentsand adjustment against future invoices; overpaymenthandling as advance.
+M P1
+FR-BIL-006 Receipt PDF/print for every payment (thermal 80 mmand A4 layouts). M P1
+FR-BIL-007 UPI QR: dynamic display of the clinic UPI QR with theamount (UPI deep-link format); payment confirmation ismanual.
+S P1
+FR-BIL-008 Refunds: partial or full with reason, mode and approvalpermission billing.refund; produces a refundrecord and credit note.
+M P1
+FR-BIL-009 Patient ledger: running balance, advances, dues; dueslist with ageing. M P1
+FR-BIL-010 Packages and prepaid sessions (Section 4.6):purchase creates a patient package; appointmentcompletion consumes a session; balances displayed;expiry handled.
+S P2
+FR-BIL-011 Discount rules and approvals: discounts above aconfigurable threshold require OWNER approval. S P1
+FR-BIL-012 Product sales (hearing aids, accessories, batteries)with batch/serial selection when inventory is enabled;warranty details recorded.
+S P2
+FR-BIL-013 GST handling: configurable per item (exempt/taxable atrate). When the clinic has a GSTIN, invoices showGSTIN, place of supply, taxable value, CGST/SGST orIGST split, HSN/SAC, and tax in words. When notregistered, the invoice shows "Bill of Supply" or a plainbill per settings.
+M P1
+FR-BIL-014 Daily collection report (cash/UPI/card totals, by user),day-end closing with cash counting and variance note. M P1
+FR-BIL-015 Billing without clinical access: the receptionist seespatient, service, amount, and payment but not clinicalnotes.
+M P1
+FR-BIL-016 Estimate/quotation for hearing aids or packages,convertible to invoice. S P2
+FR-BIL-017 Invoice and receipt in English or Marathi (labels) perpatient language preference. S P2
+FR-BIL-018 Export of invoices and payments to CSV/Excel andTally-compatible XML/CSV for the Client's CA. S P2
+FR-BIL-019 Cancelling an invoice requires a reason, and anypayments must be refunded or reallocated first. M P1
+FR-BIL-020 All monetary mutations are audited, with before/afterstate. M P1
+4.13 INVENTORY AND HEARING-AID STOCK (INV)
+ID REQUIREMENT PRI PH
+FR-INV-001 Product catalogue: type (hearing aid, accessory,battery, earmould/dome, consumable, equipment), SKU,brand, model, description, HSN, tax rate, unit ofmeasure, MRP, selling price, purchase price, reorderlevel, serial-tracked flag, warranty months, active flag,photo.
+S P2
+FR-INV-002 Vendors/suppliers: name, contact, GSTIN, address,payment terms, notes. S P2
+FR-INV-003 Purchase entry (goods received): vendor, invoicenumber/date, items with quantity, unit cost, serialnumbers (for serial-tracked items), tax, attachment ofvendor invoice; updates stock and creates stockmovements.
+S P2
+FR-INV-004 Stock ledger: every movement (PURCHASE, SALE,TRIAL_OUT, TRIAL_IN, RETURN_TO_VENDOR,ADJUSTMENT, DAMAGED, TRANSFER) recordedimmutably with quantity, serial, reference document,user, date.
+S P2
+FR-INV-005 Serial item lifecycle: IN_STOCK, RESERVED,ON_TRIAL, SOLD, RETURNED, DAMAGED,WITH_VENDOR with linked patient and invoice.
+S P2
+FR-INV-006 Low-stock alerts (dashboard and notification) atreorder level; stock valuation report (FIFO or weightedaverage, configurable).
+S P2
+FR-INV-007 Trial devices: issue to patient with expected return dateand overdue flags. S P2
+FR-INV-008 Equipment register (audiometer, tympanometer, OAE,video-laryngoscope): purchase date, serial, calibrationdue date with alerts, service history, warranty.
+S P2
+FR-INV-009 Stock count/adjustment workflow with reason. C P2
+FR-INV-010 Barcode/QR scanning of serial numbers using devicecamera. C P3
+4.14 EXPENSES (EXP)
+ID REQUIREMENT PRI PH
+FR-EXP-001 Record expenses with date, category (rent, utilities,salaries, consumables, equipment, calibration,marketing, professional fees, software, travel, repairs,other), vendor, amount, tax, payment mode, reference,attachment (bill photo), notes, and status.
+S P2
+FR-EXP-002 Recurring expenses (for example rent) auto-createdmonthly as drafts. C P2
+FR-EXP-003 Monthly summary by category and profit and loss(management view) combining invoices and expenses. S P2
+FR-EXP-004 Expense edit/delete permissions restricted to OWNER; allchanges audited. S P2
+FR-EXP-005 Export to CSV/Excel. S P2
+BA-SRS-WEB-ERP-001 | STRICTLY CONFIDENTIAL
+Black Angler Executive Documentation Page 18 of 43
