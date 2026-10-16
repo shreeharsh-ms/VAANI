@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Voice, Stuttering & Dysphagia Clinical Evaluation Report Sample</title>
+
+<style>
+    @page {
+        size: A4;
+        margin: 14mm 12mm 14mm 12mm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+        color: #0F172A;
+        line-height: 1.32;
+        background-color: #FFFFFF;
+        font-size: 8.2pt;
+        -webkit-print-color-adjust: exact;
+    }
+    .report-container {
+        width: 100%;
+        max-width: 210mm;
+        margin: 0 auto;
+        padding: 0;
+    }
+    .letterhead-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-bottom: 2.5px solid #0F172A;
+        padding-bottom: 4pt;
+        margin-bottom: 6pt;
+    }
+    .letterhead-table td { vertical-align: top; }
+    .clinic-title {
+        font-family: Georgia, serif;
+        font-size: 14pt;
+        font-weight: bold;
+        color: #0F172A;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .clinic-sub {
+        font-size: 7.8pt;
+        color: #334155;
+    }
+    .practitioner-meta {
+        text-align: right;
+        font-size: 7.8pt;
+        color: #0F172A;
+    }
+    .practitioner-meta strong {
+        font-size: 8.5pt;
+        color: #0D9488;
+    }
+    
+    .report-title-bar {
+        background-color: #0F172A;
+        color: #FFFFFF;
+        text-align: center;
+        padding: 3.5pt 6pt;
+        font-size: 9.5pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6pt;
+    }
+    
+    table.patient-meta {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 6pt;
+        border: 1px solid #CBD5E1;
+        background-color: #F8FAFC;
+    }
+    table.patient-meta td {
+        padding: 3pt 5pt;
+        font-size: 7.8pt;
+        border: 1px solid #E2E8F0;
+    }
+    table.patient-meta td.label {
+        font-weight: bold;
+        color: #334155;
+        background-color: #F1F5F9;
+        width: 16%;
+    }
+    table.patient-meta td.val {
+        color: #0F172A;
+        width: 34%;
+    }
+    
+    h2.clinical-sec-heading {
+        font-family: Georgia, serif;
+        font-size: 9pt;
+        text-transform: uppercase;
+        color: #0F172A;
+        border-bottom: 1.5px solid #0D9488;
+        padding-bottom: 1pt;
+        margin: 7pt 0 3pt 0;
+        letter-spacing: 0.3px;
+    }
+    
+    table.clinical-data {
+        width: 100% !important;
+        border-collapse: collapse;
+        margin-bottom: 6pt;
+        font-size: 7.8pt;
+    }
+    table.clinical-data th, table.clinical-data td {
+        border: 1px solid #94A3B8;
+        padding: 2.5pt 4.5pt;
+        vertical-align: top;
+        text-align: left;
+    }
+    table.clinical-data th {
+        background-color: #1E293B;
+        color: #FFFFFF;
+        font-weight: bold;
+        font-size: 7.2pt;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    table.clinical-data tr:nth-child(even) td {
+        background-color: #F8FAFC;
+    }
+
+    .score-card-grid {
+        display: flex;
+        gap: 5pt;
+        margin-bottom: 6pt;
+    }
+    .score-card {
+        flex: 1;
+        border: 1px solid #CBD5E1;
+        background: #F8FAFC;
+        padding: 4pt;
+        border-radius: 3px;
+        text-align: center;
+    }
+    .score-card .val {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #0D9488;
+        margin: 1pt 0;
+    }
+    .score-card .lbl {
+        font-size: 7pt;
+        color: #475569;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .clinical-box {
+        border: 1px solid #0D9488;
+        border-left: 3.5px solid #0D9488;
+        background-color: #F0FDFA;
+        padding: 5pt 7pt;
+        margin: 6pt 0;
+        font-size: 8pt;
+        line-height: 1.3;
+    }
+    .clinical-box strong {
+        color: #0F766E;
+        text-transform: uppercase;
+        font-size: 7.8pt;
+    }
+
+    .sig-footer {
+        margin-top: 10pt;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-top: 1px solid #CBD5E1;
+        padding-top: 6pt;
+        page-break-inside: avoid;
+    }
+    .sig-block {
+        text-align: right;
+        font-size: 7.8pt;
+    }
+</style>
+
+</head>
+<body>
+<div class="report-container">
+    <table class="letterhead-table">
+        <tr>
+            <td>
+                <div class="clinic-title">Vani's Speech & Hearing Clinic</div>
+                <div class="clinic-sub">Center for Audiology, Speech-Language Pathology & Hearing Conservation<br>Satara, Maharashtra • Contact: +91-98220-XXXXX • Email: contact@vanisclinic.in</div>
+            </td>
+            <td class="practitioner-meta">
+                <strong>Ms. Palak Paresh Gandhi</strong><br>
+                BASLP, Rehabilitation Council of India (RCI) Reg.<br>
+                Consultant Audiologist & Speech-Language Pathologist
+            </td>
+        </tr>
+    </table>
+
+    <div class="report-title-bar">VOICE, STUTTERING & DYSPHAGIA EVALUATION REPORT</div>
+
+    <table class="patient-meta">
+        <tr>
+            <td class="label">Patient Name:</td>
+            <td class="val">Mrs. Sunita M. Deshmukh</td>
+            <td class="label">UHID:</td>
+            <td class="val">PGC-26-000340</td>
+        </tr>
+        <tr>
+            <td class="label">Age / Gender:</td>
+            <td class="val">42 Yrs / Female</td>
+            <td class="label">Date of Test:</td>
+            <td class="val">October 09, 2026</td>
+        </tr>
+        <tr>
+            <td class="label">Occupation:</td>
+            <td class="val">School Teacher (Professional Voice User)</td>
+            <td class="label">Referred By:</td>
+            <td class="val">Dr. A. V. Joshi, MS (ENT)</td>
+        </tr>
+    </table>
+
+    <h2 class="clinical-sec-heading">1. Perceptual Voice Evaluation (CAPE-V & GRBAS)</h2>
+    <table class="clinical-data">
+        <thead>
+            <tr>
+                <th>Assessment Scale</th>
+                <th>Parameter Evaluated</th>
+                <th>Visual Analog Score / Grade (0-100 mm / 0-3)</th>
+                <th>Clinical Interpretation</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td rowspan="6"><strong>CAPE-V</strong><br>(Consensus Auditory-Perceptual Evaluation of Voice)</td>
+                <td>Overall Severity</td>
+                <td>55 / 100 mm (Moderate)</td>
+                <td>Moderate dysphonia during continuous speech</td>
+            </tr>
+            <tr>
+                <td>Roughness</td>
+                <td>48 / 100 mm (Moderate)</td>
+                <td>Audible vocal fold irregularity / raspy tone</td>
+            </tr>
+            <tr>
+                <td>Breathiness</td>
+                <td>35 / 100 mm (Mild-Moderate)</td>
+                <td>Audible air escape during sustained vowels</td>
+            </tr>
+            <tr>
+                <td>Strain</td>
+                <td>60 / 100 mm (Moderate)</td>
+                <td>Hyperfunctional muscle tension during phonation</td>
+            </tr>
+            <tr>
+                <td>Pitch & Loudness</td>
+                <td>Pitch: 40 (Slightly Low) | Loudness: 30 (Mild)</td>
+                <td>Pitch breaks noted during vocal load</td>
+            </tr>
+            <tr>
+                <td>Resonance</td>
+                <td>Normal (Oral-Nasal Balance)</td>
+                <td>No hyper/hyponasality detected</td>
+            </tr>
+            <tr>
+                <td><strong>GRBAS Scale</strong></td>
+                <td colspan="2">G2 (Grade) | R2 (Roughness) | B1 (Breathiness) | A0 (Asthenia) | S2 (Strain)</td>
+                <td>Moderate voice impairment driven by roughness & strain</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="clinical-sec-heading">2. Phonatory, Acoustic Measures & Voice Handicap Index (VHI)</h2>
+    <table class="clinical-data">
+        <thead>
+            <tr>
+                <th>Parameter / Measure</th>
+                <th>Observed Value</th>
+                <th>Normative Range</th>
+                <th>Diagnostic Significance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>MPT (Maximum Phonation Time)</strong></td>
+                <td>/a/ = 7.2 sec | /i/ = 8.0 sec | /u/ = 7.5 sec</td>
+                <td>15.0 – 20.0 seconds</td>
+                <td>Significantly reduced phonatory breath support</td>
+            </tr>
+            <tr>
+                <td><strong>s/z Ratio</strong></td>
+                <td>/s/ = 14.5 sec | /z/ = 7.2 sec (Ratio = <strong>2.01</strong>)</td>
+                <td>Ratio &lt; 1.4</td>
+                <td>Pathological (Indicates glottal insufficiency / lesion)</td>
+            </tr>
+            <tr>
+                <td><strong>HNR (Harmonics-to-Noise Ratio)</strong></td>
+                <td>11.4 dB</td>
+                <td>&gt; 20.0 dB</td>
+                <td>Elevated noise component in voice signal</td>
+            </tr>
+            <tr>
+                <td><strong>VHI (Voice Handicap Index)</strong></td>
+                <td>Functional: 18 | Physical: 26 | Emotional: 14<br><strong>Total VHI Score = 58 / 120</strong></td>
+                <td>0 – 30: Mild<br>31 – 60: Moderate<br>61 – 120: Severe</td>
+                <td><strong style="color: #C2410C;">Moderate Voice Handicap</strong> (High physical handicap in teaching)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="clinical-sec-heading">3. Stuttering Evaluation (SSI-4 & %SS Analysis)</h2>
+    <p><em>(Evaluated for Pediatric Fluency Profile Patient: Master Rohan K. Shinde, Age 11 Yrs)</em></p>
+    <table class="clinical-data">
+        <thead>
+            <tr>
+                <th>SSI-4 Subscale</th>
+                <th>Raw Test Data</th>
+                <th>Converted Task Score</th>
+                <th>Severity Classification</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Frequency (% Syllables Stuttered)</strong></td>
+                <td>9.4% SS (Reading + Speaking tasks)</td>
+                <td>16 Points</td>
+                <td rowspan="4" style="vertical-align: middle;"><strong style="color: #C2410C;">SSI-4 Total Score: 28<br>Severity: MODERATE-SEVERE STUTTERING</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Duration</strong></td>
+                <td>Mean of 3 longest blocks: 2.8 seconds</td>
+                <td>5 Points</td>
+            </tr>
+            <tr>
+                <td><strong>Physical Concomitants</strong></td>
+                <td>Facial grimace (3), Eye blink (2), Head nod (2)</td>
+                <td>7 Points</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="clinical-sec-heading">4. Dysphagia (Swallowing) Evaluation (FOIS & IDDSI Levels)</h2>
+    <p><em>(Evaluated for Adult Dysphagia Profile Patient: Mr. Vitthal R. Jadhav, Age 71 Yrs, Post-Stroke)</em></p>
+    <table class="clinical-data">
+        <thead>
+            <tr>
+                <th>Dysphagia Tool</th>
+                <th>Assessed Level / Status</th>
+                <th>Diet & Fluid Guidelines</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>FOIS (Functional Oral Intake)</strong></td>
+                <td><strong style="color: #C2410C;">Level 3: Total oral intake of single consistency</strong></td>
+                <td>Requires special preparation and tube compensation backup</td>
+            </tr>
+            <tr>
+                <td><strong>IDDSI Fluid Consistency</strong></td>
+                <td><strong>IDDSI Level 2: Mildly Thick Liquid</strong></td>
+                <td>Nectar-thick consistency; avoids thin water aspiration risk</td>
+            </tr>
+            <tr>
+                <td><strong>IDDSI Food Texture</strong></td>
+                <td><strong>IDDSI Level 4: Pureed Diet</strong></td>
+                <td>Smooth, cohesive, no lumps, no chewing required</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="clinical-box">
+        <strong>DIAGNOSTIC IMPRESSION & RECOMMENDATIONS:</strong><br>
+        1. <strong>Voice Impression</strong>: Moderate Vocal Hyperfunction with Glottal Insufficiency (s/z ratio 2.01, VHI 58). ENT indirect laryngoscopy recommended to rule out vocal vocal nodules.<br>
+        2. <strong>Stuttering Impression</strong>: Moderate-Severe Fluency Disorder (SSI-4 Score 28, 9.4% SS) with secondary physical concomitants.<br>
+        3. <strong>Dysphagia Impression</strong>: Oropharyngeal Dysphagia post-stroke (FOIS Level 3) requiring IDDSI Level 2 (Mildly Thick) fluids and Level 4 (Pureed) diet with chin-tuck swallowing maneuver.
+    </div>
+
+    <div class="sig-footer">
+        <div>Date: October 09, 2026<br>Place: Satara</div>
+        <div class="sig-block">
+            <br><br>
+            ________________________________________<br>
+            <strong>Ms. Palak Paresh Gandhi</strong><br>
+            BASLP | RCI Registered Consultant
+        </div>
+    </div>
+</div>
+</body>
+</html>

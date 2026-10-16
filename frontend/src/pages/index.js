@@ -1,0 +1,12 @@
+export { HomePage } from './public/HomePage';
+export { ServicesPage } from './public/ServicesPage';
+export { AboutPage } from './public/AboutPage';
+export { BookingPage } from './public/BookingPage';
+export { ContactPage } from './public/ContactPage';
+export { DashboardOverviewPage } from './dashboard/DashboardOverviewPage';
+export { PatientsPage } from './dashboard/PatientsPage';
+export { AppointmentsPage } from './dashboard/AppointmentsPage';
+export { ReportsPage } from './dashboard/ReportsPage';
+export { SettingsPage } from './dashboard/SettingsPage';
+export { LoginPage } from './auth/LoginPage';
+export { NotFoundPage } from './NotFoundPage';
