@@ -103,6 +103,20 @@ export const ReportViewPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Auto-trigger print if requested via query parameter ?print=1
+  useEffect(() => {
+    if (reportData) {
+      document.title = `${reportData.reportNumber} - ${reportData.patient?.full_name || 'Patient'} - Vaani Clinic Official Report`;
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('print') === '1') {
+        const timer = setTimeout(() => {
+          window.print();
+        }, 400);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [reportData]);
+
   if (!reportData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-600 text-xs">

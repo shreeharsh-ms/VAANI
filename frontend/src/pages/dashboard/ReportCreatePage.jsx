@@ -23,8 +23,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
-import Modal from '../../components/common/Modal';
-import OfficialClinicalDocument from '../../components/clinical/OfficialClinicalDocument';
+
 
 export const ReportCreatePage = () => {
   const navigate = useNavigate();
@@ -157,7 +156,12 @@ export const ReportCreatePage = () => {
   };
 
   // Open full-page official preview in new tab
-  const handleOpenPreviewInNewTab = () => {
+  const handleOpenPreviewInNewTab = (autoPrint = false) => {
+    if (!selectedPatient) {
+      notify.error('Please select a patient before previewing report.');
+      return;
+    }
+
     const previewPayload = {
       reportNumber: formData.reportNumber,
       reportDate: formData.reportDate,
@@ -174,7 +178,13 @@ export const ReportCreatePage = () => {
     } catch (e) {
       console.warn(e);
     }
-    window.open('/dashboard/reports/preview', '_blank');
+    const url = autoPrint === true ? '/dashboard/reports/preview?print=1' : '/dashboard/reports/preview';
+    window.open(url, '_blank');
+  };
+
+  // Robust print execution - opens dedicated clean document tab with print triggered
+  const triggerPrint = () => {
+    handleOpenPreviewInNewTab(true);
   };
 
   // Save report into localStorage
@@ -216,28 +226,9 @@ export const ReportCreatePage = () => {
     }
   };
 
-  // Robust print execution
-  const triggerPrint = () => {
-    setTimeout(() => {
-      window.print();
-    }, 150);
-  };
-
   return (
     <div className="space-y-3.5 pb-10">
       
-      {/* ── EXCLUSIVE DEDICATED PRINT CONTAINER ── */}
-      {/* Only visible during window.print(), rendered clean on A4 paper with zero modal or chrome artifacts */}
-      <div id="clinical-printable-report" aria-hidden="true">
-        <OfficialClinicalDocument
-          service={activeService}
-          patient={selectedPatient}
-          patientDossier={patientDossier}
-          formData={formData}
-          computedPTA={computedPTA}
-        />
-      </div>
-
       {/* ── TOP ACTION BAR ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-2xs">
         <div className="flex items-center gap-3">
