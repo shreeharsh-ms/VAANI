@@ -131,8 +131,12 @@ export const Navbar = () => {
                 onClick={(e) => {
                   if (location.pathname === '/') {
                     e.preventDefault();
-                    const el = document.getElementById('booking-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (window.lenis) {
+                      window.lenis.scrollTo('#booking-section', { offset: -20, duration: 1.3 });
+                    } else {
+                      const el = document.getElementById('booking-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                   }
                 }}
                 className="hidden sm:inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm md:text-[14.5px] font-bold bg-[#301444] hover:bg-[#220a32] text-white transition-all shadow-md hover:shadow-purple-950/60 hover:scale-105 active:scale-95"
@@ -216,6 +220,17 @@ export const Navbar = () => {
             {isAbout ? (
               <Link
                 to="/#booking-section"
+                onClick={(e) => {
+                  if (location.pathname === '/') {
+                    e.preventDefault();
+                    if (window.lenis) {
+                      window.lenis.scrollTo('#booking-section', { offset: -20, duration: 1.3 });
+                    } else {
+                      const el = document.getElementById('booking-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }
+                }}
                 className="inline-flex items-center gap-1.5 xl:gap-2 px-4 xl:px-7 py-2 xl:py-3 rounded-full text-xs sm:text-sm md:text-[14.5px] font-bold text-[#301444] bg-white hover:bg-purple-50 transition-all duration-200 shadow-md hover:shadow-purple-950/20 hover:scale-105 active:scale-95"
               >
                 <Calendar className="w-4 h-4 text-purple-700" />
@@ -446,7 +461,18 @@ export const Navbar = () => {
             {/* Main Book an Appointment Button Pinned at Bottom */}
             <Link
               to="/#booking-section"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                if (location.pathname === '/') {
+                  e.preventDefault();
+                  if (window.lenis) {
+                    window.lenis.scrollTo('#booking-section', { offset: -20, duration: 1.3 });
+                  } else {
+                    const el = document.getElementById('booking-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }
+              }}
               className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-full font-bold text-sm text-white bg-[#301444] hover:bg-[#200930] shadow-md shadow-purple-950/30 transition-all active:scale-95 cursor-pointer group"
             >
               <Calendar className="w-4 h-4 text-purple-200 group-hover:scale-110 transition-transform" />

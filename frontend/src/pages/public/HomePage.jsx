@@ -11,9 +11,13 @@ export const HomePage = () => {
   useEffect(() => {
     if (location.hash === '#booking-section' || window.location.hash.includes('booking')) {
       const timer = setTimeout(() => {
-        const el = document.getElementById('booking-section');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (window.lenis) {
+          window.lenis.scrollTo('#booking-section', { offset: -20, duration: 1.3 });
+        } else {
+          const el = document.getElementById('booking-section');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
         }
       }, 150);
       return () => clearTimeout(timer);
