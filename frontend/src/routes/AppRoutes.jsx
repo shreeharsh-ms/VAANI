@@ -17,6 +17,7 @@ import ArticleDetailPage from '../pages/public/ArticleDetailPage';
 import LoginPage from '../pages/auth/LoginPage';
 import DashboardOverviewPage from '../pages/dashboard/DashboardOverviewPage';
 import PatientsPage from '../pages/dashboard/PatientsPage';
+import PatientDetailPage from '../pages/dashboard/PatientDetailPage';
 import AppointmentsPage from '../pages/dashboard/AppointmentsPage';
 import ReportsPage from '../pages/dashboard/ReportsPage';
 import BillingPage from '../pages/dashboard/BillingPage';
@@ -56,6 +57,7 @@ export const AppRoutes = () => {
         <Route index element={<DashboardOverviewPage />} />
         <Route path="appointments" element={<AppointmentsPage />} />
         <Route path="patients" element={<PatientsPage />} />
+        <Route path="patients/:id" element={<PatientDetailPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="billing" element={<BillingPage />} />
         <Route path="inventory" element={<InventoryPage />} />

@@ -23,8 +23,8 @@ import Modal from '../../components/common/Modal';
 import PatientForm from '../../components/forms/PatientForm';
 import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
+import { useNavigate } from 'react-router-dom';
 import { isKey, isAlt } from '../../utils/keyboard';
-import PatientProfileModal from '../../components/patients/PatientProfileModal';
 
 // Seed Fallback Patients if none in local database
 const SEED_PATIENTS = [
@@ -151,6 +151,7 @@ const SEED_PATIENTS = [
 ];
 
 export const PatientsPage = () => {
+  const navigate = useNavigate();
   const { notify } = useNotification();
   const [patients, setPatients] = useState(() => {
     try {
@@ -175,7 +176,6 @@ export const PatientsPage = () => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPatientForView, setSelectedPatientForView] = useState(null);
 
   // Sync with patientService if available
   const fetchPatients = async () => {
@@ -465,9 +465,9 @@ export const PatientsPage = () => {
                 paginated.map((p) => (
                   <tr
                     key={p.id}
-                    onClick={() => setSelectedPatientForView(p)}
+                    onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
                     className="hover:bg-purple-50/50 cursor-pointer transition-colors group select-none"
-                    title="Click row to open complete Clinical Dossier & EMR Profile"
+                    title="Click row to open complete Clinical Dossier page"
                   >
                     <td className="py-1.5 px-3 font-mono font-bold text-purple-950 group-hover:text-purple-700">
                       <div className="flex items-center gap-1.5">
@@ -513,10 +513,10 @@ export const PatientsPage = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedPatientForView(p);
+                            navigate(`/dashboard/patients/${p.uhid || p.id}`);
                           }}
                           className="p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors"
-                          title="Open Clinical Dossier & EMR Record"
+                          title="Open Clinical Dossier & EMR Record Page"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -601,13 +601,6 @@ export const PatientsPage = () => {
           onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
-
-      {/* ── MODAL: COMPLETE CLINICAL DOSSIER & EMR PROFILE ── */}
-      <PatientProfileModal
-        patient={selectedPatientForView}
-        isOpen={Boolean(selectedPatientForView)}
-        onClose={() => setSelectedPatientForView(null)}
-      />
 
     </div>
   );
