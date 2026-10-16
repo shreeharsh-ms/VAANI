@@ -5,10 +5,10 @@ import Toast from '../components/feedback/Toast';
 
 export const DashboardLayout = () => {
   return (
-    <div className="relative min-h-screen w-full bg-[#301444] p-3 sm:p-5 lg:p-7 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
+    <div className="relative min-h-screen w-full bg-[#301444] p-2 sm:p-3 lg:p-4 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
       
       {/* ── MAIN INNER CARD: Exact Home Page Santo Frame with Rounded Corners ── */}
-      <div className="relative w-full flex-1 bg-white rounded-tr-[24px] sm:rounded-tr-[34px] lg:rounded-tr-[42px] rounded-br-[24px] sm:rounded-br-[34px] lg:rounded-br-[42px] rounded-bl-[24px] sm:rounded-bl-[34px] lg:rounded-bl-[42px] rounded-tl-none overflow-hidden shadow-2xl flex flex-col justify-between">
+      <div className="relative w-full flex-1 bg-white rounded-tr-[20px] sm:rounded-tr-[28px] lg:rounded-tr-[32px] rounded-br-[20px] sm:rounded-br-[28px] lg:rounded-br-[32px] rounded-bl-[20px] sm:rounded-bl-[28px] lg:rounded-bl-[32px] rounded-tl-none overflow-hidden shadow-2xl flex flex-col justify-between">
         
         {/* ── BACKGROUND LAYER: FAINT LAVENDER WATERCOLOR ── */}
         <div 
@@ -27,9 +27,9 @@ export const DashboardLayout = () => {
         {/* ── TOP NAVBAR: Exact Home Page Santo Navbar with Logo Tab & Fillets ── */}
         <Sidebar />
 
-        {/* ── MAIN CONTENT OUTLET (Matching Home Page Inner Grid / Padding) ── */}
-        <main className="relative z-10 flex-1 w-full p-4 sm:p-6 lg:p-8 xl:p-10">
-          <div className="max-w-[1600px] mx-auto space-y-6 sm:space-y-8">
+        {/* ── MAIN CONTENT OUTLET (High density, no wasted padding) ── */}
+        <main className="relative z-10 flex-1 w-full p-2.5 sm:p-3.5 lg:p-4">
+          <div className="w-full mx-auto space-y-3">
             <Outlet />
           </div>
         </main>

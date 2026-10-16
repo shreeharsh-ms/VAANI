@@ -11,22 +11,23 @@ export const Input = forwardRef(({
   id,
   type = 'text',
   required = false,
+  compact = false,
   ...props
 }, ref) => {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
   return (
-    <div className={`w-full flex flex-col gap-1.5 ${containerClassName}`}>
+    <div className={`w-full flex flex-col ${compact ? 'gap-0.5' : 'gap-1'} ${containerClassName}`}>
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={inputId} className={`font-semibold text-slate-700 ${compact ? 'text-[11px]' : 'text-xs'}`}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
 
       <div className="relative flex items-center">
         {StartIcon && (
-          <div className="absolute left-3 text-gray-400 pointer-events-none">
-            <StartIcon className="w-4 h-4" />
+          <div className="absolute left-2.5 text-gray-400 pointer-events-none">
+            <StartIcon className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
           </div>
         )}
 
@@ -35,27 +36,31 @@ export const Input = forwardRef(({
           id={inputId}
           type={type}
           required={required}
-          className={`w-full rounded-xl border bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-            StartIcon ? 'pl-9' : ''
-          } ${EndIcon ? 'pr-9' : ''} ${
+          className={`w-full border bg-white text-slate-900 placeholder-slate-400 transition-colors focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-purple-600 ${
+            compact
+              ? 'h-8 px-2.5 py-1 text-xs rounded-md border-slate-300'
+              : 'h-9 px-3 py-1.5 text-xs sm:text-sm rounded-lg border-purple-200'
+          } ${StartIcon ? (compact ? 'pl-8' : 'pl-9') : ''} ${
+            EndIcon ? (compact ? 'pr-8' : 'pr-9') : ''
+          } ${
             error
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-              : 'border-purple-200 dark:border-purple-800 focus:border-purple-500'
+              : ''
           } ${className}`}
           {...props}
         />
 
         {EndIcon && (
-          <div className="absolute right-3 text-gray-400">
-            <EndIcon className="w-4 h-4" />
+          <div className="absolute right-2.5 text-gray-400">
+            <EndIcon className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
           </div>
         )}
       </div>
 
       {error ? (
-        <span className="text-xs text-red-500">{error}</span>
+        <span className="text-[11px] text-red-500 font-medium">{error}</span>
       ) : helperText ? (
-        <span className="text-xs text-gray-500 dark:text-gray-400">{helperText}</span>
+        <span className="text-[10px] text-slate-500">{helperText}</span>
       ) : null}
     </div>
   );
