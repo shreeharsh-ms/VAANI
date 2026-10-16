@@ -17,6 +17,7 @@ import {
   Search,
   ArrowRight,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import PatientForm from '../../components/forms/PatientForm';
@@ -26,6 +27,7 @@ import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
 import { formatCurrency } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
+import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 
 const DEFAULT_TODAY_APPOINTMENTS = [
   {
@@ -320,50 +322,79 @@ export const DashboardOverviewPage = () => {
         {/* Right Col (4 cols): Quick Module Jump Panels */}
         <div className="lg:col-span-4 space-y-2.5">
           {/* Quick Action Navigator */}
-          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
-              Clinical Workflow Shortcuts
-            </span>
-
-            <div className="grid grid-cols-2 gap-1.5">
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+                Clinical Services &amp; Reports
+              </span>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/reports?test=pta')}
-                className="p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group"
+                onClick={() => navigate('/dashboard/reports')}
+                className="text-[10px] font-bold text-purple-700 hover:underline"
               >
-                <FileText className="w-4 h-4 text-purple-700 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-xs text-slate-800 block">PTA Audiogram</span>
-                <span className="text-[10px] text-slate-500">Audio Evaluation</span>
+                All 10 Proformas →
               </button>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard/reports?test=speech')}
-                className="p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group"
-              >
-                <Activity className="w-4 h-4 text-purple-700 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-xs text-slate-800 block">Speech Proforma</span>
-                <span className="text-[10px] text-slate-500">Language Battery</span>
-              </button>
+            {/* List of Master Clinical Services from Specification */}
+            <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
+              {CLINICAL_SERVICES.map((srv) => (
+                <div
+                  key={srv.code}
+                  className="p-2 rounded border border-slate-200 bg-slate-50/70 hover:bg-purple-50/50 hover:border-purple-300 transition-all flex items-center justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800">
+                        {srv.code}
+                      </span>
+                      <span className="font-bold text-xs text-slate-900 truncate">
+                        {srv.shortName}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 block truncate">
+                      {srv.discipline} • {srv.title}
+                    </span>
+                  </div>
 
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dashboard/reports/create?type=${srv.code}`)}
+                    className="shrink-0 px-2 py-1 rounded bg-purple-700 hover:bg-purple-800 text-white text-[10px] font-bold shadow-2xs transition-colors cursor-pointer flex items-center gap-1"
+                    title={`Create ${srv.shortName} report`}
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Create Report</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Operational Shortcuts */}
+            <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/billing')}
-                className="p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group"
+                className="p-1.5 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group flex items-center gap-2"
               >
-                <IndianRupee className="w-4 h-4 text-purple-700 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-xs text-slate-800 block">GST Invoicing</span>
-                <span className="text-[10px] text-slate-500">Dynamic UPI QR</span>
+                <IndianRupee className="w-3.5 h-3.5 text-purple-700 group-hover:scale-110 transition-transform" />
+                <div className="min-w-0">
+                  <span className="font-bold text-[11px] text-slate-800 block truncate">GST Invoicing</span>
+                  <span className="text-[9px] text-slate-500 block">Dynamic UPI QR</span>
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/inventory')}
-                className="p-2 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group"
+                className="p-1.5 rounded border border-slate-200 bg-slate-50 hover:bg-purple-50 text-left transition-colors cursor-pointer group flex items-center gap-2"
               >
-                <Box className="w-4 h-4 text-purple-700 mb-1 group-hover:scale-110 transition-transform" />
-                <span className="font-bold text-xs text-slate-800 block">Hearing Aids</span>
-                <span className="text-[10px] text-slate-500">Serial Register</span>
+                <Box className="w-3.5 h-3.5 text-purple-700 group-hover:scale-110 transition-transform" />
+                <div className="min-w-0">
+                  <span className="font-bold text-[11px] text-slate-800 block truncate">Hearing Aids</span>
+                  <span className="text-[9px] text-slate-500 block">Serial Register</span>
+                </div>
               </button>
             </div>
           </div>

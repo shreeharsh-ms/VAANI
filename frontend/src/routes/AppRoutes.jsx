@@ -20,6 +20,7 @@ import PatientsPage from '../pages/dashboard/PatientsPage';
 import PatientDetailPage from '../pages/dashboard/PatientDetailPage';
 import AppointmentsPage from '../pages/dashboard/AppointmentsPage';
 import ReportsPage from '../pages/dashboard/ReportsPage';
+import ReportCreatePage from '../pages/dashboard/ReportCreatePage';
 import BillingPage from '../pages/dashboard/BillingPage';
 import InventoryPage from '../pages/dashboard/InventoryPage';
 import RecallsPage from '../pages/dashboard/RecallsPage';
@@ -59,6 +60,7 @@ export const AppRoutes = () => {
         <Route path="patients" element={<PatientsPage />} />
         <Route path="patients/:id" element={<PatientDetailPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="reports/create" element={<ReportCreatePage />} />
         <Route path="billing" element={<BillingPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="recalls" element={<RecallsPage />} />
