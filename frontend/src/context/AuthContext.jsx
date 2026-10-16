@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { storage } from '../utils/storage';
 
 const AuthContext = createContext(null);
 
@@ -35,6 +36,14 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const setSession = (userData, userToken) => {
+    storage.set('vaani_token', userToken);
+    storage.set('vaani_user', userData);
+    setUser(userData);
+    setToken(userToken);
+    return { user: userData, token: userToken };
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -55,6 +64,7 @@ export const AuthProvider = ({ children }) => {
         isOwner,
         isClinician,
         login,
+        setSession,
         logout,
       }}
     >

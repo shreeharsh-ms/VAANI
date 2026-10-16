@@ -1,46 +1,53 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Activity, ArrowLeft } from 'lucide-react';
-import { APP_CONFIG, ROUTES } from '../constants';
+import { ArrowLeft, Shield, Sparkles } from 'lucide-react';
+import { ROUTES } from '../constants';
 import Toast from '../components/feedback/Toast';
 
 export const AuthLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-slate-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
-      <div className="w-full max-w-md">
-        {/* Back Link */}
-        <div className="mb-6">
-          <Link
-            to={ROUTES.HOME}
-            className="inline-flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Public Website</span>
-          </Link>
-        </div>
+    <div className="relative min-h-screen w-full bg-[#f8f7f5] text-[#160424] flex flex-col justify-between selection:bg-purple-200 selection:text-purple-900">
+      
+      {/* ── SUBTLE AMBIENT CLINICAL BACKDROP (Clean, calm, zero AI artifacts) ── */}
+      <div 
+        className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0"
+        aria-hidden="true"
+      >
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-purple-100/40 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-purple-100/30 blur-3xl" />
+      </div>
 
-        {/* Branding */}
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-teal-600/30">
-            <Activity className="w-6 h-6" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {APP_CONFIG.name} ERP
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Clinical Practice Management Portal
-          </p>
-        </div>
+      {/* ── TOP HEADER BAR ── */}
+      <header className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 flex items-center justify-between">
+        <Link
+          to={ROUTES.HOME}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white hover:bg-gray-50 text-xs font-semibold text-[#301444] border border-gray-200/80 shadow-xs transition-all hover:border-gray-300 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-gray-500 transition-transform group-hover:-translate-x-1" />
+          <span>Return to Clinic Website</span>
+        </Link>
+      </header>
 
-        {/* Auth Card */}
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl">
+      {/* ── MAIN CONTENT OUTLET (Center Auth Card) ── */}
+      <main className="relative z-10 w-full flex-1 flex items-center justify-center px-4 py-6 sm:py-10">
+        <div className="w-full max-w-[480px]">
           <Outlet />
         </div>
+      </main>
 
-        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
-          Authorized personnel only • Protected by JWT RBAC
-        </p>
-      </div>
+      {/* ── MINIMAL CLINICAL INSTITUTIONAL FOOTER ── */}
+      <footer className="relative z-10 w-full py-5 text-center">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-gray-200/60 pt-4">
+          <p className="text-xs text-gray-500 font-normal">
+            © {new Date().getFullYear()} Vaani Speech & Hearing Clinic • Sadashiv Peth, Satara, Maharashtra
+          </p>
+          <div className="flex items-center gap-3 text-xs text-gray-400 font-normal">
+            <span>RCI Registered Practice</span>
+            <span>•</span>
+            <span>Authorized Personnel Access Only</span>
+          </div>
+        </div>
+      </footer>
 
       <Toast />
     </div>
