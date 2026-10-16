@@ -16,62 +16,57 @@ export const OfficialClinicalDocument = ({
   if (!service || !patient) return null;
 
   return (
-    <div className="bg-white text-slate-900 font-sans p-6 sm:p-8 max-w-4xl mx-auto space-y-4 print:p-0 print:m-0 print:max-w-none print:w-full print:space-y-3.5 leading-tight">
-      
-      {/* ── CLINIC OFFICIAL LETTERHEAD ── */}
-      <div className="border-b-2 border-purple-950 pb-3 flex items-start justify-between gap-4">
-        {/* Left: Actual Clinic Logo & Institutional Details */}
-        <div className="flex items-center gap-4">
-          <img
-            src="/vaani-logo.png"
-            alt="Vaani Speech and Hearing Clinic"
-            className="h-16 w-auto object-contain shrink-0"
-          />
-          <div>
-            <h1 className="text-sm font-black tracking-wide text-purple-950 uppercase leading-tight mb-1">
-              Vaani Speech and Hearing Clinic
-            </h1>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-widest uppercase bg-purple-900 text-white px-2 py-0.5 rounded">
-                Clinical Diagnostic Suite
-              </span>
-              <span className="text-[10px] font-bold text-purple-900">
-                RCI CRR No. {formData?.rciNumber || 'A79214'}
-              </span>
+    <div
+      id="official-report-a4-page"
+      className="bg-white text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight"
+    >
+      {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
+      <div className="flex-1 flex flex-col space-y-3.5">
+        {/* ── CLINIC OFFICIAL LETTERHEAD ── */}
+        <div className="border-b-2 border-purple-950 pb-2.5 flex items-start justify-between gap-4">
+          {/* Left: Actual Clinic Logo & Institutional Details */}
+          <div className="flex items-center gap-3.5">
+            <img
+              src="/vaani-logo.png"
+              alt="Vaani Speech and Hearing Clinic"
+              className="h-14 w-auto object-contain shrink-0"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold text-purple-900 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                  RCI CRR No. {formData?.rciNumber || 'A79214'}
+                </span>
+                <span className="text-[9px] text-slate-500 font-medium">
+                  Approved Practice Center under RCI Act 1992 • ISO 9001:2015
+                </span>
+              </div>
+              <p className="text-[10.5px] font-bold text-slate-800 mt-1">
+                Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+              </p>
+              <p className="text-[9.5px] text-slate-600">
+                Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
+              </p>
             </div>
-            <p className="text-[11px] font-bold text-slate-800 mt-1">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
-            </p>
-            <p className="text-[10px] text-slate-600">
-              Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
-            </p>
-            <p className="text-[9px] text-slate-500 font-medium">
-              Approved Practice Center under Rehabilitation Council of India (RCI Act 1992) • ISO 9001:2015 Certified
-            </p>
+          </div>
+
+          {/* Right: Document Identification */}
+          <div className="text-right shrink-0">
+            <span className="block text-xs font-mono font-black text-slate-900">
+              Report No: {formData?.reportNumber}
+            </span>
+            <span className="block text-[10px] font-semibold text-slate-600">
+              Date: {formData?.reportDate}
+            </span>
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-purple-900 mt-0.5">
+              {service.discipline}
+            </span>
           </div>
         </div>
 
-        {/* Right: Document Identification */}
-        <div className="text-right shrink-0">
-          <span className="inline-block px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-950 text-white rounded">
-            {service.code}
-          </span>
-          <span className="block text-xs font-mono font-black text-slate-900 mt-1">
-            Doc: {formData?.reportNumber}
-          </span>
-          <span className="block text-[10px] font-semibold text-slate-600">
-            Date: {formData?.reportDate}
-          </span>
-          <span className="block text-[9px] font-mono text-purple-800 font-bold">
-            {service.discipline}
-          </span>
+        {/* ── REPORT TITLE BANNER ── */}
+        <div className="text-center py-1 bg-purple-900 text-white rounded font-bold uppercase tracking-wider text-xs shadow-2xs">
+          {service.title}
         </div>
-      </div>
-
-      {/* ── REPORT TITLE BANNER ── */}
-      <div className="text-center py-1.5 bg-purple-900 text-white rounded font-bold uppercase tracking-wider text-xs shadow-xs">
-        {service.title}
-      </div>
 
       {/* ── PATIENT DEMOGRAPHIC MATRIX ── */}
       <div className="border border-slate-300 rounded overflow-hidden text-xs">
@@ -426,51 +421,53 @@ export const OfficialClinicalDocument = ({
           {formData?.parameters?.recommendations || 'Follow up as clinically indicated.'}
         </p>
       </div>
+    </div>
 
-      {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
-      <div className="pt-3 border-t-2 border-purple-950 flex items-end justify-between text-xs">
-        {/* Left: Authentic QR Code & DPDP Verification */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-12 h-12 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs">
-            <QrCode className="w-10 h-10 text-purple-950" />
-          </div>
-          <div>
-            <span className="text-[9px] font-mono font-black text-purple-950 block uppercase">
-              QR VERIFIED • DPDP ACT COMPLIANT
-            </span>
-            <span className="text-[8px] text-slate-600 block">
-              Scan to verify document cryptographic authenticity
-            </span>
-            <span className="text-[8px] font-mono text-slate-500">
-              https://vaaniclinic.com/verify-doc/{formData?.reportNumber}
-            </span>
-          </div>
+    {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
+    {/* Always strictly pinned to the bottom/end of the A4 page */}
+    <div className="mt-auto pt-3 border-t-2 border-purple-950 flex items-end justify-between text-xs print:break-inside-avoid">
+      {/* Left: Authentic QR Code & DPDP Verification */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-12 h-12 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs shrink-0">
+          <QrCode className="w-10 h-10 text-purple-950" />
         </div>
-
-        {/* Right: Clinician Signature Block */}
-        <div className="text-right space-y-0.5">
-          <div className="inline-block border-b border-purple-900 pb-0.5 mb-1 px-4 text-center">
-            <span className="font-serif italic font-bold text-purple-950 text-sm block">
-              Shreeharsh M. Shivpuje
-            </span>
-            <span className="text-[8px] text-slate-500 uppercase tracking-widest block">
-              Digitally Authenticated
-            </span>
-          </div>
-          <p className="font-black text-slate-950 text-xs">
-            {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
-          </p>
-          <p className="text-[10px] font-mono font-black text-purple-950">
-            RCI CRR Registration No: {formData?.rciNumber || 'A79214'}
-          </p>
-          <p className="text-[9px] text-slate-600 font-medium">
-            Consultant Audiologist &amp; Speech-Language Pathologist
-          </p>
+        <div>
+          <span className="text-[9px] font-mono font-black text-purple-950 block uppercase">
+            QR VERIFIED • DPDP ACT COMPLIANT
+          </span>
+          <span className="text-[8px] text-slate-600 block">
+            Scan to verify document cryptographic authenticity
+          </span>
+          <span className="text-[8px] font-mono text-slate-500">
+            https://vaaniclinic.com/verify-doc/{formData?.reportNumber}
+          </span>
         </div>
       </div>
 
+      {/* Right: Clinician Signature Block */}
+      <div className="text-right space-y-0.5">
+        <div className="inline-block border-b border-purple-900 pb-0.5 mb-1 px-4 text-center">
+          <span className="font-serif italic font-bold text-purple-950 text-sm block">
+            Shreeharsh M. Shivpuje
+          </span>
+          <span className="text-[8px] text-slate-500 uppercase tracking-widest block">
+            Digitally Authenticated
+          </span>
+        </div>
+        <p className="font-black text-slate-950 text-xs">
+          {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
+        </p>
+        <p className="text-[10px] font-mono font-black text-purple-950">
+          RCI CRR Registration No: {formData?.rciNumber || 'A79214'}
+        </p>
+        <p className="text-[9px] text-slate-600 font-medium">
+          Consultant Audiologist &amp; Speech-Language Pathologist
+        </p>
+      </div>
     </div>
-  );
+
+  </div>
+);
 };
 
 export default OfficialClinicalDocument;

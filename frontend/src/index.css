@@ -140,6 +140,11 @@ html, body {
   }
 
   /* Universal reset for print */
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+
   html, body {
     background: #ffffff !important;
     background-color: #ffffff !important;
@@ -148,31 +153,43 @@ html, body {
     padding: 0 !important;
     width: 100% !important;
     height: auto !important;
-    min-height: 0 !important;
+    min-height: 100% !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide EVERYTHING on the entire page by default */
-  body * {
+  /* Ensure all UI chrome, navbars, and buttons are hidden from print */
+  header,
+  nav,
+  button,
+  kbd,
+  .print\:hidden,
+  [role="dialog"],
+  [aria-modal="true"],
+  .modal-overlay,
+  .toast,
+  [role="alert"] {
+    display: none !important;
     visibility: hidden !important;
   }
 
-  /* Exclusively reveal and position the dedicated clinical print container */
-  #clinical-printable-report,
-  #clinical-printable-report * {
+  /* Make sure everything within printable report is crisp and visible */
+  #official-report-a4-page,
+  #official-report-a4-page * {
     visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  #clinical-printable-report {
-    display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+  #official-report-a4-page {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important;
+    min-height: 279mm !important;
+    height: 279mm !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -180,21 +197,8 @@ html, body {
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    z-index: 9999999 !important;
-  }
-
-  /* Ensure all dialogs, modals, toasts, navbars, and buttons are completely eradicated from print */
-  [role="dialog"],
-  [aria-modal="true"],
-  .modal-overlay,
-  .toast,
-  [role="alert"],
-  button,
-  nav,
-  header,
-  footer {
-    display: none !important;
-    visibility: hidden !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
 }
 

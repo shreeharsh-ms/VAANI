@@ -172,7 +172,7 @@ export const ReportViewPage = () => {
 
       {/* ── A4 CLINICAL DOCUMENT PAPER CANVAS ── */}
       <main className="py-6 px-4 print:p-0 print:m-0 flex justify-center">
-        <div className="w-full max-w-[850px] bg-white border border-slate-300 rounded shadow-lg print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none">
+        <div className="w-full max-w-[210mm] bg-white border border-slate-300 rounded shadow-xl print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none">
           <OfficialClinicalDocument
             service={reportData.service}
             patient={reportData.patient}
