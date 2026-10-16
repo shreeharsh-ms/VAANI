@@ -24,6 +24,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import Modal from '../../components/common/Modal';
+import OfficialClinicalDocument from '../../components/clinical/OfficialClinicalDocument';
 
 export const ReportCreatePage = () => {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export const ReportCreatePage = () => {
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        setIsPreviewOpen(true);
+        triggerPrint();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -194,19 +195,32 @@ export const ReportCreatePage = () => {
     }
   };
 
-  // Print execution
-  const handlePrint = () => {
-    notify.info('Opening print spooler...');
+  // Robust print execution
+  const triggerPrint = () => {
+    // Hide preview modal before triggering print so modal dialog borders never get printed!
+    setIsPreviewOpen(false);
     setTimeout(() => {
       window.print();
     }, 150);
   };
 
   return (
-    <div className="space-y-3.5 pb-10 print:p-0 print:m-0 print:space-y-0">
+    <div className="space-y-3.5 pb-10">
       
-      {/* ── TOP ACTION BAR (Hidden in Print) ── */}
-      <div className="print:hidden flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-2xs">
+      {/* ── EXCLUSIVE DEDICATED PRINT CONTAINER ── */}
+      {/* Only visible during window.print(), rendered clean on A4 paper with zero modal or chrome artifacts */}
+      <div id="clinical-printable-report" aria-hidden="true">
+        <OfficialClinicalDocument
+          service={activeService}
+          patient={selectedPatient}
+          patientDossier={patientDossier}
+          formData={formData}
+          computedPTA={computedPTA}
+        />
+      </div>
+
+      {/* ── TOP ACTION BAR ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-2xs">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -219,10 +233,10 @@ export const ReportCreatePage = () => {
           <div>
             <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-700" />
-              Clinical Report Data Entry
+              Clinical Report Intake &amp; Data Entry
             </h1>
             <p className="text-[10px] text-slate-500">
-              Input patient assessment metrics • Auto-computes norms • Print with official clinic logo &amp; RCI seal
+              Input patient findings • Computes diagnostic metrics • Prints official letterhead with clinic logo &amp; RCI CRR No. {formData.rciNumber}
             </p>
           </div>
         </div>
@@ -243,21 +257,31 @@ export const ReportCreatePage = () => {
             type="button"
             onClick={() => setIsPreviewOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
-            title="Preview report with official logo & letterhead (Ctrl/Cmd + P)"
+            title="Inspect Official Preview (Ctrl/Cmd + P)"
           >
             <Eye className="w-3.5 h-3.5 text-purple-700" />
-            <span>Preview &amp; Print</span>
-            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-200 text-[9px] rounded font-mono">⌘P</kbd>
+            <span>Preview Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={triggerPrint}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
+            title="Print Official Document (Ctrl/Cmd + P)"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Official PDF</span>
+            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
           </button>
         </div>
       </div>
 
-      {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR (Hidden in Print) ── */}
-      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs space-y-1.5">
+      {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR ── */}
+      <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-            1. Select Clinical Service / Proforma Template ({CLINICAL_SERVICES.length} Available)
+            1. Select Clinical Service / Proforma Template ({CLINICAL_SERVICES.length} Master Options)
           </span>
           <span className="text-[10px] font-mono font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
             Active: {activeService.code} — {activeService.shortName}
@@ -293,8 +317,8 @@ export const ReportCreatePage = () => {
         </div>
       </div>
 
-      {/* ── STEP 2: SELECT PATIENT & AUTO-POPULATION (Data Entry Form View) ── */}
-      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-3">
+      {/* ── STEP 2: SELECT PATIENT & DEMOGRAPHICS SUMMARY ── */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-purple-700" />
@@ -303,12 +327,12 @@ export const ReportCreatePage = () => {
             </span>
           </div>
           <span className="text-[10px] text-slate-500">
-            {allPatients.length} Registered Patients
+            {allPatients.length} Registered Patients in System
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Patient Selector */}
+          {/* Patient Dropdown */}
           <div>
             <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
               Select Patient *
@@ -398,8 +422,8 @@ export const ReportCreatePage = () => {
         )}
       </div>
 
-      {/* ── STEP 3: CLINICAL PARAMETERS ENTRY FORM (Clean form, NOT document preview) ── */}
-      <div className="print:hidden bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-4">
+      {/* ── STEP 3: CLINICAL PARAMETERS ENTRY FORM ── */}
+      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-purple-700" />
@@ -515,7 +539,7 @@ export const ReportCreatePage = () => {
                           type="number"
                           value={formData.parameters.leftEarBC?.[freq] ?? ''}
                           onChange={(e) => handleNestedParamChange('leftEarBC', freq, Number(e.target.value))}
-                          className="w-14 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-200 rounded bg-white"
+                          className="w-14 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-100 rounded bg-white"
                         />
                       </td>
                     ))}
@@ -864,7 +888,7 @@ export const ReportCreatePage = () => {
           </div>
         )}
 
-        {/* 6. OTHER CLINICAL SERVICES (CBT, DYS, HAF, PRG, DSC) */}
+        {/* 6. OTHER CLINICAL SERVICES */}
         {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA'].includes(activeService.code) && (
           <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
             <span className="text-[10px] font-bold text-slate-600 uppercase block">Proforma Parameters &amp; Clinical Notes</span>
@@ -923,384 +947,60 @@ export const ReportCreatePage = () => {
             <button
               type="button"
               onClick={() => setIsPreviewOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-800 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+            >
+              <Eye className="w-3.5 h-3.5 text-purple-700" />
+              <span>Preview Official Report</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={triggerPrint}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Preview &amp; Print Official PDF</span>
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Official PDF</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── MODAL: OFFICIAL CLINICAL REPORT PREVIEW & PRINT VIEW ── */}
-      {/* (Also used as the exact layout rendered during window.print()) */}
+      {/* ── MODAL: OFFICIAL CLINICAL REPORT PREVIEW ── */}
       {isPreviewOpen && (
         <Modal
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          title={`Official Clinical Report: ${formData.reportNumber}`}
+          title={`Official Clinical Report Preview: ${formData.reportNumber}`}
           size="xl"
         >
           <div className="space-y-4 p-4 text-xs">
-            {/* Modal Top Control Bar */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <span className="text-[11px] font-bold text-slate-600 uppercase">
-                Official Letterhead View (Print Preview)
+                Official Clinical Proforma Document Preview
               </span>
               <button
                 type="button"
-                onClick={handlePrint}
+                onClick={triggerPrint}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-2xs cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Print Document</span>
+                <span>Print Official PDF</span>
               </button>
             </div>
 
-            {/* Official Report Sheet Container */}
-            <div className="bg-white border border-slate-300 rounded p-6 space-y-4 shadow-xs">
-              
-              {/* LETTERHEAD WITH ACTUAL CLINIC LOGO */}
-              <div className="border-b-2 border-purple-900 pb-3 flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <img
-                    src="/vaani-logo.png"
-                    alt="Vaani Speech and Hearing Clinic"
-                    className="h-14 w-auto object-contain"
-                  />
-                  <div>
-                    <span className="text-xs font-bold text-purple-900 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded inline-block">
-                      Speech &amp; Hearing Rehabilitation Center
-                    </span>
-                    <p className="text-[10px] text-slate-600 mt-1">
-                      Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Phone: +91 2162 234567
-                    </p>
-                    <p className="text-[9px] text-slate-500">
-                      RCI Act 1992 Approved Center • CRR No. {formData.rciNumber} • ISO 9001:2015 Certified
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-900 text-white rounded inline-block">
-                    {activeService.code}
-                  </span>
-                  <span className="block text-[10px] font-mono font-bold text-slate-700 mt-1">
-                    Doc: {formData.reportNumber}
-                  </span>
-                  <span className="block text-[10px] text-slate-500">
-                    Date: {formData.reportDate}
-                  </span>
-                </div>
-              </div>
-
-              {/* Title */}
-              <div className="text-center py-1 bg-purple-50/70 border border-purple-200 rounded">
-                <h3 className="text-sm font-black text-purple-950 uppercase tracking-wider">
-                  {activeService.title}
-                </h3>
-                <span className="text-[10px] text-purple-800 font-semibold">
-                  {activeService.discipline} Evaluation &amp; Diagnostic Service
-                </span>
-              </div>
-
-              {/* Patient Demographics Table */}
-              <div className="border border-slate-300 rounded overflow-hidden text-xs">
-                <table className="w-full border-collapse">
-                  <tbody>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">Patient Name:</td>
-                      <td className="px-3 py-1 font-bold text-slate-900 w-2/6">{selectedPatient.full_name}</td>
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">UHID:</td>
-                      <td className="px-3 py-1 font-mono font-bold text-purple-800 w-2/6">{selectedPatient.uhid}</td>
-                    </tr>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Age / Sex:</td>
-                      <td className="px-3 py-1 text-slate-800">{selectedPatient.gender} • DOB {selectedPatient.date_of_birth}</td>
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Mobile:</td>
-                      <td className="px-3 py-1 text-slate-800 font-mono">{selectedPatient.phone}</td>
-                    </tr>
-                    <tr className="border-b border-slate-200">
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Guardian:</td>
-                      <td className="px-3 py-1 text-slate-800">{selectedPatient.guardian_name || 'Self'}</td>
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">City:</td>
-                      <td className="px-3 py-1 text-slate-800">{selectedPatient.city}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Referring Doctor:</td>
-                      <td className="px-3 py-1 text-purple-950 font-bold" colSpan={3}>
-                        {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni, MS (ENT), Civil Hospital Satara'}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Dynamic Summary of Results */}
-              {activeService.code === 'RP-CLN-AUD' && (
-                <div className="border border-slate-300 rounded overflow-hidden">
-                  <div className="bg-slate-100 px-3 py-1 font-bold text-[10px] text-slate-700 uppercase border-b border-slate-300">
-                    Pure Tone Audiogram Thresholds (dB HL)
-                  </div>
-                  <table className="w-full text-center text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-600">
-                      <tr>
-                        <th className="px-2 py-1 text-left">Ear</th>
-                        <th>250Hz</th>
-                        <th>500Hz</th>
-                        <th>1kHz</th>
-                        <th>2kHz</th>
-                        <th>4kHz</th>
-                        <th>8kHz</th>
-                        <th className="bg-purple-50 text-purple-900">PTA Avg</th>
-                        <th className="bg-purple-50 text-purple-900">Degree</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      <tr className="text-rose-700 font-bold bg-rose-50/20">
-                        <td className="px-2 py-1 text-left">Right Ear (AC)</td>
-                        {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                          <td key={f}>{formData.parameters.rightEarAC?.[f]}</td>
-                        ))}
-                        <td className="bg-rose-50 font-mono font-black">{computedPTA?.rightAvg} dB</td>
-                        <td className="bg-rose-50 text-[10px]">{computedPTA?.rightDegree}</td>
-                      </tr>
-                      <tr className="text-blue-700 font-bold bg-blue-50/20">
-                        <td className="px-2 py-1 text-left">Left Ear (AC)</td>
-                        {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                          <td key={f}>{formData.parameters.leftEarAC?.[f]}</td>
-                        ))}
-                        <td className="bg-blue-50 font-mono font-black">{computedPTA?.leftAvg} dB</td>
-                        <td className="bg-blue-50 text-[10px]">{computedPTA?.leftDegree}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Diagnosis Box */}
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-                  Clinical Impression &amp; Findings:
-                </span>
-                <div className="p-2.5 bg-purple-50/50 border border-purple-200 rounded text-slate-900 font-medium leading-relaxed">
-                  {formData.parameters.provisionalDiagnosis}
-                </div>
-              </div>
-
-              {/* Recommendations Box */}
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-                  Clinical Recommendations &amp; Follow-up Protocol:
-                </span>
-                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 leading-relaxed">
-                  {formData.parameters.recommendations}
-                </div>
-              </div>
-
-              {/* Official Seal and Sign-off */}
-              <div className="pt-3 border-t-2 border-slate-200 flex items-end justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center bg-slate-50">
-                    <QrCode className="w-8 h-8 text-purple-950" />
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-mono font-bold text-purple-900 block">
-                      QR VERIFIED • DPDP COMPLIANT
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-400">
-                      https://vaaniclinic.com/verify-doc/{formData.reportNumber}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <p className="font-serif italic font-bold text-purple-900 text-sm">
-                    Shreeharsh M. Shivpuje
-                  </p>
-                  <p className="font-black text-slate-900 text-xs">
-                    {formData.examinerName}
-                  </p>
-                  <p className="text-[10px] font-mono font-bold text-purple-900">
-                    RCI CRR No: {formData.rciNumber}
-                  </p>
-                </div>
-              </div>
-
+            {/* Render the actual component */}
+            <div className="border border-slate-300 rounded shadow-2xs bg-white">
+              <OfficialClinicalDocument
+                service={activeService}
+                patient={selectedPatient}
+                patientDossier={patientDossier}
+                formData={formData}
+                computedPTA={computedPTA}
+              />
             </div>
           </div>
         </Modal>
       )}
-
-      {/* ── NATIVE PRINT-ONLY DOCUMENT CONTAINER (Hidden on Screen, visible on Print) ── */}
-      <div className="hidden print:block bg-white text-xs p-0 m-0 space-y-4">
-        {/* Printable Official Header */}
-        <div className="border-b-2 border-purple-900 pb-3 flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <img
-              src="/vaani-logo.png"
-              alt="Vaani Speech and Hearing Clinic"
-              className="h-14 w-auto object-contain"
-            />
-            <div>
-              <span className="text-xs font-bold text-purple-900 uppercase tracking-widest bg-purple-100 px-2 py-0.5 rounded inline-block">
-                Speech &amp; Hearing Rehabilitation Center
-              </span>
-              <p className="text-[10px] text-slate-600 mt-1">
-                Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Phone: +91 2162 234567
-              </p>
-              <p className="text-[9px] text-slate-500">
-                RCI Act 1992 Approved Center • CRR No. {formData.rciNumber} • ISO 9001:2015 Certified
-              </p>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <span className="px-2.5 py-1 text-xs font-black uppercase tracking-wider bg-purple-900 text-white rounded inline-block">
-              {activeService.code}
-            </span>
-            <span className="block text-[10px] font-mono font-bold text-slate-700 mt-1">
-              Doc: {formData.reportNumber}
-            </span>
-            <span className="block text-[10px] text-slate-500">
-              Date: {formData.reportDate}
-            </span>
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="text-center py-1 bg-purple-50 border border-purple-200 rounded">
-          <h3 className="text-sm font-black text-purple-950 uppercase tracking-wider">
-            {activeService.title}
-          </h3>
-          <span className="text-[10px] text-purple-800 font-semibold">
-            {activeService.discipline} Evaluation &amp; Diagnostic Service
-          </span>
-        </div>
-
-        {/* Demographics Table */}
-        <div className="border border-slate-300 rounded overflow-hidden text-xs">
-          <table className="w-full border-collapse">
-            <tbody>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">Patient Name:</td>
-                <td className="px-3 py-1 font-bold text-slate-900 w-2/6">{selectedPatient.full_name}</td>
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50 w-1/6">UHID:</td>
-                <td className="px-3 py-1 font-mono font-bold text-purple-800 w-2/6">{selectedPatient.uhid}</td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Age / Sex:</td>
-                <td className="px-3 py-1 text-slate-800">{selectedPatient.gender} • DOB {selectedPatient.date_of_birth}</td>
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Mobile:</td>
-                <td className="px-3 py-1 text-slate-800 font-mono">{selectedPatient.phone}</td>
-              </tr>
-              <tr className="border-b border-slate-200">
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Guardian:</td>
-                <td className="px-3 py-1 text-slate-800">{selectedPatient.guardian_name || 'Self'}</td>
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">City:</td>
-                <td className="px-3 py-1 text-slate-800">{selectedPatient.city}</td>
-              </tr>
-              <tr>
-                <td className="px-3 py-1 font-bold text-slate-600 bg-slate-50">Referring Doctor:</td>
-                <td className="px-3 py-1 text-purple-950 font-bold" colSpan={3}>
-                  {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni, MS (ENT), Civil Hospital Satara'}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Dynamic Parameters summary for Print */}
-        {activeService.code === 'RP-CLN-AUD' && (
-          <div className="border border-slate-300 rounded overflow-hidden">
-            <div className="bg-slate-100 px-3 py-1 font-bold text-[10px] text-slate-700 uppercase border-b border-slate-300">
-              Pure Tone Audiogram Thresholds (dB HL)
-            </div>
-            <table className="w-full text-center text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-600">
-                <tr>
-                  <th className="px-2 py-1 text-left">Ear</th>
-                  <th>250Hz</th>
-                  <th>500Hz</th>
-                  <th>1kHz</th>
-                  <th>2kHz</th>
-                  <th>4kHz</th>
-                  <th>8kHz</th>
-                  <th className="bg-purple-50 text-purple-900">PTA Avg</th>
-                  <th className="bg-purple-50 text-purple-900">Degree</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                <tr className="text-rose-700 font-bold bg-rose-50/20">
-                  <td className="px-2 py-1 text-left">Right Ear (AC)</td>
-                  {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                    <td key={f}>{formData.parameters.rightEarAC?.[f]}</td>
-                  ))}
-                  <td className="bg-rose-50 font-mono font-black">{computedPTA?.rightAvg} dB</td>
-                  <td className="bg-rose-50 text-[10px]">{computedPTA?.rightDegree}</td>
-                </tr>
-                <tr className="text-blue-700 font-bold bg-blue-50/20">
-                  <td className="px-2 py-1 text-left">Left Ear (AC)</td>
-                  {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                    <td key={f}>{formData.parameters.leftEarAC?.[f]}</td>
-                  ))}
-                  <td className="bg-blue-50 font-mono font-black">{computedPTA?.leftAvg} dB</td>
-                  <td className="bg-blue-50 text-[10px]">{computedPTA?.leftDegree}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Diagnosis Box */}
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-            Clinical Impression &amp; Findings:
-          </span>
-          <div className="p-2.5 bg-purple-50/50 border border-purple-200 rounded text-slate-900 font-medium leading-relaxed">
-            {formData.parameters.provisionalDiagnosis}
-          </div>
-        </div>
-
-        {/* Recommendations Box */}
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-            Clinical Recommendations &amp; Follow-up Protocol:
-          </span>
-          <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-800 leading-relaxed">
-            {formData.parameters.recommendations}
-          </div>
-        </div>
-
-        {/* Official Seal and Sign-off */}
-        <div className="pt-3 border-t-2 border-slate-200 flex items-end justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 border border-slate-300 rounded flex items-center justify-center bg-slate-50">
-              <QrCode className="w-8 h-8 text-purple-950" />
-            </div>
-            <div>
-              <span className="text-[9px] font-mono font-bold text-purple-900 block">
-                QR VERIFIED • DPDP COMPLIANT
-              </span>
-              <span className="text-[9px] font-mono text-slate-400">
-                https://vaaniclinic.com/verify-doc/{formData.reportNumber}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <p className="font-serif italic font-bold text-purple-900 text-sm">
-              Shreeharsh M. Shivpuje
-            </p>
-            <p className="font-black text-slate-900 text-xs">
-              {formData.examinerName}
-            </p>
-            <p className="text-[10px] font-mono font-bold text-purple-900">
-              RCI CRR No: {formData.rciNumber}
-            </p>
-          </div>
-        </div>
-      </div>
 
     </div>
   );
