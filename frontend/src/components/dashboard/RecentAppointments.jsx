@@ -21,17 +21,23 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>Today's Clinical Schedule</CardTitle>
-        <span className="text-xs text-gray-400">
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-purple-100/80 bg-purple-50/40 px-6 py-4.5">
+        <div>
+          <CardTitle className="text-lg font-bold text-[#301444]">
+            Today's Clinical Schedule
+          </CardTitle>
+          <p className="text-xs text-gray-500 mt-0.5 font-medium">Real-time daily patient consultations</p>
+        </div>
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white text-[#301444] border border-purple-200/90 shadow-2xs self-start sm:self-auto">
           {appointments.length} appointments today
         </span>
       </CardHeader>
+
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50/70 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <thead className="bg-[#faf6fc] border-b border-purple-100/80 text-[11px] font-bold text-[#301444] uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5">Time</th>
                 <th className="px-5 py-3.5">Patient</th>
@@ -41,10 +47,10 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
                 <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-purple-50/80">
               {appointments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan="6" className="px-5 py-10 text-center text-gray-400 font-medium">
                     No appointments scheduled for today.
                   </td>
                 </tr>
@@ -52,31 +58,31 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
                 appointments.map((apt) => (
                   <tr
                     key={apt.id}
-                    className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors"
+                    className="hover:bg-purple-50/40 transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-semibold text-gray-900 dark:text-gray-100">
-                        <Clock className="w-3.5 h-3.5 text-teal-600" />
+                      <div className="flex items-center gap-1.5 font-bold text-[#301444]">
+                        <Clock className="w-3.5 h-3.5 text-purple-600" />
                         <span>{formatTime(apt.appointment_time)}</span>
                       </div>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-gray-400 font-medium">
                         {apt.duration_minutes} mins
                       </span>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                      <div className="font-bold text-[#301444]">
                         {apt.patient_name}
                       </div>
-                      <div className="text-xs text-gray-400 flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
+                      <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <Phone className="w-3 h-3 text-purple-500" />
                         <span>{apt.patient_phone}</span>
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-gray-700 dark:text-gray-300 font-medium text-xs block">
+                      <span className="text-[#301444] font-semibold text-xs block">
                         {apt.service_name}
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[11px] text-purple-700/80 font-medium">
                         Clinician: {apt.clinician_name}
                       </span>
                     </td>
@@ -85,7 +91,7 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
                         {apt.status}
                       </Badge>
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-xs font-semibold text-gray-800 dark:text-gray-200">
+                    <td className="px-5 py-4 whitespace-nowrap text-xs font-extrabold text-[#301444]">
                       {formatCurrency(apt.fee_paise, true)}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-right">
@@ -94,7 +100,7 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
                           <button
                             onClick={() => onStatusUpdate && onStatusUpdate(apt.id, 'COMPLETED')}
                             title="Mark Completed"
-                            className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
+                            className="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 border border-emerald-200/80 transition-colors cursor-pointer"
                           >
                             <Check className="w-4 h-4" />
                           </button>
@@ -103,7 +109,7 @@ export const RecentAppointments = ({ appointments = [], onStatusUpdate }) => {
                           <button
                             onClick={() => onStatusUpdate && onStatusUpdate(apt.id, 'CANCELLED')}
                             title="Cancel Appointment"
-                            className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                            className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200/80 transition-colors cursor-pointer"
                           >
                             <X className="w-4 h-4" />
                           </button>

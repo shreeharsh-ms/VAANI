@@ -36,13 +36,13 @@ export const ReportsPage = () => {
       />
 
       {/* Available templates banner */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {templates.slice(0, 4).map((tpl) => (
-          <Card key={tpl.code} className="p-4 bg-teal-50/40 dark:bg-teal-950/20 border-teal-200 dark:border-teal-900">
-            <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider block mb-1">
+          <Card key={tpl.code} className="p-4 bg-white/95 border-purple-200/90 shadow-2xs hover:border-purple-300 transition-all">
+            <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block mb-1">
               {tpl.discipline} • {tpl.code}
             </span>
-            <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+            <p className="text-xs font-bold text-[#301444] truncate">
               {tpl.name}
             </p>
           </Card>
@@ -50,14 +50,16 @@ export const ReportsPage = () => {
       </div>
 
       {/* Existing Clinical Assessments Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Patient Clinical Records</CardTitle>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-purple-50/40 border-b border-purple-100/80 px-6 py-4">
+          <CardTitle className="text-lg font-bold text-[#301444]">
+            Recent Patient Clinical Records
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50/70 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <thead className="bg-[#faf6fc] border-b border-purple-100/80 text-[11px] font-bold text-[#301444] uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3.5">Report Title</th>
                   <th className="px-5 py-3.5">Patient</th>
@@ -67,40 +69,39 @@ export const ReportsPage = () => {
                   <th className="px-5 py-3.5 text-right">View / Print</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="divide-y divide-purple-50/80">
                 {assessments.map((asmt) => (
                   <tr
                     key={asmt.id}
-                    className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors"
+                    className="hover:bg-purple-50/40 transition-colors"
                   >
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-teal-600" />
+                      <div className="font-bold text-[#301444] flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-purple-600" />
                         <span>{asmt.title}</span>
                       </div>
-                      <span className="text-[11px] text-gray-400">Date: {asmt.date}</span>
+                      <span className="text-[11px] text-gray-500 font-medium">Date: {asmt.date}</span>
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap font-medium text-gray-800 dark:text-gray-200">
+                    <td className="px-5 py-4 whitespace-nowrap font-bold text-[#301444]">
                       {asmt.patient_name}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       <Badge variant="primary">{asmt.type}</Badge>
                     </td>
-                    <td className="px-5 py-4 text-xs text-gray-600 dark:text-gray-300 max-w-xs">
+                    <td className="px-5 py-4 text-xs text-gray-600 font-medium max-w-xs">
                       {asmt.diagnosis}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">
+                    <td className="px-5 py-4 whitespace-nowrap text-xs text-purple-800 font-semibold">
                       {asmt.examiner}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        startIcon={Eye}
+                      <button
                         onClick={() => setActiveReport(asmt)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#301444] bg-white hover:bg-purple-50 border border-purple-200/90 shadow-2xs transition-all cursor-pointer"
                       >
-                        Inspect
-                      </Button>
+                        <Eye className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Inspect</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -110,65 +111,60 @@ export const ReportsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Modal for report preview */}
+      {/* Inspect Assessment Modal */}
       {activeReport && (
         <Modal
-          isOpen={Boolean(activeReport)}
+          isOpen={!!activeReport}
           onClose={() => setActiveReport(null)}
           title={`Clinical Proforma: ${activeReport.title}`}
           size="lg"
-          footer={
-            <>
-              <Button variant="outline" size="sm" onClick={() => setActiveReport(null)}>
-                Close
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                startIcon={Printer}
-                onClick={() => {
-                  window.print();
-                  notify.success('Printing report proforma...');
-                }}
-              >
-                Print Official PDF
-              </Button>
-            </>
-          }
         >
-          <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-800/20 text-sm">
-            <div className="flex justify-between border-b pb-3">
+          <div className="space-y-4 p-5 border border-purple-100 rounded-2xl bg-white text-sm shadow-sm">
+            <div className="flex items-center justify-between border-b border-purple-100 pb-3">
               <div>
-                <h4 className="font-bold text-gray-900 dark:text-white">VAANI CLINIC</h4>
-                <p className="text-xs text-gray-500">Sadashiv Peth, Satara, Maharashtra</p>
+                <h4 className="font-extrabold text-[#301444] text-base">VAANI CLINIC</h4>
+                <p className="text-xs text-purple-700 font-semibold">Speech &amp; Hearing Rehabilitation Center, Satara</p>
               </div>
-              <div className="text-right">
-                <span className="text-xs font-mono text-teal-600 font-bold">{activeReport.id}</span>
-                <p className="text-xs text-gray-400">Date: {activeReport.date}</p>
+              <div className="text-right text-xs text-gray-500">
+                <p>UHID: {activeReport.uhid}</p>
+                <p>Date: {activeReport.date}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <strong className="text-gray-700 dark:text-gray-300">Patient:</strong> {activeReport.patient_name}
-              </div>
-              <div>
-                <strong className="text-gray-700 dark:text-gray-300">Examiner:</strong> {activeReport.examiner}
-              </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <p className="text-[#301444]">
+                <strong className="text-purple-900">Patient:</strong> {activeReport.patient_name}
+              </p>
+              <p className="text-[#301444]">
+                <strong className="text-purple-900">Examiner:</strong> {activeReport.examiner}
+              </p>
             </div>
 
-            <div className="pt-2">
-              <strong className="text-gray-700 dark:text-gray-300 block mb-1">Clinical Impression / Diagnosis:</strong>
-              <div className="p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 text-xs leading-relaxed">
+            <div>
+              <strong className="text-xs text-purple-900 font-bold block mb-1">Clinical Impression / Diagnosis:</strong>
+              <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 text-xs leading-relaxed text-[#301444]">
                 {activeReport.diagnosis}
               </div>
             </div>
 
-            <div className="pt-2">
-              <strong className="text-gray-700 dark:text-gray-300 block mb-1">Clinical Recommendations:</strong>
-              <div className="p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 text-xs leading-relaxed">
+            <div>
+              <strong className="text-xs text-purple-900 font-bold block mb-1">Clinical Recommendations:</strong>
+              <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100 text-xs leading-relaxed text-[#301444]">
                 {activeReport.recommendations}
               </div>
+            </div>
+
+            <div className="pt-4 flex items-center justify-end gap-3 border-t border-purple-100">
+              <button
+                onClick={() => {
+                  window.print();
+                  notify.success('Printing Clinical Report...');
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-[#301444] text-white hover:bg-[#200b30] shadow-sm transition-all cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Official PDF</span>
+              </button>
             </div>
           </div>
         </Modal>

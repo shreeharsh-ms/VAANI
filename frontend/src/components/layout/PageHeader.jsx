@@ -5,15 +5,15 @@ export const PageHeader = ({ title, subtitle, actions, breadcrumbs }) => {
     <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         {breadcrumbs && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+          <div className="text-xs text-purple-700 font-bold mb-1.5 flex items-center gap-1.5 uppercase tracking-wider">
             {breadcrumbs}
           </div>
         )}
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#301444]">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">{subtitle}</p>
         )}
       </div>
 

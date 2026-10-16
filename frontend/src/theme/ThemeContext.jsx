@@ -8,10 +8,12 @@ const ThemeContext = createContext(null);
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('vaani_theme');
-    if (saved) return saved;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
+    // Default to the radiant light clinic theme matching the public website
+    if (saved === 'dark') {
+      localStorage.setItem('vaani_theme', 'light');
+      return 'light';
+    }
+    return saved || 'light';
   });
 
   useEffect(() => {
