@@ -31,7 +31,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 
-// ── INITIAL OFFICIAL SRS SETTINGS BASELINE (Doc: BA-SRS-WEB-ERP-001) ──
+// ── INITIAL VERIFIED CLINIC SETTINGS BASELINE ──
 const DEFAULT_SETTINGS = {
   identity: {
     legalName: 'Vaani Speech & Hearing Clinic',
@@ -194,7 +194,7 @@ export const SettingsPage = () => {
               ts: '2026-10-16 19:45:10',
               actor: 'Dr. Palak Paresh Gandhi (OWNER)',
               action: 'SETTINGS_INITIALIZED',
-              summary: 'Initial practice configuration locked per SRS BA-SRS-WEB-ERP-001',
+              summary: 'Initial practice configuration locked per verified clinical practice standard',
               hash: '8f7a6c9d2e1b4029...a9e1',
             },
             {
@@ -265,12 +265,12 @@ export const SettingsPage = () => {
 
   // Reset to Baseline
   const handleResetDefaults = () => {
-    if (window.confirm('Reset all clinic settings to baseline specification (BA-SRS-WEB-ERP-001)?')) {
+    if (window.confirm('Reset all clinic settings to verified clinic defaults?')) {
       setSettings(DEFAULT_SETTINGS);
       setHolidays(MAHARASHTRA_HOLIDAYS_TEMPLATE);
       localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(DEFAULT_SETTINGS));
       localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(MAHARASHTRA_HOLIDAYS_TEMPLATE));
-      notify.info('Settings reset to official SRS specifications.');
+      notify.info('Settings reset to verified clinical practice defaults.');
     }
   };
 
@@ -320,8 +320,8 @@ export const SettingsPage = () => {
             Clinic Governance Engine
           </h1>
 
-          <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200 hidden lg:inline">
-            BA-SRS-WEB-ERP-001
+          <span className="text-[10px] text-purple-700 bg-purple-50 font-semibold px-2 py-0.5 rounded border border-purple-200 hidden lg:inline">
+            Clinical Practice Suite
           </span>
         </div>
 
@@ -352,7 +352,7 @@ export const SettingsPage = () => {
             type="button"
             onClick={handleResetDefaults}
             className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer"
-            title="Reset to official SRS baseline"
+            title="Reset to clinic defaults"
           >
             <RotateCcw className="w-3 h-3 text-slate-500" />
             <span className="hidden sm:inline">Reset Baseline</span>

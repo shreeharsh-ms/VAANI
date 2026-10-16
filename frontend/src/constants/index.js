@@ -29,9 +29,12 @@ export const ROUTES = {
   LOGIN: '/login',
   DASHBOARD: {
     OVERVIEW: '/dashboard',
-    PATIENTS: '/dashboard/patients',
     APPOINTMENTS: '/dashboard/appointments',
+    PATIENTS: '/dashboard/patients',
     REPORTS: '/dashboard/reports',
+    BILLING: '/dashboard/billing',
+    INVENTORY: '/dashboard/inventory',
+    RECALLS: '/dashboard/recalls',
     SETTINGS: '/dashboard/settings',
   },
 };

@@ -19,6 +19,9 @@ import DashboardOverviewPage from '../pages/dashboard/DashboardOverviewPage';
 import PatientsPage from '../pages/dashboard/PatientsPage';
 import AppointmentsPage from '../pages/dashboard/AppointmentsPage';
 import ReportsPage from '../pages/dashboard/ReportsPage';
+import BillingPage from '../pages/dashboard/BillingPage';
+import InventoryPage from '../pages/dashboard/InventoryPage';
+import RecallsPage from '../pages/dashboard/RecallsPage';
 import SettingsPage from '../pages/dashboard/SettingsPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
@@ -51,9 +54,12 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<DashboardOverviewPage />} />
-        <Route path="patients" element={<PatientsPage />} />
         <Route path="appointments" element={<AppointmentsPage />} />
+        <Route path="patients" element={<PatientsPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="billing" element={<BillingPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
+        <Route path="recalls" element={<RecallsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
