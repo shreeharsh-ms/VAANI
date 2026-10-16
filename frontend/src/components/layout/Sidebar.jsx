@@ -19,6 +19,7 @@ import {
 import { ROUTES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import GlobalSearchModal from '../common/GlobalSearchModal';
+import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 
 export const Sidebar = () => {
   const { user, logout } = useAuth();
@@ -26,52 +27,52 @@ export const Sidebar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Global Keyboard Shortcuts Listener
+  // Global Keyboard Shortcuts Listener (supports macOS Option ⌥ and Windows Alt combinations)
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl + K or Cmd + K -> Open Global Search
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      if (isCmdOrCtrl(e) && isKey(e, 'k')) {
         e.preventDefault();
         setIsSearchOpen((prev) => !prev);
       }
 
-      // Alt + 1 -> Overview
-      if (e.altKey && e.key === '1') {
+      // Alt + 1 / ⌥1 -> Overview
+      if (isAlt(e) && isKey(e, '1')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.OVERVIEW);
       }
-      // Alt + 2 -> Appointments
-      if (e.altKey && e.key === '2') {
+      // Alt + 2 / ⌥2 -> Appointments
+      if (isAlt(e) && isKey(e, '2')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.APPOINTMENTS);
       }
-      // Alt + 3 -> Patients
-      if (e.altKey && e.key === '3') {
+      // Alt + 3 / ⌥3 -> Patients
+      if (isAlt(e) && isKey(e, '3')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.PATIENTS);
       }
-      // Alt + 4 -> Clinical Reports
-      if (e.altKey && e.key === '4') {
+      // Alt + 4 / ⌥4 -> Clinical Reports
+      if (isAlt(e) && isKey(e, '4')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.REPORTS);
       }
-      // Alt + 5 -> Billing
-      if (e.altKey && e.key === '5') {
+      // Alt + 5 / ⌥5 -> Billing
+      if (isAlt(e) && isKey(e, '5')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.BILLING);
       }
-      // Alt + 6 -> Inventory
-      if (e.altKey && e.key === '6') {
+      // Alt + 6 / ⌥6 -> Inventory
+      if (isAlt(e) && isKey(e, '6')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.INVENTORY);
       }
-      // Alt + R -> Recalls
-      if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+      // Alt + R / ⌥R -> Recalls
+      if (isAlt(e) && isKey(e, 'r')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.RECALLS);
       }
-      // Alt + S -> Settings
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+      // Alt + S / ⌥S -> Settings
+      if (isAlt(e) && isKey(e, 's')) {
         e.preventDefault();
         navigate(ROUTES.DASHBOARD.SETTINGS);
       }
@@ -83,14 +84,14 @@ export const Sidebar = () => {
 
   // Primary ERP Navigation Items matching the SRS
   const menuItems = [
-    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, shortcut: 'Alt+1' },
-    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, shortcut: 'Alt+2' },
-    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, shortcut: 'Alt+3' },
-    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, shortcut: 'Alt+4' },
-    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, shortcut: 'Alt+5' },
-    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, shortcut: 'Alt+6' },
-    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, shortcut: 'Alt+R' },
-    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, shortcut: 'Alt+S' },
+    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, shortcut: 'Alt+1 / ⌥1' },
+    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, shortcut: 'Alt+2 / ⌥2' },
+    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, shortcut: 'Alt+3 / ⌥3' },
+    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, shortcut: 'Alt+4 / ⌥4' },
+    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, shortcut: 'Alt+5 / ⌥5' },
+    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, shortcut: 'Alt+6 / ⌥6' },
+    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, shortcut: 'Alt+R / ⌥R' },
+    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, shortcut: 'Alt+S / ⌥S' },
   ];
 
   const handleLogout = async () => {
@@ -162,12 +163,12 @@ export const Sidebar = () => {
             type="button"
             onClick={() => setIsSearchOpen(true)}
             className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all cursor-pointer"
-            title="Spotlight Search (Ctrl + K)"
+            title="Spotlight Search (Ctrl + K / ⌘K)"
           >
             <Search className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden xl:inline">Search</span>
-            <kbd className="text-[10px] text-slate-500 font-mono bg-white px-1 py-0.5 rounded border border-slate-300">
-              Ctrl+K
+            <kbd className="text-[10px] text-slate-500 font-mono bg-white px-1.5 py-0.5 rounded border border-slate-300">
+              Ctrl+K / ⌘K
             </kbd>
           </button>
 

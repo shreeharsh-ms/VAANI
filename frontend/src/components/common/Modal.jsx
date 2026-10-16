@@ -42,25 +42,34 @@ export const Modal = ({
 
       {/* Modal Dialog Content */}
       <div
-        className={`relative w-full ${sizeClasses[size]} rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl z-10 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
+        className={`relative w-full ${sizeClasses[size]} rounded-xl bg-white border border-slate-200 shadow-2xl z-10 flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50/90 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#301444]" />
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">{title}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-500 border border-slate-300/80">
+              Esc
+            </span>
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="p-5 overflow-y-auto">{children}</div>
 
         {/* Optional Footer */}
         {footer && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/40 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-3">
+          <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
             {footer}
           </div>
         )}

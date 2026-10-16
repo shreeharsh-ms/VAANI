@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   RotateCcw,
   Search,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
+import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 
 // ── INITIAL RECALL DATA SEED (SRS SECTION 4.10) ──
 const INITIAL_RECALLS = [
@@ -135,12 +136,33 @@ export const RecallsPage = () => {
 
   // New Recall Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const recallFormRef = useRef(null);
   const [newUhid, setNewUhid] = useState('');
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newCategory, setNewCategory] = useState('Speech Therapy');
   const [newReason, setNewReason] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
+
+  // Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Option + N / Alt + N -> Schedule Recall
+      if (isAlt(e) && isKey(e, 'n')) {
+        e.preventDefault();
+        setIsModalOpen(true);
+      }
+      // Ctrl + Enter or Cmd + Enter -> Submit Recall Modal
+      if (isModalOpen && isCmdOrCtrl(e) && isKey(e, 'enter')) {
+        e.preventDefault();
+        if (recallFormRef.current) {
+          recallFormRef.current.requestSubmit();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [recalls, isModalOpen]);
 
   // Handle Sort
   const handleSort = (field) => {
@@ -278,7 +300,7 @@ export const RecallsPage = () => {
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Recall</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
           </button>
         </div>
       </div>
@@ -518,7 +540,7 @@ export const RecallsPage = () => {
         title="Schedule Clinical Follow-up & Recall"
         size="md"
       >
-        <form onSubmit={handleAddRecall} className="space-y-3 font-sans text-xs">
+        <form ref={recallFormRef} onSubmit={handleAddRecall} className="space-y-3 font-sans text-xs">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID</label>
@@ -591,20 +613,38 @@ export const RecallsPage = () => {
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="h-8 px-3 rounded text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs cursor-pointer"
-            >
-              Save Recall Task
-            </button>
+          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+              <span>Submit:</span>
+              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+                Ctrl+↵
+              </span>
+              <span className="text-slate-400">or</span>
+              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+                ⌘↵ (Mac)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel <span className="opacity-60 text-[10px] font-mono">[Esc]</span>
+              </button>
+              <button
+                type="submit"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+              >
+                <span>Save Recall Task</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
+                  <span>Ctrl+↵</span>
+                  <span className="opacity-60">/</span>
+                  <span>⌘↵</span>
+                </span>
+              </button>
+            </div>
           </div>
         </form>
       </Modal>

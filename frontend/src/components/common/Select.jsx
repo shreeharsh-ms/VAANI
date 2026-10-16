@@ -20,7 +20,7 @@ export const Select = forwardRef(({
   return (
     <div className={`w-full flex flex-col gap-1.5 ${containerClassName}`}>
       {label && (
-        <label htmlFor={selectId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={selectId} className="text-xs font-semibold text-slate-700">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -32,10 +32,10 @@ export const Select = forwardRef(({
           value={value}
           onChange={onChange}
           required={required}
-          className={`w-full appearance-none rounded-xl border bg-white dark:bg-gray-900 px-3 py-2 pr-9 text-sm text-gray-900 dark:text-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer ${
+          className={`w-full appearance-none rounded-lg border bg-white px-3 py-1.5 pr-9 text-xs sm:text-sm text-slate-900 transition-colors focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-purple-600 cursor-pointer ${
             error
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-              : 'border-purple-200 dark:border-purple-800 focus:border-purple-500'
+              : 'border-purple-200 focus:border-purple-600'
           } ${className}`}
           {...props}
         >

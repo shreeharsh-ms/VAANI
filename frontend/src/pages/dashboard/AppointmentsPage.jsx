@@ -23,6 +23,7 @@ import AppointmentForm from '../../components/forms/AppointmentForm';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
 import { formatTime, formatCurrency } from '../../utils/formatters';
+import { isKey, isAlt } from '../../utils/keyboard';
 
 const SEED_APPOINTMENTS = [
   {
@@ -177,13 +178,13 @@ export const AppointmentsPage = () => {
   // Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Alt + N -> Schedule Consultation
-      if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+      // Option + N / Alt + N -> Schedule Consultation
+      if (isAlt(e) && isKey(e, 'n')) {
         e.preventDefault();
         setIsModalOpen(true);
       }
-      // Alt + E -> Export CSV
-      if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+      // Option + E / Alt + E -> Export CSV
+      if (isAlt(e) && isKey(e, 'e')) {
         e.preventDefault();
         handleExportCSV();
       }
@@ -312,22 +313,22 @@ export const AppointmentsPage = () => {
             type="button"
             onClick={handleExportCSV}
             className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
-            title="Export appointments to CSV (Alt + E)"
+            title="Export appointments to CSV (Alt + E / ⌥E)"
           >
             <Download className="w-3 h-3 text-slate-500" />
             <span>Export CSV</span>
-            <kbd className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+E]</kbd>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
-            title="Schedule consultation slot (Alt + N)"
+            title="Schedule consultation slot (Alt + N / ⌥N)"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Slot</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
           </button>
         </div>
       </div>
@@ -573,13 +574,14 @@ export const AppointmentsPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Schedule Clinical Consultation Slot"
-        size="md"
+        size="lg"
       >
         <AppointmentForm
           onSuccess={() => {
             setIsModalOpen(false);
             notify.success('Appointment scheduled successfully!');
           }}
+          onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
 

@@ -25,6 +25,7 @@ import { patientService } from '../../services/patientService';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
 import { formatCurrency } from '../../utils/formatters';
+import { isKey, isAlt } from '../../utils/keyboard';
 
 const DEFAULT_TODAY_APPOINTMENTS = [
   {
@@ -84,14 +85,14 @@ export const DashboardOverviewPage = () => {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isAptModalOpen, setIsAptModalOpen] = useState(false);
 
-  // Keyboard shortcut listener
+  // Universal keyboard shortcut listener (supports macOS Option ⌥ dead keys and Windows Alt)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+      if (isAlt(e) && isKey(e, 'n')) {
         e.preventDefault();
         setIsPatientModalOpen(true);
       }
-      if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+      if (isAlt(e) && isKey(e, 'a')) {
         e.preventDefault();
         setIsAptModalOpen(true);
       }
@@ -136,22 +137,22 @@ export const DashboardOverviewPage = () => {
             type="button"
             onClick={() => setIsPatientModalOpen(true)}
             className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
-            title="Register new patient (Alt + N)"
+            title="Register new patient (Alt + N / ⌥N)"
           >
             <Users className="w-3.5 h-3.5 text-purple-700" />
             <span>New Patient</span>
-            <kbd className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+N]</kbd>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => setIsAptModalOpen(true)}
             className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
-            title="Schedule consultation slot (Alt + A)"
+            title="Schedule consultation slot (Alt + A / ⌥A)"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Schedule Slot</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+A]</kbd>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+A / ⌥A]</kbd>
           </button>
         </div>
       </div>
@@ -432,6 +433,7 @@ export const DashboardOverviewPage = () => {
             setIsAptModalOpen(false);
             notify.success('Appointment scheduled successfully!');
           }}
+          onCancel={() => setIsAptModalOpen(false)}
         />
       </Modal>
 

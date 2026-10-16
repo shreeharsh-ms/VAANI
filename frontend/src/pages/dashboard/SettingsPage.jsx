@@ -410,8 +410,8 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Appointment Request &amp; Slot Hold Governance Sheet
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-semibold px-1.5 py-0.5 rounded border border-purple-200">
-                FR-SET-005 &amp; 5.5.6
+              <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
+                Policy Protocol
               </span>
             </div>
             <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
@@ -1091,8 +1091,8 @@ export const SettingsPage = () => {
                 <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                   Maharashtra Gazetted Holidays &amp; Blockouts ({holidays.length})
                 </span>
-                <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                  FR-SET-004
+                <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
+                  State Calendar
                 </span>
               </div>
 
@@ -1160,8 +1160,8 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Automated Sequence Prefixes &amp; Statutory GST Configuration
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                FR-SET-008 &amp; Sec 4.5
+              <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
+                GST &amp; Fiscal Compliance
               </span>
             </div>
 
@@ -1555,7 +1555,7 @@ export const SettingsPage = () => {
           <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
             <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
-                Practice Module Activation Matrix (FR-SET-012)
+                Practice Module Activation Matrix
               </span>
               <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
                 Live Dynamic Toggles

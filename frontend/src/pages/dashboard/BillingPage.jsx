@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   IndianRupee,
   Search,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
+import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 
 // ── INITIAL BILLING & INVOICE DATA SEED ──
 const INITIAL_INVOICES = [
@@ -258,6 +259,7 @@ export const BillingPage = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
   const [activeInvoiceForUpi, setActiveInvoiceForUpi] = useState(null);
+  const invoiceFormRef = useRef(null);
 
   // New Invoice Form State
   const [newUhid, setNewUhid] = useState('');
@@ -270,20 +272,27 @@ export const BillingPage = () => {
   // Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Alt + N -> New Invoice
-      if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+      // Option + N / Alt + N -> New Invoice
+      if (isAlt(e) && isKey(e, 'n')) {
         e.preventDefault();
         setIsInvoiceModalOpen(true);
       }
-      // Alt + E -> Export CSV
-      if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+      // Option + E / Alt + E -> Export CSV
+      if (isAlt(e) && isKey(e, 'e')) {
         e.preventDefault();
         handleExportCSV();
+      }
+      // Ctrl + Enter or Cmd + Enter -> Submit Invoice Modal
+      if (isInvoiceModalOpen && isCmdOrCtrl(e) && isKey(e, 'enter')) {
+        e.preventDefault();
+        if (invoiceFormRef.current) {
+          invoiceFormRef.current.requestSubmit();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [invoices]);
+  }, [invoices, isInvoiceModalOpen]);
 
   // Handle Sort Toggle
   const handleSort = (field) => {
@@ -459,22 +468,22 @@ export const BillingPage = () => {
             type="button"
             onClick={handleExportCSV}
             className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
-            title="Export filtered records to CSV (Alt + E)"
+            title="Export filtered records to CSV (Alt + E / ⌥E)"
           >
             <Download className="w-3 h-3 text-slate-500" />
             <span>Export CSV</span>
-            <kbd className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+E]</kbd>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => setIsInvoiceModalOpen(true)}
             className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
-            title="Create new GST tax invoice (Alt + N)"
+            title="Create new GST tax invoice (Alt + N / ⌥N)"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Invoice</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
           </button>
         </div>
       </div>
@@ -741,7 +750,7 @@ export const BillingPage = () => {
         title="Generate Tax Invoice / Clinical Receipt"
         size="md"
       >
-        <form onSubmit={handleCreateInvoice} className="space-y-3 font-sans text-xs">
+        <form ref={invoiceFormRef} onSubmit={handleCreateInvoice} className="space-y-3 font-sans text-xs">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID (Optional)</label>
@@ -850,20 +859,38 @@ export const BillingPage = () => {
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setIsInvoiceModalOpen(false)}
-              className="h-8 px-3 rounded text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs cursor-pointer"
-            >
-              Issue &amp; Save Invoice
-            </button>
+          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+              <span>Submit:</span>
+              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+                Ctrl+↵
+              </span>
+              <span className="text-slate-400">or</span>
+              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+                ⌘↵ (Mac)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setIsInvoiceModalOpen(false)}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel <span className="opacity-60 text-[10px] font-mono">[Esc]</span>
+              </button>
+              <button
+                type="submit"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+              >
+                <span>Issue &amp; Save Invoice</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
+                  <span>Ctrl+↵</span>
+                  <span className="opacity-60">/</span>
+                  <span>⌘↵</span>
+                </span>
+              </button>
+            </div>
           </div>
         </form>
       </Modal>

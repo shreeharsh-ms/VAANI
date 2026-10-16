@@ -33,20 +33,20 @@ export const GlobalSearchModal = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   const quickLinks = [
-    { label: 'Practice Overview Dashboard', path: '/dashboard', icon: Clock, category: 'Navigation', hint: 'Alt+1' },
-    { label: 'Appointments & Scheduler', path: '/dashboard/appointments', icon: CalendarCheck, category: 'Navigation', hint: 'Alt+2' },
-    { label: 'Patients Master Index (MPI)', path: '/dashboard/patients', icon: Users, category: 'Navigation', hint: 'Alt+3' },
-    { label: 'Clinical Diagnostic Reports', path: '/dashboard/reports', icon: FileText, category: 'Navigation', hint: 'Alt+4' },
-    { label: 'Billing, Invoices & UPI', path: '/dashboard/billing', icon: IndianRupee, category: 'Navigation', hint: 'Alt+5' },
-    { label: 'Hearing Aid Inventory & Stock', path: '/dashboard/inventory', icon: Box, category: 'Navigation', hint: 'Alt+6' },
-    { label: 'Clinical Follow-ups & Recalls', path: '/dashboard/recalls', icon: RotateCcw, category: 'Navigation', hint: 'Alt+R' },
-    { label: 'Clinic Configuration & Governance', path: '/dashboard/settings', icon: Settings, category: 'Navigation', hint: 'Alt+S' },
+    { label: 'Practice Overview Dashboard', path: '/dashboard', icon: Clock, category: 'Navigation', hint: 'Alt+1 / ⌥1' },
+    { label: 'Appointments & Scheduler', path: '/dashboard/appointments', icon: CalendarCheck, category: 'Navigation', hint: 'Alt+2 / ⌥2' },
+    { label: 'Patients Master Index (MPI)', path: '/dashboard/patients', icon: Users, category: 'Navigation', hint: 'Alt+3 / ⌥3' },
+    { label: 'Clinical Diagnostic Reports', path: '/dashboard/reports', icon: FileText, category: 'Navigation', hint: 'Alt+4 / ⌥4' },
+    { label: 'Billing, Invoices & UPI', path: '/dashboard/billing', icon: IndianRupee, category: 'Navigation', hint: 'Alt+5 / ⌥5' },
+    { label: 'Hearing Aid Inventory & Stock', path: '/dashboard/inventory', icon: Box, category: 'Navigation', hint: 'Alt+6 / ⌥6' },
+    { label: 'Clinical Follow-ups & Recalls', path: '/dashboard/recalls', icon: RotateCcw, category: 'Navigation', hint: 'Alt+R / ⌥R' },
+    { label: 'Clinic Configuration & Governance', path: '/dashboard/settings', icon: Settings, category: 'Navigation', hint: 'Alt+S / ⌥S' },
   ];
 
   const quickActions = [
-    { label: 'Register New Patient (Intake)', path: '/dashboard/patients?action=new', icon: Users, category: 'Quick Action', hint: 'Alt+N' },
-    { label: 'Schedule Appointment Slot', path: '/dashboard/appointments?action=new', icon: CalendarCheck, category: 'Quick Action', hint: 'Alt+A' },
-    { label: 'Generate GST Tax Invoice', path: '/dashboard/billing?action=new', icon: IndianRupee, category: 'Quick Action', hint: 'Alt+I' },
+    { label: 'Register New Patient (Intake)', path: '/dashboard/patients?action=new', icon: Users, category: 'Quick Action', hint: 'Alt+N / ⌥N' },
+    { label: 'Schedule Appointment Slot', path: '/dashboard/appointments?action=new', icon: CalendarCheck, category: 'Quick Action', hint: 'Alt+A / ⌥A' },
+    { label: 'Generate GST Tax Invoice', path: '/dashboard/billing?action=new', icon: IndianRupee, category: 'Quick Action', hint: 'Alt+I / ⌥I' },
     { label: 'New Pure Tone Audiogram (PTA)', path: '/dashboard/reports?test=pta', icon: FileText, category: 'Quick Action', hint: 'PTA' },
     { label: 'New Speech Assessment Proforma', path: '/dashboard/reports?test=speech', icon: FileText, category: 'Quick Action', hint: 'SLP' },
     { label: 'Add Hearing Aid Serial to Inventory', path: '/dashboard/inventory?action=new', icon: Box, category: 'Quick Action', hint: 'INV' },

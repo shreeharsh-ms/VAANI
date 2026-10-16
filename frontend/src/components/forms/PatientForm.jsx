@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Phone, Mail, MapPin, HeartPulse, FileText } from 'lucide-react';
 import Input from '../common/Input';
 import Select from '../common/Select';
@@ -9,6 +9,7 @@ import { useNotification } from '../../context/NotificationContext';
 
 export const PatientForm = ({ onSuccess, onCancel }) => {
   const { notify } = useNotification();
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -27,6 +28,20 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Keyboard shortcut listener: Ctrl+Enter or Cmd+Enter to submit
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +66,7 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3.5 bg-white text-slate-800 font-sans">
       {error && <Alert variant="danger">{error}</Alert>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,15 +176,45 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
         required
       />
 
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-        {onCancel && (
-          <Button variant="outline" size="md" onClick={onCancel}>
-            Cancel
+      {/* Action Footer with Mac & Windows Shortcuts */}
+      <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+          <span>Submit:</span>
+          <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+            Ctrl+↵
+          </span>
+          <span className="text-slate-400">or</span>
+          <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+            ⌘↵ (Mac)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              Cancel <span className="opacity-60 text-[10px] font-mono">[Esc]</span>
+            </button>
+          )}
+
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            className="flex-1 sm:flex-none justify-center bg-[#301444] hover:bg-[#200b30] text-white font-semibold px-4 py-2 text-xs rounded-lg shadow-xs"
+            isLoading={loading}
+          >
+            <span>Register Patient</span>
+            <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
+              <span>Ctrl+↵</span>
+              <span className="opacity-60">/</span>
+              <span>⌘↵</span>
+            </span>
           </Button>
-        )}
-        <Button type="submit" variant="primary" size="md" isLoading={loading}>
-          Register Patient
-        </Button>
+        </div>
       </div>
     </form>
   );

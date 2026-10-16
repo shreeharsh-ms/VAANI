@@ -38,9 +38,9 @@ export const ReportsPage = () => {
       {/* Available templates banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {templates.slice(0, 4).map((tpl) => (
-          <Card key={tpl.code} className="p-4 bg-white/95 border-purple-200/90 shadow-2xs hover:border-purple-300 transition-all">
+          <Card key={tpl.name} className="p-4 bg-white/95 border-purple-200/90 shadow-2xs hover:border-purple-300 transition-all">
             <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block mb-1">
-              {tpl.discipline} • {tpl.code}
+              {tpl.discipline} • Standard Clinical Proforma
             </span>
             <p className="text-xs font-bold text-[#301444] truncate">
               {tpl.name}
