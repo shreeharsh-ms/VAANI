@@ -679,6 +679,103 @@ export const ReportCreatePage = () => {
               </div>
             </div>
 
+            {/* Quick Outcome Selectors */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-purple-50/50 border border-purple-200 rounded-lg">
+              {/* Right Ear */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
+                    Right Ear Outcome
+                  </span>
+                  <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-white border border-rose-200 text-rose-700">
+                    {formData.parameters.rightOutcome !== 'REFER' ? 'PASS' : 'REFER'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleParamChange('rightOutcome', 'PASS');
+                      if (formData.parameters.leftOutcome !== 'REFER') {
+                        handleParamChange('provisionalDiagnosis', 'Bilateral Otoacoustic Emissions (OAE) PASS. Outer hair cell function is robust bilaterally within normal limits.');
+                        handleParamChange('recommendations', 'Routine developmental auditory and speech-language milestones tracking.');
+                      }
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
+                      formData.parameters.rightOutcome !== 'REFER'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-emerald-50'
+                    }`}
+                  >
+                    Pass ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleParamChange('rightOutcome', 'REFER');
+                      handleParamChange('provisionalDiagnosis', 'OAE Refer in Right Ear. Suggests possible middle ear effusion or cochlear dysfunction.');
+                      handleParamChange('recommendations', 'Recommend diagnostic ABR / BERA testing and repeat OAE evaluation after 2-4 weeks.');
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
+                      formData.parameters.rightOutcome === 'REFER'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50'
+                    }`}
+                  >
+                    Refer ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Left Ear */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                    Left Ear Outcome
+                  </span>
+                  <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-white border border-blue-200 text-blue-700">
+                    {formData.parameters.leftOutcome !== 'REFER' ? 'PASS' : 'REFER'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleParamChange('leftOutcome', 'PASS');
+                      if (formData.parameters.rightOutcome !== 'REFER') {
+                        handleParamChange('provisionalDiagnosis', 'Bilateral Otoacoustic Emissions (OAE) PASS. Outer hair cell function is robust bilaterally within normal limits.');
+                        handleParamChange('recommendations', 'Routine developmental auditory and speech-language milestones tracking.');
+                      }
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
+                      formData.parameters.leftOutcome !== 'REFER'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-emerald-50'
+                    }`}
+                  >
+                    Pass ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleParamChange('leftOutcome', 'REFER');
+                      handleParamChange('provisionalDiagnosis', 'OAE Refer in Left Ear. Suggests possible middle ear effusion or cochlear dysfunction.');
+                      handleParamChange('recommendations', 'Recommend diagnostic ABR / BERA testing and repeat OAE evaluation after 2-4 weeks.');
+                    }}
+                    className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
+                      formData.parameters.leftOutcome === 'REFER'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50'
+                    }`}
+                  >
+                    Refer ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className="border border-slate-200 rounded overflow-hidden">
               <table className="w-full text-center text-xs">
                 <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase">

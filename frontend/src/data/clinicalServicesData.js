@@ -36,7 +36,7 @@ export const CLINICAL_SERVICES = [
   {
     code: 'RP-CLN-OAE',
     id: 'oae-screening',
-    title: 'Newborn & Infant OAE Screening',
+    title: 'Oto-Acoustic Emission (OAE) Screening Report',
     shortName: 'OAE Screening',
     discipline: 'Audiology',
     color: 'emerald',
@@ -62,8 +62,8 @@ export const CLINICAL_SERVICES = [
       leftOutcome: 'PASS',
       overallOutcome: 'BOTH_PASS',
       nextAction: 'DISCHARGE (Advise parent developmental auditory milestone tracking)',
-      provisionalDiagnosis: 'Robust bilateral cochlear outer hair cell function detected.',
-      recommendations: 'Routine developmental hearing milestones monitoring. Repeat testing if speech delays emerge.',
+      provisionalDiagnosis: 'Bilateral Otoacoustic Emissions (OAE) PASS. Outer hair cell function is robust bilaterally within normal limits.',
+      recommendations: 'Routine developmental auditory and speech-language milestones tracking. Repeat evaluation if parental concern arises.',
     },
   },
   {
