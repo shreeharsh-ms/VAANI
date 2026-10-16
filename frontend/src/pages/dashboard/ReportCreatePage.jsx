@@ -156,6 +156,27 @@ export const ReportCreatePage = () => {
     }));
   };
 
+  // Open full-page official preview in new tab
+  const handleOpenPreviewInNewTab = () => {
+    const previewPayload = {
+      reportNumber: formData.reportNumber,
+      reportDate: formData.reportDate,
+      examinerName: formData.examinerName,
+      rciNumber: formData.rciNumber,
+      service: activeService,
+      patient: selectedPatient,
+      patientDossier: patientDossier,
+      parameters: formData.parameters,
+      computedPTA: computedPTA,
+    };
+    try {
+      sessionStorage.setItem('vaani_preview_report', JSON.stringify(previewPayload));
+    } catch (e) {
+      console.warn(e);
+    }
+    window.open('/dashboard/reports/preview', '_blank');
+  };
+
   // Save report into localStorage
   const handleSaveReport = () => {
     try {
@@ -197,8 +218,6 @@ export const ReportCreatePage = () => {
 
   // Robust print execution
   const triggerPrint = () => {
-    // Hide preview modal before triggering print so modal dialog borders never get printed!
-    setIsPreviewOpen(false);
     setTimeout(() => {
       window.print();
     }, 150);
@@ -255,12 +274,12 @@ export const ReportCreatePage = () => {
 
           <button
             type="button"
-            onClick={() => setIsPreviewOpen(true)}
+            onClick={handleOpenPreviewInNewTab}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
-            title="Inspect Official Preview (Ctrl/Cmd + P)"
+            title="Open official report preview in new tab"
           >
             <Eye className="w-3.5 h-3.5 text-purple-700" />
-            <span>Preview Report</span>
+            <span>Preview in New Tab</span>
           </button>
 
           <button
@@ -946,11 +965,11 @@ export const ReportCreatePage = () => {
 
             <button
               type="button"
-              onClick={() => setIsPreviewOpen(true)}
+              onClick={handleOpenPreviewInNewTab}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-800 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
             >
               <Eye className="w-3.5 h-3.5 text-purple-700" />
-              <span>Preview Official Report</span>
+              <span>Preview in New Tab</span>
             </button>
 
             <button
@@ -964,43 +983,6 @@ export const ReportCreatePage = () => {
           </div>
         </div>
       </div>
-
-      {/* ── MODAL: OFFICIAL CLINICAL REPORT PREVIEW ── */}
-      {isPreviewOpen && (
-        <Modal
-          isOpen={isPreviewOpen}
-          onClose={() => setIsPreviewOpen(false)}
-          title={`Official Clinical Report Preview: ${formData.reportNumber}`}
-          size="xl"
-        >
-          <div className="space-y-4 p-4 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <span className="text-[11px] font-bold text-slate-600 uppercase">
-                Official Clinical Proforma Document Preview
-              </span>
-              <button
-                type="button"
-                onClick={triggerPrint}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-2xs cursor-pointer"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Official PDF</span>
-              </button>
-            </div>
-
-            {/* Render the actual component */}
-            <div className="border border-slate-300 rounded shadow-2xs bg-white">
-              <OfficialClinicalDocument
-                service={activeService}
-                patient={selectedPatient}
-                patientDossier={patientDossier}
-                formData={formData}
-                computedPTA={computedPTA}
-              />
-            </div>
-          </div>
-        </Modal>
-      )}
 
     </div>
   );

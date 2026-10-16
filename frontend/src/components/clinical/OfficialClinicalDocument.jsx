@@ -28,6 +28,9 @@ export const OfficialClinicalDocument = ({
             className="h-16 w-auto object-contain shrink-0"
           />
           <div>
+            <h1 className="text-sm font-black tracking-wide text-purple-950 uppercase leading-tight mb-1">
+              Vaani Speech and Hearing Clinic
+            </h1>
             <div className="flex items-center gap-2">
               <span className="text-xs font-black tracking-widest uppercase bg-purple-900 text-white px-2 py-0.5 rounded">
                 Clinical Diagnostic Suite

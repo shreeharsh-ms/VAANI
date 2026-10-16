@@ -1,0 +1,176 @@
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Printer, ArrowLeft, X, ShieldCheck, QrCode } from 'lucide-react';
+import OfficialClinicalDocument from '../../components/clinical/OfficialClinicalDocument';
+import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
+import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
+
+export const ReportViewPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [reportData, setReportData] = useState(null);
+
+  useEffect(() => {
+    // 1. Try reading from sessionStorage (for live preview from creator)
+    try {
+      const previewJson = sessionStorage.getItem('vaani_preview_report');
+      if (previewJson) {
+        const parsed = JSON.parse(previewJson);
+        if (parsed && (!id || parsed.reportNumber === id || parsed.id === id || id === 'preview')) {
+          setReportData(parsed);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading vaani_preview_report from sessionStorage', e);
+    }
+
+    // 2. Try reading from localStorage saved reports
+    try {
+      const stored = localStorage.getItem('vaani_clinical_reports_v1');
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) {
+          const match = list.find((r) => r.id === id || r.report_number === id);
+          if (match) {
+            const srv = CLINICAL_SERVICES.find((s) => s.code === match.service_code) || {
+              code: match.service_code || 'RP-CLN-AUD',
+              title: match.title,
+              discipline: match.discipline,
+              description: match.diagnosis,
+            };
+            const patient = {
+              full_name: match.patient_name,
+              uhid: match.uhid,
+              gender: match.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
+              date_of_birth: match.patient_age_sex?.split(',')[1]?.trim() || '—',
+              phone: match.phone || '+91 98220 11223',
+              guardian_name: match.guardian || 'Self',
+              city: match.city || 'Satara, Maharashtra',
+            };
+            setReportData({
+              reportNumber: match.report_number || match.id,
+              reportDate: match.date,
+              examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+              rciNumber: match.rci_number || 'A79214',
+              service: srv,
+              patient: patient,
+              patientDossier: null,
+              parameters: match.parameters || {
+                provisionalDiagnosis: match.diagnosis,
+                recommendations: match.recommendations,
+              },
+              computedPTA: match.computed || null,
+            });
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading vaani_clinical_reports_v1', e);
+    }
+
+    // 3. Fallback: Default PTA report for patient 1
+    const srv = CLINICAL_SERVICES[0];
+    const patient = SEED_PATIENTS[0];
+    setReportData({
+      reportNumber: id || 'REP-26-0001',
+      reportDate: new Date().toISOString().split('T')[0],
+      examinerName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      rciNumber: 'A79214',
+      service: srv,
+      patient: patient,
+      patientDossier: PATIENT_DOSSIERS[patient.uhid] || null,
+      parameters: srv.defaultParameters,
+      computedPTA: {
+        rightAvg: 31.7,
+        leftAvg: 25.0,
+        rightDegree: 'Mild Hearing Loss',
+        leftDegree: 'Normal Hearing Sensitivity',
+      },
+    });
+  }, [id]);
+
+  // Keyboard shortcut for print (Cmd/Ctrl + P)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        window.print();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  if (!reportData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-600 text-xs">
+        Loading clinical proforma document...
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100/90 text-slate-900 font-sans print:bg-white print:p-0">
+      
+      {/* ── TOP FLOATING CONTROL BAR (Hidden during Print) ── */}
+      <header className="print:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-2.5 shadow-xs flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-black text-slate-900 uppercase tracking-wide">
+              Official Report Preview
+            </span>
+          </div>
+          <span className="text-slate-300">|</span>
+          <span className="text-xs font-mono font-bold text-purple-900">
+            {reportData.reportNumber}
+          </span>
+          <span className="text-slate-300">•</span>
+          <span className="text-xs font-bold text-slate-700">
+            {reportData.patient?.full_name} ({reportData.patient?.uhid})
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-xs transition-colors cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Official Document</span>
+            <kbd className="ml-1 px-1.5 py-0.2 bg-purple-800 text-[10px] rounded font-mono">⌘P</kbd>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.close()}
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer"
+            title="Close this tab"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Close Tab</span>
+          </button>
+        </div>
+      </header>
+
+      {/* ── A4 CLINICAL DOCUMENT PAPER CANVAS ── */}
+      <main className="py-6 px-4 print:p-0 print:m-0 flex justify-center">
+        <div className="w-full max-w-[850px] bg-white border border-slate-300 rounded shadow-lg print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none">
+          <OfficialClinicalDocument
+            service={reportData.service}
+            patient={reportData.patient}
+            patientDossier={reportData.patientDossier}
+            formData={reportData}
+            computedPTA={reportData.computedPTA}
+          />
+        </div>
+      </main>
+
+    </div>
+  );
+};
+
+export default ReportViewPage;

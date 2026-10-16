@@ -188,6 +188,44 @@ export const ReportsPage = () => {
 
   const disciplines = ['ALL', 'Audiology', 'Speech Therapy', 'Fluency', 'Voice', 'Psychology', 'Rehabilitation'];
 
+  const handleInspectInNewTab = (rep) => {
+    const srv = CLINICAL_SERVICES.find((s) => s.code === rep.service_code) || {
+      code: rep.service_code || 'RP-CLN-AUD',
+      title: rep.title,
+      discipline: rep.discipline,
+      description: rep.diagnosis,
+    };
+    const patient = {
+      full_name: rep.patient_name,
+      uhid: rep.uhid,
+      gender: rep.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
+      date_of_birth: rep.patient_age_sex?.split(',')[1]?.trim() || '—',
+      phone: rep.phone || '+91 98220 11223',
+      guardian_name: rep.guardian || 'Self',
+      city: rep.city || 'Satara, Maharashtra',
+    };
+    const payload = {
+      reportNumber: rep.report_number || rep.id,
+      reportDate: rep.date,
+      examinerName: rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      rciNumber: rep.rci_number || 'A79214',
+      service: srv,
+      patient: patient,
+      patientDossier: null,
+      parameters: rep.parameters || {
+        provisionalDiagnosis: rep.diagnosis,
+        recommendations: rep.recommendations,
+      },
+      computedPTA: rep.computed || null,
+    };
+    try {
+      sessionStorage.setItem('vaani_preview_report', JSON.stringify(payload));
+    } catch (e) {
+      console.warn(e);
+    }
+    window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
+  };
+
   return (
     <div className="space-y-4">
       {/* ── PAGE HEADER & PRIMARY CREATE ACTION ── */}
@@ -356,19 +394,18 @@ export const ReportsPage = () => {
                   <td className="px-3.5 py-2.5 whitespace-nowrap text-right space-x-1.5">
                     <button
                       type="button"
-                      onClick={() => setActiveReport(rep)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                      onClick={() => handleInspectInNewTab(rep)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
+                      title="Open full official report in new tab"
                     >
                       <Eye className="w-3 h-3 text-purple-700" />
-                      <span>Inspect</span>
+                      <span>View (New Tab)</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setActiveReport(rep);
-                        setTimeout(() => window.print(), 200);
-                      }}
+                      onClick={() => handleInspectInNewTab(rep)}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Print official report"
                     >
                       <Printer className="w-3 h-3" />
                       <span>Print</span>
@@ -381,115 +418,9 @@ export const ReportsPage = () => {
         </div>
       </div>
 
-      {/* ── INSPECT ASSESSMENT MODAL ── */}
-      {activeReport && (
-        <Modal
-          isOpen={!!activeReport}
-          onClose={() => setActiveReport(null)}
-          title={`Clinical Proforma: ${activeReport.report_number}`}
-          size="lg"
-        >
-          <div className="space-y-4 p-4 text-xs">
-            {/* Header */}
-            <div className="flex items-start justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-start gap-3">
-                <img
-                  src="/vaani-logo.png"
-                  alt="Vaani Speech and Hearing Clinic"
-                  className="h-12 w-auto object-contain"
-                />
-                <div>
-                  <span className="text-[11px] text-purple-800 font-bold block">
-                    Speech &amp; Hearing Rehabilitation Center, Satara
-                  </span>
-                  <p className="text-[10px] text-slate-500">RCI CRR Registration No: {activeReport.rci_number || 'A79214'}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="font-mono font-bold text-slate-800 block text-xs">{activeReport.report_number}</span>
-                <span className="text-[10px] text-slate-500 block">Date: {activeReport.date}</span>
-                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-800 uppercase">
-                  {activeReport.service_code || activeReport.discipline}
-                </span>
-              </div>
-            </div>
-
-            {/* Patient Demographics Banner */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Patient Name</span>
-                <span className="font-bold text-slate-900">{activeReport.patient_name}</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">UHID</span>
-                <span className="font-mono font-bold text-purple-800">{activeReport.uhid}</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Demographics</span>
-                <span className="text-slate-700">{activeReport.patient_age_sex || 'Active Patient'}</span>
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Attending Clinician</span>
-                <span className="font-semibold text-slate-800">{activeReport.examiner}</span>
-              </div>
-            </div>
-
-            {/* Diagnosis / Clinical Findings */}
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-                Clinical Impression &amp; Findings:
-              </span>
-              <div className="p-3 bg-purple-50/50 border border-purple-200 rounded text-slate-800 leading-relaxed font-medium">
-                {activeReport.diagnosis}
-              </div>
-            </div>
-
-            {/* Recommendations */}
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900 block mb-1">
-                Recommendations &amp; Follow-up Protocol:
-              </span>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded text-slate-800 leading-relaxed">
-                {activeReport.recommendations}
-              </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-slate-500 text-[10px]">
-                <QrCode className="w-4 h-4 text-purple-900" />
-                <span>QR Verification: https://vaaniclinic.com/verify-doc/{activeReport.report_number}</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate(`/dashboard/reports/create?type=${activeReport.service_code || 'RP-CLN-AUD'}`);
-                    setActiveReport(null);
-                  }}
-                  className="px-3 py-1.5 rounded text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 cursor-pointer"
-                >
-                  Duplicate / New Version
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.print();
-                    notify.success('Printing official clinical report...');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 shadow-2xs cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print Document</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };
 
 export default ReportsPage;
+

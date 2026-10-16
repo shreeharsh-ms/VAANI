@@ -21,6 +21,7 @@ import PatientDetailPage from '../pages/dashboard/PatientDetailPage';
 import AppointmentsPage from '../pages/dashboard/AppointmentsPage';
 import ReportsPage from '../pages/dashboard/ReportsPage';
 import ReportCreatePage from '../pages/dashboard/ReportCreatePage';
+import ReportViewPage from '../pages/dashboard/ReportViewPage';
 import BillingPage from '../pages/dashboard/BillingPage';
 import InventoryPage from '../pages/dashboard/InventoryPage';
 import RecallsPage from '../pages/dashboard/RecallsPage';
@@ -45,6 +46,24 @@ export const AppRoutes = () => {
       <Route element={<AuthLayout />}>
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       </Route>
+
+      {/* Standalone Full-Tab Clinical Report Preview & Print (Opens in New Tab) */}
+      <Route
+        path="/dashboard/reports/preview"
+        element={
+          <ProtectedRoute>
+            <ReportViewPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/reports/view/:id"
+        element={
+          <ProtectedRoute>
+            <ReportViewPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Authenticated Clinic ERP Routes */}
       <Route
