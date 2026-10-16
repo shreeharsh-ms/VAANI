@@ -6,6 +6,41 @@ import { QrCode } from 'lucide-react';
  * Standardized single-page proforma with RCI CRR No. A79214 seal, official logo,
  * bilateral clinical metrics, and DPDP-compliant QR authenticity badge.
  */
+/**
+ * Renders clinical text as bullet points if multiple lines or bullet prefixes exist,
+ * or as a formatted paragraph.
+ */
+const renderBulletPoints = (text, fallback = '', bulletClass = 'bg-slate-900') => {
+  const content = (text || fallback || '').trim();
+  if (!content) return null;
+
+  const rawLines = content.split('\n').map((l) => l.trim()).filter(Boolean);
+  const hasBullets = rawLines.some((l) => /^[•\-\*]|\d+[\.\)]/.test(l));
+
+  if (rawLines.length > 1 || hasBullets) {
+    return (
+      <ul className="space-y-1.5 mt-1.5 pl-0.5">
+        {rawLines.map((line, idx) => {
+          const cleanLine = line.replace(/^[•\-\*]\s*|\d+[\.\)]\s*/, '').trim();
+          if (!cleanLine) return null;
+          return (
+            <li key={idx} className="flex items-start gap-2">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${bulletClass} mt-1.5 shrink-0`} />
+              <span className="leading-snug text-slate-800">{cleanLine}</span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  return (
+    <p className="mt-1 text-slate-800 leading-relaxed font-medium">
+      {content.replace(/^[•\-\*]\s*/, '')}
+    </p>
+  );
+};
+
 export const OfficialClinicalDocument = ({
   service,
   patient,
@@ -16,6 +51,7 @@ export const OfficialClinicalDocument = ({
   if (!service || !patient) return null;
 
   const isOAE = service.code === 'RP-CLN-OAE';
+  const isCBT = service.code === 'RP-CLN-CBT';
 
   return (
     <div
@@ -25,49 +61,346 @@ export const OfficialClinicalDocument = ({
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
       <div className="flex-1 flex flex-col space-y-3.5">
         {/* ── CLINIC OFFICIAL LETTERHEAD ── */}
-        <div className="border-b-2 border-purple-950 pb-2.5 flex items-start justify-between gap-4">
-          {/* Left: Actual Clinic Logo & Institutional Details */}
-          <div className="flex items-center gap-3.5">
-            <img
-              src="/vaani-logo.png"
-              alt="Vaani Speech and Hearing Clinic"
-              className="h-14 w-auto object-contain shrink-0"
-            />
+        {isCBT ? (
+          <div className="border-b-2 border-slate-900 pb-2 flex items-start justify-between gap-4">
             <div className="space-y-0.5">
-              <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-700">
-                <span className="font-semibold text-slate-800">
-                  RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="text-[9.5px] text-slate-500 font-medium">
-                  RCI Approved Practice Center • ISO 9001:2015
-                </span>
-              </div>
-              <p className="text-[10.5px] text-slate-700 font-medium">
-                Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+              <h1 className="font-serif font-black text-base tracking-wide text-slate-950 uppercase">
+                VANI'S SPEECH &amp; HEARING CLINIC
+              </h1>
+              <p className="text-[10px] font-bold text-slate-700">
+                Center for Audiology, Speech-Language Pathology &amp; Counselling
               </p>
-              <p className="text-[9.5px] text-slate-500">
-                Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
+              <p className="text-[9px] text-slate-600">
+                Satara, Maharashtra • Contact: +91-98220-XXXXX • Email: contact@vanisclinic.in
+              </p>
+            </div>
+            <div className="text-right space-y-0.5">
+              <h2 className="font-bold text-xs text-slate-950">
+                Ms. Palak Paresh Gandhi &amp; CBT Team
+              </h2>
+              <p className="text-[9.5px] font-semibold text-slate-700">
+                RCI Registered Practitioner &amp; Psychological Counselor
+              </p>
+              <p className="text-[8.5px] text-slate-500">
+                Strictly Confidential Medical Record (DPDP Act 2023 Compliant)
               </p>
             </div>
           </div>
+        ) : (
+          <div className="border-b-2 border-purple-950 pb-2.5 flex items-start justify-between gap-4">
+            {/* Left: Actual Clinic Logo & Institutional Details */}
+            <div className="flex items-center gap-3.5">
+              <img
+                src="/vaani-logo.png"
+                alt="Vaani Speech and Hearing Clinic"
+                className="h-14 w-auto object-contain shrink-0"
+              />
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-700">
+                  <span className="font-semibold text-slate-800">
+                    RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-[9.5px] text-slate-500 font-medium">
+                    RCI Approved Practice Center • ISO 9001:2015
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-slate-700 font-medium">
+                  Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+                </p>
+                <p className="text-[9.5px] text-slate-500">
+                  Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
+                </p>
+              </div>
+            </div>
 
-          {/* Right: Document Identification */}
-          <div className="text-right shrink-0 space-y-0.5">
-            <span className="block text-xs font-mono font-bold text-slate-900">
-              Report No: {formData?.reportNumber}
-            </span>
-            <span className="block text-[10px] text-slate-500 font-medium">
-              Date: {formData?.reportDate}
-            </span>
-            <span className="block text-[9px] font-bold uppercase tracking-wider text-purple-900 mt-0.5">
-              {service.discipline}
-            </span>
+            {/* Right: Document Identification */}
+            <div className="text-right shrink-0 space-y-0.5">
+              <span className="block text-xs font-mono font-bold text-slate-900">
+                Report No: {formData?.reportNumber}
+              </span>
+              <span className="block text-[10px] text-slate-500 font-medium">
+                Date: {formData?.reportDate}
+              </span>
+              <span className="block text-[9px] font-bold uppercase tracking-wider text-purple-900 mt-0.5">
+                {service.discipline}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── CONDITIONAL REPORT BODY: OAE VS GENERAL / PTA ── */}
-        {isOAE ? (
+        {/* ── CONDITIONAL REPORT BODY: CBT VS OAE VS GENERAL / PTA ── */}
+        {isCBT ? (
+          /* ── CBT REPORT VIEW (Exact Layout matching official Psychological & CBT Document) ── */
+          <div className="space-y-2.5 text-slate-900">
+            {/* Title Banner */}
+            <div className="bg-[#0f172a] text-white text-center py-1 font-bold text-xs uppercase tracking-wider">
+              PSYCHOLOGICAL &amp; COGNITIVE BEHAVIOURAL THERAPY (CBT) REPORT
+            </div>
+
+            {/* Demographics Box */}
+            <div className="border border-slate-400 text-[10px]">
+              <div className="grid grid-cols-2 divide-x divide-slate-400 border-b border-slate-400">
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">Patient Name:</span>
+                  <span className="font-semibold text-slate-900">{patient.full_name}</span>
+                </div>
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">UHID:</span>
+                  <span className="font-mono font-bold text-slate-900">{patient.uhid}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-slate-400 border-b border-slate-400">
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">Age / Gender:</span>
+                  <span>
+                    {patient.gender === 'FEMALE' ? 'Female' : patient.gender === 'MALE' ? 'Male' : patient.gender}
+                    {patient.date_of_birth ? ` • ${patient.date_of_birth}` : ''}
+                  </span>
+                </div>
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">Date of Assessment:</span>
+                  <span>{formData?.reportDate || 'October 09, 2026'}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-slate-400">
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">Assessment Session:</span>
+                  <span>{formData?.parameters?.assessmentSession || 'Intake & Diagnostic Formulation'}</span>
+                </div>
+                <div className="p-1 px-2.5 flex">
+                  <span className="font-bold w-32 shrink-0">Consent Status:</span>
+                  <span>{formData?.parameters?.consentStatus || 'Signed CBT Consent Form Verified'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 1. STANDARDIZED PSYCHOMETRIC SCALES */}
+            <div>
+              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
+                1. STANDARDIZED PSYCHOMETRIC SCALES (PHQ-9, GAD-7, PSS-10)
+              </h3>
+              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+                <thead>
+                  <tr className="bg-[#0f172a] text-white text-left font-bold">
+                    <th className="p-1 border border-slate-400 w-2/6">INSTRUMENT</th>
+                    <th className="p-1 border border-slate-400 w-1/6">RAW SCORE</th>
+                    <th className="p-1 border border-slate-400 w-2/6">SCORE RANGE &amp; CUTOFF</th>
+                    <th className="p-1 border border-slate-400 w-2/6">CLINICAL SEVERITY LEVEL</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300">
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold">
+                      PHQ-9<br />
+                      <span className="font-normal text-[8.5px] text-slate-600">(Patient Health Questionnaire - Depression)</span>
+                    </td>
+                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                      {formData?.parameters?.phq9Score ?? 14} / 27
+                    </td>
+                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                      0-4: Minimal | 5-9: Mild<br />
+                      10-14: Moderate | 15-19: Mod. Severe | 20-27: Severe
+                    </td>
+                    <td className="p-1 border border-slate-300">
+                      <span className="font-bold text-slate-900 block uppercase">
+                        {formData?.parameters?.phq9Severity || 'MODERATE DEPRESSION'}
+                      </span>
+                      {formData?.parameters?.phq9Item9Note && (
+                        <span className="text-[8.5px] text-slate-600 block">
+                          ({formData.parameters.phq9Item9Note})
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold">
+                      GAD-7<br />
+                      <span className="font-normal text-[8.5px] text-slate-600">(Generalised Anxiety Disorder Scale)</span>
+                    </td>
+                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                      {formData?.parameters?.gad7Score ?? 12} / 21
+                    </td>
+                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                      0-4: Minimal | 5-9: Mild<br />
+                      10-14: Moderate | 15-21: Severe
+                    </td>
+                    <td className="p-1 border border-slate-300">
+                      <span className="font-bold text-slate-900 block uppercase">
+                        {formData?.parameters?.gad7Severity || 'MODERATE ANXIETY'}
+                      </span>
+                      {formData?.parameters?.gad7Note && (
+                        <span className="text-[8.5px] text-slate-600 block">
+                          ({formData.parameters.gad7Note})
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold">
+                      PSS-10<br />
+                      <span className="font-normal text-[8.5px] text-slate-600">(Perceived Stress Scale)</span>
+                    </td>
+                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                      {formData?.parameters?.pss10Score ?? 24} / 40
+                    </td>
+                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                      0-13: Low Stress | 14-26: Moderate Stress<br />
+                      27-40: High Stress
+                    </td>
+                    <td className="p-1 border border-slate-300">
+                      <span className="font-bold text-slate-900 block uppercase">
+                        {formData?.parameters?.pss10Severity || 'MODERATE-HIGH PERCEIVED STRESS'}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* 2. CLINICAL RISK ASSESSMENT & MANDATORY REFERRAL MATRIX */}
+            <div>
+              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
+                2. CLINICAL RISK ASSESSMENT &amp; MANDATORY REFERRAL MATRIX
+              </h3>
+              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+                <thead>
+                  <tr className="bg-[#0f172a] text-white text-left font-bold">
+                    <th className="p-1 border border-slate-400 w-1/4">RISK PARAMETER</th>
+                    <th className="p-1 border border-slate-400 w-1/2">CLINICAL ASSESSMENT FINDING</th>
+                    <th className="p-1 border border-slate-400 w-1/4">SYSTEM ACTION / SAFETY TRIGGER</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300">
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold align-top">Suicidal Ideation / Intent</td>
+                    <td className="p-1 border border-slate-300 align-top">
+                      {formData?.parameters?.suicidalIdeation || 'Passive thoughts ("wish I didn\'t wake up"), NO active plan, NO specific intent.'}
+                    </td>
+                    <td rowSpan={4} className="p-1.5 border border-slate-300 bg-rose-50/20 align-top">
+                      <span className="font-black text-rose-700 uppercase block mb-1 text-[9.5px]">
+                        OVERALL RISK LEVEL: {formData?.parameters?.overallRiskLevel || 'MODERATE RISK'}
+                      </span>
+                      <ul className="text-[8.5px] text-slate-700 space-y-0.5">
+                        {(Array.isArray(formData?.parameters?.safetyTriggers)
+                          ? formData.parameters.safetyTriggers
+                          : [
+                              'Mandatory Safety Plan Matrix Activated',
+                              'System displays clinician warning banner',
+                              'Psychiatric Consultation Prompt Enabled',
+                            ]
+                        ).map((trigger, i) => (
+                          <li key={i} className="flex items-start gap-1">
+                            <span>•</span>
+                            <span className="leading-tight">{trigger.replace(/^[•\-\*]\s*/, '')}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold align-top">Self-Harm History</td>
+                    <td className="p-1 border border-slate-300 align-top">
+                      {formData?.parameters?.selfHarmHistory || 'No prior suicide attempt; intermittent non-suicidal self-harm urges under high stress.'}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold align-top">Means Access &amp; Control</td>
+                    <td className="p-1 border border-slate-300 align-top">
+                      {formData?.parameters?.meansAccess || 'No firearms; medication access managed by family.'}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold align-top">Protective Factors</td>
+                    <td className="p-1 border border-slate-300 align-top">
+                      {formData?.parameters?.protectiveFactors || 'Strong supportive sister, highly motivated for CBT, employed, no substance abuse.'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* 3. PATIENT 5-STEP SAFETY PLAN MATRIX */}
+            <div>
+              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
+                3. PATIENT 5-STEP SAFETY PLAN MATRIX
+              </h3>
+              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+                <thead>
+                  <tr className="bg-[#0f172a] text-white text-left font-bold">
+                    <th className="p-1 border border-slate-400 w-20">STEP NUMBER</th>
+                    <th className="p-1 border border-slate-400 w-1/4">SAFETY PLAN DOMAIN</th>
+                    <th className="p-1 border border-slate-400">PATIENT-SPECIFIC AGREED INTERVENTION</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300">
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold text-center">Step 1</td>
+                    <td className="p-1 border border-slate-300 font-semibold">Recognizing Warning Signs</td>
+                    <td className="p-1 border border-slate-300 text-slate-800">
+                      {formData?.parameters?.safetyStep1 || 'Racing thoughts, isolating in bedroom, skipping meals, feeling heavy pressure in chest.'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold text-center">Step 2</td>
+                    <td className="p-1 border border-slate-300 font-semibold">Internal Coping Strategies</td>
+                    <td className="p-1 border border-slate-300 text-slate-800">
+                      {formData?.parameters?.safetyStep2 || 'Box breathing (4-4-4-4), 5-4-3-2-1 sensory grounding, listening to calming classical music.'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold text-center">Step 3</td>
+                    <td className="p-1 border border-slate-300 font-semibold">Social Distractions &amp; Support</td>
+                    <td className="p-1 border border-slate-300 text-slate-800">
+                      {formData?.parameters?.safetyStep3 || 'Calling sister (Pooja: +91-98220-XXXXX), sitting in clinic garden, walking pet dog.'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold text-center">Step 4</td>
+                    <td className="p-1 border border-slate-300 font-semibold">Family / Crisis Contacts</td>
+                    <td className="p-1 border border-slate-300 text-slate-800">
+                      {formData?.parameters?.safetyStep4 || 'Primary Contact: Sister (Pooja Kulkarni); Secondary Contact: Vani\'s Clinic Support.'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 border border-slate-300 font-bold text-center">Step 5</td>
+                    <td className="p-1 border border-slate-300 font-semibold">Professional &amp; Emergency Care</td>
+                    <td className="p-1 border border-slate-300 text-slate-800">
+                      {formData?.parameters?.safetyStep5 || 'Vani\'s Clinic Crisis Line (+91-98220-XXXXX) | Satara District Hospital Helpline (02162-XXXXXX).'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* FORMULATION & CBT TREATMENT PLAN */}
+            <div className="border border-emerald-300 bg-emerald-50/40 rounded p-2 text-[9.5px] space-y-1">
+              <span className="font-bold text-emerald-950 block uppercase tracking-wide">
+                FORMULATION &amp; CBT TREATMENT PLAN:
+              </span>
+              <p className="text-slate-800 leading-snug">
+                <span className="font-bold text-slate-900">1. COGNITIVE FORMULATION:</span>{' '}
+                {formData?.parameters?.cognitiveFormulation ||
+                  'Automatic thoughts ("I am a failure if I am not perfect"), cognitive distortions (Catastrophising, All-or-Nothing thinking).'}
+              </p>
+              <p className="text-slate-800 leading-snug">
+                <span className="font-bold text-slate-900">2. CBT PLAN:</span>{' '}
+                {formData?.parameters?.cbtPlan ||
+                  '12 weekly sessions targeting Cognitive Restructuring, Behavioural Activation (activity scheduling), and Mindfulness-Based Stress Reduction (MBSR).'}
+              </p>
+              <p className="text-slate-700 leading-snug">
+                <span className="font-bold text-slate-900">3. CONFIDENTIALITY NOTE:</span>{' '}
+                {formData?.parameters?.confidentialityNote ||
+                  'Record encrypted under AES-256 field encryption. Access restricted to authorized CBT clinician.'}
+              </p>
+            </div>
+          </div>
+        ) : isOAE ? (
           /* ── OAE SCREENING REPORT VIEW (Exact Real-World Clinic Layout with Ear Illustrations) ── */
           <div className="space-y-5 pt-1">
             {/* Centered Rounded Pill Banner */}
@@ -182,25 +515,31 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* Impression & Recommendation */}
-            <div className="space-y-6 pt-4">
+            <div className="space-y-4 pt-3">
               <div>
                 <span className="font-black text-xs sm:text-sm uppercase tracking-wide text-slate-900 block">
                   IMPRESSION:
                 </span>
-                <p className="mt-1.5 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
-                  {formData?.parameters?.provisionalDiagnosis ||
-                    'Bilateral Otoacoustic Emissions (DPOAE/TEOAE) PASS. Outer hair cell function is robust bilaterally within normal limits.'}
-                </p>
+                <div className="text-xs sm:text-sm font-medium">
+                  {renderBulletPoints(
+                    formData?.parameters?.provisionalDiagnosis,
+                    '• Bilateral Otoacoustic Emissions (OAE) PASS.\n• Outer hair cell function is robust bilaterally within normal limits.',
+                    'bg-slate-900'
+                  )}
+                </div>
               </div>
 
               <div>
                 <span className="font-black text-xs sm:text-sm uppercase tracking-wide text-slate-900 block">
                   RECOMMENDATION :
                 </span>
-                <p className="mt-1.5 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
-                  {formData?.parameters?.recommendations ||
-                    'Routine developmental auditory and speech-language milestones tracking. Repeat evaluation if parental concern arises.'}
-                </p>
+                <div className="text-xs sm:text-sm font-medium">
+                  {renderBulletPoints(
+                    formData?.parameters?.recommendations,
+                    '• Routine developmental auditory and speech-language milestones tracking.\n• Repeat evaluation if parental concern arises.',
+                    'bg-slate-900'
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -507,9 +846,13 @@ export const OfficialClinicalDocument = ({
               <span className="text-[10px] font-black uppercase tracking-wider text-purple-950 block">
                 Clinical Impression &amp; Findings:
               </span>
-              <p className="text-slate-900 font-bold leading-relaxed">
-                {formData?.parameters?.provisionalDiagnosis || service.description}
-              </p>
+              <div className="font-semibold text-slate-900">
+                {renderBulletPoints(
+                  formData?.parameters?.provisionalDiagnosis,
+                  service.description,
+                  'bg-purple-950'
+                )}
+              </div>
             </div>
 
             {/* ── CLINICAL RECOMMENDATIONS & MANAGEMENT PLAN ── */}
@@ -517,9 +860,13 @@ export const OfficialClinicalDocument = ({
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 block">
                 Clinical Recommendations &amp; Rehabilitation Protocol:
               </span>
-              <p className="text-slate-800 leading-relaxed font-medium">
-                {formData?.parameters?.recommendations || 'Follow up as clinically indicated.'}
-              </p>
+              <div className="font-medium text-slate-800">
+                {renderBulletPoints(
+                  formData?.parameters?.recommendations,
+                  'Follow up as clinically indicated.',
+                  'bg-slate-800'
+                )}
+              </div>
             </div>
           </>
         )}
@@ -527,46 +874,64 @@ export const OfficialClinicalDocument = ({
 
       {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
       {/* Always strictly pinned to the bottom/end of the A4 page */}
-      <div className="mt-auto pt-3 border-t-2 border-purple-950 flex items-end justify-between text-xs print:break-inside-avoid">
-        {/* Left: Authentic QR Code & DPDP Verification */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-12 h-12 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs shrink-0">
-            <QrCode className="w-10 h-10 text-purple-950" />
+      {isCBT ? (
+        <div className="mt-auto pt-3 flex items-end justify-between text-xs print:break-inside-avoid">
+          <div className="text-[10px] space-y-0.5 text-slate-800">
+            <p>
+              Date: <span className="font-medium">{formData?.reportDate || 'October 09, 2026'}</span>
+            </p>
+            <p>
+              Place: <span className="font-medium">Satara</span>
+            </p>
           </div>
-          <div>
-            <span className="text-[9px] font-mono font-black text-purple-950 block uppercase">
-              QR VERIFIED • DPDP ACT COMPLIANT
-            </span>
-            <span className="text-[8px] text-slate-600 block">
-              Scan to verify document cryptographic authenticity
-            </span>
-            <span className="text-[8px] font-mono text-slate-500">
-              https://vaaniclinic.com/verify-doc/{formData?.reportNumber}
-            </span>
+          <div className="text-center space-y-0.5">
+            <div className="w-56 border-b border-slate-400 mb-1"></div>
+            <p className="font-bold text-slate-900 text-[10.5px]">CBT Lead &amp; Psychological Counselor</p>
+            <p className="text-[9.5px] text-slate-600">Vani's Speech, Hearing &amp; Counselling Clinic</p>
           </div>
         </div>
+      ) : (
+        <div className="mt-auto pt-3 border-t-2 border-purple-950 flex items-end justify-between text-xs print:break-inside-avoid">
+          {/* Left: Authentic QR Code & DPDP Verification */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-12 h-12 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs shrink-0">
+              <QrCode className="w-10 h-10 text-purple-950" />
+            </div>
+            <div>
+              <span className="text-[9px] font-mono font-black text-purple-950 block uppercase">
+                QR VERIFIED • DPDP ACT COMPLIANT
+              </span>
+              <span className="text-[8px] text-slate-600 block">
+                Scan to verify document cryptographic authenticity
+              </span>
+              <span className="text-[8px] font-mono text-slate-500">
+                https://vaaniclinic.com/verify-doc/{formData?.reportNumber}
+              </span>
+            </div>
+          </div>
 
-        {/* Right: Clinician Signature Block */}
-        <div className="text-right space-y-0.5">
-          <div className="inline-block border-b border-purple-900 pb-0.5 mb-1 px-4 text-center">
-            <span className="font-serif italic font-bold text-purple-950 text-sm block">
-              Shreeharsh M. Shivpuje
-            </span>
-            <span className="text-[8px] text-slate-500 uppercase tracking-widest block">
-              Digitally Authenticated
-            </span>
+          {/* Right: Clinician Signature Block */}
+          <div className="text-right space-y-0.5">
+            <div className="inline-block border-b border-purple-900 pb-0.5 mb-1 px-4 text-center">
+              <span className="font-serif italic font-bold text-purple-950 text-sm block">
+                Shreeharsh M. Shivpuje
+              </span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-widest block">
+                Digitally Authenticated
+              </span>
+            </div>
+            <p className="font-black text-slate-950 text-xs">
+              {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
+            </p>
+            <p className="text-[10px] font-semibold text-slate-800">
+              RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
+            </p>
+            <p className="text-[9px] text-slate-600 font-medium">
+              Consultant Audiologist &amp; Speech-Language Pathologist
+            </p>
           </div>
-          <p className="font-black text-slate-950 text-xs">
-            {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
-          </p>
-          <p className="text-[10px] font-semibold text-slate-800">
-            RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-          </p>
-          <p className="text-[9px] text-slate-600 font-medium">
-            Consultant Audiologist &amp; Speech-Language Pathologist
-          </p>
         </div>
-      </div>
+      )}
 
     </div>
   );

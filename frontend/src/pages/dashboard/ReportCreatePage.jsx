@@ -19,6 +19,7 @@ import {
   Sliders,
   Activity,
   X,
+  ListPlus,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
@@ -46,12 +47,21 @@ export const ReportCreatePage = () => {
     return SEED_PATIENTS;
   }, []);
 
-  // Determine initial service from query param
-  const initialTypeCode = searchParams.get('type') || 'RP-CLN-AUD';
-  const initialPatientId = searchParams.get('patientId') || '';
+  // Determine initial service from query param (supports type, service, code, id)
+  const serviceParam = searchParams.get('type') || searchParams.get('service') || searchParams.get('code') || '';
+  const matchedService = CLINICAL_SERVICES.find(
+    (s) => s.code.toLowerCase() === serviceParam.toLowerCase() || s.id.toLowerCase() === serviceParam.toLowerCase()
+  );
+  const initialTypeCode = matchedService ? matchedService.code : 'RP-CLN-AUD';
+
+  const patientParam = searchParams.get('patientId') || searchParams.get('patient') || searchParams.get('uhid') || '';
+  const matchedPatient = allPatients.find(
+    (p) => p.id === patientParam || p.uhid === patientParam
+  );
+  const initialPatientId = matchedPatient ? matchedPatient.id : (allPatients[0]?.id || '');
 
   const [selectedServiceCode, setSelectedServiceCode] = useState(initialTypeCode);
-  const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId || allPatients[0]?.id || '');
+  const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Active Service definition
@@ -153,6 +163,62 @@ export const ReportCreatePage = () => {
         },
       },
     }));
+  };
+
+  // Bullet point helpers for Clinical Impression & Recommendations
+  const addBulletPoint = (fieldName) => {
+    const currentVal = formData.parameters[fieldName] || '';
+    const trimmed = currentVal.trim();
+    let newVal = '';
+    if (!trimmed) {
+      newVal = '• ';
+    } else {
+      newVal = trimmed + '\n• ';
+    }
+    handleParamChange(fieldName, newVal);
+  };
+
+  const formatAsBullets = (fieldName) => {
+    const currentVal = formData.parameters[fieldName] || '';
+    if (!currentVal.trim()) return;
+    let lines = currentVal.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 1 && lines[0].includes('.')) {
+      lines = lines[0].split('.').map((s) => s.trim()).filter(Boolean);
+    }
+    const bulleted = lines
+      .map((line) => {
+        const clean = line.replace(/^[•\-\*]\s*|\d+[\.\)]\s*/, '').trim();
+        return clean ? `• ${clean}${clean.endsWith('.') ? '' : '.'}` : '';
+      })
+      .filter(Boolean)
+      .join('\n');
+    handleParamChange(fieldName, bulleted);
+  };
+
+  const handleBulletKeyDown = (e, fieldName) => {
+    if (e.key === 'Enter') {
+      const textarea = e.currentTarget;
+      const { selectionStart, selectionEnd, value } = textarea;
+      const currentLine = value.substring(0, selectionStart).split('\n').pop();
+
+      if (currentLine.trim().startsWith('•') || currentLine.trim().startsWith('-')) {
+        e.preventDefault();
+        // If user hits enter on an empty bullet line, exit bullet mode
+        if (currentLine.trim() === '•' || currentLine.trim() === '-') {
+          const beforeLine = value.substring(0, selectionStart - currentLine.length);
+          const after = value.substring(selectionEnd);
+          const newValue = beforeLine + after;
+          handleParamChange(fieldName, newValue);
+          return;
+        }
+        const prefix = '\n• ';
+        const newValue = value.substring(0, selectionStart) + prefix + value.substring(selectionEnd);
+        handleParamChange(fieldName, newValue);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart + prefix.length;
+        }, 0);
+      }
+    }
   };
 
   // Open full-page official preview in new tab
@@ -698,8 +764,8 @@ export const ReportCreatePage = () => {
                     onClick={() => {
                       handleParamChange('rightOutcome', 'PASS');
                       if (formData.parameters.leftOutcome !== 'REFER') {
-                        handleParamChange('provisionalDiagnosis', 'Bilateral Otoacoustic Emissions (OAE) PASS. Outer hair cell function is robust bilaterally within normal limits.');
-                        handleParamChange('recommendations', 'Routine developmental auditory and speech-language milestones tracking.');
+                        handleParamChange('provisionalDiagnosis', '• Bilateral Otoacoustic Emissions (OAE) PASS.\n• Outer hair cell function is robust bilaterally within normal limits.');
+                        handleParamChange('recommendations', '• Routine developmental auditory and speech-language milestones tracking.\n• Repeat evaluation if parental concern arises.');
                       }
                     }}
                     className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
@@ -714,8 +780,8 @@ export const ReportCreatePage = () => {
                     type="button"
                     onClick={() => {
                       handleParamChange('rightOutcome', 'REFER');
-                      handleParamChange('provisionalDiagnosis', 'OAE Refer in Right Ear. Suggests possible middle ear effusion or cochlear dysfunction.');
-                      handleParamChange('recommendations', 'Recommend diagnostic ABR / BERA testing and repeat OAE evaluation after 2-4 weeks.');
+                      handleParamChange('provisionalDiagnosis', '• OAE Refer in Right Ear.\n• Suggests possible middle ear effusion or cochlear outer hair cell dysfunction.');
+                      handleParamChange('recommendations', '• Recommend diagnostic ABR / BERA testing.\n• Repeat OAE evaluation after 2-4 weeks.\n• Pediatric ENT consultation for middle ear evaluation.');
                     }}
                     className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
                       formData.parameters.rightOutcome === 'REFER'
@@ -745,8 +811,8 @@ export const ReportCreatePage = () => {
                     onClick={() => {
                       handleParamChange('leftOutcome', 'PASS');
                       if (formData.parameters.rightOutcome !== 'REFER') {
-                        handleParamChange('provisionalDiagnosis', 'Bilateral Otoacoustic Emissions (OAE) PASS. Outer hair cell function is robust bilaterally within normal limits.');
-                        handleParamChange('recommendations', 'Routine developmental auditory and speech-language milestones tracking.');
+                        handleParamChange('provisionalDiagnosis', '• Bilateral Otoacoustic Emissions (OAE) PASS.\n• Outer hair cell function is robust bilaterally within normal limits.');
+                        handleParamChange('recommendations', '• Routine developmental auditory and speech-language milestones tracking.\n• Repeat evaluation if parental concern arises.');
                       }
                     }}
                     className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
@@ -761,8 +827,8 @@ export const ReportCreatePage = () => {
                     type="button"
                     onClick={() => {
                       handleParamChange('leftOutcome', 'REFER');
-                      handleParamChange('provisionalDiagnosis', 'OAE Refer in Left Ear. Suggests possible middle ear effusion or cochlear dysfunction.');
-                      handleParamChange('recommendations', 'Recommend diagnostic ABR / BERA testing and repeat OAE evaluation after 2-4 weeks.');
+                      handleParamChange('provisionalDiagnosis', '• OAE Refer in Left Ear.\n• Suggests possible middle ear effusion or cochlear outer hair cell dysfunction.');
+                      handleParamChange('recommendations', '• Recommend diagnostic ABR / BERA testing.\n• Repeat OAE evaluation after 2-4 weeks.\n• Pediatric ENT consultation for middle ear evaluation.');
                     }}
                     className={`py-1.5 text-xs font-bold rounded border cursor-pointer transition-all ${
                       formData.parameters.leftOutcome === 'REFER'
@@ -995,8 +1061,405 @@ export const ReportCreatePage = () => {
           </div>
         )}
 
-        {/* 6. OTHER CLINICAL SERVICES */}
-        {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA'].includes(activeService.code) && (
+        {/* 6. PSYCHOLOGICAL & CBT CLINICAL FORMULATION ENTRY */}
+        {activeService.code === 'RP-CLN-CBT' && (
+          <div className="space-y-4 text-xs">
+            {/* Session & Consent */}
+            <div className="p-3 bg-indigo-50/50 border border-indigo-200 rounded-lg grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-indigo-900 font-bold block mb-1 uppercase tracking-wide">
+                  Assessment Session
+                </label>
+                <input
+                  type="text"
+                  value={formData.parameters.assessmentSession || 'Intake & Diagnostic Formulation'}
+                  onChange={(e) => handleParamChange('assessmentSession', e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-indigo-200 bg-white rounded font-medium text-slate-800"
+                  placeholder="e.g. Intake & Diagnostic Formulation"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-indigo-900 font-bold block mb-1 uppercase tracking-wide">
+                  Consent Status
+                </label>
+                <input
+                  type="text"
+                  value={formData.parameters.consentStatus || 'Signed CBT Consent Form Verified'}
+                  onChange={(e) => handleParamChange('consentStatus', e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-indigo-200 bg-white rounded font-medium text-slate-800"
+                  placeholder="e.g. Signed CBT Consent Form Verified"
+                />
+              </div>
+            </div>
+
+            {/* 1. Standardized Psychometric Scales (PHQ-9, GAD-7, PSS-10) */}
+            <div className="border border-slate-200 rounded-lg p-3 bg-white space-y-3">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                1. Standardized Psychometric Scales (PHQ-9, GAD-7, PSS-10)
+              </span>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* PHQ-9 */}
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 text-[11px]">PHQ-9 (Depression)</span>
+                    <span className="text-[10px] font-mono text-slate-500">Max: 27</span>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Raw Score (/27)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={27}
+                      value={formData.parameters.phq9Score ?? 14}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        handleParamChange('phq9Score', val);
+                        let sev = 'MINIMAL DEPRESSION';
+                        if (val >= 20) sev = 'SEVERE DEPRESSION';
+                        else if (val >= 15) sev = 'MODERATELY SEVERE DEPRESSION';
+                        else if (val >= 10) sev = 'MODERATE DEPRESSION';
+                        else if (val >= 5) sev = 'MILD DEPRESSION';
+                        handleParamChange('phq9Severity', sev);
+                      }}
+                      className="w-full px-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Clinical Severity</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.phq9Severity || 'MODERATE DEPRESSION'}
+                      onChange={(e) => handleParamChange('phq9Severity', e.target.value)}
+                      className="w-full px-2 py-1 text-xs font-bold border border-slate-300 rounded bg-white text-indigo-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Item 9 Note (Suicide Screen)</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.phq9Item9Note || 'Item 9 Score = 1: Passive death thoughts'}
+                      onChange={(e) => handleParamChange('phq9Item9Note', e.target.value)}
+                      className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded bg-white text-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* GAD-7 */}
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 text-[11px]">GAD-7 (Anxiety)</span>
+                    <span className="text-[10px] font-mono text-slate-500">Max: 21</span>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Raw Score (/21)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={21}
+                      value={formData.parameters.gad7Score ?? 12}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        handleParamChange('gad7Score', val);
+                        let sev = 'MINIMAL ANXIETY';
+                        if (val >= 15) sev = 'SEVERE ANXIETY';
+                        else if (val >= 10) sev = 'MODERATE ANXIETY';
+                        else if (val >= 5) sev = 'MILD ANXIETY';
+                        handleParamChange('gad7Severity', sev);
+                      }}
+                      className="w-full px-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Clinical Severity</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.gad7Severity || 'MODERATE ANXIETY'}
+                      onChange={(e) => handleParamChange('gad7Severity', e.target.value)}
+                      className="w-full px-2 py-1 text-xs font-bold border border-slate-300 rounded bg-white text-indigo-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Key Symptoms / Notes</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.gad7Note || 'Restlessness, excessive worry'}
+                      onChange={(e) => handleParamChange('gad7Note', e.target.value)}
+                      className="w-full px-2 py-1 text-[11px] border border-slate-300 rounded bg-white text-slate-700"
+                    />
+                  </div>
+                </div>
+
+                {/* PSS-10 */}
+                <div className="p-2.5 bg-slate-50 border border-slate-200 rounded space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800 text-[11px]">PSS-10 (Perceived Stress)</span>
+                    <span className="text-[10px] font-mono text-slate-500">Max: 40</span>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Raw Score (/40)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={40}
+                      value={formData.parameters.pss10Score ?? 24}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        handleParamChange('pss10Score', val);
+                        let sev = 'LOW STRESS';
+                        if (val >= 27) sev = 'HIGH PERCEIVED STRESS';
+                        else if (val >= 14) sev = 'MODERATE-HIGH PERCEIVED STRESS';
+                        handleParamChange('pss10Severity', sev);
+                      }}
+                      className="w-full px-2 py-1 text-xs font-mono font-bold border border-slate-300 rounded bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Clinical Severity</label>
+                    <input
+                      type="text"
+                      value={formData.parameters.pss10Severity || 'MODERATE-HIGH PERCEIVED STRESS'}
+                      onChange={(e) => handleParamChange('pss10Severity', e.target.value)}
+                      className="w-full px-2 py-1 text-xs font-bold border border-slate-300 rounded bg-white text-indigo-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-500 font-medium block">Score Cutoff Benchmark</label>
+                    <span className="text-[10px] text-slate-500 block pt-1">
+                      0-13 Low | 14-26 Moderate | 27-40 High
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Clinical Risk Assessment & Mandatory Referral Matrix */}
+            <div className="border border-slate-200 rounded-lg p-3 bg-white space-y-3">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                2. Clinical Risk Assessment &amp; Mandatory Referral Matrix
+              </span>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 space-y-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block">
+                      Suicidal Ideation / Intent
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.parameters.suicidalIdeation || ''}
+                      onChange={(e) => handleParamChange('suicidalIdeation', e.target.value)}
+                      className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                      placeholder="e.g. Passive thoughts ('wish I didn't wake up'), NO active plan, NO specific intent."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block">
+                      Self-Harm History
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.parameters.selfHarmHistory || ''}
+                      onChange={(e) => handleParamChange('selfHarmHistory', e.target.value)}
+                      className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                      placeholder="e.g. No prior suicide attempt; intermittent non-suicidal self-harm urges under high stress."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block">
+                      Means Access &amp; Control
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.parameters.meansAccess || ''}
+                      onChange={(e) => handleParamChange('meansAccess', e.target.value)}
+                      className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                      placeholder="e.g. No firearms; medication access managed by family."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block">
+                      Protective Factors
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.parameters.protectiveFactors || ''}
+                      onChange={(e) => handleParamChange('protectiveFactors', e.target.value)}
+                      className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                      placeholder="e.g. Strong supportive sister, highly motivated for CBT, employed, no substance abuse."
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Risk Level & Triggers */}
+                <div className="p-3 bg-rose-50/60 border border-rose-200 rounded-lg space-y-2.5">
+                  <div>
+                    <label className="text-[10px] font-black text-rose-900 uppercase block mb-1">
+                      Overall Risk Level
+                    </label>
+                    <select
+                      value={formData.parameters.overallRiskLevel || 'MODERATE RISK'}
+                      onChange={(e) => handleParamChange('overallRiskLevel', e.target.value)}
+                      className="w-full px-2 py-1.5 text-xs font-black text-rose-900 bg-white border border-rose-300 rounded"
+                    >
+                      <option value="LOW RISK">LOW RISK</option>
+                      <option value="MODERATE RISK">MODERATE RISK</option>
+                      <option value="HIGH RISK">HIGH RISK</option>
+                      <option value="SEVERE / IMMINENT RISK">SEVERE / IMMINENT RISK</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block mb-1">
+                      System Action / Safety Triggers
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={
+                        Array.isArray(formData.parameters.safetyTriggers)
+                          ? formData.parameters.safetyTriggers.join('\n')
+                          : formData.parameters.safetyTriggers || ''
+                      }
+                      onChange={(e) => handleParamChange('safetyTriggers', e.target.value.split('\n'))}
+                      className="w-full px-2 py-1 text-xs border border-slate-300 rounded bg-white"
+                      placeholder="• Mandatory Safety Plan Matrix Activated&#10;• System displays clinician warning banner&#10;• Psychiatric Consultation Prompt Enabled"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Patient 5-Step Safety Plan Matrix */}
+            <div className="border border-slate-200 rounded-lg p-3 bg-white space-y-2.5">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                3. Patient 5-Step Safety Plan Matrix
+              </span>
+
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                  <span className="text-[11px] font-bold text-slate-700 sm:col-span-1">
+                    Step 1: Recognizing Warning Signs
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.parameters.safetyStep1 || ''}
+                    onChange={(e) => handleParamChange('safetyStep1', e.target.value)}
+                    className="sm:col-span-3 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                    placeholder="Racing thoughts, isolating in bedroom, skipping meals..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                  <span className="text-[11px] font-bold text-slate-700 sm:col-span-1">
+                    Step 2: Internal Coping Strategies
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.parameters.safetyStep2 || ''}
+                    onChange={(e) => handleParamChange('safetyStep2', e.target.value)}
+                    className="sm:col-span-3 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                    placeholder="Box breathing (4-4-4-4), 5-4-3-2-1 sensory grounding..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                  <span className="text-[11px] font-bold text-slate-700 sm:col-span-1">
+                    Step 3: Social Distractions &amp; Support
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.parameters.safetyStep3 || ''}
+                    onChange={(e) => handleParamChange('safetyStep3', e.target.value)}
+                    className="sm:col-span-3 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                    placeholder="Calling sister (Pooja: +91-98220-XXXXX), sitting in clinic garden..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                  <span className="text-[11px] font-bold text-slate-700 sm:col-span-1">
+                    Step 4: Family / Crisis Contacts
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.parameters.safetyStep4 || ''}
+                    onChange={(e) => handleParamChange('safetyStep4', e.target.value)}
+                    className="sm:col-span-3 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                    placeholder="Primary Contact: Sister (Pooja Kulkarni); Secondary Contact: Vani's Clinic Support."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                  <span className="text-[11px] font-bold text-slate-700 sm:col-span-1">
+                    Step 5: Professional &amp; Emergency Care
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.parameters.safetyStep5 || ''}
+                    onChange={(e) => handleParamChange('safetyStep5', e.target.value)}
+                    className="sm:col-span-3 px-2 py-1 text-xs border border-slate-300 rounded bg-slate-50 focus:bg-white"
+                    placeholder="Vani's Clinic Crisis Line (+91-98220-XXXXX) | Satara District Hospital Helpline..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Formulation & CBT Treatment Plan Details */}
+            <div className="border border-teal-200 rounded-lg p-3 bg-teal-50/40 space-y-2.5">
+              <span className="text-[11px] font-black text-teal-950 uppercase tracking-wide block">
+                4. Formulation &amp; CBT Treatment Plan Specifics
+              </span>
+
+              <div className="space-y-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-700 block">
+                    1. Cognitive Formulation (Automatic Thoughts &amp; Distortions)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.parameters.cognitiveFormulation || ''}
+                    onChange={(e) => handleParamChange('cognitiveFormulation', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                    placeholder="Automatic thoughts ('I am a failure if I am not perfect'), cognitive distortions (Catastrophising, All-or-Nothing thinking)."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-700 block">
+                    2. CBT Plan &amp; Interventions
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.parameters.cbtPlan || ''}
+                    onChange={(e) => handleParamChange('cbtPlan', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-white"
+                    placeholder="12 weekly sessions targeting Cognitive Restructuring, Behavioural Activation (activity scheduling), and MBSR."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-700 block">
+                    3. Confidentiality Note
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.parameters.confidentialityNote || 'Record encrypted under AES-256 field encryption. Access restricted to authorized CBT clinician.'}
+                    onChange={(e) => handleParamChange('confidentialityNote', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded bg-white text-slate-600"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 7. OTHER CLINICAL SERVICES */}
+        {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA', 'RP-CLN-CBT'].includes(activeService.code) && (
           <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
             <span className="text-[10px] font-bold text-slate-600 uppercase block">Proforma Parameters &amp; Clinical Notes</span>
             <p className="text-slate-600 leading-relaxed">
@@ -1008,29 +1471,79 @@ export const ReportCreatePage = () => {
         {/* Clinical Impression & Recommendations */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide block mb-1">
-              Clinical Impression &amp; Diagnosis *
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                Clinical Impression &amp; Diagnosis *
+              </label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => addBulletPoint('provisionalDiagnosis')}
+                  className="px-2 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Add new bullet point"
+                >
+                  <ListPlus className="w-3 h-3" />
+                  + Bullet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => formatAsBullets('provisionalDiagnosis')}
+                  className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded transition-colors cursor-pointer"
+                  title="Format existing lines into clean bullet points"
+                >
+                  • Format List
+                </button>
+              </div>
+            </div>
             <textarea
-              rows={3}
+              rows={4}
               value={formData.parameters.provisionalDiagnosis || ''}
               onChange={(e) => handleParamChange('provisionalDiagnosis', e.target.value)}
-              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
-              placeholder="Enter clinical impression and diagnosis..."
+              onKeyDown={(e) => handleBulletKeyDown(e, 'provisionalDiagnosis')}
+              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white leading-relaxed font-sans"
+              placeholder="• Bilateral Otoacoustic Emissions (OAE) PASS.&#10;• Outer hair cell function is robust bilaterally within normal limits."
             />
+            <span className="text-[9.5px] text-slate-400 block mt-0.5">
+              Tip: Press <kbd className="px-1 py-0.2 bg-slate-200 text-slate-700 rounded text-[8.5px] font-mono">Enter</kbd> to continue bullet points automatically.
+            </span>
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide block mb-1">
-              Clinical Recommendations &amp; Follow-up Protocol *
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                Clinical Recommendations &amp; Follow-up Protocol *
+              </label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => addBulletPoint('recommendations')}
+                  className="px-2 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Add new bullet point"
+                >
+                  <ListPlus className="w-3 h-3" />
+                  + Bullet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => formatAsBullets('recommendations')}
+                  className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded transition-colors cursor-pointer"
+                  title="Format existing lines into clean bullet points"
+                >
+                  • Format List
+                </button>
+              </div>
+            </div>
             <textarea
-              rows={3}
+              rows={4}
               value={formData.parameters.recommendations || ''}
               onChange={(e) => handleParamChange('recommendations', e.target.value)}
-              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white"
-              placeholder="Enter management plan, therapy frequency, and follow-up..."
+              onKeyDown={(e) => handleBulletKeyDown(e, 'recommendations')}
+              className="w-full text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded p-2 focus:ring-1 focus:ring-purple-700 focus:bg-white leading-relaxed font-sans"
+              placeholder="• Routine developmental auditory milestones tracking.&#10;• Repeat evaluation if parental concern arises."
             />
+            <span className="text-[9.5px] text-slate-400 block mt-0.5">
+              Tip: Press <kbd className="px-1 py-0.2 bg-slate-200 text-slate-700 rounded text-[8.5px] font-mono">Enter</kbd> to continue bullet points automatically.
+            </span>
           </div>
         </div>
 
