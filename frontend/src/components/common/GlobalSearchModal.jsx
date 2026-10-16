@@ -15,6 +15,7 @@ import {
   X,
   Clock,
   ShieldCheck,
+  Mail,
 } from 'lucide-react';
 import { ROUTES } from '../../constants';
 
@@ -50,6 +51,7 @@ export const GlobalSearchModal = ({ isOpen, onClose }) => {
     { label: 'New Pure Tone Audiogram (PTA)', path: '/dashboard/reports?test=pta', icon: FileText, category: 'Quick Action', hint: 'PTA' },
     { label: 'New Speech Assessment Proforma', path: '/dashboard/reports?test=speech', icon: FileText, category: 'Quick Action', hint: 'SLP' },
     { label: 'Add Hearing Aid Serial to Inventory', path: '/dashboard/inventory?action=new', icon: Box, category: 'Quick Action', hint: 'INV' },
+    { label: 'SMTP Server & Email Dispatch Logs', path: '/dashboard/settings?tab=smtp', icon: Mail, category: 'Quick Action', hint: 'SMTP' },
   ];
 
   const samplePatients = [
