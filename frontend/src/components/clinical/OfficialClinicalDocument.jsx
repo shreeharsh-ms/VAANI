@@ -31,19 +31,20 @@ export const OfficialClinicalDocument = ({
               alt="Vaani Speech and Hearing Clinic"
               className="h-14 w-auto object-contain shrink-0"
             />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-purple-900 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                  RCI CRR No. {formData?.rciNumber || 'A79214'}
+            <div className="space-y-0.5">
+              <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-700">
+                <span className="font-semibold text-slate-800">
+                  RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
                 </span>
-                <span className="text-[9px] text-slate-500 font-medium">
-                  Approved Practice Center under RCI Act 1992 • ISO 9001:2015
+                <span className="text-slate-300">•</span>
+                <span className="text-[9.5px] text-slate-500 font-medium">
+                  RCI Approved Practice Center • ISO 9001:2015
                 </span>
               </div>
-              <p className="text-[10.5px] font-bold text-slate-800 mt-1">
+              <p className="text-[10.5px] text-slate-700 font-medium">
                 Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
               </p>
-              <p className="text-[9.5px] text-slate-600">
+              <p className="text-[9.5px] text-slate-500">
                 Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
               </p>
             </div>
@@ -457,8 +458,8 @@ export const OfficialClinicalDocument = ({
         <p className="font-black text-slate-950 text-xs">
           {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
         </p>
-        <p className="text-[10px] font-mono font-black text-purple-950">
-          RCI CRR Registration No: {formData?.rciNumber || 'A79214'}
+        <p className="text-[10px] font-semibold text-slate-800">
+          RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
         </p>
         <p className="text-[9px] text-slate-600 font-medium">
           Consultant Audiologist &amp; Speech-Language Pathologist
