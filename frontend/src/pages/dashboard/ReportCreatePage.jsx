@@ -544,11 +544,12 @@ export const ReportCreatePage = () => {
       computedPTA: computedPTA,
     };
     try {
+      localStorage.setItem('vaani_preview_report', JSON.stringify(previewPayload));
       sessionStorage.setItem('vaani_preview_report', JSON.stringify(previewPayload));
     } catch (e) {
       console.warn(e);
     }
-    const url = autoPrint === true ? '/dashboard/reports/preview?print=1' : '/dashboard/reports/preview';
+    const url = `/dashboard/reports/view/${encodeURIComponent(formData.reportNumber)}?preview=1${autoPrint ? '&print=1' : ''}`;
     window.open(url, '_blank');
   };
 
@@ -604,6 +605,27 @@ export const ReportCreatePage = () => {
       }
 
       localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(updated));
+
+      // Also sync preview cache with the latest saved data
+      const previewPayload = {
+        reportNumber: newReportRecord.report_number,
+        reportDate: newReportRecord.date,
+        examinerName: newReportRecord.examiner,
+        rciNumber: newReportRecord.rci_number,
+        service: activeService,
+        patient: selectedPatient,
+        patientDossier: patientDossier,
+        parameters: newReportRecord.parameters,
+        computedPTA: newReportRecord.computed,
+      };
+      try {
+        localStorage.setItem('vaani_preview_report', JSON.stringify(previewPayload));
+        sessionStorage.setItem('vaani_preview_report', JSON.stringify(previewPayload));
+      } catch (e) {}
+
+      // Broadcast update across all tabs and components
+      window.dispatchEvent(new CustomEvent('vaani_reports_updated', { detail: newReportRecord }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'vaani_clinical_reports_v1' }));
 
       notify.success(
         existingReport
@@ -1161,7 +1183,7 @@ export const ReportCreatePage = () => {
                               <input
                                 type="number"
                                 min={-10}
-                                max={80}
+                                max={120}
                                 step={5}
                                 value={formData.parameters.rightEarBC?.[freq] ?? ''}
                                 onChange={(e) => handleNestedParamChange('rightEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}
@@ -1219,7 +1241,7 @@ export const ReportCreatePage = () => {
                               <input
                                 type="number"
                                 min={-10}
-                                max={80}
+                                max={120}
                                 step={5}
                                 value={formData.parameters.leftEarBC?.[freq] ?? ''}
                                 onChange={(e) => handleNestedParamChange('leftEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}

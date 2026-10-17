@@ -57,19 +57,33 @@ export const ReportsPage = () => {
   });
 
   // Fetch any backend assessments as well
+  // Sync and reload reports from localStorage on mount, focus, or update event
   useEffect(() => {
+    const reload = () => {
+      setAllReports(getAllClinicalReports());
+    };
+    window.addEventListener('focus', reload);
+    window.addEventListener('storage', reload);
+    window.addEventListener('vaani_reports_updated', reload);
+
     clinicService
       .getClinicalAssessments()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setAllReports((prev) => {
-            const ids = new Set(prev.map((r) => r.id));
-            const newOnes = data.filter((d) => !ids.has(d.id));
+            const ids = new Set(prev.map((r) => r.id || r.report_number));
+            const newOnes = data.filter((d) => !ids.has(d.id || d.report_number));
             return [...prev, ...newOnes];
           });
         }
       })
       .catch(() => {});
+
+    return () => {
+      window.removeEventListener('focus', reload);
+      window.removeEventListener('storage', reload);
+      window.removeEventListener('vaani_reports_updated', reload);
+    };
   }, []);
 
   // Filtered reports
@@ -92,41 +106,45 @@ export const ReportsPage = () => {
   const disciplines = ['ALL', 'Audiology', 'Speech Therapy', 'Fluency', 'Voice', 'Psychology', 'Rehabilitation'];
 
   const handleInspectInNewTab = (rep) => {
-    const srv = CLINICAL_SERVICES.find((s) => s.code === rep.service_code) || {
-      code: rep.service_code || 'RP-CLN-AUD',
-      title: rep.title,
-      discipline: rep.discipline,
-      description: rep.diagnosis,
+    const all = getAllClinicalReports();
+    const fresh = all.find((r) => r.report_number === rep.report_number || r.id === rep.id) || rep;
+
+    const srv = CLINICAL_SERVICES.find((s) => s.code === fresh.service_code) || {
+      code: fresh.service_code || 'RP-CLN-AUD',
+      title: fresh.title,
+      discipline: fresh.discipline,
+      description: fresh.diagnosis,
     };
     const patient = {
-      full_name: rep.patient_name,
-      uhid: rep.uhid,
-      gender: rep.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
-      date_of_birth: rep.patient_age_sex?.split(',')[1]?.trim() || '—',
-      phone: rep.phone || '+91 98220 11223',
-      guardian_name: rep.guardian || 'Self',
-      city: rep.city || 'Satara, Maharashtra',
+      full_name: fresh.patient_name,
+      uhid: fresh.uhid,
+      gender: fresh.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
+      date_of_birth: fresh.patient_age_sex?.split(',')[1]?.trim() || '—',
+      phone: fresh.phone || '+91 98220 11223',
+      guardian_name: fresh.guardian || 'Self',
+      city: fresh.city || 'Satara, Maharashtra',
     };
     const payload = {
-      reportNumber: rep.report_number || rep.id,
-      reportDate: rep.date,
-      examinerName: rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      rciNumber: rep.rci_number || 'A79214',
+      reportNumber: fresh.report_number || fresh.id,
+      reportDate: fresh.date,
+      examinerName: fresh.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      rciNumber: fresh.rci_number || 'A79214',
       service: srv,
       patient: patient,
       patientDossier: null,
-      parameters: rep.parameters || {
-        provisionalDiagnosis: rep.diagnosis,
-        recommendations: rep.recommendations,
+      parameters: fresh.parameters || {
+        provisionalDiagnosis: fresh.diagnosis,
+        recommendations: fresh.recommendations,
       },
-      computedPTA: rep.computed || null,
+      computedPTA: fresh.computed || null,
     };
     try {
+      localStorage.setItem('vaani_preview_report', JSON.stringify(payload));
       sessionStorage.setItem('vaani_preview_report', JSON.stringify(payload));
     } catch (e) {
       console.warn(e);
     }
-    window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
+    window.open(`/dashboard/reports/view/${encodeURIComponent(fresh.report_number || fresh.id)}`, '_blank');
   };
 
   // ── EDIT REPORT STATE & HANDLERS ──

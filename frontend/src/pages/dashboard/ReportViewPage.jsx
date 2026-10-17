@@ -11,71 +11,155 @@ export const ReportViewPage = () => {
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
 
-  useEffect(() => {
-    // 1. Try reading from sessionStorage (for live preview from creator)
-    try {
-      const previewJson = sessionStorage.getItem('vaani_preview_report');
-      if (previewJson) {
-        const parsed = JSON.parse(previewJson);
-        if (parsed && (!id || parsed.reportNumber === id || parsed.id === id || id === 'preview')) {
-          setReportData(parsed);
-          return;
+  const loadReport = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const isPreviewParam = searchParams.get('preview') === '1' || searchParams.get('preview') === 'true';
+
+    // Helper: read preview payload from localStorage or sessionStorage
+    const getPreviewPayload = () => {
+      try {
+        const local = localStorage.getItem('vaani_preview_report');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && (!id || id === 'preview' || parsed.reportNumber === id || parsed.id === id)) {
+            return parsed;
+          }
         }
-      }
-    } catch (e) {
-      console.warn('Error reading vaani_preview_report from sessionStorage', e);
-    }
+      } catch (e) {}
+      try {
+        const session = sessionStorage.getItem('vaani_preview_report');
+        if (session) {
+          const parsed = JSON.parse(session);
+          if (parsed && (!id || id === 'preview' || parsed.reportNumber === id || parsed.id === id)) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      return null;
+    };
 
-    // 2. Try reading from all reports (localStorage + default seed assessments)
-    try {
-      const allReports = getAllClinicalReports();
-      const match = allReports.find((r) => r.id === id || r.report_number === id);
-      if (match) {
-        const srv = CLINICAL_SERVICES.find((s) => s.code === match.service_code) || {
-          code: match.service_code || 'RP-CLN-AUD',
-          title: match.title,
-          discipline: match.discipline,
-          description: match.diagnosis,
-          defaultParameters: {},
-        };
-        const patientMatch = SEED_PATIENTS.find(
-          (p) => (p.uhid && p.uhid.toLowerCase() === match.uhid?.toLowerCase()) ||
-                 (p.full_name && p.full_name.toLowerCase() === match.patient_name?.toLowerCase())
-        );
-        const patient = patientMatch || {
-          full_name: match.patient_name,
-          uhid: match.uhid,
-          gender: match.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
-          date_of_birth: match.patient_age_sex?.split(',')[1]?.trim() || '—',
-          phone: match.phone || '+91 98220 11223',
-          guardian_name: match.guardian || 'Self',
-          city: match.city || 'Satara, Maharashtra',
-        };
-        const dossier = (patient.uhid && PATIENT_DOSSIERS[patient.uhid]) || null;
-
-        setReportData({
-          reportNumber: match.report_number || match.id,
-          reportDate: match.date || new Date().toISOString().split('T')[0],
-          examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-          rciNumber: match.rci_number || 'A79214',
-          service: srv,
-          patient: patient,
-          patientDossier: dossier,
-          parameters: {
-            ...(srv.defaultParameters || {}),
-            ...(match.parameters || {}),
-            provisionalDiagnosis: match.diagnosis || match.parameters?.provisionalDiagnosis || srv.defaultParameters?.provisionalDiagnosis,
-            recommendations: match.recommendations || match.parameters?.recommendations || srv.defaultParameters?.recommendations,
-          },
-          computedPTA: match.computed || null,
-        });
+    // 1. If explicitly in preview mode or id === 'preview', check preview payload first
+    if (isPreviewParam || id === 'preview') {
+      const preview = getPreviewPayload();
+      if (preview) {
+        setReportData(preview);
         return;
       }
-    } catch (e) {
-      console.warn('Error reading reports in ReportViewPage', e);
     }
 
-    // 3. Fallback: Default PTA report for patient 1
+    // 2. Persistent Registry: Check localStorage (getAllClinicalReports) FIRST for any real report id
+    if (id && id !== 'preview') {
+      try {
+        const allReports = getAllClinicalReports();
+        const match = allReports.find(
+          (r) =>
+            r.id === id ||
+            r.report_number === id ||
+            r.report_number?.toLowerCase() === id.toLowerCase() ||
+            r.id?.toLowerCase() === id.toLowerCase()
+        );
+
+        if (match) {
+          const srv = CLINICAL_SERVICES.find((s) => s.code === match.service_code) || {
+            code: match.service_code || 'RP-CLN-AUD',
+            title: match.title,
+            discipline: match.discipline,
+            description: match.diagnosis,
+            defaultParameters: {},
+          };
+
+          const allPatients = (() => {
+            try {
+              const p = localStorage.getItem('vaani_patients_v1');
+              if (p) {
+                const parsedP = JSON.parse(p);
+                if (Array.isArray(parsedP) && parsedP.length > 0) return [...parsedP, ...SEED_PATIENTS];
+              }
+            } catch {}
+            return SEED_PATIENTS;
+          })();
+
+          const patientMatch = allPatients.find(
+            (p) =>
+              (p.uhid && match.uhid && p.uhid.toLowerCase() === match.uhid.toLowerCase()) ||
+              (p.full_name && match.patient_name && p.full_name.toLowerCase() === match.patient_name.toLowerCase())
+          );
+
+          const patient = patientMatch || {
+            full_name: match.patient_name,
+            uhid: match.uhid,
+            gender: match.patient_age_sex?.toLowerCase().includes('female') ? 'FEMALE' : 'MALE',
+            date_of_birth: match.patient_age_sex?.split(',')[1]?.trim() || '—',
+            phone: match.phone || '+91 98220 11223',
+            guardian_name: match.guardian || 'Self',
+            city: match.city || 'Satara, Maharashtra',
+          };
+          const dossier = (patient.uhid && PATIENT_DOSSIERS[patient.uhid]) || null;
+
+          // Merge parameters deeply so nested frequency thresholds are preserved
+          const defParams = srv.defaultParameters || {};
+          const matchParams = match.parameters || {};
+
+          const mergedParameters = {
+            ...defParams,
+            ...matchParams,
+            rightEarAC: { ...(defParams.rightEarAC || {}), ...(matchParams.rightEarAC || {}) },
+            rightEarBC: { ...(defParams.rightEarBC || {}), ...(matchParams.rightEarBC || {}) },
+            leftEarAC: { ...(defParams.leftEarAC || {}), ...(matchParams.leftEarAC || {}) },
+            leftEarBC: { ...(defParams.leftEarBC || {}), ...(matchParams.leftEarBC || {}) },
+            provisionalDiagnosis: match.diagnosis || matchParams.provisionalDiagnosis || defParams.provisionalDiagnosis,
+            recommendations: match.recommendations || matchParams.recommendations || defParams.recommendations,
+          };
+
+          // Recompute PTA if not stored
+          let computed = match.computed;
+          if (!computed && ['RP-CLN-AUD', 'RP-CLN-AAE'].includes(srv.code)) {
+            const rAC = mergedParameters.rightEarAC || {};
+            const lAC = mergedParameters.leftEarAC || {};
+            const rAvg = Math.round(((Number(rAC['500'] || 0) + Number(rAC['1000'] || 0) + Number(rAC['2000'] || 0)) / 3) * 10) / 10;
+            const lAvg = Math.round(((Number(lAC['500'] || 0) + Number(lAC['1000'] || 0) + Number(lAC['2000'] || 0)) / 3) * 10) / 10;
+            const classify = (avg) => {
+              if (avg <= 25) return 'Normal Hearing Sensitivity';
+              if (avg <= 40) return 'Mild Hearing Loss';
+              if (avg <= 55) return 'Moderate Hearing Loss';
+              if (avg <= 70) return 'Moderately Severe Hearing Loss';
+              if (avg <= 90) return 'Severe Hearing Loss';
+              return 'Profound Hearing Loss';
+            };
+            computed = {
+              rightAvg: rAvg,
+              leftAvg: lAvg,
+              rightDegree: classify(rAvg),
+              leftDegree: classify(lAvg),
+            };
+          }
+
+          setReportData({
+            reportNumber: match.report_number || match.id,
+            reportDate: match.date || new Date().toISOString().split('T')[0],
+            examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+            rciNumber: match.rci_number || 'A79214',
+            service: srv,
+            patient: patient,
+            patientDossier: dossier,
+            parameters: mergedParameters,
+            computedPTA: computed || null,
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn('Error reading reports in ReportViewPage', e);
+      }
+    }
+
+    // 3. Fallback to preview payload if available
+    const preview = getPreviewPayload();
+    if (preview) {
+      setReportData(preview);
+      return;
+    }
+
+    // 4. Ultimate fallback: Default PTA proforma
     const srv = CLINICAL_SERVICES[0];
     const patient = SEED_PATIENTS[0];
     setReportData({
@@ -94,6 +178,29 @@ export const ReportViewPage = () => {
         leftDegree: 'Normal Hearing Sensitivity',
       },
     });
+  };
+
+  useEffect(() => {
+    loadReport();
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'vaani_clinical_reports_v1' || e.key === 'vaani_preview_report' || !e.key) {
+        loadReport();
+      }
+    };
+    const handleCustomUpdate = () => {
+      loadReport();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('vaani_reports_updated', handleCustomUpdate);
+    window.addEventListener('focus', loadReport);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('vaani_reports_updated', handleCustomUpdate);
+      window.removeEventListener('focus', loadReport);
+    };
   }, [id]);
 
   // Keyboard shortcut for print (Cmd/Ctrl + P)

@@ -151,6 +151,20 @@ export const PatientDetailPage = () => {
     return getReportsForPatient(demographics.uhid, demographics.fullName);
   }, [demographics.uhid, demographics.fullName, reportsRefreshTick]);
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      setReportsRefreshTick((prev) => prev + 1);
+    };
+    window.addEventListener('focus', handleRefresh);
+    window.addEventListener('storage', handleRefresh);
+    window.addEventListener('vaani_reports_updated', handleRefresh);
+    return () => {
+      window.removeEventListener('focus', handleRefresh);
+      window.removeEventListener('storage', handleRefresh);
+      window.removeEventListener('vaani_reports_updated', handleRefresh);
+    };
+  }, []);
+
   // Reports Table Search, Filter, Pagination & Expand State
   const [reportSearch, setReportSearch] = useState('');
   const [reportDisciplineFilter, setReportDisciplineFilter] = useState('ALL');
@@ -281,7 +295,33 @@ export const PatientDetailPage = () => {
   };
 
   const handleViewDownloadReport = (rep) => {
-    window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
+    const all = getAllClinicalReports();
+    const fresh = all.find((r) => r.report_number === rep.report_number || r.id === rep.id) || rep;
+    const srv = CLINICAL_SERVICES.find((s) => s.code === fresh.service_code) || {
+      code: fresh.service_code || 'RP-CLN-AUD',
+      title: fresh.title,
+      discipline: fresh.discipline,
+      description: fresh.diagnosis,
+    };
+    const payload = {
+      reportNumber: fresh.report_number || fresh.id,
+      reportDate: fresh.date,
+      examinerName: fresh.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      rciNumber: fresh.rci_number || 'A79214',
+      service: srv,
+      patient: patient,
+      patientDossier: dossier,
+      parameters: fresh.parameters || {
+        provisionalDiagnosis: fresh.diagnosis,
+        recommendations: fresh.recommendations,
+      },
+      computedPTA: fresh.computed || null,
+    };
+    try {
+      localStorage.setItem('vaani_preview_report', JSON.stringify(payload));
+      sessionStorage.setItem('vaani_preview_report', JSON.stringify(payload));
+    } catch {}
+    window.open(`/dashboard/reports/view/${encodeURIComponent(fresh.report_number || fresh.id)}`, '_blank');
   };
 
   // ── EDIT REPORT MODAL STATE & ACTIONS ──
