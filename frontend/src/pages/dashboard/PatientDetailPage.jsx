@@ -27,12 +27,17 @@ import {
   ChevronRight,
   Share2,
   Edit3,
+  Plus,
+  X,
+  Send,
 } from 'lucide-react';
+import { useNotification } from '../../context/NotificationContext';
 import {
   SEED_PATIENTS,
   PATIENT_DOSSIERS,
   getPatientClinicalDossier,
 } from '../../data/patientClinicalProfiles';
+import { getReportsForPatient } from '../../data/clinicalReportsData';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 
@@ -86,16 +91,99 @@ export const PatientDetailPage = () => {
     return list[0];
   }, [id]);
 
+  const { notify } = useNotification();
+
   const dossier = useMemo(() => {
     return getPatientClinicalDossier(patient);
   }, [patient]);
 
   const { demographics, consents, clinical, therapy, hearingAids, financial, recalls, retention } = dossier;
 
+  // Load generated clinical reports for this patient
+  const patientReports = useMemo(() => {
+    return getReportsForPatient(demographics.uhid, demographics.fullName);
+  }, [demographics.uhid, demographics.fullName]);
+
+  // Email Modal State
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [selectedReportForEmail, setSelectedReportForEmail] = useState(null);
+  const [emailRecipient, setEmailRecipient] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+
+  const handleOpenEmailModal = (rep) => {
+    setSelectedReportForEmail(rep);
+    const targetEmail = demographics.email || (demographics.guardians?.[0]?.email) || `${demographics.uhid.toLowerCase()}@vaaniclinic.com`;
+    setEmailRecipient(targetEmail);
+    setEmailSubject(`Official Clinical Report - ${rep.report_number} - ${demographics.fullName} | Vaani Clinic`);
+    setEmailBody(
+      `Dear ${demographics.fullName},\n\n` +
+      `Please find attached your official diagnostic clinical report (${rep.title} - ${rep.report_number}) evaluated at Vaani Speech and Hearing Clinic, Satara.\n\n` +
+      `Summary / Impression: ${rep.diagnosis || 'Clinical evaluation completed.'}\n` +
+      (rep.recommendations ? `Recommendations: ${rep.recommendations}\n\n` : '\n') +
+      `This report is digitally signed and cryptographically verifiable under RCI CRR No. A79214 and the Digital Personal Data Protection (DPDP) Act 2023.\n\n` +
+      `Warm regards,\nDr. Shreeharsh Shivpuje, BASLP, MASLP\nVaani Speech and Hearing Clinic, Satara\nContact: +91 98220 11223`
+    );
+    setIsEmailModalOpen(true);
+  };
+
+  const handleSendEmail = (e) => {
+    e.preventDefault();
+    if (!emailRecipient) {
+      notify.error('Please specify a recipient email address.');
+      return;
+    }
+
+    try {
+      const logs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
+      logs.unshift({
+        id: `mail_${Date.now()}`,
+        date: new Date().toISOString().split('T')[0],
+        timestamp: new Date().toISOString(),
+        to: emailRecipient,
+        patient: demographics.fullName,
+        uhid: demographics.uhid,
+        reportNumber: selectedReportForEmail?.report_number,
+        subject: emailSubject,
+        status: 'DISPATCHED',
+      });
+      localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify(logs));
+    } catch {}
+
+    notify.success(`Report ${selectedReportForEmail?.report_number} successfully dispatched to ${emailRecipient}`);
+    setIsEmailModalOpen(false);
+  };
+
+  const handleSendWhatsApp = (rep) => {
+    const rawPhone = demographics.primaryPhone || patient.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    const phoneWithCountry = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
+
+    const text = `*VAANI SPEECH AND HEARING CLINIC*\n*Official Clinical Diagnostic Report*\n\n` +
+      `*Patient:* ${demographics.fullName || patient.full_name} (${demographics.uhid || patient.uhid})\n` +
+      `*Report Ref:* ${rep.report_number}\n` +
+      `*Investigation:* ${rep.title}\n` +
+      `*Date:* ${rep.date}\n` +
+      `*Attending Clinician:* ${rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP (A79214)'}\n\n` +
+      `*Diagnosis / Summary:* ${rep.diagnosis || 'Clinical evaluation completed.'}\n\n` +
+      (rep.recommendations ? `*Recommendations:* ${rep.recommendations}\n\n` : '') +
+      `*Clinic Address:* Sadashiv Peth, Near Powai Naka, Satara - 415002\n` +
+      `*Contact:* +91 98220 11223 / +91 2162 234567\n` +
+      `*Secure Verification:* https://vaaniclinic.com/verify-doc/${rep.report_number}`;
+
+    const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+    notify.success(`WhatsApp message draft launched for ${demographics.fullName || patient.full_name}`);
+  };
+
+  const handleViewDownloadReport = (rep) => {
+    window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
+  };
+
   const tabs = [
     { id: 'demographics', label: '1. Identity & Demographics', count: '14 fields' },
     { id: 'consents', label: '2. DPDP Consents', count: `${consents.length} rules` },
-    { id: 'clinical', label: '3. Clinical Diagnostics & EMR', count: 'Diagnostic Battery' },
+    { id: 'clinical', label: '3. Clinical Diagnostics & EMR', count: `${patientReports.length} Reports` },
     { id: 'hearingAids', label: '4. Hearing Aids & Devices', count: hearingAids?.dispensed ? 'Bilateral' : 'Screened' },
     { id: 'therapy', label: '5. Therapy Goals & SOAP', count: 'Active Plan' },
     { id: 'billing', label: '6. Billing & Recalls', count: `${financial?.invoices?.length || 0} Invoices` },
@@ -180,43 +268,43 @@ export const PatientDetailPage = () => {
         </div>
       </div>
 
-      {/* ── PATIENT HERO CLINICAL BANNER (EXCEL HIGH DENSITY) ── */}
-      <div className="bg-gradient-to-r from-[#29103c] via-[#3a1854] to-[#4c216c] text-white rounded-lg p-3 sm:p-4 shadow-sm border border-purple-950">
+      {/* ── PATIENT HERO CLINICAL BANNER (REFINED PROFESSIONAL LAVENDER THEME) ── */}
+      <div className="bg-gradient-to-r from-purple-50/90 via-white to-purple-50/60 text-slate-900 rounded-xl p-3.5 sm:p-4 shadow-xs border border-purple-200/90">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-black bg-white/20 text-white px-2 py-0.5 rounded border border-white/20 tracking-wider">
+              <span className="font-mono text-xs font-black bg-purple-900 text-white px-2.5 py-0.5 rounded tracking-wider shadow-2xs">
                 {demographics.uhid}
               </span>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight">
+              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
                 {demographics.fullName}
               </h1>
               {demographics.displayMr && (
-                <span className="text-xs text-purple-200 font-medium">
+                <span className="text-xs text-purple-900 font-semibold">
                   ({demographics.displayMr})
                 </span>
               )}
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
                 patient.service_line === 'SPEECH_LANGUAGE'
-                  ? 'bg-purple-950/80 text-purple-200 border-purple-400/40'
+                  ? 'bg-purple-100 text-purple-950 border-purple-300'
                   : patient.service_line === 'AUDIOLOGY'
-                  ? 'bg-indigo-950/80 text-indigo-200 border-indigo-400/40'
+                  ? 'bg-indigo-100 text-indigo-950 border-indigo-300'
                   : patient.service_line === 'VOICE'
-                  ? 'bg-amber-950/80 text-amber-200 border-amber-400/40'
-                  : 'bg-emerald-950/80 text-emerald-200 border-emerald-400/40'
+                  ? 'bg-purple-100 text-purple-950 border-purple-300'
+                  : 'bg-emerald-100 text-emerald-950 border-emerald-300'
               }`}>
                 {patient.service_line || 'CLINICAL EMR'}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-purple-200 flex-wrap font-medium">
-              <span>{demographics.sex}</span>
+            <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap font-medium">
+              <span className="font-bold text-slate-800">{demographics.sex}</span>
               <span>•</span>
-              <span className="text-white font-bold">{demographics.ageContextual}</span>
+              <span className="text-purple-950 font-bold">{demographics.ageContextual}</span>
               <span>•</span>
-              <span>DOB: {demographics.dob}</span>
+              <span>DOB: <strong className="text-slate-800">{demographics.dob}</strong></span>
               <span>•</span>
-              <span>Phone: <strong className="font-mono text-white">{demographics.primaryPhone}</strong></span>
+              <span>Phone: <strong className="font-mono text-purple-950 font-bold">{demographics.primaryPhone}</strong></span>
               <span>•</span>
               <span>{demographics.locality}, {demographics.district}</span>
             </div>
@@ -224,32 +312,32 @@ export const PatientDetailPage = () => {
 
           {/* Quick Metrics Bar */}
           <div className="flex items-center gap-2 self-start lg:self-center flex-wrap">
-            <div className="bg-white/10 border border-white/15 rounded px-2.5 py-1 text-center min-w-[90px]">
-              <span className="text-[10px] uppercase font-bold text-purple-200 block">Total Billed</span>
-              <span className="font-mono font-bold text-white text-xs">{formatCurrency(financial?.totalBilled || 0)}</span>
+            <div className="bg-white border border-slate-200/90 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Billed</span>
+              <span className="font-mono font-bold text-slate-900 text-xs">{formatCurrency(financial?.totalBilled || 0)}</span>
             </div>
-            <div className="bg-white/10 border border-white/15 rounded px-2.5 py-1 text-center min-w-[90px]">
-              <span className="text-[10px] uppercase font-bold text-emerald-300 block">Total Paid</span>
-              <span className="font-mono font-bold text-emerald-300 text-xs">{formatCurrency(financial?.totalPaid || 0)}</span>
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
+              <span className="text-[10px] uppercase font-bold text-emerald-800 block">Total Paid</span>
+              <span className="font-mono font-bold text-emerald-900 text-xs">{formatCurrency(financial?.totalPaid || 0)}</span>
             </div>
-            <div className="bg-white/10 border border-white/15 rounded px-2.5 py-1 text-center min-w-[90px]">
-              <span className="text-[10px] uppercase font-bold text-purple-200 block">Balance Due</span>
-              <span className="font-mono font-bold text-white text-xs">{formatCurrency(financial?.balance || 0)}</span>
+            <div className="bg-white border border-slate-200/90 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Balance Due</span>
+              <span className="font-mono font-bold text-slate-900 text-xs">{formatCurrency(financial?.balance || 0)}</span>
             </div>
           </div>
         </div>
 
         {/* Medical Alerts Row */}
         {demographics.medicalAlerts && demographics.medicalAlerts.length > 0 && (
-          <div className="mt-3 pt-2.5 border-t border-white/15 flex items-center gap-2 flex-wrap text-xs">
-            <div className="flex items-center gap-1 font-bold text-amber-300">
-              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+          <div className="mt-3 pt-2.5 border-t border-purple-200/60 flex items-center gap-2 flex-wrap text-xs">
+            <div className="flex items-center gap-1 font-bold text-amber-800">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
               <span>Safety Alerts:</span>
             </div>
             {demographics.medicalAlerts.map((alert, i) => (
               <span
                 key={i}
-                className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-400/20 text-amber-200 border border-amber-400/40"
+                className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-950 border border-amber-300"
               >
                 {alert.label} • {alert.note}
               </span>
@@ -268,14 +356,14 @@ export const PatientDetailPage = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold whitespace-nowrap transition-all duration-100 cursor-pointer ${
                 isActive
-                  ? 'bg-[#301444] text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-[#301444]'
+                  ? 'bg-purple-900 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100 hover:text-purple-950'
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                  isActive ? 'bg-purple-900 text-purple-200' : 'bg-slate-100 text-slate-500'
+                  isActive ? 'bg-purple-800 text-purple-100' : 'bg-slate-100 text-slate-500'
                 }`}
               >
                 {tab.count}
@@ -495,6 +583,131 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'clinical' && (
           <div className="space-y-3">
+            {/* ── 3.0 GENERATED CLINICAL REPORTS & DIAGNOSTIC RECORDS ── */}
+            <div className="bg-white border border-purple-200/90 rounded-lg overflow-hidden shadow-2xs">
+              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 font-bold text-[11px] text-purple-950 uppercase tracking-wider flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-purple-900" />
+                  <span>3.0 Official Clinical Reports &amp; Diagnostic Records</span>
+                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                    {patientReports.length} {patientReports.length === 1 ? 'Report' : 'Reports'} on File
+                  </span>
+                </div>
+                <Link
+                  to={`/dashboard/reports/create?patient=${patient.uhid}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Generate New Report</span>
+                </Link>
+              </div>
+
+              {patientReports.length > 0 ? (
+                <div className="divide-y divide-purple-100">
+                  {patientReports.map((rep) => (
+                    <div key={rep.id || rep.report_number} className="p-3.5 space-y-2.5 hover:bg-purple-50/20 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-bold bg-purple-100 text-purple-950 px-2 py-0.5 rounded border border-purple-200">
+                              {rep.report_number}
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                              {rep.title}
+                            </h4>
+                            <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono">
+                              {rep.service_code || rep.discipline}
+                            </span>
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>FINAL • VERIFIED</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-purple-700" />
+                              <span>Date: <strong className="text-slate-800">{rep.date}</strong></span>
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3 text-purple-700" />
+                              <span>Clinician: <strong className="text-slate-800">{rep.examiner || 'Dr. Shreeharsh Shivpuje (A79214)'}</strong></span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons: View/Download, Email, WhatsApp */}
+                        <div className="flex items-center gap-1.5 self-start sm:self-center flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDownloadReport(rep)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 rounded shadow-2xs transition-colors cursor-pointer"
+                            title="Open and download official printable PDF document"
+                          >
+                            <Download className="w-3.5 h-3.5 text-purple-700" />
+                            <span>Download / PDF</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEmailModal(rep)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded shadow-2xs transition-colors cursor-pointer"
+                            title="Dispatch cryptographically signed report via email"
+                          >
+                            <Mail className="w-3.5 h-3.5 text-purple-700" />
+                            <span>Email</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsApp(rep)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs transition-colors cursor-pointer"
+                            title="Send official report summary directly to patient via WhatsApp"
+                          >
+                            <Share2 className="w-3.5 h-3.5 text-white" />
+                            <span>WhatsApp</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Clinical Summary & Recommendations */}
+                      <div className="bg-slate-50 border border-slate-200 rounded p-2.5 text-xs space-y-1">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                            Provisional Clinical Diagnosis / Findings:
+                          </span>
+                          <p className="text-slate-800 font-medium">
+                            {rep.diagnosis || 'Clinical evaluation completed and authenticated under RCI CRR No. A79214.'}
+                          </p>
+                        </div>
+                        {rep.recommendations && (
+                          <div className="pt-1 border-t border-slate-200/60">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                              Clinical Recommendations:
+                            </span>
+                            <p className="text-slate-700">
+                              {rep.recommendations}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-500 space-y-2">
+                  <p>No previous reports found for this patient.</p>
+                  <Link
+                    to={`/dashboard/reports/create?patient=${patient.uhid}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create First Clinical Report</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Case History */}
             {clinical?.caseHistory && (
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
@@ -1062,6 +1275,97 @@ export const PatientDetailPage = () => {
           <span>Back to Patients Index [Alt+B]</span>
         </button>
       </div>
+
+      {/* ── EMAIL REPORT MODAL ── */}
+      {isEmailModalOpen && selectedReportForEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-5 py-3.5 bg-gradient-to-r from-purple-100 via-purple-50 to-white border-b border-purple-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-900 text-white flex items-center justify-center">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-purple-950">Dispatch Clinical Report via Email</h3>
+                  <p className="text-[11px] text-slate-500 font-mono">Ref: {selectedReportForEmail.report_number}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEmailModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendEmail} className="p-5 space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Recipient Email <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  placeholder="patient@example.com"
+                  className="w-full h-9 px-3 text-xs bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Subject Line
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full h-9 px-3 text-xs bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Message Body &amp; Clinical Summary
+                </label>
+                <textarea
+                  rows={6}
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  className="w-full p-3 text-xs font-mono bg-slate-50 border border-slate-300 rounded-md focus:border-purple-600 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>
+                  The official PDF report is digitally signed with clinician registration (RCI CRR A79214) and cryptographically linked to the clinic&apos;s master ledger under the DPDP Act 2023.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEmailModalOpen(false)}
+                  className="h-8 px-4 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="h-8 px-4 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded-md shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Email</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

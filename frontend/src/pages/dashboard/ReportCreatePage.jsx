@@ -20,6 +20,7 @@ import {
   Activity,
   X,
   ListPlus,
+  Edit3,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
@@ -35,8 +36,8 @@ export const ReportCreatePage = () => {
   const [searchParams] = useSearchParams();
   const { notify } = useNotification();
 
-  // Load all patients from localStorage or SEED_PATIENTS
-  const allPatients = useMemo(() => {
+  // Load all patients from localStorage or SEED_PATIENTS (Stateful so edits sync immediately)
+  const [allPatients, setAllPatients] = useState(() => {
     try {
       const stored = localStorage.getItem('vaani_patients_v1');
       if (stored) {
@@ -49,7 +50,21 @@ export const ReportCreatePage = () => {
       console.warn('Failed to parse vaani_patients_v1', e);
     }
     return SEED_PATIENTS;
-  }, []);
+  });
+
+  // Patient Quick Edit Modal state
+  const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
+  const [patientEditForm, setPatientEditForm] = useState({
+    full_name: '',
+    gender: 'MALE',
+    date_of_birth: '',
+    phone: '',
+    guardian_name: '',
+    guardian_phone: '',
+    city: '',
+    service_line: 'AUDIOLOGY',
+    referringDoctor: '',
+  });
 
   // Determine initial service from query param (supports type, service, code, id)
   const serviceParam = searchParams.get('type') || searchParams.get('service') || searchParams.get('code') || '';
@@ -82,6 +97,67 @@ export const ReportCreatePage = () => {
     if (!selectedPatient?.uhid) return null;
     return PATIENT_DOSSIERS[selectedPatient.uhid] || null;
   }, [selectedPatient]);
+
+  // Open Patient Quick Edit Modal
+  const handleOpenEditPatient = () => {
+    if (!selectedPatient) return;
+    setPatientEditForm({
+      full_name: selectedPatient.full_name || '',
+      gender: selectedPatient.gender || 'MALE',
+      date_of_birth: selectedPatient.date_of_birth || '',
+      phone: selectedPatient.phone || '',
+      guardian_name: selectedPatient.guardian_name || '',
+      guardian_phone: selectedPatient.guardian_phone || selectedPatient.phone || '',
+      city: selectedPatient.city || '',
+      service_line: selectedPatient.service_line || 'AUDIOLOGY',
+      referringDoctor: patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni (ENT)',
+    });
+    setIsEditPatientModalOpen(true);
+  };
+
+  // Save updated patient information (persists to localStorage & updates active session)
+  const handleSavePatientEdit = (e) => {
+    e.preventDefault();
+    if (!selectedPatient) return;
+
+    const updatedPatients = allPatients.map((p) => {
+      if (p.id === selectedPatient.id || p.uhid === selectedPatient.uhid) {
+        return {
+          ...p,
+          full_name: patientEditForm.full_name,
+          gender: patientEditForm.gender,
+          date_of_birth: patientEditForm.date_of_birth,
+          phone: patientEditForm.phone,
+          guardian_name: patientEditForm.guardian_name,
+          guardian_phone: patientEditForm.guardian_phone,
+          city: patientEditForm.city,
+          service_line: patientEditForm.service_line,
+        };
+      }
+      return p;
+    });
+
+    setAllPatients(updatedPatients);
+    localStorage.setItem('vaani_patients_v1', JSON.stringify(updatedPatients));
+
+    // Also update PATIENT_DOSSIERS in-memory if matching
+    if (selectedPatient.uhid && PATIENT_DOSSIERS[selectedPatient.uhid]) {
+      const d = PATIENT_DOSSIERS[selectedPatient.uhid].demographics;
+      d.fullName = patientEditForm.full_name;
+      d.sex = patientEditForm.gender;
+      d.dob = patientEditForm.date_of_birth;
+      d.primaryPhone = patientEditForm.phone;
+      d.referringDoctor = patientEditForm.referringDoctor;
+      d.locality = patientEditForm.city;
+      if (d.guardians && d.guardians[0]) {
+        d.guardians[0].name = patientEditForm.guardian_name;
+        d.guardians[0].phone = patientEditForm.guardian_phone;
+      }
+    }
+
+    notify.success(`Patient ${selectedPatient.uhid} profile updated across system.`);
+    setIsEditPatientModalOpen(false);
+  };
 
   // Form Parameters state for the active report
   const [formData, setFormData] = useState({
@@ -516,9 +592,20 @@ export const ReportCreatePage = () => {
               2. Patient Selection &amp; Consultation Context
             </span>
           </div>
-          <span className="text-[10px] text-slate-500">
-            {allPatients.length} Registered Patients in System
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenEditPatient}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-purple-100 hover:bg-purple-200 text-purple-950 border border-purple-300 transition-all cursor-pointer shadow-2xs"
+              title="Edit Patient Information for this report & profile"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-purple-700" />
+              <span>Edit Patient Info</span>
+            </button>
+            <span className="text-[10px] text-slate-500">
+              {allPatients.length} Registered Patients in System
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -577,36 +664,48 @@ export const ReportCreatePage = () => {
 
         {/* Auto-Populated Demographics Summary Card */}
         {selectedPatient && (
-          <div className="bg-slate-50 border border-slate-200 rounded-md p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">UHID</span>
-              <span className="font-mono font-black text-purple-800">{selectedPatient.uhid}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">Full Name</span>
-              <span className="font-bold text-slate-900 truncate block">{selectedPatient.full_name}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">Age / Sex</span>
-              <span className="font-semibold text-slate-700">
-                {selectedPatient.gender} • DOB {selectedPatient.date_of_birth}
-              </span>
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">Contact</span>
-              <span className="font-semibold text-slate-700 font-mono">{selectedPatient.phone}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">Guardian</span>
-              <span className="font-semibold text-slate-700 truncate block">
-                {selectedPatient.guardian_name || 'Self'}
-              </span>
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-bold uppercase">Referring Doctor</span>
-              <span className="font-semibold text-purple-900 truncate block">
-                {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni (ENT)'}
-              </span>
+          <div className="bg-purple-50/30 border border-purple-200/80 rounded-md p-3 relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+              <div>
+                <span className="text-[10px] text-slate-500 block font-bold uppercase">UHID</span>
+                <span className="font-mono font-black text-purple-800">{selectedPatient.uhid}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block font-bold uppercase">Full Name</span>
+                <span className="font-bold text-slate-900 truncate block">{selectedPatient.full_name}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block font-bold uppercase">Age / Sex</span>
+                <span className="font-semibold text-slate-700">
+                  {selectedPatient.gender} • DOB {selectedPatient.date_of_birth}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block font-bold uppercase">Contact</span>
+                <span className="font-semibold text-slate-700 font-mono">{selectedPatient.phone}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block font-bold uppercase">Guardian</span>
+                <span className="font-semibold text-slate-700 truncate block">
+                  {selectedPatient.guardian_name || 'Self'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-500 block font-bold uppercase">Referring Doctor</span>
+                  <span className="font-semibold text-purple-900 truncate block">
+                    {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni (ENT)'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenEditPatient}
+                  className="p-1 rounded text-purple-700 hover:text-purple-950 hover:bg-purple-100 transition-colors cursor-pointer"
+                  title="Update Patient Information"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1875,6 +1974,170 @@ export const ReportCreatePage = () => {
           </div>
         </div>
       </div>
+
+      {/* ── MODAL: EDIT PATIENT DETAILS FROM REPORT GENERATOR ── */}
+      {isEditPatientModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-purple-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 px-4 py-3 border-b border-purple-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-purple-900" />
+                <h3 className="text-sm font-bold text-purple-950">
+                  Edit Patient Profile ({selectedPatient?.uhid})
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditPatientModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePatientEdit} className="p-4 space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={patientEditForm.full_name}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Gender / Biological Sex *
+                  </label>
+                  <select
+                    value={patientEditForm.gender}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, gender: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700 cursor-pointer"
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={patientEditForm.date_of_birth}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, date_of_birth: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Primary Contact Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={patientEditForm.phone}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-mono font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Guardian / Informant Name
+                  </label>
+                  <input
+                    type="text"
+                    value={patientEditForm.guardian_name}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, guardian_name: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                    placeholder="e.g. Father, Mother, Spouse, Self"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Guardian Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={patientEditForm.guardian_phone}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, guardian_phone: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-mono font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    City / Locality
+                  </label>
+                  <input
+                    type="text"
+                    value={patientEditForm.city}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, city: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Primary Service Line
+                  </label>
+                  <select
+                    value={patientEditForm.service_line}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, service_line: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700 cursor-pointer"
+                  >
+                    <option value="AUDIOLOGY">Audiology &amp; Hearing Aid</option>
+                    <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
+                    <option value="VOICE">Voice Therapy &amp; Diagnostics</option>
+                    <option value="CBT_PSYCHOLOGY">CBT &amp; Psychology</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                    Referring Physician / Doctor
+                  </label>
+                  <input
+                    type="text"
+                    value={patientEditForm.referringDoctor}
+                    onChange={(e) => setPatientEditForm((prev) => ({ ...prev, referringDoctor: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 font-semibold text-slate-900 focus:bg-white focus:ring-1 focus:ring-purple-700"
+                    placeholder="e.g. Dr. A. P. Kulkarni (ENT)"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditPatientModalOpen(false)}
+                  className="px-3 py-1.5 rounded-md font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-md font-bold text-white bg-purple-900 hover:bg-purple-950 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Update &amp; Sync Master Profile</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

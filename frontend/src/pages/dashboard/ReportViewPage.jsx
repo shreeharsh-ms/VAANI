@@ -4,6 +4,7 @@ import { Printer, ArrowLeft, X, ShieldCheck, QrCode } from 'lucide-react';
 import OfficialClinicalDocument from '../../components/clinical/OfficialClinicalDocument';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
+import { getAllClinicalReports } from '../../data/clinicalReportsData';
 
 export const ReportViewPage = () => {
   const { id } = useParams();
@@ -25,49 +26,53 @@ export const ReportViewPage = () => {
       console.warn('Error reading vaani_preview_report from sessionStorage', e);
     }
 
-    // 2. Try reading from localStorage saved reports
+    // 2. Try reading from all reports (localStorage + default seed assessments)
     try {
-      const stored = localStorage.getItem('vaani_clinical_reports_v1');
-      if (stored) {
-        const list = JSON.parse(stored);
-        if (Array.isArray(list)) {
-          const match = list.find((r) => r.id === id || r.report_number === id);
-          if (match) {
-            const srv = CLINICAL_SERVICES.find((s) => s.code === match.service_code) || {
-              code: match.service_code || 'RP-CLN-AUD',
-              title: match.title,
-              discipline: match.discipline,
-              description: match.diagnosis,
-            };
-            const patient = {
-              full_name: match.patient_name,
-              uhid: match.uhid,
-              gender: match.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
-              date_of_birth: match.patient_age_sex?.split(',')[1]?.trim() || '—',
-              phone: match.phone || '+91 98220 11223',
-              guardian_name: match.guardian || 'Self',
-              city: match.city || 'Satara, Maharashtra',
-            };
-            setReportData({
-              reportNumber: match.report_number || match.id,
-              reportDate: match.date,
-              examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-              rciNumber: match.rci_number || 'A79214',
-              service: srv,
-              patient: patient,
-              patientDossier: null,
-              parameters: match.parameters || {
-                provisionalDiagnosis: match.diagnosis,
-                recommendations: match.recommendations,
-              },
-              computedPTA: match.computed || null,
-            });
-            return;
-          }
-        }
+      const allReports = getAllClinicalReports();
+      const match = allReports.find((r) => r.id === id || r.report_number === id);
+      if (match) {
+        const srv = CLINICAL_SERVICES.find((s) => s.code === match.service_code) || {
+          code: match.service_code || 'RP-CLN-AUD',
+          title: match.title,
+          discipline: match.discipline,
+          description: match.diagnosis,
+          defaultParameters: {},
+        };
+        const patientMatch = SEED_PATIENTS.find(
+          (p) => (p.uhid && p.uhid.toLowerCase() === match.uhid?.toLowerCase()) ||
+                 (p.full_name && p.full_name.toLowerCase() === match.patient_name?.toLowerCase())
+        );
+        const patient = patientMatch || {
+          full_name: match.patient_name,
+          uhid: match.uhid,
+          gender: match.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
+          date_of_birth: match.patient_age_sex?.split(',')[1]?.trim() || '—',
+          phone: match.phone || '+91 98220 11223',
+          guardian_name: match.guardian || 'Self',
+          city: match.city || 'Satara, Maharashtra',
+        };
+        const dossier = (patient.uhid && PATIENT_DOSSIERS[patient.uhid]) || null;
+
+        setReportData({
+          reportNumber: match.report_number || match.id,
+          reportDate: match.date || new Date().toISOString().split('T')[0],
+          examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+          rciNumber: match.rci_number || 'A79214',
+          service: srv,
+          patient: patient,
+          patientDossier: dossier,
+          parameters: {
+            ...(srv.defaultParameters || {}),
+            ...(match.parameters || {}),
+            provisionalDiagnosis: match.diagnosis || match.parameters?.provisionalDiagnosis || srv.defaultParameters?.provisionalDiagnosis,
+            recommendations: match.recommendations || match.parameters?.recommendations || srv.defaultParameters?.recommendations,
+          },
+          computedPTA: match.computed || null,
+        });
+        return;
       }
     } catch (e) {
-      console.warn('Error reading vaani_clinical_reports_v1', e);
+      console.warn('Error reading reports in ReportViewPage', e);
     }
 
     // 3. Fallback: Default PTA report for patient 1
