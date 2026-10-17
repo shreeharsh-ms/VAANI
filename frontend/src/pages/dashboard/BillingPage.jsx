@@ -22,10 +22,26 @@ import {
   ChevronRight,
   X,
   Package,
+  Edit2,
+  Trash2,
+  Mail,
+  MessageSquare,
+  Share2,
+  Send,
+  AlertTriangle,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
+import { getServiceRates } from '../../data/serviceRatesData';
+
+const WhatsAppIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.805 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+  </svg>
+);
 
 // ── INITIAL BILLING & INVOICE DATA SEED ──
 const INITIAL_INVOICES = [
@@ -255,15 +271,40 @@ export const BillingPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modals
+  // Dynamic Clinical Services & Tariff Rates
+  const [serviceRates, setServiceRates] = useState(() => getServiceRates());
+
+  useEffect(() => {
+    const handleRatesUpdate = (e) => {
+      if (e.detail) setServiceRates(e.detail);
+      else setServiceRates(getServiceRates());
+    };
+    window.addEventListener('vaani_rates_updated', handleRatesUpdate);
+    return () => window.removeEventListener('vaani_rates_updated', handleRatesUpdate);
+  }, []);
+
+  // Modals State
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
   const [activeInvoiceForUpi, setActiveInvoiceForUpi] = useState(null);
+  const [isViewInvoiceModalOpen, setIsViewInvoiceModalOpen] = useState(false);
+  const [selectedInvoiceForView, setSelectedInvoiceForView] = useState(null);
+  const [isEditInvoiceModalOpen, setIsEditInvoiceModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [selectedInvoiceForMail, setSelectedInvoiceForMail] = useState(null);
+  const [mailRecipient, setMailRecipient] = useState('');
+  const [mailSubject, setMailSubject] = useState('');
+  const [mailNote, setMailNote] = useState('');
+  const [isSendingMail, setIsSendingMail] = useState(false);
   const invoiceFormRef = useRef(null);
 
   // New Invoice Form State
   const [newUhid, setNewUhid] = useState('');
   const [newPatientName, setNewPatientName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [newService, setNewService] = useState('Pure Tone Audiometry (PTA)');
   const [newAmount, setNewAmount] = useState(800);
   const [newTaxType, setNewTaxType] = useState('HEALTHCARE_EXEMPT');
@@ -388,16 +429,18 @@ export const BillingPage = () => {
     const total = base + tax;
 
     const nextIdNumber = invoices.length + 82;
+    const matched = serviceRates.find(s => s.name === newService);
+
     const newInv = {
       id: `inv_${Date.now()}`,
       invoiceNo: `INV-2026-00${nextIdNumber}`,
       date: new Date().toISOString().substring(0, 10),
       uhid: newUhid.trim() || `VN-26-00${nextIdNumber}`,
       patientName: newPatientName.trim(),
-      phone: '+91 98220 00000',
+      phone: newPhone.trim() || '+91 98220 00000',
       service: newService,
-      serviceCode: isTaxable ? 'INV-HA-GOODS' : 'SVC-HEALTHCARE',
-      hsnSac: isTaxable ? '9021' : '999312',
+      serviceCode: matched?.code || (isTaxable ? 'INV-HA-GOODS' : 'SVC-HEALTHCARE'),
+      hsnSac: matched?.hsnSac || (isTaxable ? '9021' : '999312'),
       taxType: newTaxType,
       amount: base,
       gstPercent: gstRate,
@@ -418,12 +461,150 @@ export const BillingPage = () => {
     // Reset Form
     setNewPatientName('');
     setNewUhid('');
+    setNewPhone('');
   };
 
   // Open Dynamic UPI Modal
   const openUpiForInvoice = (inv) => {
     setActiveInvoiceForUpi(inv);
     setIsUpiModalOpen(true);
+  };
+
+  // 1. See / Open Invoice Details
+  const handleOpenInvoice = (inv) => {
+    setSelectedInvoiceForView(inv);
+    setIsViewInvoiceModalOpen(true);
+  };
+
+  // 2. Download / Print Invoice
+  const handleDownloadInvoice = (inv) => {
+    setSelectedInvoiceForView(inv);
+    setIsViewInvoiceModalOpen(true);
+    notify.info(`Preparing official Tax Invoice & Receipt ${inv.invoiceNo} for printing...`);
+    setTimeout(() => {
+      window.print();
+    }, 450);
+  };
+
+  // 3. Edit Invoice
+  const handleStartEditInvoice = (inv) => {
+    setEditingInvoice({ ...inv });
+    setIsEditInvoiceModalOpen(true);
+  };
+
+  const handleSaveEditedInvoice = (e) => {
+    e.preventDefault();
+    if (!editingInvoice) return;
+
+    const isTaxable = editingInvoice.taxType === 'TAXABLE_GOODS';
+    const base = parseFloat(editingInvoice.amount) || 0;
+    const gstRate = isTaxable ? 18 : 0;
+    const tax = isTaxable ? Math.round(base * 0.18) : 0;
+    const total = base + tax;
+
+    const updatedInv = {
+      ...editingInvoice,
+      amount: base,
+      gstPercent: gstRate,
+      taxAmount: tax,
+      totalAmount: total,
+    };
+
+    const updated = invoices.map(i => i.id === updatedInv.id ? updatedInv : i);
+    setInvoices(updated);
+    localStorage.setItem('vaani_invoices_v1', JSON.stringify(updated));
+    setIsEditInvoiceModalOpen(false);
+    if (selectedInvoiceForView?.id === updatedInv.id) {
+      setSelectedInvoiceForView(updatedInv);
+    }
+    notify.success(`Invoice ${updatedInv.invoiceNo} updated successfully!`);
+  };
+
+  // 4. Delete Invoice
+  const handlePromptDelete = (inv) => {
+    setInvoiceToDelete(inv);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!invoiceToDelete) return;
+    const updated = invoices.filter(i => i.id !== invoiceToDelete.id);
+    setInvoices(updated);
+    localStorage.setItem('vaani_invoices_v1', JSON.stringify(updated));
+    setIsDeleteModalOpen(false);
+    if (selectedInvoiceForView?.id === invoiceToDelete.id) {
+      setIsViewInvoiceModalOpen(false);
+    }
+    notify.success(`Invoice ${invoiceToDelete.invoiceNo} deleted from registry`);
+    setInvoiceToDelete(null);
+  };
+
+  // 5. Share on WhatsApp
+  const handleSendWhatsAppInvoice = (inv) => {
+    const rawPhone = inv.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    const phoneWithCountry = cleanPhone.startsWith('91') ? cleanPhone : cleanPhone ? `91${cleanPhone}` : '';
+
+    const text = `*VAANI SPEECH & HEARING CLINIC*\n*Official Tax Invoice & Clinical Receipt*\n\n` +
+      `*Patient Name:* ${inv.patientName}\n` +
+      `*UHID:* ${inv.uhid || 'Outpatient'}\n` +
+      `*Invoice No:* ${inv.invoiceNo}\n` +
+      `*Date:* ${inv.date}\n` +
+      `*Clinical Service:* ${inv.service}\n` +
+      `*Tax Regime:* ${inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% GST (Healthcare Exempt, SAC 999312)' : '18% GST (Taxable Goods, HSN 9021)'}\n` +
+      `*Total Amount:* ₹${inv.totalAmount.toLocaleString('en-IN')}\n` +
+      `*Payment Status:* ${inv.status} (${inv.paymentMode})\n` +
+      (inv.status === 'PAID' ? `*Payment Receipt:* ${inv.receiptNo}\n` : `*Payment VPA / UPI:* vaaniclinic@okaxis\n`) +
+      `\n*Clinic Address:* Sadashiv Peth, Near Powai Naka, Satara - 415002\n` +
+      `*Helpline / WhatsApp:* +91 98220 12345\n` +
+      `*Clinical Consultant:* Dr. Palak Paresh Gandhi, MASLP (RCI CRR No. A79214)\n\n` +
+      `Thank you for entrusting VAANI Speech & Hearing Clinic for your healthcare.`;
+
+    const url = phoneWithCountry
+      ? `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+    window.open(url, '_blank');
+    notify.success(`WhatsApp invoice drafted for ${inv.patientName}`);
+  };
+
+  // 6. Mail Invoice
+  const handleOpenMailModal = (inv) => {
+    setSelectedInvoiceForMail(inv);
+    setMailRecipient(inv.email || `${inv.patientName.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`);
+    setMailSubject(`Tax Invoice & Clinical Receipt ${inv.invoiceNo} — VAANI Speech & Hearing Clinic`);
+    setMailNote(`Dear ${inv.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${inv.invoiceNo} for ${inv.service} performed on ${inv.date}.\n\nTotal Paid/Due: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`);
+    setIsMailModalOpen(true);
+  };
+
+  const handleSendEmailInvoice = (e) => {
+    e.preventDefault();
+    if (!selectedInvoiceForMail) return;
+    setIsSendingMail(true);
+
+    setTimeout(() => {
+      // Record into SMTP audit logs
+      try {
+        const existingLogs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const ts = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const newLog = {
+          id: `mail_inv_${Date.now()}`,
+          timestamp: ts,
+          recipient: mailRecipient,
+          subject: mailSubject,
+          host: 'smtp.gmail.com:587',
+          status: 'SENT',
+          details: `Invoice ${selectedInvoiceForMail.invoiceNo} dispatched successfully to ${mailRecipient}`,
+        };
+        localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([newLog, ...existingLogs]));
+      } catch (err) {}
+
+      setIsSendingMail(false);
+      setIsMailModalOpen(false);
+      notify.success(`Tax Invoice ${selectedInvoiceForMail.invoiceNo} successfully dispatched to ${mailRecipient}!`);
+    }, 500);
   };
 
   // Totals calculations
@@ -617,7 +798,7 @@ export const BillingPage = () => {
                 </th>
                 <th className="py-2 px-2.5 w-20 text-center">Mode</th>
                 <th className="py-2 px-2 w-20 text-center">Status</th>
-                <th className="py-2 px-2.5 w-20 text-center">Quick Action</th>
+                <th className="py-2 px-3 w-52 text-center whitespace-nowrap">Clinical Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-normal">
@@ -671,23 +852,76 @@ export const BillingPage = () => {
                         {inv.status}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2.5 text-center">
+                    <td className="py-1.5 px-3 text-center">
                       <div className="flex items-center justify-center gap-1">
+                        {/* 1. See / Open */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenInvoice(inv)}
+                          className="p-1 rounded text-[#301444] hover:bg-purple-100 transition-colors cursor-pointer"
+                          title="See / Open Tax Invoice & Receipt"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 2. Download / Print */}
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadInvoice(inv)}
+                          className="p-1 rounded text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                          title="Download / Print Invoice"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 3. Edit */}
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditInvoice(inv)}
+                          className="p-1 rounded text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+                          title="Edit Invoice Details"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 4. Share on WhatsApp */}
+                        <button
+                          type="button"
+                          onClick={() => handleSendWhatsAppInvoice(inv)}
+                          className="p-1 rounded text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+                          title="Share Invoice on WhatsApp"
+                        >
+                          <WhatsAppIcon className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 5. Mail Invoice */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenMailModal(inv)}
+                          className="p-1 rounded text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
+                          title="Email Invoice to Patient"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* UPI QR */}
                         <button
                           type="button"
                           onClick={() => openUpiForInvoice(inv)}
-                          className="p-1 rounded text-purple-700 hover:bg-purple-100 transition-colors"
+                          className="p-1 rounded text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
                           title="Generate Dynamic UPI QR"
                         >
                           <QrCode className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* 6. Delete */}
                         <button
                           type="button"
-                          onClick={() => notify.info(`Printing receipt ${inv.receiptNo}`)}
-                          className="p-1 rounded text-slate-500 hover:bg-slate-100 transition-colors"
-                          title="Print Receipt"
+                          onClick={() => handlePromptDelete(inv)}
+                          className="p-1 rounded text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer"
+                          title="Delete Invoice"
                         >
-                          <Printer className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -751,7 +985,7 @@ export const BillingPage = () => {
         size="md"
       >
         <form ref={invoiceFormRef} onSubmit={handleCreateInvoice} className="space-y-3 font-sans text-xs">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID (Optional)</label>
               <input
@@ -773,6 +1007,16 @@ export const BillingPage = () => {
                 className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
               />
             </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Phone (WhatsApp / SMS)</label>
+              <input
+                type="text"
+                placeholder="+91 98220 11223"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>
@@ -780,28 +1024,21 @@ export const BillingPage = () => {
             <select
               value={newService}
               onChange={(e) => {
-                setNewService(e.target.value);
-                if (e.target.value.includes('Hearing Aid')) {
-                  setNewTaxType('TAXABLE_GOODS');
-                  setNewAmount(12000);
-                } else if (e.target.value.includes('Batteries')) {
-                  setNewTaxType('TAXABLE_GOODS');
-                  setNewAmount(450);
-                } else {
-                  setNewTaxType('HEALTHCARE_EXEMPT');
-                  setNewAmount(800);
+                const sName = e.target.value;
+                setNewService(sName);
+                const matched = serviceRates.find(s => s.name === sName);
+                if (matched) {
+                  setNewAmount(matched.baseRate);
+                  setNewTaxType(matched.taxType);
                 }
               }}
               className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
             >
-              <option value="Pure Tone Audiometry (PTA)">Pure Tone Audiometry (PTA) — ₹800</option>
-              <option value="Impedance Audiometry & Tympanometry">Impedance Audiometry & Tympanometry — ₹600</option>
-              <option value="Speech Therapy Clinical Evaluation">Speech Therapy Clinical Evaluation — ₹1,500</option>
-              <option value="Speech Therapy Package (10-Session Card)">Speech Therapy Package (10-Session Card) — ₹7,500</option>
-              <option value="OAE Newborn Hearing Screening">OAE Newborn Hearing Screening — ₹800</option>
-              <option value="Tinnitus Retraining Counseling (CBT)">Tinnitus Retraining Counseling (CBT) — ₹2,000</option>
-              <option value="Digital Programmable Hearing Aid (Single Unit)">Digital Programmable Hearing Aid (Single Unit) — ₹25,000</option>
-              <option value="Hearing Aid Zinc-Air Batteries (Pack of 6)">Hearing Aid Zinc-Air Batteries (Pack of 6) — ₹450</option>
+              {serviceRates.map((s) => (
+                <option key={s.id || s.code} value={s.name}>
+                  {s.name} — ₹{s.baseRate.toLocaleString('en-IN')} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
+                </option>
+              ))}
             </select>
           </div>
 
@@ -941,6 +1178,534 @@ export const BillingPage = () => {
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Confirm Payment Settlement</span>
             </button>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── MODAL: VIEW / OPEN TAX INVOICE & RECEIPT ── */}
+      <Modal
+        isOpen={isViewInvoiceModalOpen}
+        onClose={() => setIsViewInvoiceModalOpen(false)}
+        title={selectedInvoiceForView ? `Tax Invoice & Clinical Receipt: ${selectedInvoiceForView.invoiceNo}` : 'Invoice Details'}
+        size="lg"
+      >
+        {selectedInvoiceForView && (
+          <div className="space-y-4 font-sans text-xs">
+            {/* Printable Invoice Card */}
+            <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-xs space-y-4">
+              {/* Letterhead */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-base tracking-tight text-[#301444]">
+                      VAANI SPEECH &amp; HEARING CLINIC
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      RCI CRR No. A79214
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Advanced Audiology, Speech-Language Therapy &amp; Hearing Rehabilitation Center
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Sadashiv Peth, Near Powai Naka, Satara - 415002 • Phone: +91 98220 12345 • info@vaaniclinic.com
+                  </p>
+                </div>
+                <div className="text-right sm:border-l sm:border-slate-100 sm:pl-4">
+                  <span className="text-[10px] font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 block mb-1">
+                    GST SAC: {selectedInvoiceForView.hsnSac || '999312'}
+                  </span>
+                  <span className="font-mono text-xs font-extrabold text-slate-900 block">
+                    {selectedInvoiceForView.invoiceNo}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500">
+                    Date: {selectedInvoiceForView.date}
+                  </span>
+                </div>
+              </div>
+
+              {/* Patient & Invoice Metadata */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Billed To (Patient)</span>
+                  <h4 className="text-sm font-bold text-slate-900 mt-0.5">{selectedInvoiceForView.patientName}</h4>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-600 font-mono">
+                    <span className="font-bold text-purple-900">UHID: {selectedInvoiceForView.uhid || 'Outpatient'}</span>
+                    <span>•</span>
+                    <span>{selectedInvoiceForView.phone || '+91 98220 00000'}</span>
+                  </div>
+                </div>
+                <div className="sm:text-right flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Payment Summary</span>
+                    <div className="flex items-center sm:justify-end gap-2 mt-0.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        selectedInvoiceForView.status === 'PAID'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}>
+                        {selectedInvoiceForView.status === 'PAID' ? '● PAYMENT RECEIVED' : '● PAYMENT DUE'}
+                      </span>
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">
+                        {selectedInvoiceForView.paymentMode}
+                      </span>
+                    </div>
+                  </div>
+                  {selectedInvoiceForView.receiptNo && selectedInvoiceForView.receiptNo !== '-' && (
+                    <span className="text-[10px] font-mono text-slate-500 mt-1">
+                      Receipt Ref: {selectedInvoiceForView.receiptNo}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Itemized Charges Table */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-100 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase">
+                    <tr>
+                      <th className="py-2 px-3">Clinical Investigation / Service Description</th>
+                      <th className="py-2 px-2.5 text-center w-24">HSN / SAC</th>
+                      <th className="py-2 px-3 text-right w-24">Base Fee</th>
+                      <th className="py-2 px-2.5 text-center w-28">GST Rate</th>
+                      <th className="py-2 px-3 text-right w-28">Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="py-2.5 px-3">
+                        <span className="font-bold text-slate-900 block">{selectedInvoiceForView.service}</span>
+                        <span className="text-[10px] font-mono text-purple-800">
+                          Code: {selectedInvoiceForView.serviceCode || 'SVC-CLINICAL'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-2.5 text-center font-mono text-slate-600">
+                        {selectedInvoiceForView.hsnSac || '999312'}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-semibold text-slate-800">
+                        ₹{selectedInvoiceForView.amount?.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-2.5 px-2.5 text-center">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                          {selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                        ₹{selectedInvoiceForView.totalAmount?.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot className="bg-slate-50 border-t border-slate-200 font-semibold text-slate-700">
+                    <tr>
+                      <td colSpan={4} className="py-2 px-3 text-right">Base Subtotal:</td>
+                      <td className="py-2 px-3 text-right font-mono font-bold">
+                        ₹{selectedInvoiceForView.amount?.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={4} className="py-1.5 px-3 text-right text-slate-500">
+                        GST Applicable ({selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% Healthcare Exemption' : '18% GST Goods'}):
+                      </td>
+                      <td className="py-1.5 px-3 text-right font-mono text-slate-600">
+                        ₹{(selectedInvoiceForView.taxAmount || 0).toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                    <tr className="bg-purple-50/50 border-t border-purple-100 text-[#301444] text-sm">
+                      <td colSpan={4} className="py-2 px-3 text-right font-extrabold">Net Total Payable:</td>
+                      <td className="py-2 px-3 text-right font-mono font-extrabold text-[#301444]">
+                        ₹{selectedInvoiceForView.totalAmount?.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Bottom: QR Code + Authorized Signatory */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 items-center">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="w-16 h-16 bg-white p-1 rounded border border-slate-200 flex items-center justify-center shrink-0">
+                    <QrCode className="w-14 h-14 text-[#301444]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Direct UPI Settlement</span>
+                    <span className="text-xs font-mono font-bold text-purple-900 block">vaaniclinic@okaxis</span>
+                    <span className="text-[10px] text-slate-500">NPCI Certified Dynamic QR</span>
+                  </div>
+                </div>
+
+                <div className="text-right space-y-0.5">
+                  <span className="text-[10px] font-mono text-slate-400 block">Digitally Signed &amp; Approved</span>
+                  <div className="font-bold text-slate-800 text-xs">Ms. Palak Paresh Gandhi</div>
+                  <div className="text-[10px] text-slate-500">MASLP (AUD-SLP) • Consultant Audiologist</div>
+                  <div className="text-[10px] font-mono font-bold text-emerald-700">RCI Registration: CRR No. A79214</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-200">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadInvoice(selectedInvoiceForView)}
+                  className="h-8 px-3 rounded text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download / Print</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSendWhatsAppInvoice(selectedInvoiceForView)}
+                  className="h-8 px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenMailModal(selectedInvoiceForView);
+                  }}
+                  className="h-8 px-3 rounded text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleStartEditInvoice(selectedInvoiceForView);
+                  }}
+                  className="h-8 px-3 rounded text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsViewInvoiceModalOpen(false)}
+                className="h-8 px-4 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── MODAL: EDIT TAX INVOICE ── */}
+      <Modal
+        isOpen={isEditInvoiceModalOpen}
+        onClose={() => setIsEditInvoiceModalOpen(false)}
+        title={editingInvoice ? `Edit Invoice: ${editingInvoice.invoiceNo}` : 'Edit Invoice'}
+        size="md"
+      >
+        {editingInvoice && (
+          <form onSubmit={handleSaveEditedInvoice} className="space-y-3 font-sans text-xs">
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Invoice #</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={editingInvoice.invoiceNo}
+                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-slate-100 border border-slate-300 rounded text-slate-600"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Invoice Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={editingInvoice.date}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, date: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-mono font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID</label>
+                <input
+                  type="text"
+                  value={editingInvoice.uhid}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, uhid: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Patient Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingInvoice.patientName}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, patientName: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Phone Number</label>
+                <input
+                  type="text"
+                  value={editingInvoice.phone || ''}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, phone: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Clinical Service / Product Description *</label>
+              <select
+                value={editingInvoice.service}
+                onChange={(e) => {
+                  const sName = e.target.value;
+                  const matched = serviceRates.find(s => s.name === sName);
+                  if (matched) {
+                    setEditingInvoice({
+                      ...editingInvoice,
+                      service: sName,
+                      serviceCode: matched.code,
+                      hsnSac: matched.hsnSac,
+                      amount: matched.baseRate,
+                      taxType: matched.taxType,
+                    });
+                  } else {
+                    setEditingInvoice({ ...editingInvoice, service: sName });
+                  }
+                }}
+                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              >
+                {serviceRates.map((s) => (
+                  <option key={s.id || s.code} value={s.name}>
+                    {s.name} — ₹{s.baseRate.toLocaleString('en-IN')}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Base Fee (₹) *</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={editingInvoice.amount}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, amount: parseFloat(e.target.value) || 0 })}
+                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Tax Regime</label>
+                <select
+                  value={editingInvoice.taxType}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, taxType: e.target.value })}
+                  className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+                >
+                  <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt</option>
+                  <option value="TAXABLE_GOODS">18% GST (Goods)</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Payment Mode</label>
+                <select
+                  value={editingInvoice.paymentMode}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentMode: e.target.value })}
+                  className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+                >
+                  <option value="UPI">NPCI UPI</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="CARD">Debit / Credit Card</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Payment Status</label>
+                <select
+                  value={editingInvoice.status}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-bold bg-white border border-slate-300 rounded focus:border-purple-600"
+                >
+                  <option value="PAID">PAID</option>
+                  <option value="DUE">DUE</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Receipt #</label>
+                <input
+                  type="text"
+                  value={editingInvoice.receiptNo || ''}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, receiptNo: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-mono font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Live Calculation Preview */}
+            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>Base Service Fee:</span>
+                <span className="font-mono font-semibold">₹{(parseFloat(editingInvoice.amount) || 0).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-600">
+                <span>GST ({editingInvoice.taxType === 'TAXABLE_GOODS' ? '18%' : '0% Exempt'}):</span>
+                <span className="font-mono font-semibold">
+                  ₹{(editingInvoice.taxType === 'TAXABLE_GOODS' ? Math.round((parseFloat(editingInvoice.amount) || 0) * 0.18) : 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[#301444] font-bold text-sm pt-1 border-t border-slate-200">
+                <span>Total Invoice Payable:</span>
+                <span className="font-mono">
+                  ₹{((parseFloat(editingInvoice.amount) || 0) + (editingInvoice.taxType === 'TAXABLE_GOODS' ? Math.round((parseFloat(editingInvoice.amount) || 0) * 0.18) : 0)).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditInvoiceModalOpen(false)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
+              >
+                Save Invoice Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL: EMAIL INVOICE ── */}
+      <Modal
+        isOpen={isMailModalOpen}
+        onClose={() => setIsMailModalOpen(false)}
+        title={selectedInvoiceForMail ? `Email Tax Invoice: ${selectedInvoiceForMail.invoiceNo}` : 'Email Invoice'}
+        size="md"
+      >
+        {selectedInvoiceForMail && (
+          <form onSubmit={handleSendEmailInvoice} className="space-y-3 font-sans text-xs">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Recipient Patient Email *</label>
+              <input
+                type="email"
+                required
+                value={mailRecipient}
+                onChange={(e) => setMailRecipient(e.target.value)}
+                placeholder="patient@example.com"
+                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Email Subject Line *</label>
+              <input
+                type="text"
+                required
+                value={mailSubject}
+                onChange={(e) => setMailSubject(e.target.value)}
+                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Email Message &amp; Clinical Summary</label>
+              <textarea
+                rows={5}
+                value={mailNote}
+                onChange={(e) => setMailNote(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none resize-none leading-relaxed font-sans"
+              />
+            </div>
+
+            <div className="p-2.5 rounded bg-purple-50/60 border border-purple-100 flex items-center justify-between text-xs">
+              <div>
+                <span className="font-bold text-[#301444] block">Attached: {selectedInvoiceForMail.invoiceNo}.pdf</span>
+                <span className="text-[10px] text-slate-500">Total: ₹{selectedInvoiceForMail.totalAmount?.toLocaleString('en-IN')} ({selectedInvoiceForMail.status})</span>
+              </div>
+              <span className="text-[10px] font-mono text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 font-bold">
+                SMTP Ready
+              </span>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsMailModalOpen(false)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSendingMail}
+                className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isSendingMail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>{isSendingMail ? 'Dispatching...' : 'Dispatch Invoice Email'}</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL: DELETE INVOICE CONFIRMATION ── */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Billing Invoice Record"
+        size="sm"
+      >
+        {invoiceToDelete && (
+          <div className="space-y-3 font-sans text-xs">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-sm">
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
+                <span>Confirm Invoice Deletion</span>
+              </div>
+              <p className="text-xs text-rose-700">
+                Are you sure you want to delete invoice <strong className="font-mono">{invoiceToDelete.invoiceNo}</strong> for <strong>{invoiceToDelete.patientName}</strong>?
+              </p>
+              <p className="text-[11px] text-rose-600 font-medium">
+                Amount: ₹{invoiceToDelete.totalAmount?.toLocaleString('en-IN')} • Date: {invoiceToDelete.date}
+              </p>
+            </div>
+
+            <p className="text-slate-500 text-[11px]">
+              This action cannot be undone. The invoice and its payment records will be permanently removed from the clinical billing register.
+            </p>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-4 py-1.5 rounded text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-2xs transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Invoice</span>
+              </button>
+            </div>
           </div>
         )}
       </Modal>

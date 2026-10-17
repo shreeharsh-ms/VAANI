@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
+import Modal from '../../components/common/Modal';
+import { getServiceRates, saveServiceRates, resetServiceRates } from '../../data/serviceRatesData';
 
 // ── INITIAL VERIFIED CLINIC SETTINGS BASELINE ──
 const DEFAULT_SETTINGS = {
@@ -416,6 +418,118 @@ export const SettingsPage = () => {
     }
   });
 
+  // Clinical Services Tariff Schedule & Rate Master State
+  const [serviceRates, setServiceRates] = useState(() => getServiceRates());
+  const [serviceRateSearch, setServiceRateSearch] = useState('');
+  const [serviceDisciplineFilter, setServiceDisciplineFilter] = useState('ALL');
+  const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
+  const [newServiceForm, setNewServiceForm] = useState({
+    code: '',
+    name: '',
+    discipline: 'Audiology',
+    hsnSac: '999312',
+    taxType: 'HEALTHCARE_EXEMPT',
+    gstPercent: 0,
+    baseRate: 1000,
+    unit: 'Per Evaluation',
+    description: '',
+    status: 'ACTIVE',
+  });
+
+  // Filtered Service Rates
+  const filteredServiceRates = useMemo(() => {
+    return serviceRates.filter(s => {
+      const q = serviceRateSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        s.code.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q) ||
+        s.discipline.toLowerCase().includes(q) ||
+        s.hsnSac.includes(q) ||
+        (s.description && s.description.toLowerCase().includes(q));
+
+      const matchesDiscipline = serviceDisciplineFilter === 'ALL' || s.discipline === serviceDisciplineFilter;
+      return matchesSearch && matchesDiscipline;
+    });
+  }, [serviceRates, serviceRateSearch, serviceDisciplineFilter]);
+
+  // Handle Inline Service Rate Change
+  const handleUpdateBaseRate = (id, newRateVal) => {
+    const val = parseFloat(newRateVal) || 0;
+    const updated = serviceRates.map(s => s.id === id ? { ...s, baseRate: val } : s);
+    setServiceRates(updated);
+    saveServiceRates(updated);
+  };
+
+  // Toggle Active/Inactive Status
+  const handleToggleServiceStatus = (id) => {
+    const updated = serviceRates.map(s => s.id === id ? { ...s, status: s.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : s);
+    setServiceRates(updated);
+    saveServiceRates(updated);
+    notify.info('Service status updated');
+  };
+
+  // Reset Service Rates to Baseline Defaults
+  const handleResetServiceRates = () => {
+    if (window.confirm('Reset all clinical service rates to clinic default schedule?')) {
+      resetServiceRates();
+      const resetted = getServiceRates();
+      setServiceRates(resetted);
+      notify.success('Clinical service rates reset to baseline schedule');
+    }
+  };
+
+  // Add New Custom Service Rate
+  const handleAddServiceRate = (e) => {
+    e.preventDefault();
+    if (!newServiceForm.name.trim()) {
+      notify.error('Service name is required');
+      return;
+    }
+    const isTaxable = newServiceForm.taxType === 'TAXABLE_GOODS';
+    const newEntry = {
+      id: `svc_${Date.now()}`,
+      code: newServiceForm.code.trim() || `SVC-${newServiceForm.discipline.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
+      name: newServiceForm.name.trim(),
+      discipline: newServiceForm.discipline,
+      hsnSac: newServiceForm.hsnSac.trim() || (isTaxable ? '9021' : '999312'),
+      taxType: newServiceForm.taxType,
+      gstPercent: isTaxable ? 18 : 0,
+      baseRate: parseFloat(newServiceForm.baseRate) || 0,
+      unit: newServiceForm.unit.trim() || 'Per Evaluation',
+      description: newServiceForm.description.trim() || '',
+      status: 'ACTIVE',
+    };
+
+    const updated = [...serviceRates, newEntry];
+    setServiceRates(updated);
+    saveServiceRates(updated);
+    setIsAddServiceModalOpen(false);
+    setNewServiceForm({
+      code: '',
+      name: '',
+      discipline: 'Audiology',
+      hsnSac: '999312',
+      taxType: 'HEALTHCARE_EXEMPT',
+      gstPercent: 0,
+      baseRate: 1000,
+      unit: 'Per Evaluation',
+      description: '',
+      status: 'ACTIVE',
+    });
+    notify.success(`Service "${newEntry.name}" added to tariff schedule!`);
+  };
+
+  // Delete Custom Service Rate
+  const handleDeleteServiceRate = (id, name) => {
+    if (window.confirm(`Delete service "${name}" from tariff schedule?`)) {
+      const updated = serviceRates.filter(s => s.id !== id);
+      setServiceRates(updated);
+      saveServiceRates(updated);
+      notify.success(`Service "${name}" removed from tariff schedule`);
+    }
+  };
+
   // Handle Nested Setting Field Change
   const handleChange = (section, field, value) => {
     setSettings((prev) => ({
@@ -436,6 +550,7 @@ export const SettingsPage = () => {
       try {
         localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(settings));
         localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(holidays));
+        saveServiceRates(serviceRates);
 
         // Create Tamper-Evident Audit Record
         const newAudit = {
@@ -443,7 +558,7 @@ export const SettingsPage = () => {
           ts: new Date().toISOString().replace('T', ' ').substring(0, 19),
           actor: `${user?.name || 'Dr. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
           action: 'SETTINGS_UPDATE',
-          summary: `Updated ${activeTab.toUpperCase()} configuration parameters in compact sheet`,
+          summary: `Updated ${activeTab.toUpperCase()} configuration & ${serviceRates.length} service tariff rates in compact sheet`,
           hash: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`,
         };
 
@@ -451,7 +566,7 @@ export const SettingsPage = () => {
         setAuditLogs(updatedAudits);
         localStorage.setItem('vaani_clinic_audit_v1', JSON.stringify(updatedAudits));
 
-        notify.success('All clinic settings saved and persisted successfully!');
+        notify.success('All clinic settings & service tariff rates saved successfully!');
       } catch (err) {
         notify.error('Failed to save settings.');
       } finally {
@@ -594,7 +709,7 @@ export const SettingsPage = () => {
     { id: 'booking', label: 'Booking Policy', icon: CalendarCheck, count: '9 rules' },
     { id: 'credentials', label: 'Gates & Licenses', icon: ShieldCheck, count: '8 gates' },
     { id: 'hours', label: 'Hours & Calendar', icon: Clock, count: `${holidays.length} hols` },
-    { id: 'billing', label: 'Billing, GST & UPI', icon: IndianRupee, count: '10 keys' },
+    { id: 'billing', label: 'Billing, GST & UPI', icon: IndianRupee, count: `${serviceRates.length} rates • 10 keys` },
     { id: 'communications', label: 'Notifications & DPDP', icon: Bell, count: '7 specs' },
     { id: 'smtp', label: 'SMTP & Email', icon: Mail, count: `${mailLogs.length} logs` },
     { id: 'features', label: 'Features & Security', icon: Sliders, count: '9 mods' },
@@ -1648,6 +1763,163 @@ export const SettingsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Subtable 3: Clinical Services Tariff Schedule & Statutory Fee Master */}
+          <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
+                  Clinical Services Tariff Schedule &amp; Statutory Fee Master
+                </span>
+                <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
+                  FR-SET-009 • Live EMR &amp; Billing Sync
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="w-3 h-3 text-slate-400 absolute left-2 top-2 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Filter service tariff..."
+                    value={serviceRateSearch}
+                    onChange={(e) => setServiceRateSearch(e.target.value)}
+                    className="h-6 w-32 sm:w-44 pl-6 pr-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+
+                {/* Discipline Filter */}
+                <select
+                  value={serviceDisciplineFilter}
+                  onChange={(e) => setServiceDisciplineFilter(e.target.value)}
+                  className="h-6 px-1.5 text-xs bg-white border border-slate-300 rounded font-semibold text-slate-700 focus:border-purple-600"
+                >
+                  <option value="ALL">All Disciplines ({serviceRates.length})</option>
+                  <option value="Audiology">Audiology</option>
+                  <option value="Speech Therapy">Speech Therapy</option>
+                  <option value="Voice & Swallowing">Voice & Swallowing</option>
+                  <option value="Hearing Aids & Devices">Hearing Aids & Devices</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddServiceModalOpen(true)}
+                  className="h-6 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Service</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetServiceRates}
+                  className="h-6 px-2 rounded text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Reset tariff rates to clinic defaults"
+                >
+                  <RotateCcw className="w-3 h-3 text-slate-400" />
+                  <span className="hidden sm:inline">Reset Rates</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="py-2 px-2.5 w-10 text-center text-slate-400">#</th>
+                    <th className="py-2 px-2.5 w-28">Service Code</th>
+                    <th className="py-2 px-3">Clinical Investigation / Service Description</th>
+                    <th className="py-2 px-2.5 w-36">Discipline</th>
+                    <th className="py-2 px-2.5 w-24 text-center">SAC / HSN</th>
+                    <th className="py-2 px-2.5 w-28 text-center">Tax Regime</th>
+                    <th className="py-2 px-3 w-40 text-right">Configured Fee (₹)</th>
+                    <th className="py-2 px-2.5 w-20 text-center">Status</th>
+                    <th className="py-2 px-2 w-16 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-normal">
+                  {filteredServiceRates.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-6 text-center text-slate-500 font-medium">
+                        No clinical services found matching search criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredServiceRates.map((s, idx) => (
+                      <tr key={s.id} className="hover:bg-purple-50/30 transition-colors">
+                        <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">
+                          {String(idx + 1).padStart(2, '0')}
+                        </td>
+                        <td className="py-1.5 px-2.5 font-mono font-bold text-purple-900 text-[11px]">
+                          {s.code}
+                        </td>
+                        <td className="py-1.5 px-3">
+                          <span className="font-bold text-slate-800 block">{s.name}</span>
+                          <span className="text-[10px] text-slate-500 block truncate max-w-sm">{s.description || s.unit}</span>
+                        </td>
+                        <td className="py-1.5 px-2.5">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            {s.discipline}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2.5 text-center font-mono text-[11px] font-semibold text-slate-600">
+                          {s.hsnSac}
+                        </td>
+                        <td className="py-1.5 px-2.5 text-center">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                            s.taxType === 'HEALTHCARE_EXEMPT'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>
+                            {s.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt' : '18% GST'}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="font-mono text-xs font-bold text-slate-500">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="50"
+                              value={s.baseRate}
+                              onChange={(e) => handleUpdateBaseRate(s.id, e.target.value)}
+                              className="h-6 w-24 px-1.5 text-right font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                              title="Directly edit service rate"
+                            />
+                          </div>
+                        </td>
+                        <td className="py-1.5 px-2.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleServiceStatus(s.id)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border cursor-pointer transition-colors ${
+                              s.status === 'ACTIVE'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
+                            }`}
+                            title="Click to toggle active/inactive"
+                          >
+                            {s.status}
+                          </button>
+                        </td>
+                        <td className="py-1.5 px-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteServiceRate(s.id, s.name)}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Delete service rate"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
@@ -2560,6 +2832,149 @@ export const SettingsPage = () => {
           </div>
         </div>
       )}
+
+      {/* ── MODAL: ADD CLINICAL SERVICE RATE ── */}
+      <Modal
+        isOpen={isAddServiceModalOpen}
+        onClose={() => setIsAddServiceModalOpen(false)}
+        title="Add Clinical Service / Investigation to Tariff Schedule"
+        size="md"
+      >
+        <form onSubmit={handleAddServiceRate} className="space-y-3 font-sans text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Service Code</label>
+              <input
+                type="text"
+                placeholder="e.g. SVC-AUD-007"
+                value={newServiceForm.code}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, code: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Clinical Discipline *</label>
+              <select
+                value={newServiceForm.discipline}
+                onChange={(e) => {
+                  const disc = e.target.value;
+                  const isGoods = disc === 'Hearing Aids & Devices';
+                  setNewServiceForm({
+                    ...newServiceForm,
+                    discipline: disc,
+                    hsnSac: isGoods ? '9021' : '999312',
+                    taxType: isGoods ? 'TAXABLE_GOODS' : 'HEALTHCARE_EXEMPT',
+                  });
+                }}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value="Audiology">Audiology</option>
+                <option value="Speech Therapy">Speech Therapy</option>
+                <option value="Voice & Swallowing">Voice & Swallowing</option>
+                <option value="Hearing Aids & Devices">Hearing Aids & Devices</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="font-semibold text-slate-700 block mb-0.5">Clinical Service / Investigation Name *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Auditory Steady-State Response (ASSR)"
+              value={newServiceForm.name}
+              onChange={(e) => setNewServiceForm({ ...newServiceForm, name: e.target.value })}
+              className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Base Fee (₹) *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="50"
+                value={newServiceForm.baseRate}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, baseRate: parseFloat(e.target.value) || 0 })}
+                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">SAC / HSN Code</label>
+              <input
+                type="text"
+                value={newServiceForm.hsnSac}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, hsnSac: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Tax Regime</label>
+              <select
+                value={newServiceForm.taxType}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, taxType: e.target.value })}
+                className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value="HEALTHCARE_EXEMPT">0% Exempt (Healthcare)</option>
+                <option value="TAXABLE_GOODS">18% GST (Taxable Goods)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Billing Unit</label>
+              <input
+                type="text"
+                placeholder="e.g. Per Evaluation / Per Session"
+                value={newServiceForm.unit}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, unit: e.target.value })}
+                className="h-8 w-full px-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Status</label>
+              <select
+                value={newServiceForm.status}
+                onChange={(e) => setNewServiceForm({ ...newServiceForm, status: e.target.value })}
+                className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="font-semibold text-slate-700 block mb-0.5">Clinical Protocol / Description</label>
+            <textarea
+              rows={2}
+              placeholder="Clinical equipment, ANSI standard, or protocol details..."
+              value={newServiceForm.description}
+              onChange={(e) => setNewServiceForm({ ...newServiceForm, description: e.target.value })}
+              className="w-full px-2 py-1 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAddServiceModalOpen(false)}
+              className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
+            >
+              Add to Tariff Schedule
+            </button>
+          </div>
+        </form>
+      </Modal>
 
     </div>
   );
