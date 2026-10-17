@@ -6,6 +6,8 @@
  * down to the bottom footer on a single A4 page.
  */
 
+import { getClinicSettings, formatClinicAddress, formatClinicHelpline } from '../context/ClinicSettingsContext';
+
 // Helper to convert numbers to Indian Rupee Words
 export function numberToWordsINR(num) {
   const n = Math.round(Number(num) || 0);
@@ -36,15 +38,29 @@ export function numberToWordsINR(num) {
 export function printClinicalInvoice(invoice) {
   if (!invoice) return;
 
+  const settings = getClinicSettings();
   const isTaxable = invoice.taxType === 'TAXABLE_GOODS';
+  const sacCode = settings?.billing?.sacCode || '999312';
+  const hsnCode = settings?.billing?.hsnCode || '9021';
   const gstRateText = isTaxable ? '18% GST (Goods)' : '0.00% (Exempt)';
-  const sacHsnText = invoice.hsnSac || (isTaxable ? '9021' : '999312');
+  const sacHsnText = invoice.hsnSac || (isTaxable ? hsnCode : sacCode);
   const amountInWords = numberToWordsINR(invoice.totalAmount);
   const isPaid = invoice.status === 'PAID';
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const logoUrl = `${origin}/vaani-logo.png`;
+  const logoUrl = settings?.identity?.logoUrl || `${origin}/vaani-logo.png`;
+  const clinicTitle = (settings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC').toUpperCase();
+  const clinicSubtitle = settings?.identity?.taglineEn || 'Rehabilitation Center for Audiology, Speech & Hearing Healthcare';
+  const clinicAddress = formatClinicAddress(settings);
+  const clinicHelpline = formatClinicHelpline(settings);
+  const rciNo = settings?.credentials?.rciNumber || 'A79214';
+  const gstin = settings?.credentials?.gstin || '';
+  const upiId = settings?.billing?.upiId || 'vaaniclinic@okaxis';
+  const upiPayee = settings?.billing?.upiName || settings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
+  const bankName = settings?.billing?.bankName || 'HDFC Bank Ltd, Sadashiv Peth Branch, Satara';
+  const bankIfsc = settings?.billing?.bankIfsc || 'HDFC0000123';
+  const bankAccount = settings?.billing?.bankAccountMasked || '**** **** **** 4892';
   
-  const qrData = encodeURIComponent(`upi://pay?pa=vaaniclinic@okaxis&pn=Vaani%20Speech%20and%20Hearing%20Clinic&am=${invoice.totalAmount}&cu=INR&tn=${invoice.invoiceNo}`);
+  const qrData = encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiPayee)}&am=${invoice.totalAmount}&cu=INR&tn=${invoice.invoiceNo}`);
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qrData}&color=30-20-68`;
 
   // Cryptographic audit stamp
@@ -533,16 +549,16 @@ export function printClinicalInvoice(invoice) {
       <div class="header-left">
         <img src="${logoUrl}" alt="Vaani Clinic Logo" class="logo-img" onerror="this.style.display='none'" />
         <div>
-          <div class="clinic-title">VAANI SPEECH &amp; HEARING CLINIC</div>
-          <div class="clinic-sub">Rehabilitation Center for Audiology, Speech &amp; Hearing Healthcare</div>
-          <div class="clinic-address">Sadashiv Peth, Near Powai Naka, Satara, Maharashtra - 415002</div>
-          <div class="clinic-contact">Helpline: +91 98220 12345 / +91 94230 99887 • appointments@vaaniclinic.com • www.vaaniclinic.com</div>
+          <div class="clinic-title">${clinicTitle}</div>
+          <div class="clinic-sub">${clinicSubtitle}</div>
+          <div class="clinic-address">${clinicAddress}</div>
+          <div class="clinic-contact">${clinicHelpline}</div>
         </div>
       </div>
       <div class="header-right">
-        <div class="badge-pill badge-rci">RCI CRR No. A79214</div><br/>
+        <div class="badge-pill badge-rci">RCI CRR No. ${rciNo}</div><br/>
         <div class="badge-pill badge-iso">ISO 9001:2015 Practice</div>
-        <div class="hsn-info">GST SAC: ${sacHsnText}</div>
+        <div class="hsn-info">GST SAC: ${sacHsnText}${gstin ? ` • GSTIN: ${gstin}` : ''}</div>
       </div>
     </div>
 
@@ -642,8 +658,9 @@ export function printClinicalInvoice(invoice) {
           </div>
           <div class="words-statutory">
             ${isTaxable
-              ? '*Taxable supply of hearing aid / orthopedic appliance under HSN Code 9021 (CGST 9% + SGST 9% = 18%).'
-              : '*Statutorily exempt from Goods &amp; Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading 9993 (Health Care Services by Clinical Establishment).'}
+              ? `*Taxable supply of hearing aid / orthopedic appliance under HSN Code ${hsnCode} (CGST 9% + SGST 9% = 18%).`
+              : `*Statutorily exempt from Goods &amp; Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading ${sacCode} (Health Care Services by Clinical Establishment).`}
+            ${gstin ? `<div style="font-size: 8.5px; color: #475569; margin-top: 3px;">Clinic GSTIN: <strong>${gstin}</strong></div>` : ''}
           </div>
         </div>
         <div class="totals-cell">
@@ -670,16 +687,16 @@ export function printClinicalInvoice(invoice) {
           </div>
           <div>
             <div class="upi-title">DIRECT NPCI SETTLEMENT</div>
-            <div class="upi-id">vaaniclinic@okaxis</div>
-            <div class="upi-desc">Payee: Vaani Speech &amp; Hearing Clinic</div>
-            <div class="upi-desc">HDFC Bank Ltd, Sadashiv Peth • IFSC: HDFC0000123</div>
+            <div class="upi-id">${upiId}</div>
+            <div class="upi-desc">Payee: ${upiPayee}</div>
+            <div class="upi-desc">${bankName} • IFSC: ${bankIfsc}${bankAccount ? ` • A/C: ${bankAccount}` : ''}</div>
           </div>
         </div>
         <div class="sign-cell">
           <div class="sign-title">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</div>
           <div class="sign-doctor">Ms. Palak Paresh Gandhi</div>
           <div class="sign-creds">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
-          <div class="sign-rci">RCI Registration: CRR No. A79214</div>
+          <div class="sign-rci">RCI Registration: CRR No. ${rciNo}</div>
           <div class="sign-lic">Practice License Valid for Outpatient Practice</div>
         </div>
       </div>

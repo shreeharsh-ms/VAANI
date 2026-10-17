@@ -18,11 +18,15 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 import GlobalSearchModal from '../common/GlobalSearchModal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 
 export const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { logoUrl, clinicName } = useClinicSettings();
+  const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
+  const displayLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -105,10 +109,10 @@ export const Sidebar = () => {
         
         {/* Top-Left: Logo inside Dark Tab with Inverted Fillets (Santo Home Page Style) */}
         <div className="relative bg-[#301444] text-white px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-br-[18px] sm:rounded-br-[28px] flex items-center self-start flex-shrink-0">
-          <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title="Vaani Speech & Hearing Clinic">
+          <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
             <img
-              src="/vaani-logo-white.png"
-              alt="Vaani Speech and Hearing Clinic"
+              src={displayLogo}
+              alt={clinicName}
               className="h-8 sm:h-10 lg:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-105 drop-shadow-md"
             />
           </Link>
@@ -220,7 +224,7 @@ export const Sidebar = () => {
             {/* Header inside drawer */}
             <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-purple-100 bg-[#301444] text-white shadow-sm flex-shrink-0">
               <Link to={ROUTES.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-                <img src="/vaani-logo-white.png" alt="Vaani Clinic" className="h-8 w-auto object-contain" />
+                <img src={displayLogo} alt={clinicName} className="h-8 w-auto object-contain" />
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}

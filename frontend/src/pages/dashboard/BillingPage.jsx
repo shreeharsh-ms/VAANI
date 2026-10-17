@@ -33,6 +33,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
 import Modal from '../../components/common/Modal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { getServiceRates } from '../../data/serviceRatesData';
@@ -250,6 +251,20 @@ const INITIAL_INVOICES = [
 
 export const BillingPage = () => {
   const { notify } = useNotification();
+  const clinic = useClinicSettings();
+  const clinicSettings = clinic.settings;
+  const clinicLogo = clinic.logoUrl || '/vaani-logo.png';
+  const clinicName = clinicSettings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC';
+  const clinicAddress = formatClinicAddress(clinicSettings) || 'Sadashiv Peth, Near Powai Naka, Satara - 415002';
+  const clinicHelpline = formatClinicHelpline(clinicSettings);
+  const clinicRci = clinicSettings?.credentials?.rciNumber || 'A79214';
+  const clinicGstin = clinicSettings?.credentials?.gstin || '';
+  const clinicSac = clinicSettings?.billing?.sacCode || '999312';
+  const clinicHsn = clinicSettings?.billing?.hsnCode || '9021';
+  const clinicUpiId = clinicSettings?.billing?.upiId || 'vaaniclinic@okaxis';
+  const clinicPayee = clinicSettings?.billing?.upiName || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
+  const clinicBankName = clinicSettings?.billing?.bankName || 'HDFC Bank Ltd, Sadashiv Peth Branch, Satara';
+  const clinicBankIfsc = clinicSettings?.billing?.bankIfsc || 'HDFC0000123';
   const [invoices, setInvoices] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_invoices_v1');
@@ -1333,30 +1348,31 @@ export const BillingPage = () => {
               <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-slate-300 bg-white gap-3">
                 <div className="flex items-center gap-3">
                   <img
-                    src="/vaani-logo.png"
-                    alt="Vaani Clinic Logo"
+                    src={clinicLogo}
+                    alt={clinicName}
                     className="h-9 w-auto object-contain shrink-0"
+                    onError={(e) => { e.target.src = '/vaani-logo.png'; }}
                   />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-sm tracking-tight text-[#301444]">
-                        VAANI SPEECH &amp; HEARING CLINIC
+                        {clinicName}
                       </span>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        RCI CRR No. A79214
+                        RCI CRR No. {clinicRci}
                       </span>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         ISO 9001:2015
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                      Sadashiv Peth, Near Powai Naka, Satara - 415002 • Helpline: +91 98220 12345 • appointments@vaaniclinic.com
+                      {clinicAddress} • {clinicHelpline}
                     </p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-[9.5px] font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 block mb-0.5">
-                    GST SAC: {selectedInvoiceForView.hsnSac || '999312'}
+                    GST SAC: {selectedInvoiceForView.hsnSac || clinicSac}{clinicGstin ? ` • GSTIN: ${clinicGstin}` : ''}
                   </span>
                   <span className="font-mono text-xs font-extrabold text-slate-900 block">
                     {selectedInvoiceForView.invoiceNo}
@@ -1476,8 +1492,9 @@ export const BillingPage = () => {
                   </div>
                   <p className="text-[9.5px] text-slate-500 border-t border-dashed border-slate-200 pt-1.5 mt-1.5 leading-tight">
                     {selectedInvoiceForView.taxType === 'TAXABLE_GOODS'
-                      ? '*Taxable supply of hearing aid / orthopedic appliance under HSN Code 9021 (CGST 9% + SGST 9% = 18%).'
-                      : '*Statutorily exempt from Goods & Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading 9993 (Health Care Services by Clinical Establishment).'}
+                      ? `*Taxable supply of hearing aid / orthopedic appliance under HSN Code ${clinicHsn} (CGST 9% + SGST 9% = 18%).`
+                      : `*Statutorily exempt from Goods & Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading ${clinicSac} (Health Care Services by Clinical Establishment).`}
+                    {clinicGstin && <span className="block mt-0.5 text-slate-600 font-medium">Clinic GSTIN: <strong>{clinicGstin}</strong></span>}
                   </p>
                 </div>
                 <div className="col-span-5 bg-white divide-y divide-slate-100 flex flex-col justify-center">
@@ -1504,8 +1521,8 @@ export const BillingPage = () => {
                   </div>
                   <div>
                     <span className="text-[9px] font-extrabold text-purple-900 uppercase tracking-wider block">DIRECT NPCI SETTLEMENT</span>
-                    <span className="text-[11px] font-mono font-extrabold text-slate-900 block leading-tight">vaaniclinic@okaxis</span>
-                    <span className="text-[9px] text-slate-500 block leading-tight">Payee: Vaani Speech &amp; Hearing Clinic • HDFC Bank Ltd</span>
+                    <span className="text-[11px] font-mono font-extrabold text-slate-900 block leading-tight">{clinicUpiId}</span>
+                    <span className="text-[9px] text-slate-500 block leading-tight">Payee: {clinicPayee} • {clinicBankName} • IFSC: {clinicBankIfsc}</span>
                   </div>
                 </div>
 
@@ -1513,7 +1530,7 @@ export const BillingPage = () => {
                   <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
                   <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
                   <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
-                  <div className="text-[9.5px] font-mono font-bold text-emerald-700">RCI Registration: CRR No. A79214</div>
+                  <div className="text-[9.5px] font-mono font-bold text-emerald-700">RCI Registration: CRR No. {clinicRci}</div>
                 </div>
               </div>
 

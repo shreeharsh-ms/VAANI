@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Building,
@@ -29,6 +29,8 @@ import {
   Filter,
   Download,
   Info,
+  UploadCloud,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -42,7 +44,8 @@ const DEFAULT_SETTINGS = {
     tradeName: 'Vaani Clinic',
     taglineEn: 'Speak • Hear • Connect',
     taglineMr: 'स्पष्ट बोला, सुस्पष्ट ऐका, आनंदाने जगा',
-    logoUrl: '/vaani-logo-white.png',
+    logoUrl: '/vaani-logo.png',
+    logoWhiteUrl: '/vaani-logo-white.png',
     letterheadTitle: 'VAANI SPEECH & HEARING REHABILITATION CENTER',
     stampNote: 'RCI Registered Practitioner Seal (CRR No. A79214)',
   },
@@ -109,6 +112,8 @@ const DEFAULT_SETTINGS = {
     resetFiscalCycle: '04-01', // April 1st
     serviceTaxPercent: 0, // Healthcare exempt
     productTaxPercent: 18, // Hearing aid accessories
+    sacCode: '999312',
+    hsnCode: '9021',
     showGstOnInvoice: false,
     roundingMode: 'NEAREST_INTEGER',
     upiId: 'vaaniclinic@okaxis',
@@ -541,6 +546,76 @@ export const SettingsPage = () => {
     }));
   };
 
+  const logoInputRef = useRef(null);
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notify.error('Please upload a valid image file (PNG, JPG, SVG, WebP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const img = new Image();
+      img.onload = () => {
+        let finalDataUrl = dataUrl;
+        if (img.width > 1200 || img.height > 1200) {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          finalDataUrl = canvas.toDataURL('image/png');
+        }
+
+        const updatedSettings = {
+          ...settings,
+          identity: {
+            ...settings.identity,
+            logoUrl: finalDataUrl,
+            logoWhiteUrl: finalDataUrl,
+          },
+        };
+        setSettings(updatedSettings);
+        localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
+        window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
+        notify.success('Clinic logo updated successfully! New branding is now live across reports, invoices, and navigation.');
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleResetLogo = () => {
+    const updatedSettings = {
+      ...settings,
+      identity: {
+        ...settings.identity,
+        logoUrl: '/vaani-logo.png',
+        logoWhiteUrl: '/vaani-logo-white.png',
+      },
+    };
+    setSettings(updatedSettings);
+    localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
+    window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
+    notify.info('Clinic logo reset to default official Vaani brand logo.');
+  };
+
   // Save Settings & Record Cryptographic Audit Entry (FR-SET-013)
   const handleSave = (e) => {
     if (e) e.preventDefault();
@@ -551,6 +626,7 @@ export const SettingsPage = () => {
         localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(settings));
         localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(holidays));
         saveServiceRates(serviceRates);
+        window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: settings }));
 
         // Create Tamper-Evident Audit Record
         const newAudit = {
@@ -582,6 +658,7 @@ export const SettingsPage = () => {
       setHolidays(MAHARASHTRA_HOLIDAYS_TEMPLATE);
       localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(DEFAULT_SETTINGS));
       localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(MAHARASHTRA_HOLIDAYS_TEMPLATE));
+      window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: DEFAULT_SETTINGS }));
       notify.info('Settings reset to verified clinical practice defaults.');
     }
   };
@@ -1678,6 +1755,55 @@ export const SettingsPage = () => {
                     </td>
                     <td className="py-1.5 px-2.5 text-center font-mono text-slate-500">18.00%</td>
                   </tr>
+
+                  {/* Clinic GSTIN */}
+                  <tr className="hover:bg-purple-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">06</td>
+                    <td className="py-1.5 px-3 font-bold text-slate-800">Clinic Statutory GSTIN</td>
+                    <td className="py-1.5 px-3 text-slate-600">Goods &amp; Services Tax Identification Number (Printed on Official Tax Invoices)</td>
+                    <td className="py-1.5 px-3">
+                      <input
+                        type="text"
+                        value={settings.credentials.gstin || ''}
+                        onChange={(e) => handleChange('credentials', 'gstin', e.target.value.toUpperCase())}
+                        placeholder="27AAAAA0000A1Z5"
+                        className="h-7 w-44 px-2 text-xs font-mono font-bold text-purple-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                      />
+                    </td>
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-500">Statutory</td>
+                  </tr>
+
+                  {/* Healthcare SAC Code */}
+                  <tr className="hover:bg-purple-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">07</td>
+                    <td className="py-1.5 px-3 font-bold text-slate-800">Healthcare Services SAC Code</td>
+                    <td className="py-1.5 px-3 text-slate-600">Services Accounting Code for Clinical Consultations &amp; Therapy</td>
+                    <td className="py-1.5 px-3">
+                      <input
+                        type="text"
+                        value={settings.billing.sacCode || '999312'}
+                        onChange={(e) => handleChange('billing', 'sacCode', e.target.value)}
+                        className="h-7 w-28 px-2 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                      />
+                    </td>
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-500">Heading 9993</td>
+                  </tr>
+
+                  {/* Hearing Aid HSN Code */}
+                  <tr className="hover:bg-purple-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">08</td>
+                    <td className="py-1.5 px-3 font-bold text-slate-800">Hearing Aids &amp; Prosthetics HSN Code</td>
+                    <td className="py-1.5 px-3 text-slate-600">Harmonized System of Nomenclature for Hearing Appliances</td>
+                    <td className="py-1.5 px-3">
+                      <input
+                        type="text"
+                        value={settings.billing.hsnCode || '9021'}
+                        onChange={(e) => handleChange('billing', 'hsnCode', e.target.value)}
+                        className="h-7 w-28 px-2 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                      />
+                    </td>
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-500">Heading 9021</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1738,12 +1864,13 @@ export const SettingsPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Account (Masked)</label>
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Account (Masked or Direct)</label>
                     <input
                       type="text"
-                      readOnly
                       value={settings.billing.bankAccountMasked}
-                      className="h-7 w-full px-2 text-xs font-mono font-bold text-slate-800 bg-slate-50 border border-slate-300 rounded"
+                      onChange={(e) => handleChange('billing', 'bankAccountMasked', e.target.value)}
+                      placeholder="**** **** **** 4892"
+                      className="h-7 w-full px-2 text-xs font-mono font-bold text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -2635,32 +2762,102 @@ export const SettingsPage = () => {
                 </div>
               </div>
 
-              {/* Inline Brand Previews Strip */}
-              <div className="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div className="p-2 rounded border border-purple-100 bg-[#301444] text-white flex items-center justify-between">
+              {/* Brand Assets & Updatable Logo Section */}
+              <div className="pt-3 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
                   <div>
-                    <span className="text-[11px] font-bold block">White SVG Brand Logo</span>
-                    <span className="text-[9px] text-purple-300">Used in Santo Navbar &amp; Reports</span>
+                    <span className="text-xs font-bold text-[#301444] uppercase tracking-wider block">
+                      Clinic Logo &amp; Official Letterhead Brand Assets
+                    </span>
+                    <span className="text-[10.5px] text-slate-500">
+                      Upload your clinic logo (PNG, JPG, SVG). Automatically updates across all reports, tax invoices, letterheads, and navigation headers.
+                    </span>
                   </div>
-                  <img src="/vaani-logo-white.png" alt="Vaani Logo" className="h-6 w-auto object-contain" />
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      onChange={handleLogoUpload}
+                      accept="image/png, image/jpeg, image/svg+xml, image/webp"
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      className="px-2.5 py-1 text-xs font-bold bg-[#301444] text-white rounded hover:bg-purple-900 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      Upload / Update Logo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetLogo}
+                      className="px-2 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Reset to default official logo"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Reset
+                    </button>
+                  </div>
                 </div>
 
-                <div className="p-2 rounded border border-purple-100 bg-purple-50/60 flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-[#301444] block">Practitioner Seal</span>
-                    <span className="text-[9px] text-slate-500">CRR No. {settings.credentials.rciNumber}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Light Surface: Reports, Invoices, Print */}
+                  <div className="p-2.5 rounded-lg border border-purple-200 bg-white shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-1.5">
+                      <span className="text-[11px] font-bold text-slate-800">Report &amp; Invoice Preview</span>
+                      <span className="text-[9px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Light Surface</span>
+                    </div>
+                    <div className="h-16 flex items-center justify-center p-1.5 bg-slate-50 rounded border border-slate-100">
+                      <img
+                        src={settings.identity.logoUrl || '/vaani-logo.png'}
+                        alt="Report Logo Preview"
+                        className="max-h-12 max-w-full object-contain drop-shadow-2xs"
+                        onError={(e) => { e.target.src = '/vaani-logo.png'; }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-slate-500 mt-1.5 text-center">Used in A4 Invoices &amp; Clinical Reports</span>
                   </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-white text-purple-700 rounded border border-purple-200">
-                    RCI Stamp
-                  </span>
-                </div>
 
-                <div className="p-2 rounded border border-purple-100 bg-white flex items-center justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-[#301444] block">A4 Diagnostic Letterhead</span>
-                    <span className="text-[9px] text-slate-500">300 DPI Medical Header</span>
+                  {/* Dark Surface: Top Navbars & Sidebars */}
+                  <div className="p-2.5 rounded-lg border border-purple-950 bg-[#301444] text-white shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-purple-800/60 pb-1 mb-1.5">
+                      <span className="text-[11px] font-bold text-white">Navigation Header Preview</span>
+                      <span className="text-[9px] font-bold text-purple-200 bg-purple-900 px-1.5 py-0.5 rounded border border-purple-700">Dark Header</span>
+                    </div>
+                    <div className="h-16 flex items-center justify-center p-1.5 bg-white/10 rounded border border-white/10">
+                      <img
+                        src={settings.identity.logoUrl || '/vaani-logo-white.png'}
+                        alt="Navbar Logo Preview"
+                        className="max-h-12 max-w-full object-contain drop-shadow-md"
+                        onError={(e) => { e.target.src = '/vaani-logo-white.png'; }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-purple-300 mt-1.5 text-center">Used in Top Navbar &amp; Drawer</span>
                   </div>
-                  <FileText className="w-5 h-5 text-purple-700" />
+
+                  {/* Practitioner Accreditation Card */}
+                  <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/70 shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-1 mb-1.5">
+                      <span className="text-[11px] font-bold text-slate-800">Practitioner Accreditation</span>
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Verified</span>
+                    </div>
+                    <div className="space-y-1 text-[10.5px] text-slate-700">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">RCI CRR Number:</span>
+                        <span className="font-mono font-bold text-purple-950">{settings.credentials.rciNumber}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Statutory GSTIN:</span>
+                        <span className="font-mono font-semibold text-slate-900">{settings.credentials.gstin || '27AAAAA0000A1Z5'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500">Service SAC Code:</span>
+                        <span className="font-mono font-semibold text-slate-900">{settings.billing.sacCode || '999312'}</span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-slate-500 mt-1.5 text-center">Synced with RCI Practice License</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -18,11 +18,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 import { authService } from '../../services/authService';
 
 export const LoginForm = ({ onSuccess }) => {
   const { setSession } = useAuth();
   const { notify } = useNotification();
+  const { logoUrl, clinicName } = useClinicSettings();
 
   // Primary view state: 'CREDENTIALS' | 'OTP_VERIFY' | 'FORGOT_PASSWORD' | 'FORGOT_OTP'
   const [currentStep, setCurrentStep] = useState('CREDENTIALS');
@@ -330,9 +332,10 @@ export const LoginForm = ({ onSuccess }) => {
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
               <img
-                src="/vaani-logo.png"
-                alt="Vaani Speech & Hearing Clinic"
+                src={logoUrl || '/vaani-logo.png'}
+                alt={clinicName}
                 className="h-10 sm:h-12 w-auto object-contain"
+                onError={(e) => { e.target.src = '/vaani-logo.png'; }}
               />
             </div>
 

@@ -19,6 +19,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { ROUTES, APP_CONFIG } from '../../constants';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 import WatchLearnGrowSection from '../../components/home/WatchLearnGrowSection';
 import ScrollRevealCaseStudy from '../../components/home/ScrollRevealCaseStudy';
 
@@ -59,6 +60,9 @@ const CuteChatbotIcon = ({ className = "w-6 h-6 sm:w-7 sm:h-7" }) => (
 );
 
 export const ServicesPage = () => {
+  const { logoUrl, clinicName } = useClinicSettings();
+  const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
+  const displayWhiteLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -124,10 +128,10 @@ export const ServicesPage = () => {
           
           {/* Top-Left: Logo inside Dark Tab with Fillets */}
           <div className="relative bg-[#301444] text-white px-4 sm:px-8 lg:px-10 py-2.5 sm:py-4 lg:py-4.5 rounded-br-[22px] sm:rounded-br-[38px] flex items-center self-start flex-shrink-0">
-            <Link to={ROUTES.HOME} className="flex items-center group py-0.5">
+            <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
               <img
-                src="/vaani-logo-white.png"
-                alt="Vaani Speech and Hearing Clinic"
+                src={displayWhiteLogo}
+                alt={clinicName}
                 className="h-9 sm:h-13 lg:h-15 xl:h-[68px] w-auto object-contain transition-transform duration-200 group-hover:scale-105 drop-shadow-md"
               />
             </Link>
@@ -219,7 +223,7 @@ export const ServicesPage = () => {
             {/* Header inside drawer */}
             <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-purple-100/80 bg-[#301444] text-white shadow-sm flex-shrink-0">
               <Link to={ROUTES.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
-                <img src="/vaani-logo-white.png" alt="Vaani Clinic" className="h-9 w-auto object-contain" />
+                <img src={displayWhiteLogo} alt={clinicName} className="h-9 w-auto object-contain" />
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}

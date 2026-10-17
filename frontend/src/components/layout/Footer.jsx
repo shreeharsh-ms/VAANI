@@ -14,8 +14,14 @@ import {
   Volume2,
 } from 'lucide-react';
 import { APP_CONFIG, ROUTES } from '../../constants';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 export const Footer = () => {
+  const { logoUrl, clinicName, settings, rciNumber } = useClinicSettings();
+  const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
+  const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12345';
+  const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
+  const displayLogo = logoUrl || '/vaani-logo.png';
   const [flowerHovered, setFlowerHovered] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -115,17 +121,17 @@ export const Footer = () => {
 
             {/* Top Right: Clinic Logo + Practitioner Credentials (User request: 'in right side keep logo') */}
             <div className="flex flex-col items-start lg:items-end space-y-3 lg:text-right flex-shrink-0">
-              <Link to={ROUTES.HOME} className="block group">
+              <Link to={ROUTES.HOME} className="block group" title={clinicName}>
                 <img
-                  src="/vaani-logo.png"
-                  alt="Vaani Speech and Hearing Clinic"
+                  src={displayLogo}
+                  alt={clinicName}
                   className="h-14 sm:h-16 lg:h-20 xl:h-22 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </Link>
 
               <div className="space-y-1">
                 <p className="text-sm sm:text-base lg:text-lg font-serif font-bold text-[#301444] tracking-wide">
-                  Lead Audiologist & Speech-Language Pathologist
+                  Lead Audiologist &amp; Speech-Language Pathologist
                 </p>
                 <p className="text-xs sm:text-sm font-semibold text-[#7c3aed]">
                   Ms. Palak Paresh Gandhi <span className="text-[#301444]/70 font-normal">(MASLP, RCI)</span>
@@ -135,7 +141,7 @@ export const Footer = () => {
               {/* RCI Accreditation Pill */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-[#301444]/15 shadow-sm text-xs font-semibold text-[#301444]">
                 <ShieldCheck className="w-4 h-4 text-[#9333ea]" />
-                <span>RCI Registered Clinic • Reg. No. A-78942</span>
+                <span>RCI Registered Clinic • Reg. No. {rciNumber}</span>
               </div>
             </div>
 
@@ -254,24 +260,24 @@ export const Footer = () => {
               <ul className="space-y-3 text-sm sm:text-base font-medium text-[#462064]">
                 <li className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-[#9333ea] flex-shrink-0 mt-1" />
-                  <span className="text-xs sm:text-sm">Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002</span>
+                  <span className="text-xs sm:text-sm">{clinicAddress}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 text-[#9333ea] flex-shrink-0" />
                   <a
-                    href="tel:+919822012345"
+                    href={`tel:${clinicPhone.replace(/\s+/g, '')}`}
                     className="hover:text-[#9333ea] transition-colors font-semibold text-xs sm:text-sm"
                   >
-                    +91 98220 12345
+                    {clinicPhone}
                   </a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-[#9333ea] flex-shrink-0" />
                   <a
-                    href="mailto:care@vaaniclinic.com"
+                    href={`mailto:${clinicEmail}`}
                     className="hover:text-[#9333ea] transition-colors text-xs sm:text-sm"
                   >
-                    care@vaaniclinic.com
+                    {clinicEmail}
                   </a>
                 </li>
                 <li className="flex items-start gap-2.5">

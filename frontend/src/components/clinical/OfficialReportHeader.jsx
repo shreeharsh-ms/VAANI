@@ -1,13 +1,14 @@
 import React from 'react';
 import { ShieldCheck, Award, FileText } from 'lucide-react';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 /**
  * OfficialReportHeader
  * Reusable decorative clinical letterhead component for VAANI clinical reports.
  * Features:
  * - Rich lavender / royal purple clinical theme
- * - Clinic branding with official Vaani logo
- * - RCI CRR No. A79214 official seal & ISO 9001:2015 certification badges
+ * - Clinic branding with official or uploaded clinic logo
+ * - RCI CRR No. official seal & ISO 9001:2015 certification badges
  * - Structured metadata pill (Report No, Date, Discipline, Page count)
  * - Ornamental divider flourish
  */
@@ -22,30 +23,42 @@ export const OfficialReportHeader = ({
   useImage = true,
   className = '',
 }) => {
-  const rciNumber = formData?.rciNumber || 'A79214';
+  const clinic = useClinicSettings();
+  const settings = clinic.settings;
+
+  const rciNumber = formData?.rciNumber || settings?.credentials?.rciNumber || 'A79214';
   const reportNumber = formData?.reportNumber || 'REP-26-4829';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
   const disciplineName = discipline || service?.discipline || 'AUDIOLOGY';
+  const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
+  const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12345';
+  const consultPhone = settings?.contact?.consultationPhone || '+91 94230 99887';
+  const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
+  const clinicLogo = clinic.logoUrl || '/vaani-logo.png';
+  const clinicName = settings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC';
+  const tagline = settings?.identity?.taglineEn || 'SPEAK • HEAR • CONNECT';
 
-  // Official header banner using the user's custom high-resolution letterhead
-  if (useImage) {
+  const isCustomLogo = clinicLogo && clinicLogo !== '/vaani-logo.png' && clinicLogo !== '/vaani-logo-white.png';
+
+  // If a custom logo has been uploaded by the clinic, render the dynamic high-res clinical letterhead
+  if (useImage && !isCustomLogo) {
     return (
       <div className={`official-report-header shrink-0 w-full m-0 p-0 mb-3 select-none ${className}`}>
         <div className="relative w-full overflow-hidden">
-          {/* User's custom official banner - uncropped, 100% full width edge-to-edge, zero border-radius */}
+          {/* Default official letterhead banner */}
           <img
             src="/vaani-header-banner.png"
-            alt="Vaani Speech and Hearing Clinic"
+            alt={clinicName}
             className="w-full h-auto block rounded-none"
           />
 
-          {/* Clinic Address, Contact Number & Email directly below SPEAK • HEAR • CONNECT */}
+          {/* Dynamic Clinic Address, Contact Number & Email directly below SPEAK • HEAR • CONNECT */}
           <div className="absolute left-[40.2%] top-[72%] right-[4%] bottom-[4%] flex flex-col justify-center">
-            <p className="text-[9px] sm:text-[10px] print:text-[8px] font-semibold text-purple-950 tracking-wide leading-tight">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+            <p className="text-[9px] sm:text-[10px] print:text-[8px] font-semibold text-purple-950 tracking-wide leading-tight truncate">
+              {clinicAddress}
             </p>
-            <p className="text-[8px] sm:text-[9px] print:text-[7.5px] font-medium text-slate-700 tracking-tight leading-tight mt-0.5">
-              Tel: <span className="font-bold text-purple-900">+91 2162 234567</span> • Mob: <span className="font-bold text-purple-900">+91 94220 11223</span> • Email: <span className="font-bold text-purple-900">clinic@vaaniclinic.com</span>
+            <p className="text-[8px] sm:text-[9px] print:text-[7.5px] font-medium text-slate-700 tracking-tight leading-tight mt-0.5 truncate">
+              Tel: <span className="font-bold text-purple-900">{clinicPhone}</span> • Mob: <span className="font-bold text-purple-900">{consultPhone}</span> • Email: <span className="font-bold text-purple-900">{clinicEmail}</span>
             </p>
           </div>
         </div>
@@ -60,16 +73,23 @@ export const OfficialReportHeader = ({
         <div className="h-1 w-full bg-gradient-to-r from-purple-900 via-indigo-600 to-purple-800 rounded-full mb-2 print:mb-1.5" />
 
         <div className="bg-gradient-to-r from-purple-100/80 via-white to-purple-50/70 border border-purple-200 rounded-xl p-2.5 px-3.5 flex items-start justify-between gap-3 shadow-2xs">
-          <div className="space-y-0.5">
-            <h1 className="font-serif font-black text-sm tracking-wide text-purple-950 uppercase">
-              VANI'S SPEECH &amp; HEARING CLINIC
-            </h1>
-            <p className="text-[10px] font-bold text-slate-700">
-              Center for Audiology, Speech-Language Pathology &amp; Psychological Counselling
-            </p>
-            <p className="text-[9px] text-slate-600">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002 • Tel: +91 2162 234567 • clinic@vaaniclinic.com
-            </p>
+          <div className="flex items-center gap-2.5">
+            <img
+              src={clinicLogo}
+              alt={clinicName}
+              className="h-10 w-auto object-contain shrink-0 drop-shadow-2xs"
+            />
+            <div className="space-y-0.5">
+              <h1 className="font-serif font-black text-sm tracking-wide text-purple-950 uppercase">
+                {clinicName}
+              </h1>
+              <p className="text-[10px] font-bold text-slate-700">
+                Center for Audiology, Speech-Language Pathology &amp; Psychological Counselling
+              </p>
+              <p className="text-[9px] text-slate-600">
+                {clinicAddress} • Tel: {clinicPhone} • {clinicEmail}
+              </p>
+            </div>
           </div>
 
           <div className="text-right shrink-0 space-y-0.5">
@@ -111,8 +131,8 @@ export const OfficialReportHeader = ({
         {/* Left: Clinic Logo & Institutional Accreditations */}
         <div className="flex items-center gap-3">
           <img
-            src="/vaani-logo.png"
-            alt="Vaani Speech and Hearing Clinic"
+            src={clinicLogo}
+            alt={clinicName}
             className={`${compact ? 'h-10' : 'h-11 sm:h-12'} w-auto object-contain shrink-0 drop-shadow-2xs`}
           />
           <div className="space-y-0.5">
@@ -131,10 +151,10 @@ export const OfficialReportHeader = ({
             </div>
 
             <p className="text-[9.5px] text-slate-800 font-medium">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+              {clinicAddress}
             </p>
             <p className="text-[8.5px] text-slate-500 font-normal">
-              Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
+              Tel: {clinicPhone} • Mob: {consultPhone} • Email: {clinicEmail}
             </p>
           </div>
         </div>
