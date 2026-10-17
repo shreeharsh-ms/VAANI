@@ -1,9 +1,10 @@
 import React from 'react';
-import { QrCode } from 'lucide-react';
 import { DualAudiogramSection } from './AudiogramGraph';
 import { EarlyDevelopmentalHistoryDocument } from './EarlyDevelopmentalHistoryDocument';
 import { FluencyDisordersDocument } from './FluencyDisordersDocument';
 import { VoiceDisordersDocument } from './VoiceDisordersDocument';
+import { OfficialReportHeader } from './OfficialReportHeader';
+import { OfficialReportFooter } from './OfficialReportFooter';
 
 /**
  * Official Clinical Document Template
@@ -106,78 +107,16 @@ export const OfficialClinicalDocument = ({
   return (
     <div
       id="official-report-a4-page"
-      className="bg-white text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight"
+      className="bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl"
     >
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
-      <div className="flex-1 flex flex-col space-y-3.5">
-        {/* ── CLINIC OFFICIAL LETTERHEAD ── */}
-        {isCBT ? (
-          <div className="border-b-2 border-slate-900 pb-2 flex items-start justify-between gap-4">
-            <div className="space-y-0.5">
-              <h1 className="font-serif font-black text-base tracking-wide text-slate-950 uppercase">
-                VANI'S SPEECH &amp; HEARING CLINIC
-              </h1>
-              <p className="text-[10px] font-bold text-slate-700">
-                Center for Audiology, Speech-Language Pathology &amp; Counselling
-              </p>
-              <p className="text-[9px] text-slate-600">
-                Satara, Maharashtra • Contact: +91-98220-XXXXX • Email: contact@vanisclinic.in
-              </p>
-            </div>
-            <div className="text-right space-y-0.5">
-              <h2 className="font-bold text-xs text-slate-950">
-                Ms. Palak Paresh Gandhi &amp; CBT Team
-              </h2>
-              <p className="text-[9.5px] font-semibold text-slate-700">
-                RCI Registered Practitioner &amp; Psychological Counselor
-              </p>
-              <p className="text-[8.5px] text-slate-500">
-                Strictly Confidential Medical Record (DPDP Act 2023 Compliant)
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="border-b-2 border-purple-950 pb-2.5 flex items-start justify-between gap-4">
-            {/* Left: Actual Clinic Logo & Institutional Details */}
-            <div className="flex items-center gap-3.5">
-              <img
-                src="/vaani-logo.png"
-                alt="Vaani Speech and Hearing Clinic"
-                className="h-14 w-auto object-contain shrink-0"
-              />
-              <div className="space-y-0.5">
-                <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-slate-700">
-                  <span className="font-semibold text-slate-800">
-                    RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-                  </span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-[9.5px] text-slate-500 font-medium">
-                    RCI Approved Practice Center • ISO 9001:2015
-                  </span>
-                </div>
-                <p className="text-[10.5px] text-slate-700 font-medium">
-                  Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
-                </p>
-                <p className="text-[9.5px] text-slate-500">
-                  Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
-                </p>
-              </div>
-            </div>
-
-            {/* Right: Document Identification */}
-            <div className="text-right shrink-0 space-y-0.5">
-              <span className="block text-xs font-mono font-bold text-slate-900">
-                Report No: {formData?.reportNumber}
-              </span>
-              <span className="block text-[10px] text-slate-500 font-medium">
-                Date: {formData?.reportDate}
-              </span>
-              <span className="block text-[9px] font-bold uppercase tracking-wider text-purple-900 mt-0.5">
-                {service.discipline}
-              </span>
-            </div>
-          </div>
-        )}
+      <div className="flex-1 flex flex-col space-y-3">
+        {/* ── REUSABLE DECORATIVE CLINICAL LETTERHEAD ── */}
+        <OfficialReportHeader
+          formData={formData}
+          service={service}
+          isCBT={isCBT}
+        />
 
         {/* ── CONDITIONAL REPORT BODY: CBT VS OAE VS GENERAL / PTA ── */}
         {isCBT ? (
@@ -455,37 +394,37 @@ export const OfficialClinicalDocument = ({
           <div className="space-y-2.5 text-slate-900">
             {/* Centered Rounded Pill Title Banner */}
             <div className="text-center my-0.5">
-              <span className="inline-block bg-[#0284c7] text-white font-black text-xs sm:text-sm tracking-wider px-8 py-1 rounded-full uppercase shadow-2xs">
+              <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-xs sm:text-sm tracking-wider px-8 py-1 rounded-full uppercase shadow-xs border border-purple-400/40">
                 AUDIOLOGICAL EVALUATION
               </span>
             </div>
 
-            {/* Demographics & Test Context Matrix (3-row clean border box matching Image 2) */}
-            <div className="border border-slate-700 text-[10px] bg-white">
+            {/* Demographics & Test Context Matrix */}
+            <div className="border border-purple-300 rounded-lg overflow-hidden text-[10px] bg-white shadow-2xs">
               {/* Row 1 */}
-              <div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">
+              <div className="grid grid-cols-3 divide-x divide-purple-200 border-b border-purple-200">
                 <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-14 shrink-0 text-slate-800">Date :</span>
+                  <span className="font-bold w-14 shrink-0 text-purple-950">Date :</span>
                   <span className="font-semibold text-slate-900">{formData?.reportDate || '16/10/2026'}</span>
                 </div>
                 <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-slate-800">Reg. No. :</span>
+                  <span className="font-bold w-18 shrink-0 text-purple-950">Reg. No. :</span>
                   <span className="font-mono font-bold text-slate-900">{patient.uhid}</span>
                 </div>
                 <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-slate-800">PTA No. :</span>
-                  <span className="font-mono font-bold text-slate-900">{formData?.parameters?.ptaNo || '64/2026'}</span>
+                  <span className="font-bold w-18 shrink-0 text-purple-950">PTA No. :</span>
+                  <span className="font-mono font-bold text-purple-900">{formData?.parameters?.ptaNo || '64/2026'}</span>
                 </div>
               </div>
 
               {/* Row 2 */}
-              <div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">
+              <div className="grid grid-cols-3 divide-x divide-purple-200 border-b border-purple-200">
                 <div className="p-1 px-2.5 flex items-center col-span-2">
-                  <span className="font-bold w-32 shrink-0 text-slate-800">Name of Patient :</span>
-                  <span className="font-black text-slate-900 text-[11px]">{patient.full_name}</span>
+                  <span className="font-bold w-32 shrink-0 text-purple-950">Name of Patient :</span>
+                  <span className="font-black text-slate-950 text-[11px]">{patient.full_name}</span>
                 </div>
                 <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-slate-800">Age/Sex :</span>
+                  <span className="font-bold w-18 shrink-0 text-purple-950">Age/Sex :</span>
                   <span className="font-semibold text-slate-900">
                     {patient.date_of_birth} / {patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : patient.gender}
                   </span>
@@ -493,28 +432,28 @@ export const OfficialClinicalDocument = ({
               </div>
 
               {/* Row 3 */}
-              <div className="grid grid-cols-3 divide-x divide-slate-700">
+              <div className="grid grid-cols-3 divide-x divide-purple-200">
                 <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-24 shrink-0 text-slate-800">Audiometer :</span>
+                  <span className="font-bold w-24 shrink-0 text-purple-950">Audiometer :</span>
                   <span className="font-bold text-slate-900">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
                 </div>
                 <div className="p-1 px-2.5 flex items-center col-span-2">
-                  <span className="font-bold w-24 shrink-0 text-slate-800">Responses :</span>
+                  <span className="font-bold w-24 shrink-0 text-purple-950">Responses :</span>
                   <div className="flex items-center gap-3 text-[9.5px]">
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-slate-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                         {formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? '✓' : ''}
                       </span>
                       Consistent
                     </span>
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-slate-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                         {formData?.parameters?.responses === 'Fairly Consistent' ? '✓' : ''}
                       </span>
                       Fairly Consistent
                     </span>
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-slate-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                         {formData?.parameters?.responses === 'Inconsistent' ? '✓' : ''}
                       </span>
                       Inconsistent
@@ -533,94 +472,94 @@ export const OfficialClinicalDocument = ({
             />
 
             {/* AUDIOMETRIC SUMMARY TABLE */}
-            <div className="border border-slate-700 overflow-hidden text-[9px]">
+            <div className="border border-purple-300 rounded-lg overflow-hidden text-[9px] bg-white shadow-2xs">
               <table className="w-full border-collapse text-center">
                 <thead>
-                  <tr className="bg-slate-100 font-bold border-b border-slate-700">
-                    <th className="p-1 border-r border-slate-700 w-20"></th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      PTA<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                  <tr className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 text-purple-950 font-bold border-b border-purple-200">
+                    <th className="p-1 border-r border-purple-200 w-20"></th>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      PTA<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      PTA 2<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      PTA 2<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      SDT<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      SDT<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      SRT<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      SRT<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      WRS %<br /><span className="text-[7.5px] font-normal text-slate-600">at _ dBHL</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      WRS %<br /><span className="text-[7.5px] font-normal text-purple-800">at _ dBHL</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      MCL<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      MCL<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 leading-tight">
-                      UCL<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    <th className="p-1 border-r border-purple-200 leading-tight">
+                      UCL<br /><span className="text-[7.5px] font-normal text-purple-800">(dB HL)</span>
                     </th>
-                    <th className="p-1 border-r border-slate-700 font-bold">Rinne</th>
+                    <th className="p-1 border-r border-purple-200 font-bold">Rinne</th>
                     <th className="p-1 font-bold">Weber</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-300">
+                <tbody className="divide-y divide-purple-100">
                   <tr>
-                    <td className="p-1 font-bold text-rose-700 border-r border-slate-700">Right Ear</td>
-                    <td className="p-1 font-mono font-bold text-rose-900 border-r border-slate-700">
+                    <td className="p-1 font-bold text-rose-700 border-r border-purple-200">Right Ear</td>
+                    <td className="p-1 font-mono font-bold text-rose-900 border-r border-purple-200">
                       {computedPTA?.rightAvg ? `${computedPTA.rightAvg} dB` : formData?.parameters?.rightPTA || '05 dB'}
                     </td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightPTA2 || '—'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightSDT || '10 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightSRT || '15 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightWRS || '96% at 50 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightMCL || '55 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightUCL || '90 dB'}</td>
-                    <td className="p-1 font-bold border-r border-slate-700 text-slate-800">{formData?.parameters?.rightRinne || '+ve'}</td>
-                    <td rowSpan={2} className="p-1 font-bold align-middle text-slate-800 bg-slate-50/50">
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightPTA2 || '—'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightSDT || '10 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightSRT || '15 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightWRS || '96% at 50 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightMCL || '55 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.rightUCL || '90 dB'}</td>
+                    <td className="p-1 font-bold border-r border-purple-200 text-slate-800">{formData?.parameters?.rightRinne || '+ve'}</td>
+                    <td rowSpan={2} className="p-1 font-bold align-middle text-purple-950 bg-purple-50/40">
                       {formData?.parameters?.weber || 'Central'}
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-1 font-bold text-blue-700 border-r border-slate-700">Left Ear</td>
-                    <td className="p-1 font-mono font-bold text-blue-900 border-r border-slate-700">
+                    <td className="p-1 font-bold text-blue-700 border-r border-purple-200">Left Ear</td>
+                    <td className="p-1 font-mono font-bold text-blue-900 border-r border-purple-200">
                       {computedPTA?.leftAvg ? `${computedPTA.leftAvg} dB` : formData?.parameters?.leftPTA || '06.66 dB'}
                     </td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftPTA2 || '—'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftSDT || '10 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftSRT || '15 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftWRS || '96% at 50 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftMCL || '55 dB'}</td>
-                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftUCL || '90 dB'}</td>
-                    <td className="p-1 font-bold border-r border-slate-700 text-slate-800">{formData?.parameters?.leftRinne || '+ve'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftPTA2 || '—'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftSDT || '10 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftSRT || '15 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftWRS || '96% at 50 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftMCL || '55 dB'}</td>
+                    <td className="p-1 font-mono border-r border-purple-200">{formData?.parameters?.leftUCL || '90 dB'}</td>
+                    <td className="p-1 font-bold border-r border-purple-200 text-slate-800">{formData?.parameters?.leftRinne || '+ve'}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* INTERPRETATION & RECOMMENDATIONS */}
-            <div className="space-y-1.5 pt-0.5 text-xs">
+            <div className="space-y-1.5 pt-0.5 text-xs bg-white/90 border border-purple-200 rounded-lg p-2.5 shadow-2xs">
               <div>
-                <span className="font-black uppercase tracking-wide text-slate-900 block text-[10.5px]">
+                <span className="font-black uppercase tracking-wide text-purple-950 block text-[10.5px]">
                   Interpretation :
                 </span>
                 <div className="text-[10px] text-slate-800 font-medium">
                   {renderBulletPoints(
                     formData?.parameters?.provisionalDiagnosis,
                     '• Bilateral hearing sensitivity within normal limits.\n• Symmetrical bilateral air conduction thresholds.',
-                    'bg-slate-900'
+                    'bg-purple-900'
                   )}
                 </div>
               </div>
 
               <div>
-                <span className="font-black uppercase tracking-wide text-slate-900 block text-[10.5px]">
+                <span className="font-black uppercase tracking-wide text-purple-950 block text-[10.5px]">
                   Recommendations :
                 </span>
                 <div className="text-[10px] text-slate-800 font-medium">
                   {renderBulletPoints(
                     formData?.parameters?.recommendations,
                     '• Speech evaluation.\n• Care of ears.\n• Follow up after 6 months or if parental concern arises.',
-                    'bg-slate-900'
+                    'bg-purple-900'
                   )}
                 </div>
               </div>
@@ -1099,65 +1038,11 @@ export const OfficialClinicalDocument = ({
       </div>
 
       {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
-      {/* Always strictly pinned to the bottom/end of the A4 page */}
-      {isCBT ? (
-        <div className="mt-auto pt-3 flex items-end justify-between text-xs print:break-inside-avoid">
-          <div className="text-[10px] space-y-0.5 text-slate-800">
-            <p>
-              Date: <span className="font-medium">{formData?.reportDate || 'October 09, 2026'}</span>
-            </p>
-            <p>
-              Place: <span className="font-medium">Satara</span>
-            </p>
-          </div>
-          <div className="text-center space-y-0.5">
-            <div className="w-56 border-b border-slate-400 mb-1"></div>
-            <p className="font-bold text-slate-900 text-[10.5px]">CBT Lead &amp; Psychological Counselor</p>
-            <p className="text-[9.5px] text-slate-600">Vani's Speech, Hearing &amp; Counselling Clinic</p>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-auto pt-3 border-t-2 border-purple-950 flex items-end justify-between text-xs print:break-inside-avoid">
-          {/* Left: Authentic QR Code & DPDP Verification */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-12 h-12 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs shrink-0">
-              <QrCode className="w-10 h-10 text-purple-950" />
-            </div>
-            <div>
-              <span className="text-[9px] font-mono font-black text-purple-950 block uppercase">
-                QR VERIFIED • DPDP ACT COMPLIANT
-              </span>
-              <span className="text-[8px] text-slate-600 block">
-                Scan to verify document cryptographic authenticity
-              </span>
-              <span className="text-[8px] font-mono text-slate-500">
-                https://vaaniclinic.com/verify-doc/{formData?.reportNumber}
-              </span>
-            </div>
-          </div>
-
-          {/* Right: Clinician Signature Block */}
-          <div className="text-right space-y-0.5">
-            <div className="inline-block border-b border-purple-900 pb-0.5 mb-1 px-4 text-center">
-              <span className="font-serif italic font-bold text-purple-950 text-sm block">
-                Shreeharsh M. Shivpuje
-              </span>
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest block">
-                Digitally Authenticated
-              </span>
-            </div>
-            <p className="font-black text-slate-950 text-xs">
-              {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
-            </p>
-            <p className="text-[10px] font-semibold text-slate-800">
-              RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-            </p>
-            <p className="text-[9px] text-slate-600 font-medium">
-              Consultant Audiologist &amp; Speech-Language Pathologist
-            </p>
-          </div>
-        </div>
-      )}
+      <OfficialReportFooter
+        formData={formData}
+        service={service}
+        isCBT={isCBT}
+      />
 
     </div>
   );

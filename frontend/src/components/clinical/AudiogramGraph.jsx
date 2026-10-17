@@ -334,26 +334,26 @@ export const DualAudiogramSection = ({
   className = '',
 }) => {
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-2 border border-slate-300 rounded p-2 bg-white ${className}`}>
+    <div className={`flex flex-wrap items-center justify-between gap-2 border border-purple-200/90 rounded-lg p-1.5 bg-white shadow-2xs ${className}`}>
       {/* Right Ear Audiogram */}
-      <div className="flex-1 min-w-[210px] max-w-[260px]">
+      <div className="flex-1 min-w-[200px] max-w-[255px]">
         <SingleAudiogramGraph
           ear="right"
           acData={rightAC}
           bcData={rightBC}
           width={240}
-          height={195}
+          height={180}
         />
       </div>
 
       {/* Left Ear Audiogram */}
-      <div className="flex-1 min-w-[210px] max-w-[260px]">
+      <div className="flex-1 min-w-[200px] max-w-[255px]">
         <SingleAudiogramGraph
           ear="left"
           acData={leftAC}
           bcData={leftBC}
           width={240}
-          height={195}
+          height={180}
         />
       </div>
 

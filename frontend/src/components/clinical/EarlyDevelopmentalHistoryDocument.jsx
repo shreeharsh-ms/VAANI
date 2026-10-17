@@ -1,5 +1,6 @@
 import React from 'react';
-import { QrCode } from 'lucide-react';
+import { OfficialReportHeader } from './OfficialReportHeader';
+import { OfficialReportFooter } from './OfficialReportFooter';
 
 /**
  * Early Developmental History (EDH) Official Clinical Dossier (3-Page Production Layout)
@@ -20,88 +21,26 @@ export const EarlyDevelopmentalHistoryDocument = ({
 }) => {
   const params = formData?.parameters || {};
 
-  // Common Header Component
+  // Reusable Lavender Header Component
   const renderHeader = (pageNumber) => (
-    <div className="border-b-2 border-purple-950 pb-1 mb-1.5 flex items-start justify-between gap-3 shrink-0">
-      <div className="flex items-center gap-2.5">
-        <img
-          src="/vaani-logo.png"
-          alt="Vaani Speech and Hearing Clinic"
-          className="h-10 w-auto object-contain shrink-0"
-        />
-        <div className="space-y-0.5">
-          <div className="flex flex-wrap items-center gap-x-2 text-[9.5px] text-slate-700">
-            <span className="font-semibold text-slate-800">
-              RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-[8.5px] text-slate-500 font-medium">
-              RCI Approved Practice Center • ISO 9001:2015
-            </span>
-          </div>
-          <p className="text-[9.5px] text-slate-700 font-medium">
-            Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
-          </p>
-          <p className="text-[8.5px] text-slate-500">
-            Tel: +91 2162 234567 • Mob: +91 94220 11223 • Email: clinic@vaaniclinic.com
-          </p>
-        </div>
-      </div>
-
-      <div className="text-right shrink-0 space-y-0.5 text-slate-900">
-        <span className="block text-xs font-mono font-bold text-slate-900">
-          Report No: {formData?.reportNumber}
-        </span>
-        <span className="block text-[9.5px] text-slate-500 font-medium">
-          Date: {formData?.reportDate}
-        </span>
-        <span className="inline-block px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-wider bg-purple-100 text-purple-900 rounded border border-purple-200">
-          Page {pageNumber} of 3
-        </span>
-      </div>
-    </div>
+    <OfficialReportHeader
+      formData={formData}
+      service={service}
+      pageNumber={pageNumber}
+      totalPages={3}
+      discipline="SPEECH-LANGUAGE PATHOLOGY"
+      compact={true}
+    />
   );
 
-  // Common Statutory Footer Component
+  // Reusable Lavender Statutory Footer Component
   const renderFooter = (pageNumber) => (
-    <div className="mt-auto pt-1.5 border-t-2 border-purple-950 flex items-end justify-between text-xs shrink-0 print:break-inside-avoid">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 border border-slate-400 rounded flex items-center justify-center bg-white shadow-2xs shrink-0">
-          <QrCode className="w-6 h-6 text-purple-950" />
-        </div>
-        <div>
-          <span className="text-[8px] font-mono font-black text-purple-950 block uppercase">
-            QR VERIFIED • DPDP ACT COMPLIANT
-          </span>
-          <span className="text-[7px] text-slate-600 block">
-            Scan to verify document cryptographic authenticity
-          </span>
-          <span className="text-[7px] font-mono text-slate-500">
-            https://vaaniclinic.com/verify-doc/{formData?.reportNumber} • Pg {pageNumber}/3
-          </span>
-        </div>
-      </div>
-
-      <div className="text-right space-y-0.5">
-        <div className="inline-block border-b border-purple-900 pb-0.5 mb-0.5 px-2 text-center">
-          <span className="font-serif italic font-bold text-purple-950 text-[11px] block leading-none">
-            Shreeharsh M. Shivpuje
-          </span>
-          <span className="text-[7px] text-slate-500 uppercase tracking-widest block">
-            Digitally Authenticated
-          </span>
-        </div>
-        <p className="font-black text-slate-950 text-[10px] leading-tight">
-          {formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}
-        </p>
-        <p className="text-[8.5px] font-semibold text-slate-800">
-          RCI CRR No: <span className="font-mono font-bold text-purple-950">{formData?.rciNumber || 'A79214'}</span>
-        </p>
-        <p className="text-[7.5px] text-slate-600 font-medium">
-          Consultant Audiologist &amp; Speech-Language Pathologist
-        </p>
-      </div>
-    </div>
+    <OfficialReportFooter
+      formData={formData}
+      pageNumber={pageNumber}
+      totalPages={3}
+      compact={true}
+    />
   );
 
   return (
@@ -110,7 +49,7 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, BIRTH HISTORY & SENSORY/COGNITIVE FOUNDATIONS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-white text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(1)}
 
@@ -329,13 +268,13 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: LANGUAGE, SPEECH MILESTONES, BEHAVIOR, CONCEPTS & ORAL STRUCTURES
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-white text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(2)}
 
           {/* Title Banner */}
           <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-[#0284c7] text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-2xs">
+            <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
               EARLY DEVELOPMENTAL HISTORY — LANGUAGE, BEHAVIOR &amp; ORAL MECHANISM
             </span>
           </div>
@@ -506,13 +445,13 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 3: ORAL SKILLS & FEEDING, LITERACY, FORMAL TESTS & CLINICAL FORMULATION
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-white text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(3)}
 
           {/* Title Banner */}
           <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-[#0284c7] text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-2xs">
+            <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
               EARLY DEVELOPMENTAL HISTORY — FORMAL TESTS &amp; CLINICAL FORMULATION
             </span>
           </div>
