@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   X,
   Printer,
@@ -46,6 +47,27 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
 
   const dossier = getPatientClinicalDossier(patient);
   const { demographics, consents, clinical, therapy, hearingAids, financial, recalls, retention } = dossier;
+
+  const edhReport = useMemo(() => {
+    if (!patient) return null;
+    try {
+      const savedReports = JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]');
+      const rep = savedReports.find(
+        (r) =>
+          (r.uhid === demographics.uhid || r.uhid === patient.id || r.uhid === patient.uhid) &&
+          (r.service_code === 'RP-CLN-EDH' || (r.title && r.title.toLowerCase().includes('early dev')))
+      );
+      if (rep) return rep;
+    } catch {}
+
+    try {
+      const raw = localStorage.getItem('vaani_edh_' + demographics.uhid);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+
+    if (patient.earlyDevHistory) return patient.earlyDevHistory;
+    return null;
+  }, [patient, demographics.uhid]);
 
   const tabs = [
     { id: 'demographics', label: '1. Identity & Demographics', count: '14 fields' },
@@ -391,277 +413,119 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
               ══════════════════════════════════════════════════════════════════ */}
           {activeTab === 'clinical' && (
             <div className="space-y-3">
-              {/* Subcard 1: Structured Case History (5.5.20) */}
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>3.1 Structured Clinical Case History (Section 5.5.20)</span>
-                  <span className="text-[10px] text-slate-500 font-medium">First Encounter Baseline</span>
-                </div>
-                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Chief Complaint</span>
-                      <p className="font-semibold text-slate-800 leading-snug">{clinical.caseHistory.chiefComplaint}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">History of Presenting Illness (HOPI)</span>
-                      <p className="text-slate-600 leading-snug">{clinical.caseHistory.hopi}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Developmental Milestones</span>
-                      <p className="text-slate-700 font-medium leading-snug">{clinical.caseHistory.milestones}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prenatal &amp; Natal Summary</span>
-                      <p className="text-slate-600 leading-snug">{clinical.caseHistory.prenatal} {clinical.caseHistory.natal}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Medical, Otologic &amp; Systemic History</span>
-                      <p className="text-slate-600 leading-snug">{clinical.caseHistory.medicalHistory}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Feeding &amp; Swallowing Function</span>
-                      <p className="text-slate-600 leading-snug">{clinical.caseHistory.feedingSwallowing}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subcard 2: Audiology Diagnostic Evaluations (5.5.22) */}
-              {clinical.audiologyScreen && (
-                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                    <span>3.2 Audiology &amp; Otological Diagnostic Battery (Section 5.5.22)</span>
-                    <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-mono font-semibold border border-purple-200">
-                      PTA, Speech, Immittance, OAE &amp; ABR
-                    </span>
-                  </div>
-
-                  <div className="p-3 space-y-2.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Otoscopy Findings</span>
-                        <p className="font-semibold text-slate-800 mt-0.5">{clinical.audiologyScreen.otoscopy}</p>
-                      </div>
-                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PTA Pure Tone Audiogram Impression</span>
-                        <p className="font-bold text-[#301444] mt-0.5">{clinical.audiologyScreen.ptaSummary}</p>
-                      </div>
-                    </div>
-
-                    {/* Detailed Audiometric Metrics if available */}
-                    {clinical.audiologyScreen.audiogramMetrics && (
-                      <div className="p-2.5 rounded bg-purple-50/40 border border-purple-200 space-y-2">
-                        <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                          Calibrated Diagnostic Metrics &amp; Speech Audiometry
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
-                          {clinical.audiologyScreen.audiogramMetrics.ptaRight3Freq && (
-                            <div>
-                              <span className="text-slate-500 block text-[11px]">Right Ear 3-Freq Average:</span>
-                              <span className="font-mono font-bold text-slate-800">{clinical.audiologyScreen.audiogramMetrics.ptaRight3Freq}</span>
-                            </div>
-                          )}
-                          {clinical.audiologyScreen.audiogramMetrics.ptaLeft3Freq && (
-                            <div>
-                              <span className="text-slate-500 block text-[11px]">Left Ear 3-Freq Average:</span>
-                              <span className="font-mono font-bold text-slate-800">{clinical.audiologyScreen.audiogramMetrics.ptaLeft3Freq}</span>
-                            </div>
-                          )}
-                          {clinical.audiologyScreen.audiogramMetrics.airBoneGap && (
-                            <div>
-                              <span className="text-slate-500 block text-[11px]">Air-Bone Gap (ABG):</span>
-                              <span className="font-mono font-bold text-slate-800">{clinical.audiologyScreen.audiogramMetrics.airBoneGap}</span>
-                            </div>
-                          )}
-                          {clinical.audiologyScreen.audiogramMetrics.speechRecognitionThreshold && (
-                            <div className="sm:col-span-2">
-                              <span className="text-slate-500 block text-[11px]">Speech Audiometry (SRT):</span>
-                              <span className="font-mono font-bold text-slate-800">{clinical.audiologyScreen.audiogramMetrics.speechRecognitionThreshold}</span>
-                            </div>
-                          )}
-                          {clinical.audiologyScreen.audiogramMetrics.wordRecognitionScore && (
-                            <div className="sm:col-span-2 lg:col-span-3">
-                              <span className="text-slate-500 block text-[11px]">Word Recognition Score (WRS %):</span>
-                              <span className="font-semibold text-slate-800">{clinical.audiologyScreen.audiogramMetrics.wordRecognitionScore}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Infant BERA / OAE Metrics if available */}
-                    {clinical.audiologyScreen.beraAbrMetrics && (
-                      <div className="p-2.5 rounded bg-indigo-50/50 border border-indigo-200 space-y-1.5">
-                        <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider block">
-                          Auditory Brainstem Response (BERA / ABR) Waveform Latencies
-                        </span>
-                        <div className="text-xs space-y-1 font-mono text-slate-700">
-                          <p><span className="font-semibold text-slate-900">Stimulus:</span> {clinical.audiologyScreen.beraAbrMetrics.stimulus}</p>
-                          <p><span className="font-semibold text-slate-900">Wave Latencies (90 dB):</span> {clinical.audiologyScreen.beraAbrMetrics.waveLatencies90dB}</p>
-                          <p><span className="font-semibold text-slate-900">Wave V Threshold:</span> <span className="font-bold text-purple-900">{clinical.audiologyScreen.beraAbrMetrics.waveVThreshold}</span></p>
-                          <p className="font-sans text-[11px] text-slate-600 mt-1"><span className="font-bold text-slate-800">Impression:</span> {clinical.audiologyScreen.beraAbrMetrics.clinicalImpression}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Subcard 3: Speech-Language, Fluency & Voice (5.5.21) */}
-              {clinical.speechLanguage && (
-                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                    <span>3.3 Speech-Language, Fluency &amp; Voice Evaluation (Section 5.5.21)</span>
-                    <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-mono font-semibold border border-purple-200">
-                      Standardized Protocols
-                    </span>
-                  </div>
-
-                  <div className="p-3 space-y-2.5 text-xs">
-                    {/* OPME Grid */}
-                    {clinical.speechLanguage.opme && (
-                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Oral Peripheral Mechanism Examination (OPME) &amp; DDK Rates
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-700">
-                          <p><span className="font-semibold text-slate-900">Lips &amp; Tongue:</span> {clinical.speechLanguage.opme.lips} {clinical.speechLanguage.opme.tongue}</p>
-                          <p><span className="font-semibold text-slate-900">Palate:</span> {clinical.speechLanguage.opme.palate}</p>
-                          <p className="sm:col-span-2 font-mono"><span className="font-semibold text-slate-900">DDK Syllables:</span> {clinical.speechLanguage.opme.ddkRates}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Articulation & Phonology */}
-                    {clinical.speechLanguage.articulation && clinical.speechLanguage.articulation.pcc && (
-                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Articulation &amp; Phonological Inventory
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-700">
-                          <div>
-                            <span className="text-slate-500 block">PCC Metric:</span>
-                            <span className="font-mono font-bold text-purple-950 text-xs">{clinical.speechLanguage.articulation.pcc}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">Stimulability:</span>
-                            <span className="font-semibold text-slate-800">{clinical.speechLanguage.articulation.stimulability}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">Speech Intelligibility:</span>
-                            <span className="font-semibold text-slate-800">{clinical.speechLanguage.articulation.intelligibility}</span>
-                          </div>
-                          <div className="sm:col-span-3">
-                            <span className="text-slate-500 block">Error Phonemes &amp; Substitutions:</span>
-                            <span className="font-mono text-slate-800 font-semibold">{clinical.speechLanguage.articulation.errorPattern}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Fluency SSI-4 Battery */}
-                    {clinical.speechLanguage.fluencyBattery && (
-                      <div className="p-2.5 rounded bg-purple-50/50 border border-purple-200 space-y-1">
-                        <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                          Stuttering Severity Instrument (SSI-4) &amp; Disfluency Metrics
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px] text-slate-700">
-                          <div>
-                            <span className="text-slate-500 block">% Syllables Stuttered (%SS):</span>
-                            <span className="font-mono font-bold text-purple-950">{clinical.speechLanguage.fluencyBattery.percentSyllablesStuttered}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">Duration of Blocks:</span>
-                            <span className="font-semibold text-slate-800">{clinical.speechLanguage.fluencyBattery.durationOfBlocks}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">SSI-4 Total Score:</span>
-                            <span className="font-mono font-bold text-purple-950">{clinical.speechLanguage.fluencyBattery.ssi4TotalScore}</span>
-                          </div>
-                          <div className="sm:col-span-2">
-                            <span className="text-slate-500 block">Physical Concomitants:</span>
-                            <span className="text-slate-800">{clinical.speechLanguage.fluencyBattery.physicalConcomitants}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">OASES Impact Score:</span>
-                            <span className="font-mono text-slate-800">{clinical.speechLanguage.fluencyBattery.oasesScore}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Voice Assessment Battery */}
-                    {clinical.speechLanguage.voiceAssessment && (
-                      <div className="p-2.5 rounded bg-amber-50/60 border border-amber-200 space-y-1">
-                        <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
-                          Voice Diagnostic Battery (GRBAS, MPT, Acoustic Metrics, VHI-10)
-                        </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-slate-700">
-                          <div>
-                            <span className="text-slate-500 block">GRBAS Perceptual:</span>
-                            <span className="font-mono font-bold text-slate-800">{clinical.speechLanguage.voiceAssessment.perceptualGrbas}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">Maximum Phonation Time:</span>
-                            <span className="font-mono font-bold text-slate-800">{clinical.speechLanguage.voiceAssessment.maximumPhonationTime}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">s/z Ratio:</span>
-                            <span className="font-mono font-bold text-slate-800">{clinical.speechLanguage.voiceAssessment.szRatio}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">VHI-10 Handicap:</span>
-                            <span className="font-mono font-bold text-slate-800">{clinical.speechLanguage.voiceAssessment.vhi10Score}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Subcard 4: CBT Psychological Therapy Record (5.5.29) if available */}
-              {clinical.cbtPsychology && (
-                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                    <span>3.4 Cognitive Behavioural Therapy (CBT) Encrypted Record (Section 5.5.29)</span>
-                    <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.2 rounded font-mono font-bold border border-emerald-200">
-                      RCI CRR A79214 Restricted
-                    </span>
-                  </div>
-
-                  <div className="p-3 space-y-2 text-xs">
-                    <div className="p-2.5 rounded bg-purple-50/50 border border-purple-200 space-y-1">
-                      <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                        Psychometric Scale Scores &amp; Outcome Monitoring
+              {edhReport ? (
+                <div className="bg-white border border-purple-200 rounded-lg overflow-hidden shadow-2xs">
+                  <div className="px-3.5 py-2 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <History className="w-4 h-4 text-purple-900" />
+                      <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                        3.1 Early Developmental History (EDH) Assessment Record
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
-                        <p><span className="font-semibold text-slate-700">PHQ-9 Depression:</span> <span className="font-bold text-slate-900">{clinical.cbtPsychology.psychometrics.phq9Score}</span></p>
-                        <p><span className="font-semibold text-slate-700">GAD-7 Anxiety:</span> <span className="font-bold text-slate-900">{clinical.cbtPsychology.psychometrics.gad7Score}</span></p>
-                        <p><span className="font-semibold text-slate-700">THI Progress:</span> <span className="font-bold text-purple-950">{clinical.cbtPsychology.psychometrics.thiScoreProgress}</span></p>
+                      <span className="font-mono text-[10px] text-purple-900 bg-purple-100 px-2 py-0.5 rounded font-extrabold border border-purple-300">
+                        {edhReport.report_number || 'RP-CLN-EDH'}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-slate-500">
+                      Exam Date: <strong className="text-slate-800">{edhReport.date || 'Recent'}</strong>
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 space-y-3 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Chief Developmental Concern
+                        </span>
+                        <p className="font-semibold text-slate-900 leading-relaxed">
+                          {edhReport.chief_complaint || edhReport.diagnosis || edhReport.title || 'Developmental speech-language evaluation.'}
+                        </p>
+                      </div>
+
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Developmental Milestones
+                        </span>
+                        <p className="text-slate-800 leading-relaxed">
+                          {edhReport.milestones || edhReport.developmental_milestones || edhReport.summary || 'Age-appropriate developmental milestones documented.'}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Cognitive Model Formulation &amp; Thought Record
-                      </span>
-                      <p className="text-[11px] text-slate-800"><span className="font-bold">Automatic Thought:</span> {clinical.cbtPsychology.cognitiveFormulation.automaticThoughts}</p>
-                      <p className="text-[11px] text-purple-900 font-semibold"><span className="font-bold text-slate-700">Distortion:</span> {clinical.cbtPsychology.cognitiveFormulation.cognitiveDistortions}</p>
-                      <p className="text-[11px] text-slate-700 italic"><span className="font-bold text-slate-800 not-italic">Balanced Thought:</span> {clinical.cbtPsychology.cognitiveFormulation.balancedThought}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div className="p-2 rounded bg-purple-50/30 border border-purple-100 space-y-1">
+                        <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+                          Prenatal & Natal Summary
+                        </span>
+                        <p className="text-slate-700 text-[11px] leading-relaxed">
+                          {edhReport.prenatal_natal || edhReport.birth_history || 'Full term delivery, normal birth cry.'}
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded bg-purple-50/30 border border-purple-100 space-y-1">
+                        <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+                          Speech & Language Milestones
+                        </span>
+                        <p className="text-slate-700 text-[11px] leading-relaxed">
+                          {edhReport.speech_milestones || edhReport.language_history || 'Babbling at 6m; first words at 12m.'}
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded bg-purple-50/30 border border-purple-100 space-y-1">
+                        <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+                          Medical & Systemic History
+                        </span>
+                        <p className="text-slate-700 text-[11px] leading-relaxed">
+                          {edhReport.medical_history || 'No recurrent otitis media or seizures.'}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="p-2 rounded bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 font-medium">
-                      ✓ <span className="font-bold">Safety &amp; Risk Screen:</span> {clinical.cbtPsychology.safetyPlan}
+                    {edhReport.recommendations && (
+                      <div className="p-2.5 rounded bg-emerald-50/60 border border-emerald-200 space-y-1">
+                        <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider block">
+                          Clinical Recommendations
+                        </span>
+                        <p className="text-emerald-950 font-medium leading-relaxed">
+                          {edhReport.recommendations}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-50/80 border border-amber-300 rounded-xl p-5 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center shrink-0">
+                        <AlertCircle className="w-5 h-5 text-amber-700" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-sm text-amber-950">
+                            Please Fill Early Dev History for this Patient
+                          </h4>
+                          <span className="bg-amber-200 text-amber-900 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded uppercase">
+                            Required
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-900/90 max-w-xl leading-relaxed">
+                          No Early Developmental History (EDH) baseline is recorded for <strong>{demographics.fullName}</strong> ({demographics.uhid}).
+                          Standardized RCI protocol requires documenting early milestones prior to clinical intervention.
+                        </p>
+                      </div>
                     </div>
+
+                    <Link
+                      to={}
+                      onClick={onClose}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Fill Early Dev History Now</span>
+                    </Link>
                   </div>
                 </div>
               )}
-            </div>
           )}
 
           {/* ══════════════════════════════════════════════════════════════════

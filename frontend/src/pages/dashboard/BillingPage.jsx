@@ -336,6 +336,11 @@ export const BillingPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [invoices, isInvoiceModalOpen]);
 
+  // Date Filter State
+  const [dateFilterPreset, setDateFilterPreset] = useState('ALL');
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
+
   // Handle Sort Toggle
   const handleSort = (field) => {
     if (sortField === field) {
@@ -361,9 +366,31 @@ export const BillingPage = () => {
       const matchesStatus = statusFilter === 'ALL' || inv.status === statusFilter;
       const matchesTax = taxFilter === 'ALL' || inv.taxType === taxFilter;
 
-      return matchesSearch && matchesStatus && matchesTax;
+      let matchesDate = true;
+      if (dateFilterPreset === 'TODAY') {
+        const todayStr = new Date().toISOString().substring(0, 10);
+        matchesDate = inv.date === todayStr;
+      } else if (dateFilterPreset === 'LAST_7_DAYS') {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        const cutoff = d.toISOString().substring(0, 10);
+        matchesDate = inv.date >= cutoff;
+      } else if (dateFilterPreset === 'THIS_MONTH') {
+        const ym = new Date().toISOString().substring(0, 7);
+        matchesDate = inv.date && inv.date.startsWith(ym);
+      } else if (dateFilterPreset === 'LAST_30_DAYS') {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        const cutoff = d.toISOString().substring(0, 10);
+        matchesDate = inv.date >= cutoff;
+      } else if (dateFilterPreset === 'CUSTOM') {
+        if (startDateFilter) matchesDate = matchesDate && inv.date >= startDateFilter;
+        if (endDateFilter) matchesDate = matchesDate && inv.date <= endDateFilter;
+      }
+
+      return matchesSearch && matchesStatus && matchesTax && matchesDate;
     });
-  }, [invoices, search, statusFilter, taxFilter]);
+  }, [invoices, search, statusFilter, taxFilter, dateFilterPreset, startDateFilter, endDateFilter]);
 
   const sortedInvoices = useMemo(() => {
     return [...filteredInvoices].sort((a, b) => {
@@ -721,6 +748,63 @@ export const BillingPage = () => {
             <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt (Notification 12/2017)</option>
             <option value="TAXABLE_GOODS">18% GST (Hearing Aids &amp; Accessories)</option>
           </select>
+
+          {/* Date Filter */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <select
+              value={dateFilterPreset}
+              onChange={(e) => {
+                setDateFilterPreset(e.target.value);
+                setPage(1);
+              }}
+              className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            >
+              <option value="ALL">📅 All Dates</option>
+              <option value="TODAY">Today</option>
+              <option value="LAST_7_DAYS">Last 7 Days</option>
+              <option value="THIS_MONTH">This Month</option>
+              <option value="LAST_30_DAYS">Last 30 Days</option>
+              <option value="CUSTOM">Custom Range...</option>
+            </select>
+
+            {dateFilterPreset === 'CUSTOM' && (
+              <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 h-7">
+                <input
+                  type="date"
+                  value={startDateFilter}
+                  onChange={(e) => {
+                    setStartDateFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-[11px] text-slate-700 focus:outline-none"
+                />
+                <span className="text-[10px] text-slate-400">to</span>
+                <input
+                  type="date"
+                  value={endDateFilter}
+                  onChange={(e) => {
+                    setEndDateFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-[11px] text-slate-700 focus:outline-none"
+                />
+                {(startDateFilter || endDateFilter) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartDateFilter('');
+                      setEndDateFilter('');
+                      setPage(1);
+                    }}
+                    className="text-slate-400 hover:text-slate-600 text-xs px-0.5"
+                    title="Clear dates"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Rows per page selector */}

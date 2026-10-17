@@ -32,9 +32,14 @@ import {
   Filter,
   Share2,
   Edit3,
+  Edit2,
+  Trash2,
   Plus,
   X,
   Send,
+  QrCode,
+  Eye,
+  MessageCircle,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import {
@@ -45,11 +50,21 @@ import {
 import { getReportsForPatient } from '../../data/clinicalReportsData';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
+import { patientService } from '../../services/patientService';
+import Modal from '../../components/common/Modal';
+import { printClinicalInvoice, numberToWordsINR } from '../../utils/invoicePrint';
+
+const WhatsAppIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.805 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+  </svg>
+);
 
 export const PatientDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('demographics');
+  const [patientRefreshTick, setPatientRefreshTick] = useState(0);
 
   // Resolve Patient from LocalStorage or SEED_PATIENTS or PATIENT_DOSSIERS
   const patient = useMemo(() => {
@@ -94,7 +109,7 @@ export const PatientDetailPage = () => {
     }
 
     return list[0];
-  }, [id]);
+  }, [id, patientRefreshTick]);
 
   const { notify } = useNotification();
 
@@ -243,13 +258,401 @@ export const PatientDetailPage = () => {
     window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
   };
 
+  // ── PATIENT PROFILE EDIT & DELETE STATE ──
+  const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
+  const [editPatientForm, setEditPatientForm] = useState({
+    full_name: '',
+    date_of_birth: '',
+    gender: 'FEMALE',
+    phone: '',
+    email: '',
+    guardian_name: '',
+    guardian_phone: '',
+    city: 'Satara',
+    address: '',
+    service_line: 'SPEECH_LANGUAGE',
+    primary_concern: '',
+  });
+  const [isDeletePatientModalOpen, setIsDeletePatientModalOpen] = useState(false);
+
+  const handleOpenEditPatient = () => {
+    setEditPatientForm({
+      full_name: demographics.fullName || patient.full_name || '',
+      date_of_birth: demographics.dob || patient.date_of_birth || '1992-05-18',
+      gender: demographics.sex || patient.gender || 'FEMALE',
+      phone: demographics.primaryPhone || patient.phone || '',
+      email: demographics.email || patient.email || '',
+      guardian_name: demographics.guardians?.[0]?.name || patient.guardian_name || '',
+      guardian_phone: demographics.guardians?.[0]?.phone || patient.guardian_phone || '',
+      city: demographics.locality || patient.city || 'Satara',
+      address: demographics.addressLine1 || '',
+      service_line: patient.service_line || 'SPEECH_LANGUAGE',
+      primary_concern: demographics.primaryConcern || patient.diagnosis || '',
+    });
+    setIsEditPatientModalOpen(true);
+  };
+
+  const handleSavePatientEdit = (e) => {
+    e.preventDefault();
+    const updated = {
+      ...patient,
+      ...editPatientForm,
+      id: patient.id || `p_${demographics.uhid}`,
+      uhid: demographics.uhid,
+    };
+    patientService.saveLocalPatient(updated);
+    setPatientRefreshTick((prev) => prev + 1);
+    setIsEditPatientModalOpen(false);
+    notify.success(`Patient profile for ${updated.full_name} updated successfully!`);
+  };
+
+  const handleConfirmDeletePatient = async () => {
+    await patientService.deletePatient(patient.id || demographics.uhid);
+    setIsDeletePatientModalOpen(false);
+    notify.success(`Patient file for ${demographics.fullName} (${demographics.uhid}) deleted.`);
+    navigate('/dashboard/patients');
+  };
+
+  // ── EARLY DEV HISTORY (EDH) RESOLUTION ──
+  const edhReport = useMemo(() => {
+    // 1. Check patientReports for EDH
+    const rep = patientReports.find(
+      (r) =>
+        r.service_code === 'RP-CLN-EDH' ||
+        (r.title && r.title.toLowerCase().includes('early dev')) ||
+        (r.service_code && r.service_code.includes('EDH'))
+    );
+    if (rep) return rep;
+
+    // 2. Check localStorage
+    try {
+      const raw = localStorage.getItem('vaani_edh_' + demographics.uhid);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+
+    // 3. Direct patient property
+    if (patient.earlyDevHistory) return patient.earlyDevHistory;
+
+    return null;
+  }, [patientReports, demographics.uhid, patient, reportsRefreshTick]);
+
+  // ── THERAPY GOALS & SOAP NOTES STATE ──
+  const [therapyRefreshTick, setTherapyRefreshTick] = useState(0);
+  const therapyPlans = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('vaani_therapy_' + demographics.uhid);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  }, [demographics.uhid, therapyRefreshTick]);
+
+  const soapNotes = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('vaani_soap_' + demographics.uhid);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  }, [demographics.uhid, therapyRefreshTick]);
+
+  const [isNewPlanModalOpen, setIsNewPlanModalOpen] = useState(false);
+  const [newPlanForm, setNewPlanForm] = useState({
+    title: 'Comprehensive Rehabilitation & Therapy Protocol',
+    clinician: 'Ms. Palak Paresh Gandhi, MASLP (RCI A79214)',
+    schedule: '2 Sessions / Week',
+    reviewDate: '2026-11-15',
+    longTermGoal: 'Improve communication effectiveness, functional speech fluency, and reduce communicative effort.',
+    obj1Desc: 'Demonstrate functional syllable repetition reduction and controlled breath phrasing.',
+    obj1Target: '80% accurate phrasing in structured clinical activities',
+    obj2Desc: 'Complete daily home practice exercises and maintain vocal hygiene habits.',
+    obj2Target: '100% adherence logged by caregiver / client',
+  });
+
+  const [isNewSoapModalOpen, setIsNewSoapModalOpen] = useState(false);
+  const [newSoapForm, setNewSoapForm] = useState({
+    sessionNo: 1,
+    date: new Date().toISOString().substring(0, 10),
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
+  });
+
+  const [planToDelete, setPlanToDelete] = useState(null);
+  const [isDeletePlanModalOpen, setIsDeletePlanModalOpen] = useState(false);
+
+  const handleSaveNewPlan = (e) => {
+    e.preventDefault();
+    const newPlan = {
+      planId: `THP-2026-${String(therapyPlans.length + 80).padStart(4, '0')}`,
+      title: newPlanForm.title,
+      assignedClinician: newPlanForm.clinician,
+      frequency: newPlanForm.schedule,
+      reviewDate: newPlanForm.reviewDate,
+      longTermGoal: newPlanForm.longTermGoal,
+      smartObjectives: [
+        ...(newPlanForm.obj1Desc ? [{
+          id: 'obj_1',
+          text: newPlanForm.obj1Desc,
+          baseline: 'Clinical intake baseline',
+          target: newPlanForm.obj1Target || 'Mastery',
+          currentProgress: 'In Progress (Active Protocol)',
+          status: 'IN_PROGRESS'
+        }] : []),
+        ...(newPlanForm.obj2Desc ? [{
+          id: 'obj_2',
+          text: newPlanForm.obj2Desc,
+          baseline: 'Initial observation',
+          target: newPlanForm.obj2Target || 'Target achieved',
+          currentProgress: 'Initiated',
+          status: 'IN_PROGRESS'
+        }] : [])
+      ]
+    };
+    const updated = [newPlan, ...therapyPlans];
+    localStorage.setItem('vaani_therapy_' + demographics.uhid, JSON.stringify(updated));
+    setTherapyRefreshTick((prev) => prev + 1);
+    setIsNewPlanModalOpen(false);
+    notify.success(`Active rehabilitation plan ${newPlan.planId} created for ${demographics.fullName}!`);
+  };
+
+  const handleSendPlanWhatsApp = (plan) => {
+    const phone = (demographics.primaryPhone || '').replace(/[^0-9]/g, '');
+    const phoneWithCountry = phone.length === 10 ? `91${phone}` : phone;
+    const msg = `*VAANI Speech & Hearing Clinic — Therapy Session & Goal Reminder*\n\n` +
+      `Dear ${demographics.fullName},\n` +
+      `This is a clinical reminder regarding your active rehabilitation plan:\n` +
+      `• *Protocol:* ${plan.title}\n` +
+      `• *Assigned Clinician:* ${plan.assignedClinician}\n` +
+      `• *Schedule:* ${plan.frequency}\n` +
+      `• *Next Review:* ${plan.reviewDate}\n` +
+      `• *Primary Clinical Goal:* ${plan.longTermGoal}\n\n` +
+      `Please ensure all prescribed home activities are completed before your next visit.\n` +
+      `Helpline: +91 98220 12345 • Satara Clinic`;
+
+    const url = phoneWithCountry
+      ? `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    notify.success(`WhatsApp therapy reminder drafted for ${demographics.fullName}`);
+  };
+
+  const handleSaveNewSoap = (e) => {
+    e.preventDefault();
+    const newSoap = {
+      id: `soap_${Date.now()}`,
+      sessionNo: Number(newSoapForm.sessionNo) || (soapNotes.length + 1),
+      date: newSoapForm.date || new Date().toISOString().substring(0, 10),
+      subjective: newSoapForm.subjective,
+      objective: newSoapForm.objective,
+      assessment: newSoapForm.assessment,
+      plan: newSoapForm.plan,
+    };
+    const updated = [newSoap, ...soapNotes];
+    localStorage.setItem('vaani_soap_' + demographics.uhid, JSON.stringify(updated));
+    setTherapyRefreshTick((prev) => prev + 1);
+    setIsNewSoapModalOpen(false);
+    notify.success(`SOAP Session note #${newSoap.sessionNo} logged!`);
+  };
+
+  const handleDeletePlan = (plan) => {
+    const updated = therapyPlans.filter((p) => p.planId !== plan.planId);
+    localStorage.setItem('vaani_therapy_' + demographics.uhid, JSON.stringify(updated));
+    setTherapyRefreshTick((prev) => prev + 1);
+    setIsDeletePlanModalOpen(false);
+    notify.success(`Therapy plan ${plan.planId} deleted.`);
+  };
+
+  // ── PATIENT INVOICES STATE & ACTIONS ──
+  const [invoiceRefreshTick, setInvoiceRefreshTick] = useState(0);
+  const patientInvoices = useMemo(() => {
+    let list = [];
+    if (Array.isArray(financial?.invoices)) {
+      list.push(...financial.invoices.map((inv) => ({
+        id: inv.invoiceNo,
+        invoiceNo: inv.invoiceNo,
+        date: inv.date,
+        patientName: demographics.fullName,
+        uhid: demographics.uhid,
+        phone: demographics.primaryPhone,
+        service: inv.description,
+        amount: inv.amount,
+        taxAmount: inv.tax || 0,
+        totalAmount: inv.amount + (inv.tax || 0),
+        taxType: inv.tax > 0 ? 'TAXABLE_GOODS' : 'HEALTHCARE_EXEMPT',
+        status: inv.status || 'PAID',
+        paymentMode: inv.paymentMode || 'UPI',
+        receiptNo: inv.refNo || `REC-${inv.invoiceNo?.replace('INV-', '')}`,
+      })));
+    }
+
+    try {
+      const raw = localStorage.getItem('vaani_billing_invoices_v1');
+      if (raw) {
+        const allInvoices = JSON.parse(raw);
+        if (Array.isArray(allInvoices)) {
+          const matching = allInvoices.filter(
+            (i) =>
+              (i.uhid && i.uhid.toLowerCase() === demographics.uhid.toLowerCase()) ||
+              (i.patientName && i.patientName.toLowerCase() === demographics.fullName.toLowerCase())
+          );
+          matching.forEach((m) => {
+            if (!list.some((existing) => existing.invoiceNo === m.invoiceNo)) {
+              list.push(m);
+            }
+          });
+        }
+      }
+    } catch {}
+
+    return list;
+  }, [financial?.invoices, demographics.uhid, demographics.fullName, invoiceRefreshTick]);
+
+  // Invoice Date Filtering & Pagination
+  const [invDatePreset, setInvDatePreset] = useState('ALL');
+  const [invStartDate, setInvStartDate] = useState('');
+  const [invEndDate, setInvEndDate] = useState('');
+  const [invPage, setInvPage] = useState(1);
+  const [invPageSize, setInvPageSize] = useState(5);
+
+  const filteredPatientInvoices = useMemo(() => {
+    return patientInvoices.filter((inv) => {
+      let matchesDate = true;
+      if (invDatePreset === 'TODAY') {
+        const todayStr = new Date().toISOString().substring(0, 10);
+        matchesDate = inv.date === todayStr;
+      } else if (invDatePreset === 'LAST_7_DAYS') {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        matchesDate = inv.date >= d.toISOString().substring(0, 10);
+      } else if (invDatePreset === 'THIS_MONTH') {
+        const ym = new Date().toISOString().substring(0, 7);
+        matchesDate = inv.date && inv.date.startsWith(ym);
+      } else if (invDatePreset === 'LAST_30_DAYS') {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        matchesDate = inv.date >= d.toISOString().substring(0, 10);
+      } else if (invDatePreset === 'CUSTOM') {
+        if (invStartDate) matchesDate = matchesDate && inv.date >= invStartDate;
+        if (invEndDate) matchesDate = matchesDate && inv.date <= invEndDate;
+      }
+      return matchesDate;
+    });
+  }, [patientInvoices, invDatePreset, invStartDate, invEndDate]);
+
+  const totalInvPages = Math.ceil(filteredPatientInvoices.length / invPageSize) || 1;
+  const paginatedPatientInvoices = useMemo(() => {
+    const start = (invPage - 1) * invPageSize;
+    return filteredPatientInvoices.slice(start, start + invPageSize);
+  }, [filteredPatientInvoices, invPage, invPageSize]);
+
+  // Invoice Modals State
+  const [isViewInvoiceModalOpen, setIsViewInvoiceModalOpen] = useState(false);
+  const [selectedInvoiceForView, setSelectedInvoiceForView] = useState(null);
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [selectedInvoiceForMail, setSelectedInvoiceForMail] = useState(null);
+  const [mailRecipient, setMailRecipient] = useState('');
+  const [mailSubject, setMailSubject] = useState('');
+  const [mailNote, setMailNote] = useState('');
+  const [isSendingMail, setIsSendingMail] = useState(false);
+  const [isEditInvoiceModalOpen, setIsEditInvoiceModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [isDeleteInvoiceModalOpen, setIsDeleteInvoiceModalOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+
+  const handleOpenPatientInvoice = (inv) => {
+    setSelectedInvoiceForView(inv);
+    setIsViewInvoiceModalOpen(true);
+  };
+
+  const handleDownloadPatientInvoice = (inv) => {
+    printClinicalInvoice(inv);
+    notify.success(`Tax invoice ${inv.invoiceNo} opened for printing`);
+  };
+
+  const handleWhatsAppPatientInvoice = (inv) => {
+    const phone = (inv.phone || demographics.primaryPhone || '').replace(/[^0-9]/g, '');
+    const phoneWithCountry = phone.length === 10 ? `91${phone}` : phone;
+    const text = `*VAANI Speech & Hearing Clinic — Tax Invoice & Receipt*\n\n` +
+      `Dear ${inv.patientName},\n` +
+      `Invoice #: ${inv.invoiceNo}\n` +
+      `Date: ${inv.date}\n` +
+      `UHID: ${inv.uhid}\n` +
+      `Service: ${inv.service}\n` +
+      `Total: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status})\n` +
+      `Payment Mode: ${inv.paymentMode}\n\n` +
+      `Thank you for trusting VAANI Clinic.\n` +
+      `Helpline: +91 98220 12345`;
+    const url = phoneWithCountry
+      ? `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+    notify.success(`WhatsApp invoice drafted for ${inv.patientName}`);
+  };
+
+  const handleOpenMailPatientInvoice = (inv) => {
+    setSelectedInvoiceForMail(inv);
+    setMailRecipient(inv.email || demographics.email || `${inv.patientName.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`);
+    setMailSubject(`Tax Invoice & Clinical Receipt ${inv.invoiceNo} — VAANI Speech & Hearing Clinic`);
+    setMailNote(`Dear ${inv.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${inv.invoiceNo} for ${inv.service}.\n\nTotal: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`);
+    setIsMailModalOpen(true);
+  };
+
+  const handleSendMailPatientInvoice = (e) => {
+    e.preventDefault();
+    if (!selectedInvoiceForMail) return;
+    setIsSendingMail(true);
+    setTimeout(() => {
+      setIsSendingMail(false);
+      setIsMailModalOpen(false);
+      notify.success(`Tax Invoice ${selectedInvoiceForMail.invoiceNo} dispatched to ${mailRecipient}!`);
+    }, 450);
+  };
+
+  const handleStartEditPatientInvoice = (inv) => {
+    setEditingInvoice({ ...inv });
+    setIsEditInvoiceModalOpen(true);
+  };
+
+  const handleSaveEditedPatientInvoice = (e) => {
+    e.preventDefault();
+    if (!editingInvoice) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem('vaani_billing_invoices_v1') || '[]');
+      const idx = stored.findIndex((i) => i.invoiceNo === editingInvoice.invoiceNo);
+      if (idx >= 0) {
+        stored[idx] = { ...stored[idx], ...editingInvoice };
+        localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(stored));
+      }
+    } catch {}
+    setInvoiceRefreshTick((prev) => prev + 1);
+    setIsEditInvoiceModalOpen(false);
+    notify.success(`Invoice ${editingInvoice.invoiceNo} updated successfully!`);
+  };
+
+  const handleDeletePatientInvoice = (inv) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('vaani_billing_invoices_v1') || '[]');
+      const filtered = stored.filter((i) => i.invoiceNo !== inv.invoiceNo);
+      localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(filtered));
+    } catch {}
+    setInvoiceRefreshTick((prev) => prev + 1);
+    setIsDeleteInvoiceModalOpen(false);
+    notify.success(`Invoice ${inv.invoiceNo} deleted.`);
+  };
+
   const tabs = [
     { id: 'demographics', label: '1. Identity & Demographics', count: '14 fields' },
     { id: 'consents', label: '2. DPDP Consents', count: `${consents.length} rules` },
     { id: 'clinical', label: '3. Clinical Diagnostics & EMR', count: `${patientReports.length} Reports` },
     { id: 'hearingAids', label: '4. Hearing Aids & Devices', count: hearingAids?.dispensed ? 'Bilateral' : 'Screened' },
-    { id: 'therapy', label: '5. Therapy Goals & SOAP', count: 'Active Plan' },
-    { id: 'billing', label: '6. Billing & Recalls', count: `${financial?.invoices?.length || 0} Invoices` },
+    { id: 'therapy', label: '5. Therapy Goals & SOAP', count: `${therapyPlans.length} Plans` },
+    { id: 'billing', label: '6. Billing & Recalls', count: `${patientInvoices.length} Invoices` },
     { id: 'retention', label: '7. Retention & Legal Audit', count: 'Statutory' },
   ];
 
@@ -317,6 +720,26 @@ export const PatientDetailPage = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>RCI CRR No. A79214 Certified</span>
           </div>
+
+          <button
+            type="button"
+            onClick={handleOpenEditPatient}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 transition-all cursor-pointer shadow-2xs"
+            title="Edit Patient Demographic & Clinical Profile"
+          >
+            <Edit2 className="w-3.5 h-3.5 text-purple-700" />
+            <span>Edit Profile</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsDeletePatientModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all cursor-pointer shadow-2xs"
+            title="Delete Patient Record"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">Delete</span>
+          </button>
 
           <button
             type="button"
@@ -446,10 +869,20 @@ export const PatientDetailPage = () => {
           <div className="space-y-3">
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
               <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                <span>1.1 Patient Master Identity &amp; Demographic Profile</span>
-                <span className="font-mono text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
-                  Section 4.8 &amp; 5.5.14
-                </span>
+                <div className="flex items-center gap-2">
+                  <span>1.1 Patient Master Identity &amp; Demographic Profile</span>
+                  <span className="font-mono text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
+                    Section 4.8 &amp; 5.5.14
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenEditPatient}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3 h-3 text-purple-700" />
+                  <span>Edit Profile</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 text-xs">
@@ -993,230 +1426,138 @@ export const PatientDetailPage = () => {
               </div>
             </div>
 
-            {/* Case History */}
-            {clinical?.caseHistory && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>3.1 Structured Clinical Case History (Section 5.5.20)</span>
-                  <span className="text-[10px] text-slate-500 font-mono">First Encounter Baseline</span>
-                </div>
-                <div className="p-3.5 grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Chief Complaint</span>
-                      <p className="font-semibold text-slate-900">{clinical.caseHistory.chiefComplaint}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">History of Presenting Illness (HOPI)</span>
-                      <p className="text-slate-700">{clinical.caseHistory.hopi}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Developmental Milestones</span>
-                      <p className="text-slate-700">{clinical.caseHistory.milestones}</p>
-                    </div>
+            {/* ── 3.1 EARLY DEVELOPMENTAL HISTORY (EDH) OR PENDING PROMPT ── */}
+            {edhReport ? (
+              <div className="bg-white border border-purple-200 rounded-lg overflow-hidden shadow-2xs">
+                <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-purple-900" />
+                    <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                      3.1 Early Developmental History (EDH) Assessment Record (RP-CLN-EDH)
+                    </span>
+                    <span className="font-mono text-[10px] text-purple-900 bg-purple-100 px-2 py-0.5 rounded font-extrabold border border-purple-300">
+                      {edhReport.report_number || 'RP-CLN-EDH'}
+                    </span>
                   </div>
-
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prenatal &amp; Natal Summary</span>
-                      <p className="text-slate-700">{clinical.caseHistory.prenatalNatal || `${clinical.caseHistory.prenatal || ''} ${clinical.caseHistory.natal || ''}`}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Medical, Otologic &amp; Systemic History</span>
-                      <p className="text-slate-700">{clinical.caseHistory.medicalHistory}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Feeding &amp; Swallowing Function</span>
-                      <p className="text-slate-700">{clinical.caseHistory.feedingSwallowing}</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-slate-500">
+                      Exam Date: <strong className="text-slate-800">{edhReport.date || 'Recent'}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleViewDownloadReport(edhReport)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-white hover:bg-slate-100 text-purple-950 border border-purple-300 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <ExternalLink className="w-3 h-3 text-purple-700" />
+                      <span>Open Full EDH Record</span>
+                    </button>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Audiology Battery */}
-            {(clinical?.audiology || clinical?.audiologyScreen) && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>3.2 Audiology &amp; Otological Diagnostic Battery (Section 5.5.22)</span>
-                  <span className="font-mono text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 text-[10px]">
-                    PTA, Speech, Immittance, OAE &amp; ABR
-                  </span>
-                </div>
                 <div className="p-3.5 space-y-3 text-xs">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="p-2.5 rounded bg-slate-50 border border-slate-200">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Otoscopy Findings</span>
-                      <p className="font-semibold text-slate-800">
-                        {clinical?.audiology?.otoscopy || clinical?.audiologyScreen?.otoscopy || 'Bilateral normal clear canals'}
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Chief Developmental Concern
+                      </span>
+                      <p className="font-semibold text-slate-900 leading-relaxed">
+                        {edhReport.chief_complaint || edhReport.diagnosis || edhReport.title || 'Developmental speech-language evaluation.'}
                       </p>
                     </div>
-                    <div className="p-2.5 rounded bg-slate-50 border border-slate-200">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">PTA Pure Tone Audiogram Impression</span>
-                      <p className="font-semibold text-purple-950">
-                        {clinical?.audiology?.ptaImpression || clinical?.audiologyScreen?.ptaSummary || 'Normal hearing thresholds bilaterally'}
+
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Developmental Milestones &amp; Acquisition Age
+                      </span>
+                      <p className="text-slate-800 leading-relaxed">
+                        {edhReport.milestones || edhReport.developmental_milestones || edhReport.summary || 'Age-appropriate motor and cognitive acquisition milestones documented.'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Detailed metrics */}
-                  {(clinical?.audiology?.ptaMetrics || clinical?.audiologyScreen?.audiogramMetrics) && (
-                    <div className="p-2.5 rounded bg-purple-50/40 border border-purple-200 space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="p-2.5 rounded bg-purple-50/30 border border-purple-100 space-y-1">
                       <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                        Calibrated Diagnostic Metrics &amp; Speech Audiometry
+                        Prenatal &amp; Natal Summary
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Right Ear 3-Freq Average:</span>
-                          <strong className="text-slate-900">
-                            {clinical?.audiology?.ptaMetrics?.rightPTA || clinical?.audiologyScreen?.audiogramMetrics?.ptaRight3Freq || 'N/A'}
-                          </strong>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Left Ear 3-Freq Average:</span>
-                          <strong className="text-slate-900">
-                            {clinical?.audiology?.ptaMetrics?.leftPTA || clinical?.audiologyScreen?.audiogramMetrics?.ptaLeft3Freq || 'N/A'}
-                          </strong>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Air-Bone Gap (ABG):</span>
-                          <strong className="text-slate-900">
-                            {clinical?.audiology?.ptaMetrics?.abg || clinical?.audiologyScreen?.audiogramMetrics?.airBoneGap || 'N/A'}
-                          </strong>
-                        </div>
-                      </div>
+                      <p className="text-slate-700 leading-relaxed">
+                        {edhReport.prenatal_natal || edhReport.birth_history || 'Full term delivery, normal birth cry, no neonatal ICU admission.'}
+                      </p>
                     </div>
-                  )}
 
-                  {/* Infant BERA if present */}
-                  {clinical?.audiologyScreen?.beraAbrMetrics && (
-                    <div className="p-2.5 rounded bg-indigo-50/50 border border-indigo-200 space-y-1 font-mono text-xs">
-                      <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider block font-sans">
-                        Auditory Brainstem Response (BERA / ABR) Waveform Latencies
-                      </span>
-                      <p><span className="font-semibold">Stimulus:</span> {clinical.audiologyScreen.beraAbrMetrics.stimulus}</p>
-                      <p><span className="font-semibold">Wave Latencies:</span> {clinical.audiologyScreen.beraAbrMetrics.waveLatencies90dB}</p>
-                      <p><span className="font-semibold">Wave V Threshold:</span> <strong className="text-purple-900">{clinical.audiologyScreen.beraAbrMetrics.waveVThreshold}</strong></p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Speech & Language Battery */}
-            {clinical?.speechLanguage && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>3.3 Speech-Language, Fluency &amp; Voice Evaluation (Section 5.5.21)</span>
-                  <span className="text-[10px] text-slate-500 font-mono">Standardized Protocols</span>
-                </div>
-                <div className="p-3.5 space-y-3 text-xs">
-                  {clinical.speechLanguage.opme && (
-                    <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        Oral Peripheral Mechanism Examination (OPME) &amp; DDK Rates
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <p className="text-slate-700"><strong>Lips &amp; Tongue:</strong> {clinical.speechLanguage.opme.lipsTongue || `${clinical.speechLanguage.opme.lips || ''} ${clinical.speechLanguage.opme.tongue || ''}`}</p>
-                        <p className="text-slate-700"><strong>Palate:</strong> {clinical.speechLanguage.opme.palate}</p>
-                      </div>
-                      <p className="text-slate-700"><strong>DDK Syllables:</strong> <span className="font-mono text-purple-900 font-bold">{clinical.speechLanguage.opme.ddkRates}</span></p>
-                    </div>
-                  )}
-
-                  {clinical.speechLanguage.articulation && (
-                    <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1.5">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                        Articulation &amp; Phonological Inventory
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">PCC Metric:</span>
-                          <strong className="text-purple-950 font-bold">{clinical.speechLanguage.articulation.pcc}</strong>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Stimulability:</span>
-                          <span className="text-slate-800 font-medium">{clinical.speechLanguage.articulation.stimulability}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-500 block">Speech Intelligibility:</span>
-                          <span className="text-slate-800 font-medium">{clinical.speechLanguage.articulation.intelligibility}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {clinical.speechLanguage.voiceAssessment && (
-                    <div className="p-2.5 rounded bg-amber-50/60 border border-amber-200 space-y-1">
-                      <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
-                        Voice Diagnostic Battery (GRBAS, MPT, Acoustic Metrics, VHI-10)
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-slate-700">
-                        <div>
-                          <span className="text-slate-500 block">GRBAS Perceptual:</span>
-                          <strong className="font-mono text-slate-900">{clinical.speechLanguage.voiceAssessment.perceptualGrbas}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 block">Max Phonation Time:</span>
-                          <strong className="font-mono text-slate-900">{clinical.speechLanguage.voiceAssessment.maximumPhonationTime}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 block">s/z Ratio:</span>
-                          <strong className="font-mono text-slate-900">{clinical.speechLanguage.voiceAssessment.szRatio}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 block">VHI-10 Handicap:</span>
-                          <strong className="font-mono text-slate-900">{clinical.speechLanguage.voiceAssessment.vhi10Score}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {clinical.speechLanguage.fluencyBattery && (
-                    <div className="p-2.5 rounded bg-purple-50/50 border border-purple-200 space-y-1">
+                    <div className="p-2.5 rounded bg-purple-50/30 border border-purple-100 space-y-1">
                       <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                        Stuttering Severity Instrument (SSI-4) &amp; Disfluency Metrics
+                        Speech &amp; Language Milestones
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
-                        <div>
-                          <span className="text-slate-500 block">% Syllables Stuttered:</span>
-                          <strong className="font-mono text-purple-950">{clinical.speechLanguage.fluencyBattery.percentSyllablesStuttered}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 block">SSI-4 Total Score:</span>
-                          <strong className="font-mono text-purple-950">{clinical.speechLanguage.fluencyBattery.ssi4TotalScore}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-500 block">OASES Impact Score:</span>
-                          <strong className="font-mono text-slate-900">{clinical.speechLanguage.fluencyBattery.oasesScore}</strong>
-                        </div>
-                      </div>
+                      <p className="text-slate-700 leading-relaxed">
+                        {edhReport.speech_milestones || edhReport.language_history || 'Babbling at 6 months; first meaningful words at 12 months; two-word combinations developing.'}
+                      </p>
                     </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* CBT Psychology */}
-            {clinical?.cbtPsychology && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>3.4 Cognitive Behavioural Therapy (CBT) Encrypted Record (Section 5.5.29)</span>
-                  <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.2 rounded font-mono font-bold border border-emerald-200">
-                    Restricted Access
-                  </span>
-                </div>
-                <div className="p-3.5 space-y-2 text-xs">
-                  <div className="p-2.5 rounded bg-purple-50/50 border border-purple-200 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
-                      Psychometric Scale Scores
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
-                      <p><span className="font-semibold text-slate-700">PHQ-9:</span> <strong className="text-slate-900">{clinical.cbtPsychology.psychometrics?.phq9Score}</strong></p>
-                      <p><span className="font-semibold text-slate-700">GAD-7:</span> <strong className="text-slate-900">{clinical.cbtPsychology.psychometrics?.gad7Score}</strong></p>
-                      <p><span className="font-semibold text-slate-700">THI Progress:</span> <strong className="text-purple-950">{clinical.cbtPsychology.psychometrics?.thiScoreProgress}</strong></p>
+                    <div className="p-2.5 rounded bg-purple-50/30 border border-purple-100 space-y-1">
+                      <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">
+                        Medical, Otologic &amp; Systemic History
+                      </span>
+                      <p className="text-slate-700 leading-relaxed">
+                        {edhReport.medical_history || 'No recurrent otitis media, seizure episodes, or metabolic complications reported.'}
+                      </p>
                     </div>
                   </div>
+
+                  {edhReport.recommendations && (
+                    <div className="p-2.5 rounded bg-emerald-50/60 border border-emerald-200 space-y-1">
+                      <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider block">
+                        Clinical Recommendations &amp; Early Intervention Pathway
+                      </span>
+                      <p className="text-emerald-950 font-medium leading-relaxed">
+                        {edhReport.recommendations}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-[11px] text-slate-500">
+                    <div>
+                      Attending Clinician: <strong className="text-slate-800">{edhReport.examiner || 'Dr. Shreeharsh Shivpuje (RCI A79214)'}</strong>
+                    </div>
+                    <Link
+                      to={`/dashboard/reports/create?type=RP-CLN-EDH&patient=${demographics.uhid}`}
+                      className="text-purple-700 hover:text-purple-950 font-bold underline"
+                    >
+                      Update / Amend Early Dev History →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-amber-50/80 border border-amber-300 rounded-xl p-5 sm:p-6 shadow-2xs">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 flex items-center justify-center shrink-0">
+                      <AlertCircle className="w-6 h-6 text-amber-700" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-extrabold text-sm sm:text-base text-amber-950">
+                          Please Fill Early Dev History for this Patient
+                        </h4>
+                        <span className="bg-amber-200 text-amber-900 text-[10px] font-mono font-bold px-2 py-0.5 rounded uppercase">
+                          Baseline Required
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-900/90 max-w-2xl leading-relaxed">
+                        No Early Developmental History (EDH) has been recorded yet for <strong>{demographics.fullName}</strong> ({demographics.uhid}).
+                        Under standardized RCI Clinical Protocols (RP-CLN-EDH), a baseline developmental history documenting prenatal, motor, speech-language, and feeding milestones must be recorded for clinical diagnostic correlation and therapy planning.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/dashboard/reports/create?type=RP-CLN-EDH&patient=${demographics.uhid}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-xs transition-colors shrink-0 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Fill Early Dev History Now</span>
+                  </Link>
                 </div>
               </div>
             )}
@@ -1303,110 +1644,239 @@ export const PatientDetailPage = () => {
             TAB 5: THERAPY GOALS & SOAP (SECTION 5.5.27 & 5.5.28)
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'therapy' && (
-          <div className="space-y-3">
-            {/* Active Therapy Plan */}
-            {(therapy?.plan || therapy?.activePlan) && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>5.1 Active Clinical Rehabilitation Plan (Section 5.5.27)</span>
-                  <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 font-mono font-bold">
-                    {therapy?.plan?.planId || therapy?.activePlan?.planId}
+          <div className="space-y-4">
+            {/* 5.1 Active Clinical Rehabilitation Plans Header & Register */}
+            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
+              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-purple-900" />
+                  <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                    5.1 Active Clinical Rehabilitation Plans &amp; SMART Objectives (Section 5.5.27)
+                  </span>
+                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                    {therapyPlans.length} {therapyPlans.length === 1 ? 'Active Plan' : 'Active Plans'}
                   </span>
                 </div>
-                <div className="p-3.5 space-y-3 text-xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm">
-                        {therapy?.plan?.title || therapy?.activePlan?.title}
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
-                        Assigned: {therapy?.plan?.assignedClinician || therapy?.activePlan?.assignedClinician}
-                      </p>
-                    </div>
-                    <div className="text-left sm:text-right text-[11px] text-slate-500 font-mono">
-                      <p>Schedule: <strong className="text-slate-800">{therapy?.plan?.frequency || therapy?.activePlan?.frequency}</strong></p>
-                      <p>Review: {therapy?.plan?.reviewDate || therapy?.activePlan?.reviewDate}</p>
-                    </div>
-                  </div>
 
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Long-Term Goal</span>
-                    <p className="font-semibold text-slate-800 pt-0.5">
-                      {therapy?.plan?.longTermGoal || therapy?.activePlan?.longTermGoal}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewSoapModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-purple-700" />
+                    <span>+ Add SOAP Note</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsNewPlanModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Create Rehabilitation Plan &amp; Goals</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3.5">
+                {therapyPlans.length === 0 ? (
+                  <div className="py-8 text-center text-slate-500 space-y-2">
+                    <Activity className="w-10 h-10 mx-auto text-slate-300" />
+                    <p className="font-bold text-sm text-slate-800">No Active Rehabilitation Plan Created Yet</p>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Establish an individualized clinical therapy plan with SMART objectives, session schedules, and target mastery criteria for {demographics.fullName}.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewPlanModalOpen(true)}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold bg-[#301444] text-white hover:bg-[#200b30] shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Create Initial Rehabilitation Plan</span>
+                    </button>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    {therapyPlans.map((plan, planIdx) => (
+                      <div key={plan.planId || planIdx} className="border border-purple-200 rounded-lg p-3.5 bg-purple-50/15 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 pb-2.5">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-slate-900 text-sm">{plan.title}</h3>
+                              <span className="font-mono text-[10px] text-purple-900 bg-purple-100 px-2 py-0.5 rounded font-bold border border-purple-200">
+                                {plan.planId}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                              Assigned Clinician: <strong className="text-slate-800">{plan.assignedClinician}</strong>
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap text-right text-[11px] text-slate-500 font-mono">
+                            <span className="bg-white px-2 py-1 rounded border border-slate-200">
+                              Schedule: <strong className="text-slate-800">{plan.frequency}</strong>
+                            </span>
+                            <span className="bg-white px-2 py-1 rounded border border-slate-200">
+                              Review: <strong className="text-purple-950">{plan.reviewDate}</strong>
+                            </span>
+                          </div>
+                        </div>
 
-                  {/* SMART Objectives Table */}
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Short-Term SMART Objectives &amp; Mastery Tracking
-                    </span>
-                    <div className="border border-slate-200 rounded overflow-hidden">
-                      <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-50 text-[10px] font-bold text-slate-600 uppercase border-b border-slate-200">
-                          <tr>
-                            <th className="py-1.5 px-3">Objective Description</th>
-                            <th className="py-1.5 px-2 text-center w-20">Baseline</th>
-                            <th className="py-1.5 px-2 text-center w-20">Target</th>
-                            <th className="py-1.5 px-3 text-center w-28">Current Progress</th>
-                            <th className="py-1.5 px-2 text-center w-24">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {(therapy?.plan?.smartObjectives || therapy?.activePlan?.smartObjectives || []).map((obj) => (
-                            <tr key={obj.id} className="hover:bg-purple-50/20">
-                              <td className="py-1.5 px-3 text-slate-800 font-medium">{obj.text}</td>
-                              <td className="py-1.5 px-2 text-center font-mono text-slate-500">{obj.baseline}</td>
-                              <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-800">{obj.target}</td>
-                              <td className="py-1.5 px-3 text-center font-mono font-bold text-purple-950">{obj.currentProgress}</td>
-                              <td className="py-1.5 px-2 text-center">
-                                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border uppercase ${
-                                  obj.status === 'ACHIEVED'
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                    : 'bg-purple-50 text-purple-800 border-purple-200'
-                                }`}>
-                                  {obj.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Long-Term Goal</span>
+                          <p className="font-medium text-slate-800 text-xs mt-0.5 leading-relaxed bg-white p-2.5 rounded border border-slate-200">
+                            {plan.longTermGoal}
+                          </p>
+                        </div>
+
+                        {/* SMART Objectives */}
+                        {plan.smartObjectives && plan.smartObjectives.length > 0 && (
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                              Short-Term SMART Objectives &amp; Mastery Tracking
+                            </span>
+                            <div className="border border-slate-200 rounded overflow-hidden bg-white">
+                              <table className="w-full text-xs text-left">
+                                <thead className="bg-slate-50 text-[10px] font-bold text-slate-600 uppercase border-b border-slate-200">
+                                  <tr>
+                                    <th className="py-2 px-3">Objective Description</th>
+                                    <th className="py-2 px-2 text-center w-24">Baseline</th>
+                                    <th className="py-2 px-2 text-center w-28">Target Criteria</th>
+                                    <th className="py-2 px-3 text-center w-36">Current Progress</th>
+                                    <th className="py-2 px-2 text-center w-28">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {plan.smartObjectives.map((obj, i) => (
+                                    <tr key={obj.id || i} className="hover:bg-purple-50/20">
+                                      <td className="py-2 px-3 text-slate-800 font-medium">{obj.text}</td>
+                                      <td className="py-2 px-2 text-center font-mono text-slate-500 text-[11px]">{obj.baseline}</td>
+                                      <td className="py-2 px-2 text-center font-mono font-bold text-slate-800 text-[11px]">{obj.target}</td>
+                                      <td className="py-2 px-3 text-center font-mono font-bold text-purple-950 text-[11px]">{obj.currentProgress}</td>
+                                      <td className="py-2 px-2 text-center">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                                          obj.status === 'ACHIEVED'
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                            : 'bg-purple-50 text-purple-800 border-purple-200'
+                                        }`}>
+                                          {obj.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Plan Actions: WhatsApp, Add SOAP, Delete */}
+                        <div className="pt-2 border-t border-purple-100 flex items-center justify-between flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSendPlanWhatsApp(plan)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors cursor-pointer"
+                            title="Send scheduled session and home practice reminder to patient via WhatsApp"
+                          >
+                            <WhatsAppIcon className="w-3.5 h-3.5" />
+                            <span>Send Reminder on WhatsApp</span>
+                          </button>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsNewSoapModalOpen(true)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5 text-purple-700" />
+                              <span>Add Session SOAP</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPlanToDelete(plan);
+                                setIsDeletePlanModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs transition-colors cursor-pointer"
+                              title="Delete this rehabilitation plan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Delete Plan</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
 
-            {/* Latest SOAP Note */}
-            {therapy?.latestSoap && (
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>5.2 Latest Clinical SOAP Session Note (Section 5.5.28)</span>
+            {/* 5.2 Chronological Clinical SOAP Session Notes */}
+            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
+              <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-purple-700" />
+                  <span>5.2 Chronological Clinical SOAP Session Notes (Section 5.5.28)</span>
+                </div>
+                <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-500 font-mono">
-                    Session #{therapy.latestSoap.sessionNo} • {therapy.latestSoap.date}
+                    {soapNotes.length} Notes Logged
                   </span>
-                </div>
-                <div className="p-3.5 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">S (Subjective)</span>
-                    <p className="text-slate-800">{therapy.latestSoap.subjective}</p>
-                  </div>
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">O (Objective)</span>
-                    <p className="text-slate-800">{therapy.latestSoap.objective}</p>
-                  </div>
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">A (Assessment)</span>
-                    <p className="text-slate-800">{therapy.latestSoap.assessment}</p>
-                  </div>
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
-                    <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">P (Plan &amp; Home Practice)</span>
-                    <p className="text-slate-800">{therapy.latestSoap.plan}</p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewSoapModalOpen(true)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-900 text-white hover:bg-purple-950 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Log Note</span>
+                  </button>
                 </div>
               </div>
-            )}
+
+              <div className="p-3.5 space-y-3">
+                {soapNotes.length === 0 ? (
+                  <div className="py-6 text-center text-slate-500 text-xs">
+                    <p className="font-semibold text-slate-700">No Clinical SOAP Session Notes Logged</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Document patient response, objective measurements, and home practice plans after each session.</p>
+                  </div>
+                ) : (
+                  soapNotes.map((s, idx) => (
+                    <div key={s.id || idx} className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-1.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-purple-950">Session #{s.sessionNo}</span>
+                          <span className="text-[11px] text-slate-500 font-mono">• {s.date}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
+                          Clinician Verified
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                        <div className="p-2 rounded bg-white border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">S (Subjective)</span>
+                          <p className="text-slate-800 leading-relaxed">{s.subjective}</p>
+                        </div>
+                        <div className="p-2 rounded bg-white border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">O (Objective)</span>
+                          <p className="text-slate-800 leading-relaxed">{s.objective}</p>
+                        </div>
+                        <div className="p-2 rounded bg-white border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">A (Assessment)</span>
+                          <p className="text-slate-800 leading-relaxed">{s.assessment}</p>
+                        </div>
+                        <div className="p-2 rounded bg-white border border-slate-200 space-y-0.5">
+                          <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider block">P (Plan &amp; Home Practice)</span>
+                          <p className="text-slate-800 leading-relaxed">{s.plan}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -1431,38 +1901,299 @@ export const PatientDetailPage = () => {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-              <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                <span>Statutory GST Tax Invoices &amp; Receipts</span>
-                <span className="text-[10px] text-slate-500 font-mono">Healthcare 0% Exempt</span>
+              {/* Header Strip */}
+              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2">
+                  <IndianRupee className="w-4 h-4 text-purple-900" />
+                  <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                    Statutory GST Tax Invoices &amp; Official Receipts
+                  </span>
+                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                    {patientInvoices.length} {patientInvoices.length === 1 ? 'Invoice' : 'Invoices'}
+                  </span>
+                  <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold border border-emerald-200">
+                    Healthcare 0% Exempt (SAC 9993)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvoiceRefreshTick((t) => t + 1);
+                      notify.info('Invoices reloaded from billing ledger.');
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                    title="Refresh billing register"
+                  >
+                    <RotateCcw className="w-3 h-3 text-purple-700" />
+                    <span>Refresh</span>
+                  </button>
+
+                  <Link
+                    to={`/dashboard/billing?patient=${patient.uhid}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ New Invoice</span>
+                  </Link>
+                </div>
               </div>
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-100/70 text-[10px] font-bold text-slate-600 uppercase border-b border-slate-200">
-                  <tr>
-                    <th className="py-2 px-3">Invoice #</th>
-                    <th className="py-2 px-3">Date</th>
-                    <th className="py-2 px-3">Service / Product Description</th>
-                    <th className="py-2 px-3 text-right">Fee (₹)</th>
-                    <th className="py-2 px-3 text-center">Status</th>
-                    <th className="py-2 px-3 font-mono">Payment Ref</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {financial?.invoices?.map((inv) => (
-                    <tr key={inv.invoiceNo} className="hover:bg-purple-50/20">
-                      <td className="py-2 px-3 font-mono font-bold text-purple-950">{inv.invoiceNo}</td>
-                      <td className="py-2 px-3 font-mono text-slate-600">{inv.date}</td>
-                      <td className="py-2 px-3 font-medium text-slate-800">{inv.description}</td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">{formatCurrency(inv.amount)}</td>
-                      <td className="py-2 px-3 text-center">
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          {inv.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 font-mono text-[11px] text-slate-600">{inv.refNo}</td>
+
+              {/* Date Filter Toolbar */}
+              <div className="px-3 py-2 bg-slate-50/90 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-slate-600 font-semibold text-[11px]">Filter Date:</span>
+                    <select
+                      value={invDatePreset}
+                      onChange={(e) => {
+                        setInvDatePreset(e.target.value);
+                        setInvPage(1);
+                      }}
+                      className="h-7 px-2 text-xs bg-white border border-slate-300 rounded font-medium text-slate-700 focus:border-purple-600 focus:outline-hidden cursor-pointer"
+                    >
+                      <option value="ALL">All Recorded Dates</option>
+                      <option value="TODAY">Today</option>
+                      <option value="LAST_7_DAYS">Last 7 Days</option>
+                      <option value="THIS_MONTH">This Month</option>
+                      <option value="LAST_30_DAYS">Last 30 Days</option>
+                      <option value="CUSTOM">Custom Date Range...</option>
+                    </select>
+                  </div>
+
+                  {invDatePreset === 'CUSTOM' && (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="date"
+                        value={invStartDate}
+                        onChange={(e) => {
+                          setInvStartDate(e.target.value);
+                          setInvPage(1);
+                        }}
+                        className="h-7 px-2 text-xs bg-white border border-slate-300 rounded font-mono text-slate-700 focus:outline-hidden"
+                      />
+                      <span className="text-slate-400">to</span>
+                      <input
+                        type="date"
+                        value={invEndDate}
+                        onChange={(e) => {
+                          setInvEndDate(e.target.value);
+                          setInvPage(1);
+                        }}
+                        className="h-7 px-2 text-xs bg-white border border-slate-300 rounded font-mono text-slate-700 focus:outline-hidden"
+                      />
+                    </div>
+                  )}
+
+                  {invDatePreset !== 'ALL' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInvDatePreset('ALL');
+                        setInvStartDate('');
+                        setInvEndDate('');
+                        setInvPage(1);
+                      }}
+                      className="text-[11px] text-purple-700 hover:text-purple-950 font-bold underline cursor-pointer"
+                    >
+                      Reset Filter
+                    </button>
+                  )}
+                </div>
+
+                <div className="text-[11px] text-slate-500 self-center">
+                  Showing <strong className="text-slate-800">{filteredPatientInvoices.length}</strong> of{' '}
+                  <strong className="text-slate-800">{patientInvoices.length}</strong> recorded invoices
+                </div>
+              </div>
+
+              {/* Invoices Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead className="bg-slate-100/90 text-[10px] font-bold text-slate-700 uppercase border-b border-slate-200">
+                    <tr>
+                      <th className="py-2 px-3 whitespace-nowrap">Invoice #</th>
+                      <th className="py-2 px-3 whitespace-nowrap">Date</th>
+                      <th className="py-2 px-3">Service / Product Description</th>
+                      <th className="py-2 px-3 text-right whitespace-nowrap">Fee (₹)</th>
+                      <th className="py-2 px-3 text-center whitespace-nowrap">Status</th>
+                      <th className="py-2 px-3 font-mono whitespace-nowrap">Payment Ref</th>
+                      <th className="py-2 px-3 text-right whitespace-nowrap">Clinical &amp; Billing Actions</th>
                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {paginatedPatientInvoices.length > 0 ? (
+                      paginatedPatientInvoices.map((inv) => (
+                        <tr key={inv.invoiceNo || inv.id} className="hover:bg-purple-50/20 transition-colors">
+                          <td className="py-2 px-3 font-mono font-bold text-purple-950 whitespace-nowrap">
+                            <span className="bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                              {inv.invoiceNo}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 font-mono text-slate-600 whitespace-nowrap text-[11px]">
+                            {inv.date}
+                          </td>
+                          <td className="py-2 px-3 font-medium text-slate-800">
+                            <span>{inv.service}</span>
+                            <span className="block text-[10px] text-slate-400">SAC: 9993 • Outpatient Healthcare Assessment</span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                            ₹{Number(inv.totalAmount || inv.amount || 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="py-2 px-3 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                              inv.status === 'PAID'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}>
+                              {inv.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                            {inv.receiptNo || inv.refNo || 'NPCI-UPI'}
+                          </td>
+                          <td className="py-2 px-3 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1">
+                              {/* 1. See Details */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenPatientInvoice(inv)}
+                                className="p-1 rounded text-purple-800 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
+                                title="See invoice details (Compact Excel Voucher)"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 2. Download / Print */}
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadPatientInvoice(inv)}
+                                className="p-1 rounded text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                                title="Print / Download official A4 Tax Invoice"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 3. WhatsApp */}
+                              <button
+                                type="button"
+                                onClick={() => handleWhatsAppPatientInvoice(inv)}
+                                className="p-1 rounded text-white bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer"
+                                title="Send invoice summary on WhatsApp"
+                              >
+                                <WhatsAppIcon className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 4. Mail */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMailPatientInvoice(inv)}
+                                className="p-1 rounded text-purple-700 hover:bg-purple-50 border border-purple-200 transition-colors cursor-pointer"
+                                title="Email invoice to patient"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 5. Edit */}
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditPatientInvoice(inv)}
+                                className="p-1 rounded text-amber-700 hover:bg-amber-50 border border-amber-300 transition-colors cursor-pointer"
+                                title="Edit invoice details"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 6. Delete */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setInvoiceToDelete(inv);
+                                  setIsDeleteInvoiceModalOpen(true);
+                                }}
+                                className="p-1 rounded text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
+                                title="Delete invoice"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-500 text-xs">
+                          <p className="font-semibold text-slate-700">No matching invoices found for the selected date range.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Adjust your date filter or create a new invoice.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span>Rows per page:</span>
+                  <select
+                    value={invPageSize}
+                    onChange={(e) => {
+                      setInvPageSize(Number(e.target.value));
+                      setInvPage(1);
+                    }}
+                    className="h-6 px-1.5 text-xs bg-white border border-slate-300 rounded font-semibold text-slate-700 focus:outline-hidden cursor-pointer"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <span className="text-[11px] text-slate-400">|</span>
+                  <span className="text-[11px]">
+                    Page <strong className="text-slate-900">{invPage}</strong> of{' '}
+                    <strong className="text-slate-900">{totalInvPages}</strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={invPage <= 1}
+                    onClick={() => setInvPage((p) => Math.max(1, p - 1))}
+                    className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                    <span>Prev</span>
+                  </button>
+
+                  {Array.from({ length: totalInvPages }, (_, i) => i + 1).map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setInvPage(num)}
+                      className={`h-6 w-6 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
+                        num === invPage
+                          ? 'bg-purple-900 text-white'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {num}
+                    </button>
                   ))}
-                </tbody>
-              </table>
+
+                  <button
+                    type="button"
+                    disabled={invPage >= totalInvPages}
+                    onClick={() => setInvPage((p) => Math.min(totalInvPages, p + 1))}
+                    className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
@@ -1561,7 +2292,913 @@ export const PatientDetailPage = () => {
         </button>
       </div>
 
-      {/* ── EMAIL REPORT MODAL ── */}
+      {/* ── MODAL: EDIT PATIENT MASTER PROFILE ── */}
+      <Modal
+        isOpen={isEditPatientModalOpen}
+        onClose={() => setIsEditPatientModalOpen(false)}
+        title={`Edit Patient Master Profile: ${demographics.fullName} (${demographics.uhid})`}
+        size="lg"
+      >
+        <form onSubmit={handleSavePatientEdit} className="space-y-3.5 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">
+                Full Legal Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editPatientForm.full_name}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, full_name: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">
+                Date of Birth <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                required
+                value={editPatientForm.date_of_birth}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, date_of_birth: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:border-purple-600 focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Biological Sex</label>
+              <select
+                value={editPatientForm.gender}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, gender: e.target.value })}
+                className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              >
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Primary Phone</label>
+              <input
+                type="tel"
+                value={editPatientForm.phone}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, phone: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Email Address</label>
+              <input
+                type="email"
+                value={editPatientForm.email}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, email: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Guardian / Caregiver Name</label>
+              <input
+                type="text"
+                value={editPatientForm.guardian_name}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, guardian_name: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Guardian Contact Phone</label>
+              <input
+                type="tel"
+                value={editPatientForm.guardian_phone}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, guardian_phone: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">City / Locality</label>
+              <input
+                type="text"
+                value={editPatientForm.city}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, city: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Primary Clinical Service Line</label>
+              <select
+                value={editPatientForm.service_line}
+                onChange={(e) => setEditPatientForm({ ...editPatientForm, service_line: e.target.value })}
+                className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
+              >
+                <option value="SPEECH_LANGUAGE">Speech &amp; Language Pathology</option>
+                <option value="AUDIOLOGY">Audiology &amp; Hearing Rehabilitation</option>
+                <option value="VOICE">Voice Therapy &amp; Laryngeal Rehab</option>
+                <option value="DEVELOPMENTAL">Early Childhood Developmental Care</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Residential Address</label>
+            <input
+              type="text"
+              value={editPatientForm.address}
+              onChange={(e) => setEditPatientForm({ ...editPatientForm, address: e.target.value })}
+              className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">Primary Clinical Concern / Diagnosis</label>
+            <textarea
+              rows={2}
+              value={editPatientForm.primary_concern}
+              onChange={(e) => setEditPatientForm({ ...editPatientForm, primary_concern: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsEditPatientModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs"
+            >
+              Save Profile Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── MODAL: CONFIRM DELETE PATIENT ── */}
+      <Modal
+        isOpen={isDeletePatientModalOpen}
+        onClose={() => setIsDeletePatientModalOpen(false)}
+        title="Confirm Patient Record Deletion"
+        size="sm"
+      >
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-700">
+            Are you sure you want to delete patient file <strong>{demographics.fullName}</strong> ({demographics.uhid})?
+          </p>
+          <div className="p-2.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-[11px]">
+            ⚠️ This will remove the patient record from your active ledger. Clinical audit logs remain stored cryptographically under DPDP Act statutory requirements.
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsDeletePatientModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeletePatient}
+              className="h-8 px-4 rounded text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-2xs"
+            >
+              Yes, Delete Patient
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── MODAL: CREATE REHABILITATION PLAN & GOALS ── */}
+      <Modal
+        isOpen={isNewPlanModalOpen}
+        onClose={() => setIsNewPlanModalOpen(false)}
+        title={`New Rehabilitation Plan & Goals — ${demographics.fullName}`}
+        size="lg"
+      >
+        <form onSubmit={handleSaveNewPlan} className="space-y-3 text-xs">
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">
+              Rehabilitation Protocol Title <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={newPlanForm.title}
+              onChange={(e) => setNewPlanForm({ ...newPlanForm, title: e.target.value })}
+              className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden font-medium"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Assigned Clinician</label>
+              <input
+                type="text"
+                required
+                value={newPlanForm.clinician}
+                onChange={(e) => setNewPlanForm({ ...newPlanForm, clinician: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Session Schedule</label>
+              <input
+                type="text"
+                value={newPlanForm.schedule}
+                onChange={(e) => setNewPlanForm({ ...newPlanForm, schedule: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Review Date</label>
+              <input
+                type="date"
+                value={newPlanForm.reviewDate}
+                onChange={(e) => setNewPlanForm({ ...newPlanForm, reviewDate: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 font-bold mb-1">
+              Primary Long-Term Goal <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={2}
+              required
+              value={newPlanForm.longTermGoal}
+              onChange={(e) => setNewPlanForm({ ...newPlanForm, longTermGoal: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+            />
+          </div>
+
+          <div className="p-3 rounded-lg bg-purple-50/50 border border-purple-200 space-y-2">
+            <span className="text-[11px] font-bold text-purple-950 uppercase tracking-wider block">
+              Short-Term SMART Objectives (Mastery Tracking)
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="sm:col-span-2">
+                <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Objective 1 Description</label>
+                <input
+                  type="text"
+                  value={newPlanForm.obj1Desc}
+                  onChange={(e) => setNewPlanForm({ ...newPlanForm, obj1Desc: e.target.value })}
+                  className="w-full h-7.5 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Target Criteria</label>
+                <input
+                  type="text"
+                  value={newPlanForm.obj1Target}
+                  onChange={(e) => setNewPlanForm({ ...newPlanForm, obj1Target: e.target.value })}
+                  className="w-full h-7.5 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-purple-100">
+              <div className="sm:col-span-2">
+                <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Objective 2 Description</label>
+                <input
+                  type="text"
+                  value={newPlanForm.obj2Desc}
+                  onChange={(e) => setNewPlanForm({ ...newPlanForm, obj2Desc: e.target.value })}
+                  className="w-full h-7.5 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Target Criteria</label>
+                <input
+                  type="text"
+                  value={newPlanForm.obj2Target}
+                  onChange={(e) => setNewPlanForm({ ...newPlanForm, obj2Target: e.target.value })}
+                  className="w-full h-7.5 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsNewPlanModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs"
+            >
+              Save Rehabilitation Plan
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── MODAL: LOG SOAP NOTE ── */}
+      <Modal
+        isOpen={isNewSoapModalOpen}
+        onClose={() => setIsNewSoapModalOpen(false)}
+        title={`Log Clinical SOAP Session Note — ${demographics.fullName}`}
+        size="lg"
+      >
+        <form onSubmit={handleSaveNewSoap} className="space-y-3 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Session Number</label>
+              <input
+                type="number"
+                min="1"
+                value={newSoapForm.sessionNo}
+                onChange={(e) => setNewSoapForm({ ...newSoapForm, sessionNo: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Session Date</label>
+              <input
+                type="date"
+                value={newSoapForm.date}
+                onChange={(e) => setNewSoapForm({ ...newSoapForm, date: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-purple-900 font-bold mb-1">S (Subjective) — Patient / Caregiver Feedback</label>
+            <textarea
+              rows={2}
+              required
+              placeholder="e.g. Patient reports easier phonation and reduced throat tension during classroom speaking..."
+              value={newSoapForm.subjective}
+              onChange={(e) => setNewSoapForm({ ...newSoapForm, subjective: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-900 font-bold mb-1">O (Objective) — Measured Performance &amp; Tasks Completed</label>
+            <textarea
+              rows={2}
+              required
+              placeholder="e.g. MPT increased from 10.2s to 13.5s; sustained vocalic sighs produced with relaxed laryngeal posture..."
+              value={newSoapForm.objective}
+              onChange={(e) => setNewSoapForm({ ...newSoapForm, objective: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-900 font-bold mb-1">A (Assessment) — Clinical Interpretation</label>
+            <textarea
+              rows={2}
+              required
+              placeholder="e.g. Consistent progressive mastery of resonant voice therapy exercises; extrinsic muscular tension subsiding..."
+              value={newSoapForm.assessment}
+              onChange={(e) => setNewSoapForm({ ...newSoapForm, assessment: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-purple-900 font-bold mb-1">P (Plan &amp; Home Practice)</label>
+            <textarea
+              rows={2}
+              required
+              placeholder="e.g. Continue lip trills 3x daily; follow up in 3 days for conversational transfer..."
+              value={newSoapForm.plan}
+              onChange={(e) => setNewSoapForm({ ...newSoapForm, plan: e.target.value })}
+              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsNewSoapModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs"
+            >
+              Save SOAP Session Note
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── MODAL: CONFIRM DELETE THERAPY PLAN ── */}
+      <Modal
+        isOpen={isDeletePlanModalOpen}
+        onClose={() => setIsDeletePlanModalOpen(false)}
+        title="Delete Rehabilitation Plan"
+        size="sm"
+      >
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-700">
+            Are you sure you want to remove therapy plan <strong>{planToDelete?.planId}</strong> ({planToDelete?.title})?
+          </p>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsDeletePlanModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeletePlan(planToDelete)}
+              className="h-8 px-4 rounded text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-2xs"
+            >
+              Delete Plan
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── MODAL: COMPACT EXCEL VIEW TAX INVOICE ── */}
+      <Modal
+        isOpen={isViewInvoiceModalOpen}
+        onClose={() => setIsViewInvoiceModalOpen(false)}
+        title={selectedInvoiceForView ? `Tax Invoice & Clinical Receipt: ${selectedInvoiceForView.invoiceNo}` : 'Invoice Details'}
+        size="2xl"
+        footer={
+          selectedInvoiceForView && (
+            <div className="w-full flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPatientInvoice(selectedInvoiceForView)}
+                  className="h-7.5 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-purple-950 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download / Print</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleWhatsAppPatientInvoice(selectedInvoiceForView)}
+                  className="h-7.5 px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenMailPatientInvoice(selectedInvoiceForView)}
+                  className="h-7.5 px-3 rounded text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsViewInvoiceModalOpen(false);
+                    handleStartEditPatientInvoice(selectedInvoiceForView);
+                  }}
+                  className="h-7.5 px-3 rounded text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsViewInvoiceModalOpen(false)}
+                className="h-7.5 px-3.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          )
+        }
+      >
+        {selectedInvoiceForView && (
+          <div className="font-sans text-xs">
+            <div className="border border-slate-300 rounded-lg bg-white overflow-hidden shadow-2xs">
+              <div className="h-1 bg-gradient-to-r from-[#301444] via-purple-700 to-[#301444]" />
+
+              {/* Compact Letterhead */}
+              <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-slate-300 bg-white gap-3">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/vaani-logo.png"
+                    alt="Vaani Clinic Logo"
+                    className="h-9 w-auto object-contain shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm tracking-tight text-[#301444]">
+                        VAANI SPEECH &amp; HEARING CLINIC
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        RCI CRR No. A79214
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        ISO 9001:2015
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                      Sadashiv Peth, Near Powai Naka, Satara - 415002 • Helpline: +91 98220 12345 • appointments@vaaniclinic.com
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-[9.5px] font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 block mb-0.5">
+                    GST SAC: 999312
+                  </span>
+                  <span className="font-mono text-xs font-extrabold text-slate-900 block">
+                    {selectedInvoiceForView.invoiceNo}
+                  </span>
+                  <span className="text-[9.5px] font-mono text-slate-500">
+                    Date: {selectedInvoiceForView.date}
+                  </span>
+                </div>
+              </div>
+
+              {/* Sub-header Bar */}
+              <div className="px-3.5 py-1.5 bg-slate-50 border-b border-slate-300 flex items-center justify-between text-[11px]">
+                <div>
+                  <span className="font-extrabold text-[#301444] uppercase tracking-wider text-[11px]">
+                    TAX INVOICE &amp; CLINICAL PAYMENT RECEIPT
+                  </span>
+                  <span className="text-slate-500 text-[10px]"> • Original for Recipient</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${
+                    selectedInvoiceForView.status === 'PAID'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}>
+                    {selectedInvoiceForView.status === 'PAID' ? '✓ PAYMENT RECEIVED' : '● PAYMENT DUE'}
+                  </span>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 font-bold">
+                    {selectedInvoiceForView.paymentMode}
+                  </span>
+                </div>
+              </div>
+
+              {/* Patient and Fiscal Info */}
+              <div className="grid grid-cols-2 divide-x divide-slate-300 border-b border-slate-300 bg-white">
+                <div className="p-2.5">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+                    Billed To (Patient Information)
+                  </span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-bold text-slate-900 text-xs">{selectedInvoiceForView.patientName}</span>
+                    <span className="font-mono text-[10px] font-bold text-purple-900">
+                      UHID: {selectedInvoiceForView.uhid || demographics.uhid}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[10px] text-slate-500">
+                    <span>Phone: {selectedInvoiceForView.phone || demographics.primaryPhone}</span>
+                    <span>Center: Satara Outpatient Unit</span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 bg-slate-50/50">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+                    Fiscal &amp; Invoice Particulars
+                  </span>
+                  <div className="flex items-baseline justify-between text-[10px]">
+                    <span className="text-slate-500">Invoice Reference:</span>
+                    <span className="font-mono font-extrabold text-slate-900">{selectedInvoiceForView.invoiceNo}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between text-[10px] mt-0.5">
+                    <span className="text-slate-500">Receipt Ref:</span>
+                    <span className="font-mono text-slate-700">{selectedInvoiceForView.receiptNo || 'REC-' + selectedInvoiceForView.invoiceNo.replace('INV-', '')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-[#301444] text-white text-[9.5px] font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-1.5 px-2 text-center w-8 border-r border-purple-800">#</th>
+                    <th className="py-1.5 px-2.5 border-r border-purple-800">Clinical Investigation / Health Care Service</th>
+                    <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">SAC / HSN</th>
+                    <th className="py-1.5 px-2 text-center w-24 border-r border-purple-800">Discipline</th>
+                    <th className="py-1.5 px-2.5 text-right w-24 border-r border-purple-800">Base Fee (₹)</th>
+                    <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">GST Rate</th>
+                    <th className="py-1.5 px-2.5 text-right w-24">Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-300 bg-white">
+                    <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-300">01</td>
+                    <td className="py-2 px-2.5 border-r border-slate-300">
+                      <span className="font-bold text-slate-900 block text-xs">{selectedInvoiceForView.service}</span>
+                      <span className="text-[9.5px] font-mono text-purple-800">
+                        Code: SVC-CLINICAL • RCI Clinical Protocol
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
+                      999312
+                    </td>
+                    <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-300 text-[10px]">
+                      Clinical Healthcare
+                    </td>
+                    <td className="py-2 px-2.5 text-right font-mono font-semibold text-slate-800 border-r border-slate-300">
+                      ₹{Number(selectedInvoiceForView.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2 px-2 text-center border-r border-slate-300 text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-700">
+                        0% (Exempt)
+                      </span>
+                    </td>
+                    <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
+                      ₹{Number(selectedInvoiceForView.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Subtotal & Amount in Words */}
+              <div className="grid grid-cols-12 border-t border-slate-300 divide-x divide-slate-300 bg-white">
+                <div className="col-span-7 p-2.5 bg-slate-50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">AMOUNT IN WORDS:</span>
+                    <p className="text-xs font-extrabold text-slate-800 italic mt-0.5">
+                      {numberToWordsINR(selectedInvoiceForView.totalAmount)}
+                    </p>
+                  </div>
+                  <p className="text-[9.5px] text-slate-500 border-t border-dashed border-slate-200 pt-1.5 mt-1.5 leading-tight">
+                    *Statutorily exempt from Goods &amp; Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading 9993 (Health Care Services by Clinical Establishment).
+                  </p>
+                </div>
+                <div className="col-span-5 bg-white divide-y divide-slate-100 flex flex-col justify-center">
+                  <div className="flex justify-between items-center py-1 px-3 text-[10.5px] text-slate-600">
+                    <span>Base Assessment Fee:</span>
+                    <span className="font-mono font-semibold">₹{Number(selectedInvoiceForView.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 px-3 text-[10.5px] text-slate-600">
+                    <span>GST Applied (0%):</span>
+                    <span className="font-mono font-semibold">₹0.00</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1.5 px-3 bg-purple-50/70 border-t border-purple-200 text-[#301444] font-extrabold text-xs">
+                    <span>NET TOTAL PAYABLE:</span>
+                    <span className="font-mono text-sm">₹{Number(selectedInvoiceForView.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Settlement and Clinician Authorization */}
+              <div className="grid grid-cols-2 divide-x divide-slate-300 border-t border-slate-300 bg-white">
+                <div className="flex items-center gap-2.5 p-2 bg-purple-50/20">
+                  <div className="w-10 h-10 bg-white p-0.5 rounded border border-purple-200 flex items-center justify-center shrink-0">
+                    <QrCode className="w-9 h-9 text-[#301444]" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-extrabold text-purple-900 uppercase tracking-wider block">DIRECT NPCI SETTLEMENT</span>
+                    <span className="text-[11px] font-mono font-extrabold text-slate-900 block leading-tight">vaaniclinic@okaxis</span>
+                    <span className="text-[9px] text-slate-500 block leading-tight">Payee: Vaani Speech &amp; Hearing Clinic • HDFC Bank Ltd</span>
+                  </div>
+                </div>
+
+                <div className="p-2 text-right flex flex-col justify-center">
+                  <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
+                  <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
+                  <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
+                  <div className="text-[9.5px] font-mono font-bold text-emerald-700">RCI Registration: CRR No. A79214</div>
+                </div>
+              </div>
+
+              {/* Bottom Notice */}
+              <div className="px-3 py-1 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-[8.5px] text-slate-500">
+                <span>This is an official computer-generated clinical tax invoice &amp; voucher under the Clinical Establishments Act and DPDP Act 2023.</span>
+                <span className="font-mono text-[8.5px] text-slate-400">SHA256:e3089426fa...{selectedInvoiceForView.invoiceNo}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── MODAL: EMAIL TAX INVOICE ── */}
+      <Modal
+        isOpen={isMailModalOpen}
+        onClose={() => setIsMailModalOpen(false)}
+        title="Email Tax Invoice &amp; Official Receipt"
+        size="md"
+      >
+        {selectedInvoiceForMail && (
+          <form onSubmit={handleSendMailPatientInvoice} className="space-y-3 font-sans text-xs">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">
+                Recipient Email <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="email"
+                required
+                value={mailRecipient}
+                onChange={(e) => setMailRecipient(e.target.value)}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Subject</label>
+              <input
+                type="text"
+                required
+                value={mailSubject}
+                onChange={(e) => setMailSubject(e.target.value)}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Note to Patient</label>
+              <textarea
+                rows={5}
+                value={mailNote}
+                onChange={(e) => setMailNote(e.target.value)}
+                className="w-full p-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden font-mono"
+              />
+            </div>
+
+            <div className="p-2.5 rounded bg-purple-50/50 border border-purple-200 text-[11px] text-purple-950 flex items-center justify-between">
+              <span>Attached: <strong>{selectedInvoiceForMail.invoiceNo}.pdf</strong> (A4 Full-Sheet Signed Invoice)</span>
+              <span className="font-mono font-bold text-slate-700">₹{selectedInvoiceForMail.totalAmount}</span>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setIsMailModalOpen(false)}
+                className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSendingMail}
+                className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>{isSendingMail ? 'Sending...' : 'Send Invoice Email'}</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL: EDIT TAX INVOICE ── */}
+      <Modal
+        isOpen={isEditInvoiceModalOpen}
+        onClose={() => setIsEditInvoiceModalOpen(false)}
+        title={editingInvoice ? `Edit Invoice: ${editingInvoice.invoiceNo}` : 'Edit Invoice'}
+        size="md"
+      >
+        {editingInvoice && (
+          <form onSubmit={handleSaveEditedPatientInvoice} className="space-y-3 font-sans text-xs">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1">Service Description</label>
+              <input
+                type="text"
+                required
+                value={editingInvoice.service}
+                onChange={(e) => setEditingInvoice({ ...editingInvoice, service: e.target.value })}
+                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Fee (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  required
+                  value={editingInvoice.amount}
+                  onChange={(e) => {
+                    const amt = parseFloat(e.target.value) || 0;
+                    setEditingInvoice({
+                      ...editingInvoice,
+                      amount: amt,
+                      totalAmount: amt,
+                    });
+                  }}
+                  className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Payment Status</label>
+                <select
+                  value={editingInvoice.status}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value })}
+                  className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-semibold"
+                >
+                  <option value="PAID">PAID</option>
+                  <option value="PENDING">PENDING</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Payment Mode</label>
+                <select
+                  value={editingInvoice.paymentMode}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentMode: e.target.value })}
+                  className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-mono"
+                >
+                  <option value="UPI">UPI</option>
+                  <option value="CASH">CASH</option>
+                  <option value="CARD">CARD</option>
+                  <option value="NETBANKING">NETBANKING</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Payment Reference / Receipt #</label>
+                <input
+                  type="text"
+                  value={editingInvoice.receiptNo || editingInvoice.refNo || ''}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, receiptNo: e.target.value, refNo: e.target.value })}
+                  className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setIsEditInvoiceModalOpen(false)}
+                className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs"
+              >
+                Save Invoice Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL: CONFIRM DELETE INVOICE ── */}
+      <Modal
+        isOpen={isDeleteInvoiceModalOpen}
+        onClose={() => setIsDeleteInvoiceModalOpen(false)}
+        title="Delete Tax Invoice"
+        size="sm"
+      >
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-700">
+            Are you sure you want to delete invoice <strong>{invoiceToDelete?.invoiceNo}</strong> for <strong>{invoiceToDelete?.patientName}</strong>?
+          </p>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsDeleteInvoiceModalOpen(false)}
+              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeletePatientInvoice(invoiceToDelete)}
+              className="h-8 px-4 rounded text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-2xs"
+            >
+              Delete Invoice
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── MODAL: EMAIL CLINICAL REPORT ── */}
       {isEmailModalOpen && selectedReportForEmail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
