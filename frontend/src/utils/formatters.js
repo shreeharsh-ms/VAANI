@@ -33,16 +33,44 @@ export const formatDate = (dateString) => {
 };
 
 /**
- * Format time string e.g. "14:30" to "2:30 PM".
+ * Format time string e.g. "14:30" to "2:30 PM", or pass through if already formatted.
  */
 export const formatTime = (timeString) => {
   if (!timeString) return '';
-  const [hours, minutes] = timeString.split(':');
-  if (!hours) return timeString;
+  const str = String(timeString).trim();
+  if (str.toUpperCase().includes('AM') || str.toUpperCase().includes('PM')) {
+    return str;
+  }
+  const [hours, minutes] = str.split(':');
+  if (!hours) return str;
   const h = parseInt(hours, 10);
   const ampm = h >= 12 ? 'PM' : 'AM';
   const displayH = h % 12 || 12;
-  return `${displayH}:${minutes} ${ampm}`;
+  const displayM = (minutes || '00').substring(0, 2);
+  return `${displayH}:${displayM} ${ampm}`;
+};
+
+/**
+ * Normalize time slot string into unified format (e.g. "10:15 AM", "02:00 PM").
+ */
+export const normalizeSlotTime = (timeStr) => {
+  if (!timeStr) return '';
+  const clean = String(timeStr).trim();
+  const match = clean.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  if (match) {
+    let h = parseInt(match[1], 10);
+    const m = match[2];
+    const modifier = match[3] ? match[3].toUpperCase() : null;
+
+    if (modifier) {
+      return `${String(h).padStart(2, '0')}:${m} ${modifier}`;
+    } else {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${String(h12).padStart(2, '0')}:${m} ${ampm}`;
+    }
+  }
+  return clean;
 };
 
 /**

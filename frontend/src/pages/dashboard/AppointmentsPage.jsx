@@ -17,136 +17,37 @@ import {
   ChevronRight,
   User,
   Calendar as CalendarIcon,
+  MessageSquare,
+  Mail,
+  Edit,
+  RotateCcw,
+  Trash2,
+  Check,
+  X,
+  Share2,
+  AlertTriangle,
+  Send,
+  CalendarDays,
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import AppointmentForm from '../../components/forms/AppointmentForm';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
-import { formatTime, formatCurrency } from '../../utils/formatters';
+import { formatTime, formatCurrency, normalizeSlotTime } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
-import { getAllAppointments } from '../../data/appointmentsData';
+import { getAllAppointments, SEED_APPOINTMENTS } from '../../data/appointmentsData';
 
-const SEED_APPOINTMENTS = [
-  {
-    id: 'apt_1',
-    appointment_date: '2026-10-16',
-    start_time: '10:00',
-    end_time: '10:45',
-    patient_name: 'Aarav Sachin Shinde',
-    patient_phone: '+91 98220 11223',
-    patient_uhid: 'VN-26-0001',
-    service_name: 'Pediatric Speech-Language Diagnostic Evaluation',
-    service_line: 'SPEECH_LANGUAGE',
-    status: 'CONFIRMED',
-    fee_paise: 150000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_2',
-    appointment_date: '2026-10-16',
-    start_time: '11:00',
-    end_time: '11:45',
-    patient_name: 'Sunita Dattatray More',
-    patient_phone: '+91 94220 44556',
-    patient_uhid: 'VN-26-0002',
-    service_name: 'Pure Tone Audiometry (PTA) + Tympanometry',
-    service_line: 'AUDIOLOGY',
-    status: 'CHECKED_IN',
-    fee_paise: 120000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_3',
-    appointment_date: '2026-10-16',
-    start_time: '16:00',
-    end_time: '16:45',
-    patient_name: 'Vijay Narayan Kadam',
-    patient_phone: '+91 98901 77889',
-    patient_uhid: 'VN-26-0003',
-    service_name: 'Hearing Aid Trial & Fitting Fine-Tuning',
-    service_line: 'AUDIOLOGY',
-    status: 'CONFIRMED',
-    fee_paise: 80000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_4',
-    appointment_date: '2026-10-17',
-    start_time: '10:30',
-    end_time: '11:15',
-    patient_name: 'Ananya Rahul Patil',
-    patient_phone: '+91 97654 33221',
-    patient_uhid: 'VN-26-0004',
-    service_name: 'Fluency Disorder (Stuttering) Therapy Session 4',
-    service_line: 'SPEECH_LANGUAGE',
-    status: 'CONFIRMED',
-    fee_paise: 80000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_5',
-    appointment_date: '2026-10-17',
-    start_time: '11:30',
-    end_time: '12:15',
-    patient_name: 'Ramesh Balasaheb Deshmukh',
-    patient_phone: '+91 94231 66778',
-    patient_uhid: 'VN-26-0005',
-    service_name: 'Tinnitus Cognitive Behavioral Counseling (CBT)',
-    service_line: 'CBT_PSYCHOLOGY',
-    status: 'PENDING',
-    fee_paise: 200000,
-    payment_status: 'PENDING',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_6',
-    appointment_date: '2026-10-15',
-    start_time: '17:00',
-    end_time: '17:30',
-    patient_name: 'Kavita Suresh Bhosale',
-    patient_phone: '+91 98233 44112',
-    patient_uhid: 'VN-26-0006',
-    service_name: 'Voice Therapy & Acoustic Vocal Warmup',
-    service_line: 'VOICE',
-    status: 'COMPLETED',
-    fee_paise: 150000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_7',
-    appointment_date: '2026-10-15',
-    start_time: '18:00',
-    end_time: '18:30',
-    patient_name: 'Dhananjay Ramchandra Jadhav',
-    patient_phone: '+91 98902 55667',
-    patient_uhid: 'VN-26-0007',
-    service_name: 'Newborn Infant OAE Screening Bilateral',
-    service_line: 'AUDIOLOGY',
-    status: 'COMPLETED',
-    fee_paise: 80000,
-    payment_status: 'PAID',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
-  {
-    id: 'apt_8',
-    appointment_date: '2026-10-14',
-    start_time: '11:00',
-    end_time: '11:30',
-    patient_name: 'Sanjay Govind Pawar',
-    patient_phone: '+91 98224 33221',
-    patient_uhid: 'VN-26-0009',
-    service_name: 'Diagnostic Pure Tone Audiometry (PTA)',
-    service_line: 'AUDIOLOGY',
-    status: 'NO_SHOW',
-    fee_paise: 80000,
-    payment_status: 'PENDING',
-    clinician: 'Dr. Palak Paresh Gandhi',
-  },
+const ALL_SLOTS = [
+  '09:30 AM',
+  '10:15 AM',
+  '11:00 AM',
+  '11:45 AM',
+  '02:00 PM',
+  '02:45 PM',
+  '03:30 PM',
+  '04:15 PM',
+  '05:00 PM',
+  '05:45 PM',
 ];
 
 export const AppointmentsPage = () => {
@@ -157,6 +58,8 @@ export const AppointmentsPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [serviceFilter, setServiceFilter] = useState('ALL');
+  const [dateFilter, setDateFilter] = useState('ALL'); // 'ALL' | 'TODAY' | 'TOMORROW' | 'THIS_WEEK' | 'CUSTOM'
+  const [customDate, setCustomDate] = useState('');
 
   // Sorting
   const [sortField, setSortField] = useState('appointment_date');
@@ -166,18 +69,73 @@ export const AppointmentsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Modals
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
+  const [reschedulingAppointment, setReschedulingAppointment] = useState(null);
+
+  // Reschedule Form State
+  const [rescheduleData, setRescheduleData] = useState({
+    newDate: '',
+    newSlot: '',
+    reason: '',
+    notifyWhatsApp: true,
+  });
+
+  // Edit Form State
+  const [editFormData, setEditFormData] = useState({
+    patient_name: '',
+    patient_phone: '',
+    patient_email: '',
+    patient_uhid: '',
+    service_name: '',
+    service_line: 'SPEECH_LANGUAGE',
+    appointment_date: '',
+    start_time: '',
+    fee_inr: 1500,
+    status: 'CONFIRMED',
+    notes: '',
+  });
+
+  // Reload appointments from local storage
+  const loadAppointments = () => {
+    try {
+      const saved = localStorage.getItem('vaani_appointments_v1');
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setAppointments(parsed);
+          return;
+        }
+      }
+      setAppointments(getAllAppointments());
+    } catch {
+      setAppointments(getAllAppointments());
+    }
+  };
+
+  useEffect(() => {
+    loadAppointments();
+
+    window.addEventListener('vaani-appointments-updated', loadAppointments);
+    window.addEventListener('vaani-clinic-data-purged', loadAppointments);
+    window.addEventListener('storage', loadAppointments);
+    window.addEventListener('focus', loadAppointments);
+    return () => {
+      window.removeEventListener('vaani-appointments-updated', loadAppointments);
+      window.removeEventListener('vaani-clinic-data-purged', loadAppointments);
+      window.removeEventListener('storage', loadAppointments);
+      window.removeEventListener('focus', loadAppointments);
+    };
+  }, []);
 
   // Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Option + N / Alt + N -> Schedule Consultation
       if (isAlt(e) && isKey(e, 'n')) {
         e.preventDefault();
-        setIsModalOpen(true);
+        setIsScheduleModalOpen(true);
       }
-      // Option + E / Alt + E -> Export CSV
       if (isAlt(e) && isKey(e, 'e')) {
         e.preventDefault();
         handleExportCSV();
@@ -189,39 +147,238 @@ export const AppointmentsPage = () => {
 
   const handleSort = (field) => {
     if (sortField === field) {
-      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortOrder('asc');
     }
   };
 
-  const handleStatusUpdate = (id, newStatus) => {
-    const updated = appointments.map((a) =>
-      a.id === id ? { ...a, status: newStatus } : a
-    );
-    setAppointments(updated);
-    localStorage.setItem('vaani_appointments_v1', JSON.stringify(updated));
+  // Status Update Handler
+  const handleStatusUpdate = async (id, newStatus) => {
+    await appointmentService.updateStatus(id, newStatus);
     notify.success(`Status updated to ${newStatus}`);
+    loadAppointments();
   };
 
-  // Filter Logic
+  // Approve / Deny Handlers
+  const handleApprove = async (id) => {
+    await appointmentService.updateStatus(id, 'CONFIRMED');
+    notify.success('Appointment approved! Slot has been locked and confirmed.');
+    loadAppointments();
+  };
+
+  const handleDeny = async (id) => {
+    await appointmentService.updateStatus(id, 'CANCELLED');
+    notify.info('Appointment request denied. Slot has been released.');
+    loadAppointments();
+  };
+
+  // Delete Handler
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`Are you sure you want to permanently delete the appointment for ${name}?`)) {
+      await appointmentService.deleteAppointment(id);
+      notify.success('Appointment deleted from roster.');
+      loadAppointments();
+    }
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (apt) => {
+    setEditingAppointment(apt);
+    setEditFormData({
+      patient_name: apt.patient_name || '',
+      patient_phone: apt.patient_phone || '',
+      patient_email: apt.patient_email || '',
+      patient_uhid: apt.patient_uhid || '',
+      service_name: apt.service_name || '',
+      service_line: apt.service_line || 'SPEECH_LANGUAGE',
+      appointment_date: (apt.appointment_date || '').split('T')[0],
+      start_time: apt.start_time || '10:15 AM',
+      fee_inr: (apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 1500,
+      status: apt.status || 'CONFIRMED',
+      notes: apt.notes || '',
+    });
+  };
+
+  // Save Edit Modal
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingAppointment) return;
+
+    await appointmentService.updateAppointment(editingAppointment.id, {
+      patient_name: editFormData.patient_name.trim(),
+      patient_phone: editFormData.patient_phone.trim(),
+      patient_email: editFormData.patient_email.trim(),
+      patient_uhid: editFormData.patient_uhid.trim(),
+      service_name: editFormData.service_name.trim(),
+      service_line: editFormData.service_line,
+      appointment_date: editFormData.appointment_date,
+      start_time: editFormData.start_time,
+      fee_paise: Number(editFormData.fee_inr) * 100,
+      status: editFormData.status,
+      notes: editFormData.notes.trim(),
+    });
+
+    notify.success('Appointment details updated successfully!');
+    setEditingAppointment(null);
+    loadAppointments();
+  };
+
+  // Open Reschedule Modal
+  const handleOpenReschedule = (apt) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const initialDate = apt.appointment_date || todayStr;
+    setReschedulingAppointment(apt);
+    setRescheduleData({
+      newDate: initialDate,
+      newSlot: apt.start_time || '10:15 AM',
+      reason: 'Patient requested rescheduling',
+      notifyWhatsApp: true,
+    });
+  };
+
+  // Compute Booked Slots for the selected reschedule date
+  const rescheduleBookedSlots = useMemo(() => {
+    if (!rescheduleData.newDate) return [];
+    const booked = appointmentService.getBookedSlotsForDate(rescheduleData.newDate);
+    // Exclude currently rescheduling appointment's own slot if on the same date
+    if (reschedulingAppointment && (reschedulingAppointment.appointment_date || '').split('T')[0] === rescheduleData.newDate) {
+      const ownSlot = normalizeSlotTime(reschedulingAppointment.start_time);
+      return booked.filter((s) => s !== ownSlot);
+    }
+    return booked;
+  }, [rescheduleData.newDate, reschedulingAppointment]);
+
+  // Save Reschedule
+  const handleConfirmReschedule = async (e) => {
+    e.preventDefault();
+    if (!reschedulingAppointment) return;
+
+    if (!rescheduleData.newSlot) {
+      notify.warning('Please select an available time slot.');
+      return;
+    }
+
+    await appointmentService.updateAppointment(reschedulingAppointment.id, {
+      appointment_date: rescheduleData.newDate,
+      start_time: rescheduleData.newSlot,
+      status: 'CONFIRMED',
+      notes: reschedulingAppointment.notes
+        ? `${reschedulingAppointment.notes} [Rescheduled to ${rescheduleData.newDate} ${rescheduleData.newSlot}: ${rescheduleData.reason}]`
+        : `Rescheduled to ${rescheduleData.newDate} ${rescheduleData.newSlot}: ${rescheduleData.reason}`,
+    });
+
+    if (rescheduleData.notifyWhatsApp && reschedulingAppointment.patient_phone) {
+      const phone = reschedulingAppointment.patient_phone.replace(/[^0-9]/g, '');
+      const msg = `Namaste *${reschedulingAppointment.patient_name}*,
+Your appointment at *Vaani Speech & Hearing Clinic* has been successfully rescheduled.
+
+🗓 *New Date:* ${rescheduleData.newDate}
+⏰ *New Time Slot:* ${rescheduleData.newSlot}
+🩺 *Service:* ${reschedulingAppointment.service_name}
+👩‍⚕️ *Clinician:* Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)
+📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)
+📞 *Contact:* +91 98220 12345
+
+Kindly reply *CONFIRM* to acknowledge.`;
+
+      navigator.clipboard?.writeText(msg).catch(() => {});
+      if (phone) {
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+      notify.success('Reschedule confirmed! WhatsApp update launched & copied.');
+    } else {
+      notify.success('Appointment rescheduled successfully!');
+    }
+
+    setReschedulingAppointment(null);
+    loadAppointments();
+  };
+
+  // WhatsApp Reminder
+  const handleSendWhatsAppReminder = (apt) => {
+    const phone = (apt.patient_phone || '').replace(/[^0-9]/g, '');
+    const msg = `Namaste *${apt.patient_name}*,
+This is a gentle clinical reminder for your upcoming appointment at *Vaani Speech & Hearing Clinic*.
+
+🗓 *Date:* ${apt.appointment_date}
+⏰ *Time Slot:* ${apt.start_time}
+🩺 *Service:* ${apt.service_name}
+👩‍⚕️ *Clinician:* Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)
+📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)
+📞 *Helpdesk:* +91 98220 12345
+
+Please arrive 10 minutes prior to your scheduled slot. Kindly reply *CONFIRM* to acknowledge.`;
+
+    navigator.clipboard?.writeText(msg).catch(() => {});
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+    notify.success(`WhatsApp reminder opened & copied to clipboard for ${apt.patient_name}!`);
+  };
+
+  // Email Reminder
+  const handleSendEmailReminder = (apt) => {
+    const email = apt.patient_email || '';
+    const subject = `Clinical Appointment Reminder: ${apt.appointment_date} at ${apt.start_time} - Vaani Clinic`;
+    const body = `Dear ${apt.patient_name},
+
+This is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.
+
+Appointment Particulars:
+- Date: ${apt.appointment_date}
+- Time Slot: ${apt.start_time}
+- Clinical Service: ${apt.service_name}
+- Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214
+- Clinic Address: Sadashiv Peth, Satara, Maharashtra (Opp. Civil Hospital)
+- Direct Phone: +91 98220 12345
+
+Please arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.
+
+Warm regards,
+Vaani Speech & Hearing Clinic`;
+
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    notify.success(`Email reminder client opened for ${apt.patient_name}!`);
+  };
+
+  // Filter Logic (Search, Status, Service, Date)
   const filtered = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
     return appointments.filter((a) => {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        a.patient_name.toLowerCase().includes(q) ||
-        a.patient_uhid?.toLowerCase().includes(q) ||
-        a.patient_phone.includes(q) ||
-        a.service_name.toLowerCase().includes(q);
+        (a.patient_name || '').toLowerCase().includes(q) ||
+        (a.patient_uhid || '').toLowerCase().includes(q) ||
+        (a.patient_phone || '').includes(q) ||
+        (a.service_name || '').toLowerCase().includes(q);
 
       const matchesStatus = statusFilter === 'ALL' || a.status === statusFilter;
       const matchesService = serviceFilter === 'ALL' || a.service_line === serviceFilter;
 
-      return matchesSearch && matchesStatus && matchesService;
+      let matchesDate = true;
+      const aDate = (a.appointment_date || '').split('T')[0];
+
+      if (dateFilter === 'TODAY') {
+        matchesDate = aDate === todayStr;
+      } else if (dateFilter === 'TOMORROW') {
+        matchesDate = aDate === tomorrowStr;
+      } else if (dateFilter === 'THIS_WEEK') {
+        const aptTime = new Date(a.appointment_date).getTime();
+        const nowTime = new Date().getTime();
+        const diffDays = (aptTime - nowTime) / (1000 * 3600 * 24);
+        matchesDate = diffDays >= -1 && diffDays <= 7;
+      } else if (dateFilter === 'CUSTOM' && customDate) {
+        matchesDate = aDate === customDate;
+      }
+
+      return matchesSearch && matchesStatus && matchesService && matchesDate;
     });
-  }, [appointments, search, statusFilter, serviceFilter]);
+  }, [appointments, search, statusFilter, serviceFilter, dateFilter, customDate]);
 
   // Sort Logic
   const sorted = useMemo(() => {
@@ -246,8 +403,21 @@ export const AppointmentsPage = () => {
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ['Date', 'Start Time', 'End Time', 'UHID', 'Patient Name', 'Phone', 'Service Name', 'Service Line', 'Status', 'Fee (₹)', 'Payment Status', 'Clinician'];
-    const rows = sorted.map(a => [
+    const headers = [
+      'Date',
+      'Start Time',
+      'End Time',
+      'UHID',
+      'Patient Name',
+      'Phone',
+      'Service Name',
+      'Service Line',
+      'Status',
+      'Fee (₹)',
+      'Payment Status',
+      'Clinician',
+    ];
+    const rows = sorted.map((a) => [
       a.appointment_date,
       a.start_time,
       a.end_time,
@@ -262,7 +432,8 @@ export const AppointmentsPage = () => {
       `"${a.clinician || 'Dr. Palak Gandhi'}"`,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -273,12 +444,13 @@ export const AppointmentsPage = () => {
     notify.success('Appointments register exported to CSV successfully!');
   };
 
+  const pendingCount = appointments.filter((a) => a.status === 'PENDING').length;
+  const checkedInCount = appointments.filter((a) => a.status === 'CHECKED_IN').length;
+
   return (
     <div className="w-full space-y-2.5 font-sans">
-      
-      {/* ── TOP ACTION BAR (COMPACT EXCEL DENSITY) ── */}
+      {/* ── TOP ACTION BAR ── */}
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
-        
         {/* Left: Title & Quick Counts */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
@@ -288,15 +460,22 @@ export const AppointmentsPage = () => {
 
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-slate-500">Scheduled:</span>
             <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
               {appointments.length} Slots
             </span>
 
+            {pendingCount > 0 && (
+              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300 font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                {pendingCount} Pending Approval
+              </span>
+            )}
+
             <span className="text-xs font-semibold text-slate-500">In Queue:</span>
             <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono">
-              {appointments.filter(a => a.status === 'CHECKED_IN').length} Arrived
+              {checkedInCount} Arrived
             </span>
           </div>
         </div>
@@ -316,7 +495,7 @@ export const AppointmentsPage = () => {
 
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsScheduleModalOpen(true)}
             className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Schedule consultation slot (Alt + N / ⌥N)"
           >
@@ -327,11 +506,11 @@ export const AppointmentsPage = () => {
         </div>
       </div>
 
-      {/* ── FILTER & SEARCH BAR ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[280px]">
+      {/* ── FILTER & SEARCH BAR WITH COMPREHENSIVE DATE FILTERS ── */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Multi-field search */}
-          <div className="relative flex items-center flex-1 max-w-sm">
+          <div className="relative flex items-center flex-1 min-w-[240px] max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
@@ -354,56 +533,193 @@ export const AppointmentsPage = () => {
             )}
           </div>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="CONFIRMED">Confirmed</option>
-            <option value="CHECKED_IN">Checked In (Waiting)</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="PENDING">Pending Triage</option>
-            <option value="NO_SHOW">No Show</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
+          {/* Quick Date Presets */}
+          <div className="flex items-center gap-1 flex-wrap text-xs">
+            <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
+              <CalendarDays className="w-3 h-3 text-purple-700" /> Date:
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setDateFilter('ALL');
+                setPage(1);
+              }}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+                dateFilter === 'ALL'
+                  ? 'bg-[#301444] text-white border-[#301444]'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              All Dates
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDateFilter('TODAY');
+                setPage(1);
+              }}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+                dateFilter === 'TODAY'
+                  ? 'bg-[#301444] text-white border-[#301444]'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDateFilter('TOMORROW');
+                setPage(1);
+              }}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+                dateFilter === 'TOMORROW'
+                  ? 'bg-[#301444] text-white border-[#301444]'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              Tomorrow
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDateFilter('THIS_WEEK');
+                setPage(1);
+              }}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+                dateFilter === 'THIS_WEEK'
+                  ? 'bg-[#301444] text-white border-[#301444]'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              Next 7 Days
+            </button>
 
-          {/* Service Line Filter */}
-          <select
-            value={serviceFilter}
-            onChange={(e) => {
-              setServiceFilter(e.target.value);
-              setPage(1);
-            }}
-            className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-          >
-            <option value="ALL">All Clinical Categories</option>
-            <option value="SPEECH_LANGUAGE">Speech-Language</option>
-            <option value="AUDIOLOGY">Audiology</option>
-            <option value="VOICE">Voice Therapy</option>
-            <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
-          </select>
+            {/* Custom Date Input */}
+            <div className="flex items-center gap-1 pl-1">
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => {
+                  setCustomDate(e.target.value);
+                  setDateFilter('CUSTOM');
+                  setPage(1);
+                }}
+                className={`h-7 px-2 text-xs font-mono font-medium rounded border transition-colors ${
+                  dateFilter === 'CUSTOM'
+                    ? 'border-purple-600 bg-purple-50/50 text-purple-950 ring-1 ring-purple-600'
+                    : 'border-slate-300 bg-white text-slate-700'
+                }`}
+                title="Select specific date to filter"
+              />
+              {dateFilter === 'CUSTOM' && customDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomDate('');
+                    setDateFilter('ALL');
+                  }}
+                  className="text-slate-400 hover:text-slate-700 text-xs px-1"
+                  title="Clear custom date"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Rows selector */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <span className="text-[11px] font-medium">Rows:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
 
-        {/* Rows selector */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
-          <span className="text-[11px] font-medium">Rows:</span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setPage(1);
-            }}
-            className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+        {/* Secondary Filter Row: Status & Clinical Category */}
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-200 text-xs">
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-500">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending Approval</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="CHECKED_IN">Checked In (Waiting)</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="NO_SHOW">No Show</option>
+              <option value="CANCELLED">Cancelled / Denied</option>
+            </select>
+          </div>
+
+          {/* Service Line Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-500">Category:</span>
+            <select
+              value={serviceFilter}
+              onChange={(e) => {
+                setServiceFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            >
+              <option value="ALL">All Clinical Categories</option>
+              <option value="SPEECH_LANGUAGE">Speech-Language</option>
+              <option value="AUDIOLOGY">Audiology</option>
+              <option value="VOICE">Voice Therapy</option>
+              <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
+            </select>
+          </div>
+
+          {/* Quick Shortcut: Pending Approval Chip */}
+          {pendingCount > 0 && statusFilter !== 'PENDING' && (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('PENDING');
+                setPage(1);
+              }}
+              className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <AlertCircle className="w-3 h-3 text-amber-700" />
+              <span>Show {pendingCount} Pending Approvals</span>
+            </button>
+          )}
+
+          {/* Clear Filters Reset */}
+          {(search || statusFilter !== 'ALL' || serviceFilter !== 'ALL' || dateFilter !== 'ALL') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('ALL');
+                setServiceFilter('ALL');
+                setDateFilter('ALL');
+                setCustomDate('');
+                setPage(1);
+              }}
+              className="ml-auto text-xs text-purple-700 hover:text-purple-900 font-semibold underline cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -419,7 +735,11 @@ export const AppointmentsPage = () => {
                 >
                   <div className="flex items-center justify-between">
                     <span>Date &amp; Slot</span>
-                    {sortField === 'appointment_date' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />) : <ArrowUpDown className="w-3 h-3 text-slate-400" />}
+                    {sortField === 'appointment_date' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
                   </div>
                 </th>
                 <th
@@ -428,88 +748,214 @@ export const AppointmentsPage = () => {
                 >
                   <div className="flex items-center justify-between">
                     <span>Patient Name &amp; UHID</span>
-                    {sortField === 'patient_name' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />) : <ArrowUpDown className="w-3 h-3 text-slate-400" />}
+                    {sortField === 'patient_name' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
                   </div>
                 </th>
                 <th className="py-2 px-3">Service Description</th>
-                <th className="py-2 px-2.5 w-28 text-center">Category</th>
+                <th className="py-2 px-2.5 w-24 text-center">Category</th>
                 <th className="py-2 px-2.5 w-28 text-center">Status</th>
                 <th
                   onClick={() => handleSort('fee_paise')}
-                  className="py-2 px-3 w-24 text-right cursor-pointer hover:bg-slate-200/80 transition-colors"
+                  className="py-2 px-3 w-20 text-right cursor-pointer hover:bg-slate-200/80 transition-colors"
                 >
                   <div className="flex items-center justify-end gap-1">
                     <span>Fee (₹)</span>
-                    {sortField === 'fee_paise' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />) : <ArrowUpDown className="w-3 h-3 text-slate-400" />}
+                    {sortField === 'fee_paise' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    )}
                   </div>
                 </th>
-                <th className="py-2 px-3 w-40 text-center">Quick Lifecycle Update</th>
+                <th className="py-2 px-3 w-36 text-center">Approval &amp; Status</th>
+                <th className="py-2 px-3 w-36 text-center">Actions &amp; Reminders</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-normal">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 font-medium">
+                  <td colSpan={8} className="py-8 text-center text-slate-500 font-medium">
                     No matching appointments found.
                   </td>
                 </tr>
               ) : (
                 paginated.map((apt) => (
                   <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
+                    {/* Date & Slot */}
                     <td className="py-1.5 px-3">
                       <span className="font-mono font-bold text-slate-900 block">{apt.appointment_date}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">{apt.start_time} - {apt.end_time}</span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {apt.start_time} {apt.end_time ? `- ${apt.end_time}` : ''}
+                      </span>
                     </td>
+
+                    {/* Patient Name & UHID */}
                     <td className="py-1.5 px-3">
                       <span className="font-bold text-slate-800 block truncate">{apt.patient_name}</span>
-                      <span className="text-[10px] text-purple-900 font-mono font-semibold">{apt.patient_uhid || 'VN-26-0001'} • {apt.patient_phone}</span>
-                    </td>
-                    <td className="py-1.5 px-3 text-slate-700 truncate max-w-xs">
-                      {apt.service_name}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        apt.service_line === 'SPEECH_LANGUAGE'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : apt.service_line === 'AUDIOLOGY'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : apt.service_line === 'VOICE'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        {apt.service_line === 'SPEECH_LANGUAGE' ? 'Speech' : apt.service_line === 'AUDIOLOGY' ? 'Audiology' : apt.service_line === 'VOICE' ? 'Voice' : 'CBT'}
+                      <span className="text-[10px] text-purple-900 font-mono font-semibold">
+                        {apt.patient_uhid || 'VN-26-0001'} • {apt.patient_phone}
                       </span>
                     </td>
+
+                    {/* Service Description */}
+                    <td className="py-1.5 px-3 text-slate-700">
+                      <div className="truncate max-w-xs font-medium">{apt.service_name}</div>
+                      {apt.notes && (
+                        <div className="text-[10px] text-slate-400 italic truncate max-w-xs">
+                          {apt.notes}
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Category */}
                     <td className="py-1.5 px-2.5 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        apt.status === 'CONFIRMED'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : apt.status === 'CHECKED_IN'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200 animate-pulse'
-                          : apt.status === 'COMPLETED'
-                          ? 'bg-slate-100 text-slate-700 border-slate-200'
-                          : apt.status === 'PENDING'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-rose-50 text-rose-700 border-rose-200'
-                      }`}>
-                        {apt.status === 'CHECKED_IN' ? 'In Queue' : apt.status}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
-                      ₹{((apt.fee_paise || 0) / 100).toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-1.5 px-3 text-center">
-                      <select
-                        value={apt.status}
-                        onChange={(e) => handleStatusUpdate(apt.id, e.target.value)}
-                        className="h-6 px-1.5 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          apt.service_line === 'SPEECH_LANGUAGE'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : apt.service_line === 'AUDIOLOGY'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : apt.service_line === 'VOICE'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
                       >
-                        <option value="CONFIRMED">Confirmed</option>
-                        <option value="CHECKED_IN">Check In (Token)</option>
-                        <option value="COMPLETED">Completed</option>
-                        <option value="NO_SHOW">No Show</option>
-                        <option value="CANCELLED">Cancelled</option>
-                      </select>
+                        {apt.service_line === 'SPEECH_LANGUAGE'
+                          ? 'Speech'
+                          : apt.service_line === 'AUDIOLOGY'
+                          ? 'Audiology'
+                          : apt.service_line === 'VOICE'
+                          ? 'Voice'
+                          : 'CBT'}
+                      </span>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="py-1.5 px-2.5 text-center">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 ${
+                          apt.status === 'PENDING'
+                            ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                            : apt.status === 'CONFIRMED'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : apt.status === 'CHECKED_IN'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : apt.status === 'COMPLETED'
+                            ? 'bg-slate-100 text-slate-700 border-slate-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}
+                      >
+                        {apt.status === 'PENDING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                        {apt.status === 'PENDING'
+                          ? 'Pending'
+                          : apt.status === 'CHECKED_IN'
+                          ? 'In Queue'
+                          : apt.status === 'CONFIRMED'
+                          ? 'Confirmed'
+                          : apt.status}
+                      </span>
+                    </td>
+
+                    {/* Fee */}
+                    <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
+                      ₹{(((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0)).toLocaleString('en-IN')}
+                    </td>
+
+                    {/* Approval & Lifecycle Status Dropdown */}
+                    <td className="py-1.5 px-3 text-center">
+                      {apt.status === 'PENDING' ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(apt.id)}
+                            className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs flex items-center gap-0.5 cursor-pointer"
+                            title="Approve booking and lock slot"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Approve</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeny(apt.id)}
+                            className="h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer"
+                            title="Deny request and release slot"
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Deny</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <select
+                          value={apt.status}
+                          onChange={(e) => handleStatusUpdate(apt.id, e.target.value)}
+                          className="h-6 px-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                        >
+                          <option value="CONFIRMED">Confirmed</option>
+                          <option value="CHECKED_IN">Check In (Token)</option>
+                          <option value="COMPLETED">Completed</option>
+                          <option value="NO_SHOW">No Show</option>
+                          <option value="CANCELLED">Cancelled</option>
+                        </select>
+                      )}
+                    </td>
+
+                    {/* Actions & Reminders Column */}
+                    <td className="py-1.5 px-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        {/* WhatsApp Reminder */}
+                        <button
+                          type="button"
+                          onClick={() => handleSendWhatsAppReminder(apt)}
+                          className="w-6 h-6 rounded flex items-center justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+                          title="Send WhatsApp appointment reminder to patient"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                        </button>
+
+                        {/* Email Reminder */}
+                        <button
+                          type="button"
+                          onClick={() => handleSendEmailReminder(apt)}
+                          className="w-6 h-6 rounded flex items-center justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+                          title="Send Email appointment reminder"
+                        >
+                          <Mail className="w-3 h-3" />
+                        </button>
+
+                        {/* Reschedule Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReschedule(apt)}
+                          className="w-6 h-6 rounded flex items-center justify-center bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
+                          title="Reschedule appointment to another date/slot"
+                        >
+                          <CalendarIcon className="w-3 h-3" />
+                        </button>
+
+                        {/* Edit Details */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(apt)}
+                          className="w-6 h-6 rounded flex items-center justify-center bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                          title="Edit patient details or consultation fee"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(apt.id, apt.patient_name)}
+                          className="w-6 h-6 rounded flex items-center justify-center bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
+                          title="Delete appointment"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -521,14 +967,16 @@ export const AppointmentsPage = () => {
         {/* ── PAGINATION FOOTER ── */}
         <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
           <div className="font-medium">
-            Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of <span className="font-bold text-slate-900">{totalEntries}</span> appointment entries
+            Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
+            <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of{' '}
+            <span className="font-bold text-slate-900">{totalEntries}</span> appointment entries
           </div>
 
           <div className="flex items-center gap-1">
             <button
               type="button"
               disabled={page <= 1}
-              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
             >
               <ChevronLeft className="w-3 h-3" />
@@ -553,7 +1001,7 @@ export const AppointmentsPage = () => {
             <button
               type="button"
               disabled={page >= totalPages}
-              onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
               className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
             >
               <span>Next</span>
@@ -563,22 +1011,304 @@ export const AppointmentsPage = () => {
         </div>
       </div>
 
-      {/* ── MODAL: SCHEDULE CONSULTATION ── */}
+      {/* ── MODAL 1: SCHEDULE CONSULTATION SLOT ── */}
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
         title="Schedule Clinical Consultation Slot"
         size="lg"
       >
         <AppointmentForm
           onSuccess={() => {
-            setIsModalOpen(false);
+            setIsScheduleModalOpen(false);
             notify.success('Appointment scheduled successfully!');
+            loadAppointments();
           }}
-          onCancel={() => setIsModalOpen(false)}
+          onCancel={() => setIsScheduleModalOpen(false)}
         />
       </Modal>
 
+      {/* ── MODAL 2: EDIT APPOINTMENT DETAILS ── */}
+      <Modal
+        isOpen={!!editingAppointment}
+        onClose={() => setEditingAppointment(null)}
+        title="Edit Consultation Appointment Details"
+        size="md"
+      >
+        {editingAppointment && (
+          <form onSubmit={handleSaveEdit} className="space-y-3 font-sans text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Patient Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.patient_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, patient_name: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Contact Phone / WhatsApp *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.patient_phone}
+                  onChange={(e) => setEditFormData({ ...editFormData, patient_phone: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Patient UHID</label>
+                <input
+                  type="text"
+                  value={editFormData.patient_uhid}
+                  onChange={(e) => setEditFormData({ ...editFormData, patient_uhid: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Email Address</label>
+                <input
+                  type="email"
+                  value={editFormData.patient_email}
+                  onChange={(e) => setEditFormData({ ...editFormData, patient_email: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Clinical Service *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.service_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, service_name: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Clinical Category</label>
+                <select
+                  value={editFormData.service_line}
+                  onChange={(e) => setEditFormData({ ...editFormData, service_line: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none bg-white"
+                >
+                  <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
+                  <option value="AUDIOLOGY">Audiology Diagnostics</option>
+                  <option value="VOICE">Voice Rehabilitation</option>
+                  <option value="CBT_PSYCHOLOGY">CBT &amp; Counseling</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Consultation Fee (₹)</label>
+                <input
+                  type="number"
+                  value={editFormData.fee_inr}
+                  onChange={(e) => setEditFormData({ ...editFormData, fee_inr: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Date</label>
+                <input
+                  type="date"
+                  value={editFormData.appointment_date}
+                  onChange={(e) => setEditFormData({ ...editFormData, appointment_date: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Time Slot</label>
+                <input
+                  type="text"
+                  value={editFormData.start_time}
+                  onChange={(e) => setEditFormData({ ...editFormData, start_time: e.target.value })}
+                  placeholder="e.g. 10:15 AM"
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Status</label>
+                <select
+                  value={editFormData.status}
+                  onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                  className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none bg-white font-semibold"
+                >
+                  <option value="PENDING">Pending Triage / Approval</option>
+                  <option value="CONFIRMED">Confirmed</option>
+                  <option value="CHECKED_IN">Checked In (In Queue)</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="NO_SHOW">No Show</option>
+                  <option value="CANCELLED">Cancelled / Denied</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Clinical Notes / Reason</label>
+                <textarea
+                  rows={2}
+                  value={editFormData.notes}
+                  onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  placeholder="Chief complaint or referral note..."
+                  className="w-full p-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingAppointment(null)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-xs cursor-pointer"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL 3: RESCHEDULE APPOINTMENT ── */}
+      <Modal
+        isOpen={!!reschedulingAppointment}
+        onClose={() => setReschedulingAppointment(null)}
+        title="Reschedule Appointment Slot"
+        size="md"
+      >
+        {reschedulingAppointment && (
+          <form onSubmit={handleConfirmReschedule} className="space-y-3 font-sans text-xs">
+            {/* Current details callout */}
+            <div className="p-2.5 rounded bg-purple-50 border border-purple-200 text-xs text-purple-950 space-y-1">
+              <div className="font-bold">
+                Patient: <span className="text-[#301444] font-black">{reschedulingAppointment.patient_name}</span> ({reschedulingAppointment.patient_uhid || 'VN-26-0001'})
+              </div>
+              <div className="text-[11px] text-purple-800">
+                Current Booking: <strong className="font-mono">{reschedulingAppointment.appointment_date}</strong> at <strong className="font-mono">{reschedulingAppointment.start_time}</strong> ({reschedulingAppointment.service_name})
+              </div>
+            </div>
+
+            {/* Select New Date */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Select New Consultation Date *
+              </label>
+              <input
+                type="date"
+                required
+                min={new Date().toISOString().split('T')[0]}
+                value={rescheduleData.newDate}
+                onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
+                className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none font-mono"
+              />
+            </div>
+
+            {/* Select New Slot from live available slots */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-slate-700">
+                  Select New Time Slot *
+                </label>
+                {rescheduleBookedSlots.length > 0 && (
+                  <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.2 rounded">
+                    {rescheduleBookedSlots.length} slot{rescheduleBookedSlots.length > 1 ? 's' : ''} already booked
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {ALL_SLOTS.map((slot) => {
+                  const norm = normalizeSlotTime(slot);
+                  const isBooked = rescheduleBookedSlots.includes(norm);
+                  const isSelected = rescheduleData.newSlot === slot;
+
+                  return (
+                    <button
+                      type="button"
+                      key={slot}
+                      disabled={isBooked}
+                      onClick={() => setRescheduleData({ ...rescheduleData, newSlot: slot })}
+                      className={`py-1.5 px-2 rounded text-xs font-semibold border transition-all flex items-center justify-between ${
+                        isBooked
+                          ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-75'
+                          : isSelected
+                          ? 'bg-[#301444] text-white border-[#301444] shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-purple-400 hover:bg-purple-50 cursor-pointer'
+                      }`}
+                    >
+                      <span className={isBooked ? 'line-through text-slate-400' : ''}>{slot}</span>
+                      {isBooked && (
+                        <span className="text-[9px] font-bold text-rose-700 bg-rose-100 border border-rose-300 px-1 py-0.2 rounded">
+                          Booked
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Reason for Rescheduling
+              </label>
+              <input
+                type="text"
+                value={rescheduleData.reason}
+                onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
+                placeholder="e.g. Patient requested morning shift instead"
+                className="w-full h-8 px-2 text-xs border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+
+            {/* Send WhatsApp Toggle */}
+            <div className="pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-800">
+                <input
+                  type="checkbox"
+                  checked={rescheduleData.notifyWhatsApp}
+                  onChange={(e) => setRescheduleData({ ...rescheduleData, notifyWhatsApp: e.target.checked })}
+                  className="rounded border-slate-300 text-purple-700 focus:ring-purple-600 w-4 h-4 cursor-pointer"
+                />
+                <span className="font-semibold">Dispatch WhatsApp &amp; Clipboard Reschedule Confirmation to Patient</span>
+              </label>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReschedulingAppointment(null)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-xs cursor-pointer flex items-center gap-1"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Confirm Reschedule</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };

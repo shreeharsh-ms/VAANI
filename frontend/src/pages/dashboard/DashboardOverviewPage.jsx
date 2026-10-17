@@ -18,6 +18,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
+  Check,
+  X,
+  MessageSquare,
+  AlertTriangle,
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import PatientForm from '../../components/forms/PatientForm';
@@ -81,6 +85,7 @@ export const DashboardOverviewPage = () => {
   const { notify } = useNotification();
   const [patientsCount, setPatientsCount] = useState(0);
   const [appointments, setAppointments] = useState([]);
+  const [rawAppointments, setRawAppointments] = useState([]);
   const [recalls, setRecalls] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -97,33 +102,20 @@ export const DashboardOverviewPage = () => {
         const parsed = JSON.parse(savedPatients);
         setPatientsCount(Array.isArray(parsed) ? parsed.length : 0);
       } else {
-        setPatientsCount(8);
+        setPatientsCount(0);
       }
 
-      // 2. Today's Appointments & Queue
+      // 2. Appointments & Consultations
       const savedApts = localStorage.getItem('vaani_appointments_v1');
       if (savedApts !== null) {
         const parsed = JSON.parse(savedApts);
         if (Array.isArray(parsed)) {
-          const mapped = parsed.map((a, idx) => ({
-            id: a.id || `apt_${idx}`,
-            token: String(idx + 1).padStart(2, '0'),
-            time: a.start_time
-              ? `${a.start_time} ${parseInt(a.start_time.split(':')[0]) >= 12 ? 'PM' : 'AM'}`
-              : a.time || '10:00 AM',
-            uhid: a.patient_uhid || a.uhid || '-',
-            patientName: a.patient_name || a.patientName || 'Walk-in Patient',
-            phone: a.patient_phone || a.phone || '-',
-            service: a.service_name || a.service || 'Consultation',
-            status: a.status === 'CONFIRMED' ? 'SCHEDULED' : a.status || 'SCHEDULED',
-            fee: a.fee_paise ? a.fee_paise / 100 : a.fee || 1000,
-          }));
-          setAppointments(mapped);
+          setRawAppointments(parsed);
         } else {
-          setAppointments([]);
+          setRawAppointments([]);
         }
       } else {
-        setAppointments(DEFAULT_TODAY_APPOINTMENTS);
+        setRawAppointments([]);
       }
 
       // 3. Clinical Recalls Due
@@ -143,22 +135,7 @@ export const DashboardOverviewPage = () => {
           setRecalls([]);
         }
       } else {
-        setRecalls([
-          {
-            id: 'rec_1',
-            patientName: 'Sunita Dattatray More',
-            reason: 'Oticon Trial Follow-up & Tuning',
-            dueText: 'Due Today',
-            urgency: 'HIGH',
-          },
-          {
-            id: 'rec_2',
-            patientName: 'Aarav Sachin Shinde',
-            reason: '3-Month Speech Milestone Review',
-            dueText: 'In 4 Days',
-            urgency: 'MEDIUM',
-          },
-        ]);
+        setRecalls([]);
       }
     } catch (e) {
       console.warn('Dashboard data sync error:', e);
@@ -168,29 +145,60 @@ export const DashboardOverviewPage = () => {
   useEffect(() => {
     loadDashboardData();
 
+    window.addEventListener('vaani-appointments-updated', loadDashboardData);
     window.addEventListener('vaani-clinic-data-purged', loadDashboardData);
     window.addEventListener('storage', loadDashboardData);
     window.addEventListener('focus', loadDashboardData);
     return () => {
+      window.removeEventListener('vaani-appointments-updated', loadDashboardData);
       window.removeEventListener('vaani-clinic-data-purged', loadDashboardData);
       window.removeEventListener('storage', loadDashboardData);
       window.removeEventListener('focus', loadDashboardData);
     };
   }, []);
 
+  // Today's appointments (active consultations for today's date)
+  const todayAppointments = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return rawAppointments
+      .filter((a) => {
+        const aDate = (a.appointment_date || '').split('T')[0];
+        // Match today, or if no date set and not cancelled
+        const isToday = aDate === todayStr || (!a.appointment_date && rawAppointments.length <= 4);
+        return isToday && a.status !== 'CANCELLED';
+      })
+      .map((a, idx) => ({
+        id: a.id || `apt_${idx}`,
+        token: String(idx + 1).padStart(2, '0'),
+        time: a.start_time || '10:00 AM',
+        uhid: a.patient_uhid || a.uhid || '-',
+        patientName: a.patient_name || a.patientName || 'Walk-in Patient',
+        phone: a.patient_phone || a.phone || '-',
+        service: a.service_name || a.service || 'Consultation',
+        status: a.status || 'SCHEDULED',
+        fee: a.fee_paise ? a.fee_paise / 100 : a.fee || 1000,
+        source: a.source || 'INTERNAL',
+      }));
+  }, [rawAppointments]);
+
+  // Pending online booking requests needing clinician review / approval
+  const pendingAppointments = useMemo(() => {
+    return rawAppointments.filter((a) => a.status === 'PENDING');
+  }, [rawAppointments]);
+
   // Compute Today's Revenue dynamically
   const todayFeesTotal = useMemo(() => {
     try {
-      const sum = appointments
-        .filter((a) => a.status === 'COMPLETED' || a.status === 'IN_SESSION' || a.status === 'CHECKED_IN' || a.fee)
+      const sum = todayAppointments
+        .filter((a) => a.status === 'COMPLETED' || a.status === 'IN_SESSION' || a.status === 'CHECKED_IN' || a.status === 'CONFIRMED')
         .reduce((acc, a) => acc + (Number(a.fee) || 0), 0);
       return sum;
     } catch {
       return 0;
     }
-  }, [appointments]);
+  }, [todayAppointments]);
 
-  // Universal keyboard shortcut listener (supports macOS Option ⌥ dead keys and Windows Alt)
+  // Universal keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (isAlt(e) && isKey(e, 'n')) {
@@ -206,11 +214,22 @@ export const DashboardOverviewPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleUpdateStatus = (id, newStatus) => {
-    setAppointments(prev =>
-      prev.map(a => a.id === id ? { ...a, status: newStatus } : a)
-    );
+  const handleUpdateStatus = async (id, newStatus) => {
+    await appointmentService.updateStatus(id, newStatus);
     notify.success(`Queue status updated to ${newStatus}`);
+    loadDashboardData();
+  };
+
+  const handleApproveAppointment = async (id) => {
+    await appointmentService.updateStatus(id, 'CONFIRMED');
+    notify.success('Appointment approved! Slot has been locked and confirmed.');
+    loadDashboardData();
+  };
+
+  const handleDenyAppointment = async (id) => {
+    await appointmentService.updateStatus(id, 'CANCELLED');
+    notify.info('Appointment request denied. Slot has been released.');
+    loadDashboardData();
   };
 
   return (
@@ -269,14 +288,14 @@ export const DashboardOverviewPage = () => {
           <div>
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Today&apos;s Schedule</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-lg font-bold font-mono text-slate-900">{appointments.length}</span>
+              <span className="text-lg font-bold font-mono text-slate-900">{todayAppointments.length}</span>
               <span className={`text-[10px] font-bold px-1 py-0.2 rounded ${
-                appointments.filter(a => a.status === 'IN_SESSION').length > 0
+                todayAppointments.filter(a => a.status === 'IN_SESSION').length > 0
                   ? 'bg-emerald-50 text-emerald-700 animate-pulse'
                   : 'bg-slate-100 text-slate-600'
               }`}>
-                {appointments.filter(a => a.status === 'IN_SESSION').length > 0
-                  ? `${appointments.filter(a => a.status === 'IN_SESSION').length} In Session`
+                {todayAppointments.filter(a => a.status === 'IN_SESSION').length > 0
+                  ? `${todayAppointments.filter(a => a.status === 'IN_SESSION').length} In Session`
                   : '0 In Session'}
               </span>
             </div>
@@ -292,11 +311,11 @@ export const DashboardOverviewPage = () => {
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Waiting Queue</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-lg font-bold font-mono text-indigo-900">
-                {appointments.filter(a => a.status === 'CHECKED_IN').length}
+                {todayAppointments.filter(a => a.status === 'CHECKED_IN').length}
               </span>
               <span className="text-[10px] text-indigo-700 font-semibold">
-                {appointments.filter(a => a.status === 'CHECKED_IN').length > 0
-                  ? `Token ${appointments.find(a => a.status === 'CHECKED_IN')?.token || '01'} Calling`
+                {todayAppointments.filter(a => a.status === 'CHECKED_IN').length > 0
+                  ? `Token ${todayAppointments.find(a => a.status === 'CHECKED_IN')?.token || '01'} Calling`
                   : 'Queue Clear'}
               </span>
             </div>
@@ -346,6 +365,82 @@ export const DashboardOverviewPage = () => {
         
         {/* Left Col (8 cols): Live Queue & Consultations Table */}
         <div className="lg:col-span-8 space-y-2.5">
+          
+          {/* ── PENDING ONLINE BOOKING REQUESTS CARD (IF ANY) ── */}
+          {pendingAppointments.length > 0 && (
+            <div className="bg-amber-50/90 border border-amber-300 rounded-lg p-3 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                  <span className="font-bold text-xs text-amber-900 uppercase tracking-wider">
+                    Online Booking Requests Awaiting Clinical Approval ({pendingAppointments.length})
+                  </span>
+                </div>
+                <span className="text-[10px] font-medium text-amber-700">
+                  Approve to lock slot &amp; confirm; Deny to release slot
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {pendingAppointments.map((apt) => (
+                  <div key={apt.id} className="bg-white border border-amber-200 rounded-md p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <strong className="text-xs font-bold text-slate-900">{apt.patient_name || apt.patientName}</strong>
+                        <span className="text-[10px] font-mono text-purple-700 font-semibold">{apt.patient_phone || apt.phone}</span>
+                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          {apt.source === 'ONLINE_PORTAL' ? 'Website Booking' : 'Pending Request'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 flex items-center gap-2 flex-wrap">
+                        <span>🗓 <strong className="font-mono text-slate-800">{apt.appointment_date}</strong></span>
+                        <span>⏰ <strong className="font-mono text-purple-900">{apt.start_time}</strong></span>
+                        <span>🩺 {apt.service_name || apt.service}</span>
+                        <span>💰 ₹{((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      {apt.notes && (
+                        <p className="text-[10px] text-slate-500 italic">“{apt.notes}”</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                      <a
+                        href={`https://wa.me/${(apt.patient_phone || apt.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                          `Namaste ${apt.patient_name || apt.patientName}, this is Vaani Speech & Hearing Clinic regarding your appointment request for ${apt.appointment_date} at ${apt.start_time}.`
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="h-6 px-2 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                        title="Chat on WhatsApp"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        <span>WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDenyAppointment(apt.id)}
+                        className="h-6 px-2 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                        title="Decline request and release slot"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Deny</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApproveAppointment(apt.id)}
+                        className="h-6 px-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black flex items-center gap-1 shadow-2xs cursor-pointer"
+                        title="Approve booking and lock slot"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Approve Slot</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
             <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -379,7 +474,7 @@ export const DashboardOverviewPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-normal">
-                  {appointments.length === 0 ? (
+                  {todayAppointments.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-slate-400">
                         <Calendar className="w-6 h-6 mx-auto mb-1.5 text-slate-300" />
@@ -388,7 +483,7 @@ export const DashboardOverviewPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    appointments.map((apt) => (
+                    todayAppointments.map((apt) => (
                       <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
                         <td className="py-2 px-2.5 text-center font-mono font-bold text-purple-900 bg-purple-50/40">
                           {apt.token}
@@ -405,17 +500,36 @@ export const DashboardOverviewPage = () => {
                         </td>
                         <td className="py-2 px-2.5 text-center">
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                            apt.status === 'IN_SESSION'
+                            apt.status === 'PENDING'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                              : apt.status === 'IN_SESSION'
                               ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
                               : apt.status === 'CHECKED_IN'
                               ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                               : 'bg-slate-100 text-slate-700 border-slate-200'
                           }`}>
-                            {apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
+                            {apt.status === 'PENDING' ? 'Pending Approval' : apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
                           </span>
                         </td>
                         <td className="py-2 px-3 text-center">
-                          {apt.status === 'CHECKED_IN' ? (
+                          {apt.status === 'PENDING' ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleApproveAppointment(apt.id)}
+                                className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDenyAppointment(apt.id)}
+                                className="h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold cursor-pointer"
+                              >
+                                Deny
+                              </button>
+                            </div>
+                          ) : apt.status === 'CHECKED_IN' ? (
                             <button
                               type="button"
                               onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}

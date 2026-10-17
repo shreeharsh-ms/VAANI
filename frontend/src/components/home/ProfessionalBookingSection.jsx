@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
+import { normalizeSlotTime } from '../../utils/formatters';
 
 const serviceOptions = [
   {
@@ -122,6 +123,22 @@ export const ProfessionalBookingSection = () => {
     notes: '',
   });
 
+  // Dynamically compute reserved/booked slots for the chosen date
+  const bookedSlots = React.useMemo(() => {
+    return appointmentService.getBookedSlotsForDate(formData.appointment_date);
+  }, [formData.appointment_date, currentStep]);
+
+  // If current selected time is booked, auto-select first available slot
+  React.useEffect(() => {
+    const norm = normalizeSlotTime(formData.appointment_time);
+    if (bookedSlots.includes(norm)) {
+      const firstAvailable = availableTimeSlots.find((s) => !bookedSlots.includes(normalizeSlotTime(s)));
+      if (firstAvailable) {
+        setFormData((prev) => ({ ...prev, appointment_time: firstAvailable }));
+      }
+    }
+  }, [bookedSlots, formData.appointment_date]);
+
   const handleNext = () => {
     if (currentStep === 1) {
       if (!formData.patient_name.trim()) {
@@ -150,7 +167,10 @@ export const ProfessionalBookingSection = () => {
         service_name: formData.service_name,
         appointment_date: formData.appointment_date,
         appointment_time: formData.appointment_time,
+        patient_age_group: formData.patient_age_group,
         notes: formData.notes.trim() || undefined,
+        status: 'PENDING', // Awaiting clinician / staff approval
+        source: 'ONLINE_PORTAL',
       });
 
       const aptId = res.id || `VN-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -162,9 +182,8 @@ export const ProfessionalBookingSection = () => {
         appointment_time: formData.appointment_time,
         phone: formData.patient_phone,
       });
-      notify.success('Appointment booked successfully!');
+      notify.success('Appointment request submitted! Awaiting clinical approval.');
     } catch (err) {
-      // Graceful fallback for mock demo
       const aptId = `VN-${Math.floor(10000 + Math.random() * 90000)}`;
       setBookedSuccess({
         id: aptId,
@@ -174,7 +193,7 @@ export const ProfessionalBookingSection = () => {
         appointment_time: formData.appointment_time,
         phone: formData.patient_phone,
       });
-      notify.success('Appointment booked successfully!');
+      notify.success('Appointment request submitted! Awaiting clinical approval.');
     } finally {
       setLoading(false);
     }
@@ -511,31 +530,54 @@ export const ProfessionalBookingSection = () => {
 
                       {/* Time Slots Grid */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-700">
-                          Available Time Slots
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-gray-700">
+                            Available Time Slots
+                          </label>
+                          {bookedSlots.length > 0 && (
+                            <span className="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                              {bookedSlots.length} slot{bookedSlots.length > 1 ? 's' : ''} reserved
+                            </span>
+                          )}
+                        </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {availableTimeSlots.map((slot) => {
+                            const norm = normalizeSlotTime(slot);
+                            const isBooked = bookedSlots.includes(norm);
                             const isSlotSelected = formData.appointment_time === slot;
 
                             return (
                               <button
                                 type="button"
                                 key={slot}
+                                disabled={isBooked}
                                 onClick={() =>
-                                  setFormData({ ...formData, appointment_time: slot })
+                                  !isBooked && setFormData({ ...formData, appointment_time: slot })
                                 }
-                                className={`py-2 px-2 rounded-xl text-xs font-semibold border transition-all ${
-                                  isSlotSelected
+                                title={isBooked ? 'This slot has already been booked and confirmed' : `Select ${slot}`}
+                                className={`py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between gap-1.5 ${
+                                  isBooked
+                                    ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-75'
+                                    : isSlotSelected
                                     ? 'bg-[#8b2fc9] text-white border-[#8b2fc9] shadow-xs'
-                                    : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/50'
+                                    : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/50 cursor-pointer'
                                 }`}
                               >
-                                {slot}
+                                <span className={isBooked ? 'line-through text-slate-400' : ''}>{slot}</span>
+                                {isBooked && (
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 bg-rose-100/80 border border-rose-300/80 px-1 py-0.2 rounded font-sans leading-none">
+                                    Booked
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
                         </div>
+                        {bookedSlots.length >= availableTimeSlots.length && (
+                          <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 font-medium">
+                            All appointment slots are fully booked for this date. Please pick another date.
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons */}
