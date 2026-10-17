@@ -33,6 +33,7 @@ import {
   ExternalLink,
   Users,
   User,
+  Sparkles,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
@@ -347,6 +348,81 @@ export const BillingPage = () => {
     } catch {}
   };
 
+  // Helper to determine if a line item is an actual hearing aid device (excludes tests, therapy, batteries & impressions)
+  const isHearingAidItem = (item) => {
+    if (!item) return false;
+    if (item.isCustomHearingAid) return true;
+    if (item.category === 'HEARING_AID' || item.type === 'HEARING_AID') return true;
+
+    const name = (item.service || item.name || '').toLowerCase();
+
+    // 1. Diagnostics, tests, consultations & therapy (tests like PTA, BERA, OAE are NOT devices)
+    if (
+      name.includes('audiometry') ||
+      name.includes('pta') ||
+      name.includes('tympanometry') ||
+      name.includes('impedance') ||
+      name.includes('oae') ||
+      name.includes('bera') ||
+      name.includes('abr') ||
+      name.includes('evaluation') ||
+      name.includes('assessment') ||
+      name.includes('screening') ||
+      name.includes('consultation') ||
+      name.includes('cbt') ||
+      name.includes('speech') ||
+      name.includes('voice') ||
+      name.includes('swallowing') ||
+      name.includes('stuttering') ||
+      name.includes('fluency') ||
+      name.includes('therapy') ||
+      name.includes('trial')
+    ) {
+      return false;
+    }
+
+    // 2. Consumables & accessories (batteries, domes, wax guards, earmould impressions are NOT devices)
+    if (
+      name.includes('battery') ||
+      name.includes('batteries') ||
+      name.includes('earmould') ||
+      name.includes('impression') ||
+      name.includes('dome') ||
+      name.includes('wax') ||
+      name.includes('dry box') ||
+      name.includes('desiccant')
+    ) {
+      return false;
+    }
+
+    // 3. Hearing Aid instruments & models
+    if (
+      name.includes('hearing aid') ||
+      name.includes('lumity') ||
+      name.includes('phonak') ||
+      name.includes('signia') ||
+      name.includes('widex') ||
+      name.includes('oticon') ||
+      name.includes('resound') ||
+      name.includes('starkey') ||
+      name.includes('unitron') ||
+      name.includes('bte') ||
+      name.includes('ric') ||
+      name.includes('cic') ||
+      name.includes('iic') ||
+      name.includes('itc')
+    ) {
+      return true;
+    }
+
+    // 4. If an explicit serial number is populated
+    if (item.serialNo && item.serialNo.trim().length > 0) {
+      return true;
+    }
+
+    return false;
+  };
+
   // Multi-Item Invoice Line Items State (CREATE MODAL)
   const [invoiceItems, setInvoiceItems] = useState([
     {
@@ -361,7 +437,7 @@ export const BillingPage = () => {
       taxAmount: 0,
       totalAmount: 800,
       serialNo: '',
-      ear: 'Right Ear',
+      ear: '',
       brand: '',
       model: '',
     }
@@ -411,6 +487,16 @@ export const BillingPage = () => {
           item.taxType = matched.taxType;
           item.gstPercent = matched.taxType === 'TAXABLE_GOODS' ? 18 : 0;
           item.baseRate = matched.baseRate;
+        }
+        // If switched to a service that is NOT a hearing aid device, clear serial and ear
+        if (!isHearingAidItem({ ...item, isCustomHearingAid: false })) {
+          item.serialNo = '';
+          item.ear = '';
+          item.brand = '';
+          item.model = '';
+          item.isCustomHearingAid = false;
+        } else if (!item.ear) {
+          item.ear = 'Right Ear';
         }
       }
 
@@ -516,6 +602,16 @@ export const BillingPage = () => {
           item.gstPercent = matched.taxType === 'TAXABLE_GOODS' ? 18 : 0;
           item.baseRate = matched.baseRate;
         }
+        // If switched to a service that is NOT a hearing aid device, clear serial and ear
+        if (!isHearingAidItem({ ...item, isCustomHearingAid: false })) {
+          item.serialNo = '';
+          item.ear = '';
+          item.brand = '';
+          item.model = '';
+          item.isCustomHearingAid = false;
+        } else if (!item.ear) {
+          item.ear = 'Right Ear';
+        }
       }
 
       if (field === 'selectedDeviceSerial') {
@@ -576,7 +672,7 @@ export const BillingPage = () => {
   const syncDispensedHearingAids = (inv, items) => {
     try {
       const haItems = items.filter(
-        it => it.serialNo?.trim() || (it.service && it.service.toLowerCase().includes('hearing aid'))
+        it => isHearingAidItem(it) && (it.serialNo?.trim() || it.service)
       );
       if (haItems.length === 0) return;
 
@@ -1105,8 +1201,8 @@ export const BillingPage = () => {
           qty: parseInt(it.qty, 10) || 1,
           taxAmount: it.taxAmount || 0,
           totalAmount: it.totalAmount || ((parseFloat(it.baseRate || it.rate || it.amount || 0)) * (parseInt(it.qty, 10) || 1) + (it.taxAmount || 0)),
-          serialNo: it.serialNo || inv.serialNo || '',
-          ear: it.ear || inv.ear || 'Right Ear',
+          serialNo: isHearingAidItem(it) ? (it.serialNo || inv.serialNo || '') : '',
+          ear: isHearingAidItem(it) ? (it.ear || inv.ear || 'Right Ear') : '',
           brand: it.brand || '',
           model: it.model || '',
         }))
@@ -1121,8 +1217,8 @@ export const BillingPage = () => {
           qty: 1,
           taxAmount: inv.taxAmount || 0,
           totalAmount: inv.totalAmount || inv.amount || 800,
-          serialNo: inv.serialNo || '',
-          ear: inv.ear || 'Right Ear',
+          serialNo: isHearingAidItem(inv) ? (inv.serialNo || '') : '',
+          ear: isHearingAidItem(inv) ? (inv.ear || 'Right Ear') : '',
           brand: '',
           model: '',
         }];
@@ -1920,43 +2016,70 @@ export const BillingPage = () => {
                             ))}
                           </select>
 
-                          {/* Hearing Aid Serial & Ear Integration */}
-                          <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
-                            {inStockDevices.length > 0 && (
-                              <div>
-                                <select
-                                  value={item.serialNo || ''}
-                                  onChange={(e) => handleUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
-                                  className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                          {/* Hearing Aid Serial & Ear Integration (Only for actual hearing aid instruments) */}
+                          {isHearingAidItem(item) ? (
+                            <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-purple-900 flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-purple-600" />
+                                  <span>Hearing Aid Instrument Linking</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItemRow(idx, 'isCustomHearingAid', false)}
+                                  className="text-[9.5px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                                  title="Hide device linking"
                                 >
-                                  <option value="">— Link In-Stock Clinic Device (Optional) —</option>
-                                  {inStockDevices.map((d) => (
-                                    <option key={d.serialNo} value={d.serialNo}>
-                                      {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
-                                    </option>
-                                  ))}
+                                  ✕
+                                </button>
+                              </div>
+                              {inStockDevices.length > 0 && (
+                                <div>
+                                  <select
+                                    value={item.serialNo || ''}
+                                    onChange={(e) => handleUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
+                                    className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                                  >
+                                    <option value="">— Link In-Stock Clinic Device (Optional) —</option>
+                                    {inStockDevices.map((d) => (
+                                      <option key={d.serialNo} value={d.serialNo}>
+                                        {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1.5">
+                                <input
+                                  type="text"
+                                  placeholder="Device Serial Number (from Barcode / Box)"
+                                  value={item.serialNo || ''}
+                                  onChange={(e) => handleUpdateItemRow(idx, 'serialNo', e.target.value)}
+                                  className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
+                                />
+                                <select
+                                  value={item.ear || 'Right Ear'}
+                                  onChange={(e) => handleUpdateItemRow(idx, 'ear', e.target.value)}
+                                  className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
+                                >
+                                  <option value="Right Ear">Right Ear</option>
+                                  <option value="Left Ear">Left Ear</option>
+                                  <option value="Bilateral">Bilateral</option>
                                 </select>
                               </div>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                type="text"
-                                placeholder="Device Serial Number (from Barcode / Box)"
-                                value={item.serialNo || ''}
-                                onChange={(e) => handleUpdateItemRow(idx, 'serialNo', e.target.value)}
-                                className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
-                              />
-                              <select
-                                value={item.ear || 'Right Ear'}
-                                onChange={(e) => handleUpdateItemRow(idx, 'ear', e.target.value)}
-                                className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
-                              >
-                                <option value="Right Ear">Right Ear</option>
-                                <option value="Left Ear">Left Ear</option>
-                                <option value="Bilateral">Bilateral</option>
-                              </select>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="pt-0.5">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItemRow(idx, 'isCustomHearingAid', true)}
+                                className="text-[10px] text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                title="Click to link a hearing aid device serial number & ear side to this line item"
+                              >
+                                <span>+ Link Hearing Aid Device Serial &amp; Ear</span>
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td className="py-1.5 px-2 text-center">
                           <input
@@ -2540,43 +2663,70 @@ export const BillingPage = () => {
                                 ))}
                               </select>
 
-                              {/* Hearing Aid Serial & Ear Integration */}
-                              <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
-                                {inStockDevices.length > 0 && (
-                                  <div>
-                                    <select
-                                      value={item.serialNo || ''}
-                                      onChange={(e) => handleEditUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
-                                      className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                              {/* Hearing Aid Serial & Ear Integration (Only for actual hearing aid instruments) */}
+                              {isHearingAidItem(item) ? (
+                                <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-purple-900 flex items-center gap-1">
+                                      <Sparkles className="w-3 h-3 text-purple-600" />
+                                      <span>Hearing Aid Instrument Linking</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', false)}
+                                      className="text-[9.5px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                                      title="Hide device linking"
                                     >
-                                      <option value="">— Link In-Stock Clinic Device (Optional) —</option>
-                                      {inStockDevices.map((d) => (
-                                        <option key={d.serialNo} value={d.serialNo}>
-                                          {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
-                                        </option>
-                                      ))}
+                                      ✕
+                                    </button>
+                                  </div>
+                                  {inStockDevices.length > 0 && (
+                                    <div>
+                                      <select
+                                        value={item.serialNo || ''}
+                                        onChange={(e) => handleEditUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
+                                        className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                                      >
+                                        <option value="">— Link In-Stock Clinic Device (Optional) —</option>
+                                        {inStockDevices.map((d) => (
+                                          <option key={d.serialNo} value={d.serialNo}>
+                                            {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      type="text"
+                                      placeholder="Device Serial Number (from Barcode / Box)"
+                                      value={item.serialNo || ''}
+                                      onChange={(e) => handleEditUpdateItemRow(idx, 'serialNo', e.target.value)}
+                                      className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
+                                    />
+                                    <select
+                                      value={item.ear || 'Right Ear'}
+                                      onChange={(e) => handleEditUpdateItemRow(idx, 'ear', e.target.value)}
+                                      className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
+                                    >
+                                      <option value="Right Ear">Right Ear</option>
+                                      <option value="Left Ear">Left Ear</option>
+                                      <option value="Bilateral">Bilateral</option>
                                     </select>
                                   </div>
-                                )}
-                                <div className="flex items-center gap-1.5">
-                                  <input
-                                    type="text"
-                                    placeholder="Device Serial Number (from Barcode / Box)"
-                                    value={item.serialNo || ''}
-                                    onChange={(e) => handleEditUpdateItemRow(idx, 'serialNo', e.target.value)}
-                                    className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
-                                  />
-                                  <select
-                                    value={item.ear || 'Right Ear'}
-                                    onChange={(e) => handleEditUpdateItemRow(idx, 'ear', e.target.value)}
-                                    className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
-                                  >
-                                    <option value="Right Ear">Right Ear</option>
-                                    <option value="Left Ear">Left Ear</option>
-                                    <option value="Bilateral">Bilateral</option>
-                                  </select>
                                 </div>
-                              </div>
+                              ) : (
+                                <div className="pt-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', true)}
+                                    className="text-[10px] text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                    title="Click to link a hearing aid device serial number & ear side to this line item"
+                                  >
+                                    <span>+ Link Hearing Aid Device Serial &amp; Ear</span>
+                                  </button>
+                                </div>
+                              )}
                             </td>
                             <td className="py-1.5 px-2 text-center align-top pt-2">
                               <input
