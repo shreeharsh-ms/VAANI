@@ -107,7 +107,7 @@ export const OfficialClinicalDocument = ({
   return (
     <div
       id="official-report-a4-page"
-      className="bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl"
+      className="bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none"
     >
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
       <div className="flex-1 flex flex-col space-y-3">

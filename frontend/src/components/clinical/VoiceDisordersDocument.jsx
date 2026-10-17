@@ -51,7 +51,7 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, CLINICAL HISTORY, VOCAL DEMANDS & RISKS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(1)}
 
@@ -253,7 +253,7 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: AERODYNAMIC, PERCEPTUAL (GRBAS/BUFFALO), ACOUSTIC & PLAN
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(2)}
 
@@ -480,7 +480,7 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 3: STROBOSCOPIC EVALUATION OF VOICE & ENT SIGN-OFF
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
         <div className="flex-1 flex flex-col space-y-1.5 pb-1">
           {renderHeader(3)}
 

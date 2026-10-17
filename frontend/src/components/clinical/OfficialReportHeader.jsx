@@ -74,42 +74,16 @@ export const OfficialReportHeader = ({
     );
   }
 
-  // When useImage is true, use the pre-rendered official header image with dynamic metadata overlay
+  // Official header banner using the user's custom high-resolution letterhead
   if (useImage) {
     return (
-      <div className={`official-report-header mb-1.5 shrink-0 relative ${compact ? 'mb-1' : ''} ${className}`}>
-        <div className="relative w-full overflow-hidden">
-          <img
-            src="/vaani-official-header.png"
-            alt="Vaani Speech and Hearing Clinic Official Letterhead"
-            className="w-full h-auto object-contain block drop-shadow-2xs"
-          />
-
-          {/* Dynamic Report Identification Overlay matching exact position */}
-          <div className="absolute right-[1.6%] top-[19%] w-[20%] max-w-[170px] text-right">
-            <div className="bg-white/95 border border-purple-200/90 rounded-lg p-1 px-2 text-right shadow-2xs space-y-0.5">
-              <div className="flex items-center justify-end gap-1">
-                <FileText className="w-2.5 h-2.5 text-purple-700" />
-                <span className="text-[9.5px] font-mono font-black text-purple-950 truncate">
-                  {reportNumber}
-                </span>
-              </div>
-              <div className="text-[8px] text-slate-600 font-medium truncate">
-                Date: <span className="font-semibold text-slate-800">{reportDate}</span>
-              </div>
-              <div className="flex items-center justify-end gap-1 pt-0.5">
-                <span className="inline-block px-1.5 py-0.2 text-[7.5px] font-black uppercase tracking-wider bg-purple-900 text-white rounded">
-                  {disciplineName}
-                </span>
-                {totalPages && totalPages > 1 && (
-                  <span className="inline-block px-1 py-0.2 text-[7px] font-bold uppercase tracking-wider bg-purple-100 text-purple-950 rounded border border-purple-300">
-                    Pg {pageNumber}/{totalPages}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className={`official-report-header shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mt-6 sm:-mx-7 sm:-mt-7 print:m-0 print:w-full mb-3 select-none ${className}`}>
+        {/* User's custom official banner - uncropped, 100% full width edge-to-edge, zero border-radius */}
+        <img
+          src="/vaani-header-banner.png"
+          alt="Vaani Speech and Hearing Clinic"
+          className="w-full h-auto block rounded-none"
+        />
       </div>
     );
   }

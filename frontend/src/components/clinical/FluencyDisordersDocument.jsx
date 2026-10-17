@@ -66,7 +66,7 @@ export const FluencyDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, HISTORY, PROBLEM, CONCOMITANTS & LISTENER DYNAMICS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
         <div className="flex-1 flex flex-col space-y-1 pb-1">
           {renderHeader(1)}
 
@@ -378,7 +378,7 @@ export const FluencyDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: SAMPLE ANALYSIS TABLE, VOICE/BREATHING, BATTERY & PLAN
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl">
+      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
         <div className="flex-1 flex flex-col space-y-1 pb-1">
           {renderHeader(2)}
 
