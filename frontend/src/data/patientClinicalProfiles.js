@@ -16,8 +16,8 @@ export const SEED_PATIENTS = [
     date_of_birth: '2020-04-12',
     gender: 'MALE',
     phone: '+91 98220 11223',
-    guardian_name: 'Sachin Shinde (Father)',
-    guardian_phone: '+91 98220 11223',
+    guardian_name: '',
+    guardian_phone: '',
     service_line: 'SPEECH_LANGUAGE',
     diagnosis: 'Expressive Language Delay & Mild Articulation Impairment',
     city: 'Sadashiv Peth, Satara',
@@ -166,47 +166,13 @@ export const PATIENT_DOSSIERS = {
       occupation: 'Student (UKG)',
       education: 'UKG - St. Paul English School, Satara',
       maritalStatus: 'SINGLE_CHILD',
-      guardians: [
-        {
-          name: 'Sachin Dattatray Shinde',
-          relation: 'Father',
-          phone: '+91 98220 11223',
-          email: 'sachin.shinde.satara@gmail.com',
-          isPrimaryContact: true,
-          isLegalGuardian: true,
-          canConsent: true,
-          canPickUp: true,
-          occupation: 'Civil Engineer (PWD Satara)',
-        },
-        {
-          name: 'Pooja Sachin Shinde',
-          relation: 'Mother',
-          phone: '+91 94220 55441',
-          email: 'pooja.shinde@gmail.com',
-          isPrimaryContact: false,
-          isLegalGuardian: true,
-          canConsent: true,
-          canPickUp: true,
-          occupation: 'High School Teacher',
-        },
-      ],
-      familyGroupId: 'FAM-MH-STR-2026-0042',
+      guardians: [],
+      familyGroupId: '',
       medicalAlerts: [
         { label: 'COMMUNICATION_NEEDS', severity: 'INFO', note: 'Prefers Marathi visual cueing prompts' },
-        { label: 'ALLERGY: SULFA DRUGS', severity: 'WARN', note: 'Reported by pediatrician in 2023' },
       ],
-      referral: {
-        doctorName: 'Dr. Nilesh Kulkarni, MD (Pediatrics)',
-        hospital: 'Satara Child Health Hospital & NICU',
-        discipline: 'Paediatrician',
-        date: '2026-01-10',
-        reason: 'Delay in 2-word phrase combinations at 3.5y; mild speech clarity concerns',
-      },
-      abha: {
-        id: '91-4412-8921-0042@abdm',
-        status: 'ENCRYPTED_LINKED',
-        statutoryNote: 'DPDP Act 2023 compliant: Zero Aadhaar data stored.',
-      },
+      referral: null,
+      abha: null,
       lifecycleStatus: 'ACTIVE',
       registeredAt: '2026-01-15T10:30:00Z',
     },
@@ -1517,88 +1483,81 @@ export const PATIENT_DOSSIERS = {
 export const getPatientClinicalDossier = (patient) => {
   if (!patient) return null;
 
-  // If we have an exact match in our clinical dossiers database:
+  // Retrieve any custom persisted metadata for this patient UHID
+  let customMeta = null;
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(`vaani_patient_meta_${patient.uhid}`);
+      if (raw) customMeta = JSON.parse(raw);
+    }
+  } catch {}
+
+  let dossier = null;
+
+  // If we have a matching base dossier structure:
   if (PATIENT_DOSSIERS[patient.uhid]) {
-    return PATIENT_DOSSIERS[patient.uhid];
-  }
+    dossier = JSON.parse(JSON.stringify(PATIENT_DOSSIERS[patient.uhid]));
+  } else {
+    // Otherwise, construct a rich, compliant dossier dynamically from patient fields:
+    const regDate = patient.created_at || new Date().toISOString();
+    const birthYear = patient.date_of_birth ? new Date(patient.date_of_birth).getFullYear() : 2000;
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+    const isMinor = age < 18;
 
-  // Otherwise, construct a rich, compliant dossier dynamically from patient fields:
-  const regDate = patient.created_at || new Date().toISOString();
-  const birthYear = patient.date_of_birth ? new Date(patient.date_of_birth).getFullYear() : 2000;
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - birthYear;
-  const isMinor = age < 18;
-
-  return {
-    demographics: {
-      uhid: patient.uhid || 'VN-26-0099',
-      salutation: isMinor ? (patient.gender === 'FEMALE' ? 'Baby' : 'Master') : (patient.gender === 'FEMALE' ? 'Ms.' : 'Mr.'),
-      firstName: patient.first_name || patient.full_name?.split(' ')[0] || 'Patient',
-      middleName: '',
-      lastName: patient.last_name || patient.full_name?.split(' ').slice(1).join(' ') || 'User',
-      fullName: patient.full_name || `${patient.first_name || ''} ${patient.last_name || ''}`.trim(),
-      displayMr: patient.full_name || 'रुग्ण तपशील',
-      sex: patient.gender || 'UNDISCLOSED',
-      dob: patient.date_of_birth || '2000-01-01',
-      ageYears: age,
-      ageMonths: age * 12,
-      ageContextual: isMinor ? `${age}y (${age * 12} mos)` : `${age}y`,
-      preferredLanguages: ['Marathi', 'English'],
-      homeLanguages: ['Marathi'],
-      primaryPhone: patient.phone || '+91 98220 00000',
-      altPhone: '+91 94220 00000',
-      email: patient.email || 'patient@vaaniclinic.com',
-      mobileIsShared: Boolean(isMinor),
-      preferredChannel: 'WHATSAPP',
-      bestCallingTime: '10:00 - 13:00 IST',
-      addressLine1: patient.address || 'Civil Lines Area',
-      addressLine2: patient.city || 'Satara',
-      locality: patient.city || 'Satara',
-      taluka: 'Satara',
-      district: 'Satara',
-      state: 'Maharashtra',
-      pin: '415002',
-      country: 'India',
-      occupation: isMinor ? 'Student' : 'Professional',
-      education: isMinor ? 'School Student' : 'Graduate',
-      maritalStatus: isMinor ? 'SINGLE_CHILD' : 'MARRIED',
-      guardians: [
-        {
-          name: patient.guardian_name || (isMinor ? 'Parent / Guardian' : 'Self'),
-          relation: isMinor ? 'Guardian' : 'Self',
-          phone: patient.guardian_phone || patient.phone || '+91 98220 00000',
-          email: patient.email || 'guardian@vaaniclinic.com',
-          isPrimaryContact: true,
-          isLegalGuardian: Boolean(isMinor),
-          canConsent: true,
-          canPickUp: true,
-          occupation: 'Civilian',
-        },
-      ],
-      familyGroupId: `FAM-MH-STR-2026-${patient.uhid?.replace(/\D/g, '') || '0099'}`,
-      medicalAlerts: [
-        { label: 'CLINICAL_INTAKE_RECORD', severity: 'INFO', note: patient.diagnosis || 'Intake evaluation in progress' },
-      ],
-      referral: {
-        doctorName: 'Clinical Intake Referral',
-        hospital: 'Vaani Practice Intake Portal',
-        discipline: patient.service_line || 'Audiology & Speech',
-        date: regDate.substring(0, 10),
-        reason: patient.diagnosis || 'Clinical evaluation and rehabilitation',
+    dossier = {
+      demographics: {
+        uhid: patient.uhid || 'VN-26-0099',
+        salutation: isMinor ? (patient.gender === 'FEMALE' ? 'Baby' : 'Master') : (patient.gender === 'FEMALE' ? 'Ms.' : 'Mr.'),
+        firstName: patient.first_name || patient.full_name?.split(' ')[0] || 'Patient',
+        middleName: '',
+        lastName: patient.last_name || patient.full_name?.split(' ').slice(1).join(' ') || 'User',
+        fullName: patient.full_name || `${patient.first_name || ''} ${patient.last_name || ''}`.trim(),
+        displayMr: patient.full_name || 'रुग्ण तपशील',
+        sex: patient.gender || 'UNDISCLOSED',
+        dob: patient.date_of_birth || '2000-01-01',
+        ageYears: age,
+        ageMonths: age * 12,
+        ageContextual: isMinor ? `${age}y (${age * 12} mos)` : `${age}y`,
+        preferredLanguages: ['Marathi', 'English'],
+        homeLanguages: ['Marathi'],
+        primaryPhone: patient.phone || '',
+        altPhone: patient.alt_phone || '',
+        email: patient.email || '',
+        mobileIsShared: Boolean(isMinor),
+        preferredChannel: 'WHATSAPP',
+        bestCallingTime: '10:00 - 13:00 IST',
+        addressLine1: patient.address || 'Civil Lines Area',
+        addressLine2: patient.city || 'Satara',
+        locality: patient.city || 'Satara',
+        taluka: 'Satara',
+        district: 'Satara',
+        state: 'Maharashtra',
+        pin: '415002',
+        country: 'India',
+        occupation: isMinor ? 'Student' : 'Professional',
+        education: isMinor ? 'School Student' : 'Graduate',
+        maritalStatus: isMinor ? 'SINGLE_CHILD' : 'MARRIED',
+        guardians: [],
+        familyGroupId: patient.family_group_id || '',
+        medicalAlerts: [
+          { label: 'CLINICAL_INTAKE_RECORD', severity: 'INFO', note: patient.diagnosis || 'Intake evaluation in progress' },
+        ],
+        referral: null,
+        abha: null,
+        abhaId: patient.abha_id || '',
+        lifecycleStatus: patient.status || 'ACTIVE',
+        registeredAt: regDate,
       },
-      abha: { id: `91-****-****-${patient.uhid?.slice(-4) || '0042'}@abdm`, status: 'ENCRYPTED_LINKED', statutoryNote: 'DPDP Act compliant.' },
-      lifecycleStatus: patient.status || 'ACTIVE',
-      registeredAt: regDate,
-    },
-    consents: [
-      { id: 'cst_1', type: 'Treatment & Clinical Evaluation Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '8f7a6c9d2e1b4029...a9e1', legalBasis: 'Clinical Standard' },
-      { id: 'cst_2', type: 'Data Processing Consent (DPDP Act 2023)', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '3e4f5a6b7c8d9e01...b2c3', legalBasis: 'DPDP Act 2023' },
-      { id: 'cst_3', type: 'Communication Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '9a8b7c6d5e4f3a21...c4d5', legalBasis: 'TRAI Alerting' },
-      { id: 'cst_4', type: 'Clinical Audio/Video Recording', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '1a2b3c4d5e6f7081...d5e6', legalBasis: 'Diagnostic Archival' },
-      { id: 'cst_5', type: 'Case Study & Research Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '5e6f7a8b9c0d1e2f...e6f7', legalBasis: 'Academic Review' },
-      { id: 'cst_6', type: 'Telehealth Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '7c8d9e0f1a2b3c4d...f7a8', legalBasis: 'Teleconsultation' },
-      { id: 'cst_7', type: 'Psychological Therapy (CBT) Consent', status: 'NOT_APPLICABLE', grantor: 'N/A', method: 'EXEMPT', timestamp: regDate, hash: '0000000000000000...0000', legalBasis: 'Not indicated' },
-    ],
+      consents: [
+        { id: 'cst_1', type: 'Treatment & Clinical Evaluation Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '8f7a6c9d2e1b4029...a9e1', legalBasis: 'Clinical Standard' },
+        { id: 'cst_2', type: 'Data Processing Consent (DPDP Act 2023)', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '3e4f5a6b7c8d9e01...b2c3', legalBasis: 'DPDP Act 2023' },
+        { id: 'cst_3', type: 'Communication Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '9a8b7c6d5e4f3a21...c4d5', legalBasis: 'TRAI Alerting' },
+        { id: 'cst_4', type: 'Clinical Audio/Video Recording', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '1a2b3c4d5e6f7081...d5e6', legalBasis: 'Diagnostic Archival' },
+        { id: 'cst_5', type: 'Case Study & Research Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '5e6f7a8b9c0d1e2f...e6f7', legalBasis: 'Academic Review' },
+        { id: 'cst_6', type: 'Telehealth Consent', status: 'GRANTED', grantor: isMinor ? 'Guardian' : 'Patient (Self)', method: 'DIGITAL_SIGNATURE', timestamp: regDate, hash: '7c8d9e0f1a2b3c4d...f7a8', legalBasis: 'Teleconsultation' },
+        { id: 'cst_7', type: 'Psychological Therapy (CBT) Consent', status: 'NOT_APPLICABLE', grantor: 'N/A', method: 'EXEMPT', timestamp: regDate, hash: '0000000000000000...0000', legalBasis: 'Not indicated' },
+      ],
     clinical: {
       caseHistory: {
         chiefComplaint: patient.diagnosis || 'Clinical consultation requested.',
@@ -1658,4 +1617,67 @@ export const getPatientClinicalDossier = (patient) => {
       auditHashChain: 'SHA-256: 8f7a6c9d2e1b4029a1b2c3d4e5f60718...a9e1 (Tamper-evident)',
     },
   };
+  }
+
+  if (!dossier) return null;
+
+  // Apply custom patient metadata overrides
+  if (customMeta) {
+    if (customMeta.guardians !== undefined) {
+      dossier.demographics.guardians = customMeta.guardians;
+    }
+    if (customMeta.familyGroupId !== undefined) {
+      dossier.demographics.familyGroupId = customMeta.familyGroupId;
+    }
+    if (customMeta.referral !== undefined) {
+      dossier.demographics.referral = customMeta.referral;
+    }
+    if (customMeta.abhaId !== undefined) {
+      dossier.demographics.abhaId = customMeta.abhaId;
+      dossier.demographics.abha = customMeta.abhaId
+        ? {
+            id: customMeta.abhaId,
+            status: 'ENCRYPTED_LINKED',
+            statutoryNote: 'DPDP Act 2023 compliant: Zero Aadhaar data stored.',
+          }
+        : null;
+    }
+  } else {
+    // If no customMeta, check patient object fields
+    if (patient.guardians && Array.isArray(patient.guardians)) {
+      dossier.demographics.guardians = patient.guardians;
+    } else if (dossier.demographics.guardians && Array.isArray(dossier.demographics.guardians)) {
+      // Keep dossier's own defined guardians (e.g. empty array [])
+    } else if (patient.guardian_name && patient.guardian_name.trim() !== '') {
+      dossier.demographics.guardians = [
+        {
+          name: patient.guardian_name,
+          relation: 'Guardian',
+          phone: patient.guardian_phone || patient.phone || '',
+          occupation: '',
+          isLegalGuardian: true,
+          canConsent: true,
+          canPickUp: true,
+        },
+      ];
+    } else {
+      dossier.demographics.guardians = [];
+    }
+    if (patient.referral) {
+      dossier.demographics.referral = patient.referral;
+    }
+    if (patient.abha_id) {
+      dossier.demographics.abhaId = patient.abha_id;
+      dossier.demographics.abha = {
+        id: patient.abha_id,
+        status: 'ENCRYPTED_LINKED',
+        statutoryNote: 'DPDP Act 2023 compliant: Zero Aadhaar data stored.',
+      };
+    }
+    if (patient.family_group_id) {
+      dossier.demographics.familyGroupId = patient.family_group_id;
+    }
+  }
+
+  return dossier;
 };

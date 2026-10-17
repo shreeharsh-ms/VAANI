@@ -38,8 +38,8 @@ import {
   X,
   Send,
   QrCode,
-  Eye,
   MessageCircle,
+  Users,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
@@ -283,47 +283,149 @@ export const PatientDetailPage = () => {
 
   // ── PATIENT PROFILE EDIT & DELETE STATE ──
   const [isEditPatientModalOpen, setIsEditPatientModalOpen] = useState(false);
+  const [editPatientModalTab, setEditPatientModalTab] = useState('demographics'); // 'demographics' | 'guardians' | 'referral'
   const [editPatientForm, setEditPatientForm] = useState({
     full_name: '',
     date_of_birth: '',
     gender: 'FEMALE',
     phone: '',
+    alt_phone: '',
     email: '',
-    guardian_name: '',
-    guardian_phone: '',
     city: 'Satara',
     address: '',
     service_line: 'SPEECH_LANGUAGE',
     primary_concern: '',
+    guardians: [],
+    family_group_id: '',
+    referral: {
+      doctorName: '',
+      hospital: '',
+      discipline: '',
+      notes: '',
+    },
+    abha_id: '',
   });
   const [isDeletePatientModalOpen, setIsDeletePatientModalOpen] = useState(false);
 
-  const handleOpenEditPatient = () => {
+  const handleOpenEditPatient = (targetTab = 'demographics') => {
+    setEditPatientModalTab(targetTab);
+    const existingGuardians = demographics?.guardians && demographics.guardians.length > 0
+      ? JSON.parse(JSON.stringify(demographics.guardians))
+      : patient?.guardian_name
+      ? [
+          {
+            name: patient.guardian_name,
+            relation: 'Guardian',
+            phone: patient.guardian_phone || patient.phone || '',
+            occupation: '',
+            isLegalGuardian: true,
+            canConsent: true,
+            canPickUp: true,
+          },
+        ]
+      : [];
+
+    const existingReferral = demographics?.referral && (demographics.referral.doctorName || demographics.referral.hospital)
+      ? {
+          doctorName: demographics.referral.doctorName || '',
+          hospital: demographics.referral.hospital || '',
+          discipline: demographics.referral.discipline || '',
+          notes: demographics.referral.notes || demographics.referral.reason || '',
+        }
+      : { doctorName: '', hospital: '', discipline: '', notes: '' };
+
     setEditPatientForm({
       full_name: demographics.fullName || patient.full_name || '',
       date_of_birth: demographics.dob || patient.date_of_birth || '1992-05-18',
       gender: demographics.sex || patient.gender || 'FEMALE',
       phone: demographics.primaryPhone || patient.phone || '',
+      alt_phone: demographics.altPhone || patient.alt_phone || '',
       email: demographics.email || patient.email || '',
-      guardian_name: demographics.guardians?.[0]?.name || patient.guardian_name || '',
-      guardian_phone: demographics.guardians?.[0]?.phone || patient.guardian_phone || '',
       city: demographics.locality || patient.city || 'Satara',
-      address: demographics.addressLine1 || '',
+      address: demographics.addressLine1 || patient.address || '',
       service_line: patient.service_line || 'SPEECH_LANGUAGE',
       primary_concern: demographics.primaryConcern || patient.diagnosis || '',
+      guardians: existingGuardians,
+      family_group_id: demographics.familyGroupId || patient.family_group_id || '',
+      referral: existingReferral,
+      abha_id: demographics.abhaId || demographics.abha?.id || patient.abha_id || '',
     });
     setIsEditPatientModalOpen(true);
   };
 
+  const handleAddGuardianRow = () => {
+    setEditPatientForm((prev) => ({
+      ...prev,
+      guardians: [
+        ...prev.guardians,
+        {
+          name: '',
+          relation: prev.guardians.length === 0 ? 'Father' : prev.guardians.length === 1 ? 'Mother' : 'Legal Guardian',
+          phone: '',
+          occupation: '',
+          isLegalGuardian: true,
+          canConsent: true,
+          canPickUp: true,
+        },
+      ],
+    }));
+  };
+
+  const handleRemoveGuardianRow = (idx) => {
+    setEditPatientForm((prev) => ({
+      ...prev,
+      guardians: prev.guardians.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleUpdateGuardianField = (idx, field, value) => {
+    setEditPatientForm((prev) => {
+      const copy = [...prev.guardians];
+      copy[idx] = { ...copy[idx], [field]: value };
+      return { ...prev, guardians: copy };
+    });
+  };
+
   const handleSavePatientEdit = (e) => {
     e.preventDefault();
+    const uhid = demographics.uhid || patient.uhid || id;
+    const primaryGuardian = editPatientForm.guardians[0];
+
     const updated = {
       ...patient,
-      ...editPatientForm,
-      id: patient.id || `p_${demographics.uhid}`,
-      uhid: demographics.uhid,
+      full_name: editPatientForm.full_name,
+      date_of_birth: editPatientForm.date_of_birth,
+      gender: editPatientForm.gender,
+      phone: editPatientForm.phone,
+      alt_phone: editPatientForm.alt_phone,
+      email: editPatientForm.email,
+      guardian_name: primaryGuardian ? primaryGuardian.name : '',
+      guardian_phone: primaryGuardian ? primaryGuardian.phone : '',
+      guardians: editPatientForm.guardians,
+      city: editPatientForm.city,
+      address: editPatientForm.address,
+      service_line: editPatientForm.service_line,
+      diagnosis: editPatientForm.primary_concern,
+      family_group_id: editPatientForm.family_group_id,
+      referral: editPatientForm.referral,
+      abha_id: editPatientForm.abha_id,
+      id: patient.id || `p_${uhid}`,
+      uhid: uhid,
     };
     patientService.saveLocalPatient(updated);
+
+    // Save custom metadata under uhid
+    const metaPayload = {
+      guardians: editPatientForm.guardians,
+      familyGroupId: editPatientForm.family_group_id,
+      referral: editPatientForm.referral,
+      abhaId: editPatientForm.abha_id,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(`vaani_patient_meta_${uhid}`, JSON.stringify(metaPayload));
+
+    window.dispatchEvent(new CustomEvent('vaani-patient-updated', { detail: { uhid, updated } }));
+    window.dispatchEvent(new Event('storage'));
     setPatientRefreshTick((prev) => prev + 1);
     setIsEditPatientModalOpen(false);
     notify.success(`Patient profile for ${updated.full_name} updated successfully!`);
@@ -965,66 +1067,160 @@ export const PatientDetailPage = () => {
 
             {/* Guardians & Referral */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>1.2 Guardians &amp; Legal Caregivers</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Mandatory for Minors</span>
-                </div>
-                <div className="p-3 space-y-2.5">
-                  {demographics.guardians?.map((g, i) => (
-                    <div key={i} className="p-2.5 rounded border border-slate-200 bg-slate-50/50 space-y-1 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-900">{g.name}</span>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-100 text-purple-900">
-                          {g.relation}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px] text-slate-600">
-                        <span>Phone: <strong className="font-mono text-slate-800">{g.phone}</strong></span>
-                        <span>{g.occupation}</span>
-                      </div>
-                      <div className="flex items-center gap-2 pt-1 text-[10px] text-emerald-800 font-medium">
-                        {g.isLegalGuardian && <span>✓ Legal Guardian: Yes</span>}
-                        {g.canConsent && <span>• Can Consent: Yes</span>}
-                        {g.canPickUp && <span>• Pick-up Auth: Yes</span>}
-                      </div>
+              {/* 1.2 Guardians & Caregivers */}
+              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-purple-700" />
+                      <span>1.2 Guardians &amp; Legal Caregivers</span>
                     </div>
-                  ))}
-                  <div className="pt-1 text-[11px] text-slate-500 flex items-center justify-between">
-                    <span>Family Link Group ID:</span>
-                    <span className="font-mono font-bold text-purple-900">{demographics.familyGroupId}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-500 font-normal">Mandatory for Minors</span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditPatient('guardians')}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Add or edit legal guardians & caregivers"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>{demographics.guardians?.length > 0 ? 'Edit' : '+ Add'}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-2.5">
+                    {demographics.guardians && demographics.guardians.length > 0 ? (
+                      <>
+                        {demographics.guardians.map((g, i) => (
+                          <div key={i} className="p-2.5 rounded border border-slate-200 bg-slate-50/50 space-y-1 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-900">{g.name}</span>
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-100 text-purple-900">
+                                {g.relation || 'Guardian'}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-slate-600">
+                              <span>Phone: <strong className="font-mono text-slate-800">{g.phone || 'N/A'}</strong></span>
+                              <span>{g.occupation || ''}</span>
+                            </div>
+                            <div className="flex items-center gap-2 pt-1 text-[10px] text-emerald-800 font-medium flex-wrap">
+                              {g.isLegalGuardian && <span>✓ Legal Guardian: Yes</span>}
+                              {g.canConsent && <span>• Can Consent: Yes</span>}
+                              {g.canPickUp && <span>• Pick-up Auth: Yes</span>}
+                            </div>
+                          </div>
+                        ))}
+                        {demographics.familyGroupId && (
+                          <div className="pt-1 text-[11px] text-slate-500 flex items-center justify-between">
+                            <span>Family Link Group ID:</span>
+                            <span className="font-mono font-bold text-purple-900">{demographics.familyGroupId}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="py-6 px-3 text-center border-2 border-dashed border-slate-200 rounded-lg space-y-2 bg-slate-50/40">
+                        <div className="w-8 h-8 rounded-full bg-purple-100/70 text-purple-800 flex items-center justify-center mx-auto">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs text-slate-700 font-semibold">No legal guardians or caregivers recorded yet.</p>
+                        <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                          Mandatory for pediatric &amp; minor patients under DPDP Act 2023. Record legal guardian, phone, and pickup authorization.
+                        </p>
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPatient('guardians')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs cursor-pointer transition-all"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Guardian / Caregiver</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>1.3 Referral Partner &amp; ABHA Health Account</span>
-                  <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                    DPDP Compliant
-                  </span>
-                </div>
-                <div className="p-3 space-y-3 text-xs">
-                  <div className="p-2.5 rounded border border-slate-200 bg-slate-50/50 space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Referring Physician</span>
-                    <p className="font-bold text-slate-900">{demographics.referral?.doctorName}</p>
-                    <p className="text-[11px] text-slate-600">{demographics.referral?.hospital} • {demographics.referral?.discipline}</p>
-                    <p className="text-[11px] text-slate-500 italic">"{demographics.referral?.notes || demographics.referral?.reason || 'Clinical Consultation'}"</p>
-                  </div>
-
-                  <div className="p-2.5 rounded border border-purple-200 bg-purple-50/30 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">
-                        Ayushman Bharat Health Account (ABHA)
-                      </span>
-                      <span className="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-1 rounded border border-emerald-200">
-                        Encrypted
-                      </span>
+              {/* 1.3 Referral Partner & ABHA */}
+              <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>1.3 Referral Partner &amp; ABHA Health Account</span>
                     </div>
-                    <p className="font-mono font-bold text-purple-950 text-xs">{demographics.abhaId || demographics.abha?.id || '91-XXXX-XXXX-XXXX'}</p>
-                    <p className="text-[10px] text-slate-500">
-                      DPDP Act 2023 compliant: Zero Aadhaar data stored.
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                        DPDP Compliant
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditPatient('referral')}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 flex items-center gap-1 transition-colors cursor-pointer"
+                        title="Add or edit referring physician and ABHA ID"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>{(demographics.referral && (demographics.referral.doctorName || demographics.referral.hospital)) || demographics.abhaId || demographics.abha ? 'Edit' : '+ Add'}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-3 text-xs">
+                    {demographics.referral && (demographics.referral.doctorName || demographics.referral.hospital) ? (
+                      <div className="p-2.5 rounded border border-slate-200 bg-slate-50/50 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Referring Physician</span>
+                        <p className="font-bold text-slate-900">{demographics.referral.doctorName}</p>
+                        {(demographics.referral.hospital || demographics.referral.discipline) && (
+                          <p className="text-[11px] text-slate-600">
+                            {demographics.referral.hospital} {demographics.referral.discipline ? `• ${demographics.referral.discipline}` : ''}
+                          </p>
+                        )}
+                        {(demographics.referral.notes || demographics.referral.reason) && (
+                          <p className="text-[11px] text-slate-500 italic">
+                            "{demographics.referral.notes || demographics.referral.reason}"
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {demographics.abhaId || demographics.abha?.id ? (
+                      <div className="p-2.5 rounded border border-purple-200 bg-purple-50/30 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">
+                            Ayushman Bharat Health Account (ABHA)
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-1 rounded border border-emerald-200">
+                            Encrypted
+                          </span>
+                        </div>
+                        <p className="font-mono font-bold text-purple-950 text-xs">{demographics.abhaId || demographics.abha?.id}</p>
+                        <p className="text-[10px] text-slate-500">
+                          DPDP Act 2023 compliant: Zero Aadhaar data stored.
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {!((demographics.referral && (demographics.referral.doctorName || demographics.referral.hospital)) || demographics.abhaId || demographics.abha?.id) && (
+                      <div className="py-6 px-3 text-center border-2 border-dashed border-slate-200 rounded-lg space-y-2 bg-slate-50/40">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100/70 text-emerald-800 flex items-center justify-center mx-auto">
+                          <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs text-slate-700 font-semibold">No referral partner or ABHA health account recorded yet.</p>
+                        <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                          Record referring pediatrician/ENT doctor, clinical referral notes, and Ayushman Bharat (ABHA) ID.
+                        </p>
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPatient('referral')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs cursor-pointer transition-all"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Referral &amp; ABHA Details</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2322,152 +2518,440 @@ export const PatientDetailPage = () => {
         title={`Edit Patient Master Profile: ${demographics.fullName} (${demographics.uhid})`}
         size="lg"
       >
-        <form onSubmit={handleSavePatientEdit} className="space-y-3.5 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">
-                Full Legal Name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={editPatientForm.full_name}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, full_name: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">
-                Date of Birth <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                required
-                value={editPatientForm.date_of_birth}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, date_of_birth: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:border-purple-600 focus:outline-hidden"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Biological Sex</label>
-              <select
-                value={editPatientForm.gender}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, gender: e.target.value })}
-                className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-              >
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Primary Phone</label>
-              <input
-                type="tel"
-                value={editPatientForm.phone}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, phone: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Email Address</label>
-              <input
-                type="email"
-                value={editPatientForm.email}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, email: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Guardian / Caregiver Name</label>
-              <input
-                type="text"
-                value={editPatientForm.guardian_name}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, guardian_name: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Guardian Contact Phone</label>
-              <input
-                type="tel"
-                value={editPatientForm.guardian_phone}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, guardian_phone: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">City / Locality</label>
-              <input
-                type="text"
-                value={editPatientForm.city}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, city: e.target.value })}
-                className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-1">Primary Clinical Service Line</label>
-              <select
-                value={editPatientForm.service_line}
-                onChange={(e) => setEditPatientForm({ ...editPatientForm, service_line: e.target.value })}
-                className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
-              >
-                <option value="SPEECH_LANGUAGE">Speech &amp; Language Pathology</option>
-                <option value="AUDIOLOGY">Audiology &amp; Hearing Rehabilitation</option>
-                <option value="VOICE">Voice Therapy &amp; Laryngeal Rehab</option>
-                <option value="DEVELOPMENTAL">Early Childhood Developmental Care</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-slate-700 font-bold mb-1">Residential Address</label>
-            <input
-              type="text"
-              value={editPatientForm.address}
-              onChange={(e) => setEditPatientForm({ ...editPatientForm, address: e.target.value })}
-              className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-700 font-bold mb-1">Primary Clinical Concern / Diagnosis</label>
-            <textarea
-              rows={2}
-              value={editPatientForm.primary_concern}
-              onChange={(e) => setEditPatientForm({ ...editPatientForm, primary_concern: e.target.value })}
-              className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+        <form onSubmit={handleSavePatientEdit} className="space-y-4 text-xs font-sans">
+          {/* Modal Tab Switcher */}
+          <div className="flex border-b border-slate-200 gap-2">
             <button
               type="button"
-              onClick={() => setIsEditPatientModalOpen(false)}
-              className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              onClick={() => setEditPatientModalTab('demographics')}
+              className={`pb-2 px-2 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+                editPatientModalTab === 'demographics'
+                  ? 'border-[#301444] text-[#301444]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
             >
-              Cancel
+              1. Demographics &amp; Contact
             </button>
             <button
-              type="submit"
-              className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs"
+              type="button"
+              onClick={() => setEditPatientModalTab('guardians')}
+              className={`pb-2 px-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                editPatientModalTab === 'guardians'
+                  ? 'border-[#301444] text-[#301444]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
             >
-              Save Profile Changes
+              <span>1.2 Guardians &amp; Caregivers</span>
+              {editPatientForm.guardians?.length > 0 && (
+                <span className="text-[10px] bg-purple-100 text-purple-900 px-1.5 py-0.2 rounded-full font-bold">
+                  {editPatientForm.guardians.length}
+                </span>
+              )}
             </button>
+            <button
+              type="button"
+              onClick={() => setEditPatientModalTab('referral')}
+              className={`pb-2 px-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                editPatientModalTab === 'referral'
+                  ? 'border-[#301444] text-[#301444]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span>1.3 Referral &amp; ABHA</span>
+              {(editPatientForm.referral?.doctorName || editPatientForm.abha_id) && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          </div>
+
+          {/* TAB 1: DEMOGRAPHICS */}
+          {editPatientModalTab === 'demographics' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Full Legal Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editPatientForm.full_name}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, full_name: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Date of Birth <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editPatientForm.date_of_birth}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, date_of_birth: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:border-purple-600 focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Biological Sex</label>
+                  <select
+                    value={editPatientForm.gender}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, gender: e.target.value })}
+                    className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                  >
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Primary Phone</label>
+                  <input
+                    type="tel"
+                    value={editPatientForm.phone}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, phone: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Alternate Phone</label>
+                  <input
+                    type="tel"
+                    value={editPatientForm.alt_phone}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, alt_phone: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    value={editPatientForm.email}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, email: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">City / Locality</label>
+                  <input
+                    type="text"
+                    value={editPatientForm.city}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, city: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Primary Clinical Service Line</label>
+                  <select
+                    value={editPatientForm.service_line}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, service_line: e.target.value })}
+                    className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
+                  >
+                    <option value="SPEECH_LANGUAGE">Speech &amp; Language Pathology</option>
+                    <option value="AUDIOLOGY">Audiology &amp; Hearing Rehabilitation</option>
+                    <option value="VOICE">Voice Therapy &amp; Laryngeal Rehab</option>
+                    <option value="DEVELOPMENTAL">Early Childhood Developmental Care</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Residential Address</label>
+                  <input
+                    type="text"
+                    value={editPatientForm.address}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, address: e.target.value })}
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Primary Clinical Concern / Chief Complaint</label>
+                <textarea
+                  rows={2}
+                  value={editPatientForm.primary_concern}
+                  onChange={(e) => setEditPatientForm({ ...editPatientForm, primary_concern: e.target.value })}
+                  placeholder="Primary reason for referral or consultation..."
+                  className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: GUARDIANS & CAREGIVERS (1.2) */}
+          {editPatientModalTab === 'guardians' && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Family Link Group ID</label>
+                <input
+                  type="text"
+                  placeholder="e.g. FAM-MH-STR-2026-0042"
+                  value={editPatientForm.family_group_id}
+                  onChange={(e) => setEditPatientForm({ ...editPatientForm, family_group_id: e.target.value })}
+                  className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded font-mono focus:border-purple-600 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 text-xs">Caregivers &amp; Legal Guardians</span>
+                  <button
+                    type="button"
+                    onClick={handleAddGuardianRow}
+                    className="h-7 px-2.5 rounded bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-xs flex items-center gap-1 border border-purple-200 cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Add Guardian / Caregiver</span>
+                  </button>
+                </div>
+
+                {editPatientForm.guardians && editPatientForm.guardians.length > 0 ? (
+                  editPatientForm.guardians.map((g, idx) => (
+                    <div key={idx} className="p-3 rounded-lg border border-slate-200 bg-slate-50/70 space-y-2.5 relative">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                        <span className="font-bold text-slate-700 text-xs">Guardian #{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveGuardianRow(idx)}
+                          className="text-rose-600 hover:text-rose-800 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Full Name *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Sachin Dattatray Shinde"
+                            value={g.name}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'name', e.target.value)}
+                            className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Relationship *</label>
+                          <select
+                            value={g.relation}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'relation', e.target.value)}
+                            className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
+                          >
+                            <option value="Father">Father</option>
+                            <option value="Mother">Mother</option>
+                            <option value="Legal Guardian">Legal Guardian</option>
+                            <option value="Grandparent">Grandparent</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Caregiver">Caregiver</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Contact Phone</label>
+                          <input
+                            type="tel"
+                            placeholder="+91 98220 12345"
+                            value={g.phone}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'phone', e.target.value)}
+                            className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded font-mono focus:outline-hidden"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Occupation</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Civil Engineer, Teacher"
+                            value={g.occupation}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'occupation', e.target.value)}
+                            className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 pt-1 flex-wrap text-xs text-slate-700">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(g.isLegalGuardian)}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'isLegalGuardian', e.target.checked)}
+                            className="rounded border-slate-300 text-purple-900 focus:ring-0"
+                          />
+                          <span>Legal Guardian</span>
+                        </label>
+
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(g.canConsent)}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'canConsent', e.target.checked)}
+                            className="rounded border-slate-300 text-purple-900 focus:ring-0"
+                          />
+                          <span>Authorized for Clinical Consent</span>
+                        </label>
+
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(g.canPickUp)}
+                            onChange={(e) => handleUpdateGuardianField(idx, 'canPickUp', e.target.checked)}
+                            className="rounded border-slate-300 text-purple-900 focus:ring-0"
+                          />
+                          <span>Authorized for Pick-up / Discharge</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-6 px-3 text-center border-2 border-dashed border-slate-200 rounded-lg space-y-2 bg-slate-50/40">
+                    <p className="text-xs text-slate-600 font-medium">No guardians added yet for this patient.</p>
+                    <p className="text-[11px] text-slate-400">Click below to add a father, mother, or legal caregiver.</p>
+                    <button
+                      type="button"
+                      onClick={handleAddGuardianRow}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Guardian / Caregiver</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: REFERRAL & ABHA (1.3) */}
+          {editPatientModalTab === 'referral' && (
+            <div className="space-y-3.5">
+              <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 space-y-2.5">
+                <span className="font-bold text-slate-800 text-xs block">Referring Medical Partner / Doctor</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Doctor Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dr. Nilesh Kulkarni, MD"
+                      value={editPatientForm.referral?.doctorName || ''}
+                      onChange={(e) =>
+                        setEditPatientForm({
+                          ...editPatientForm,
+                          referral: { ...editPatientForm.referral, doctorName: e.target.value },
+                        })
+                      }
+                      className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Specialization / Discipline</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Paediatrician, ENT Surgeon"
+                      value={editPatientForm.referral?.discipline || ''}
+                      onChange={(e) =>
+                        setEditPatientForm({
+                          ...editPatientForm,
+                          referral: { ...editPatientForm.referral, discipline: e.target.value },
+                        })
+                      }
+                      className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Hospital / Clinic / Department</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Satara Child Health Hospital & NICU"
+                      value={editPatientForm.referral?.hospital || ''}
+                      onChange={(e) =>
+                        setEditPatientForm({
+                          ...editPatientForm,
+                          referral: { ...editPatientForm.referral, hospital: e.target.value },
+                        })
+                      }
+                      className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Referral Reason / Clinical Notes</label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Speech delay, unclear speech at 3.5 years..."
+                      value={editPatientForm.referral?.notes || ''}
+                      onChange={(e) =>
+                        setEditPatientForm({
+                          ...editPatientForm,
+                          referral: { ...editPatientForm.referral, notes: e.target.value },
+                        })
+                      }
+                      className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg border border-purple-200 bg-purple-50/40 space-y-2">
+                <span className="font-bold text-purple-950 text-xs block">
+                  Ayushman Bharat Digital Mission (ABDM) / ABHA Health Account
+                </span>
+                <div>
+                  <label className="block text-[11px] font-bold text-purple-900 mb-0.5">
+                    ABHA ID / ABHA Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 91-4412-8921-0042@abdm or 14-digit ABHA Number"
+                    value={editPatientForm.abha_id}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, abha_id: e.target.value })}
+                    className="w-full h-8 px-2 text-xs bg-white border border-purple-300 rounded font-mono focus:border-purple-600 focus:outline-hidden"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    DPDP Act 2023 compliant: Zero Aadhaar data stored. Linked securely to Ayushman Bharat Health Records.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+            <span className="text-[11px] text-slate-500">
+              * Changes persist securely under patient record.
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditPatientModalOpen(false)}
+                className="h-8 px-3 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="h-8 px-4 rounded text-xs font-bold bg-[#301444] text-white hover:bg-purple-950 shadow-2xs cursor-pointer"
+              >
+                Save Profile Changes
+              </button>
+            </div>
           </div>
         </form>
       </Modal>

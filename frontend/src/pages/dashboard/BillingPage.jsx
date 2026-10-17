@@ -31,6 +31,8 @@ import {
   AlertTriangle,
   Check,
   ExternalLink,
+  Users,
+  User,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
@@ -38,6 +40,7 @@ import Modal from '../../components/common/Modal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { getServiceRates } from '../../data/serviceRatesData';
 import { printClinicalInvoice, numberToWordsINR } from '../../utils/invoicePrint';
+import { SEED_PATIENTS } from '../../data/patientClinicalProfiles';
 
 const WhatsAppIcon = ({ className = "w-3.5 h-3.5" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -330,13 +333,122 @@ export const BillingPage = () => {
   const [newTaxType, setNewTaxType] = useState('HEALTHCARE_EXEMPT');
   const [newPaymentMode, setNewPaymentMode] = useState('UPI');
 
+  // Registered Patient Search & Autocomplete State
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
+  const [selectedPatientRecord, setSelectedPatientRecord] = useState(null);
+  const patientDropdownRef = useRef(null);
+
+  // Load all registered patients from local storage / seed
+  const registeredPatients = useMemo(() => {
+    let list = [];
+    try {
+      const saved = localStorage.getItem('vaani_patients_v1');
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          list = parsed;
+        }
+      }
+    } catch {}
+
+    if (list.length === 0) {
+      list = SEED_PATIENTS || [];
+    }
+    return list;
+  }, [isInvoiceModalOpen]);
+
+  // Filter matched patients by name, UHID, phone, service line, or city
+  const matchedPatients = useMemo(() => {
+    const q = patientSearchQuery.trim().toLowerCase();
+    if (!q) {
+      return registeredPatients.slice(0, 8);
+    }
+    return registeredPatients.filter((p) => {
+      const name = (p.full_name || '').toLowerCase();
+      const uhid = (p.uhid || '').toLowerCase();
+      const phone = (p.phone || p.guardian_phone || '').toLowerCase();
+      const srv = (p.service_line || '').toLowerCase();
+      const city = (p.city || '').toLowerCase();
+      return name.includes(q) || uhid.includes(q) || phone.includes(q) || srv.includes(q) || city.includes(q);
+    }).slice(0, 10);
+  }, [registeredPatients, patientSearchQuery]);
+
+  // Handle selecting a patient from the search dropdown
+  const handleSelectPatientForInvoice = (p) => {
+    setSelectedPatientRecord(p);
+    setNewPatientName(p.full_name || '');
+    setNewUhid(p.uhid || '');
+    setNewPhone(p.phone || p.guardian_phone || '');
+    setPatientSearchQuery('');
+    setIsPatientDropdownOpen(false);
+
+    // Auto-suggest clinical service based on patient discipline
+    if (p.service_line) {
+      const srv = p.service_line.toUpperCase();
+      let matchedService = null;
+      if (srv.includes('AUD')) {
+        matchedService = serviceRates.find(s => s.code === 'SVC-AUD-001' || s.name.includes('Pure Tone'));
+      } else if (srv.includes('SPEECH') || srv.includes('LANG')) {
+        matchedService = serviceRates.find(s => s.code === 'SVC-SLP-001' || s.name.includes('Speech'));
+      } else if (srv.includes('VOI')) {
+        matchedService = serviceRates.find(s => s.code === 'SVC-VOI-001' || s.name.includes('Voice'));
+      } else if (srv.includes('CBT') || srv.includes('PSYCH')) {
+        matchedService = serviceRates.find(s => s.code === 'SVC-CBT-001' || s.name.includes('Tinnitus'));
+      }
+
+      if (matchedService) {
+        setNewService(matchedService.name);
+        setNewAmount(matchedService.baseRate);
+        setNewTaxType(matchedService.taxType);
+      }
+    }
+
+    notify.info(`Auto-populated details for ${p.full_name} (${p.uhid})`);
+  };
+
+  const handleClearSelectedPatient = () => {
+    setSelectedPatientRecord(null);
+    setNewPatientName('');
+    setNewUhid('');
+    setNewPhone('');
+    setPatientSearchQuery('');
+  };
+
+  const handleOpenNewInvoiceModal = () => {
+    setSelectedPatientRecord(null);
+    setPatientSearchQuery('');
+    setIsPatientDropdownOpen(false);
+    setNewPatientName('');
+    setNewUhid('');
+    setNewPhone('');
+    setNewService('Pure Tone Audiometry (PTA)');
+    setNewAmount(800);
+    setNewTaxType('HEALTHCARE_EXEMPT');
+    setNewPaymentMode('UPI');
+    setIsInvoiceModalOpen(true);
+  };
+
+  // Close patient dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target)) {
+        setIsPatientDropdownOpen(false);
+      }
+    };
+    if (isPatientDropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }
+  }, [isPatientDropdownOpen]);
+
   // Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Option + N / Alt + N -> New Invoice
       if (isAlt(e) && isKey(e, 'n')) {
         e.preventDefault();
-        setIsInvoiceModalOpen(true);
+        handleOpenNewInvoiceModal();
       }
       // Option + E / Alt + E -> Export CSV
       if (isAlt(e) && isKey(e, 'e')) {
@@ -506,6 +618,9 @@ export const BillingPage = () => {
     notify.success(`Invoice ${newInv.invoiceNo} created successfully!`);
 
     // Reset Form
+    setSelectedPatientRecord(null);
+    setPatientSearchQuery('');
+    setIsPatientDropdownOpen(false);
     setNewPatientName('');
     setNewUhid('');
     setNewPhone('');
@@ -702,7 +817,7 @@ export const BillingPage = () => {
 
           <button
             type="button"
-            onClick={() => setIsInvoiceModalOpen(true)}
+            onClick={handleOpenNewInvoiceModal}
             className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Create new GST tax invoice (Alt + N / ⌥N)"
           >
@@ -1086,6 +1201,118 @@ export const BillingPage = () => {
         size="md"
       >
         <form ref={invoiceFormRef} onSubmit={handleCreateInvoice} className="space-y-3 font-sans text-xs">
+          {/* ── PATIENT SEARCH & AUTO-POPULATE COMBOBOX ── */}
+          <div className="space-y-1.5" ref={patientDropdownRef}>
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-xs text-purple-950 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-purple-700" />
+                <span>Search &amp; Select Existing Patient (Auto-populate Info)</span>
+              </label>
+              <span className="text-[10px] text-slate-500 font-medium">
+                Search by Name, UHID, or Mobile
+              </span>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Type patient name, UHID (e.g. VN-26-0001), or phone number..."
+                value={patientSearchQuery}
+                onChange={(e) => {
+                  setPatientSearchQuery(e.target.value);
+                  setIsPatientDropdownOpen(true);
+                }}
+                onFocus={() => setIsPatientDropdownOpen(true)}
+                className="h-8.5 w-full pl-8 pr-8 text-xs font-medium bg-purple-50/50 border border-purple-200 rounded-md focus:border-purple-600 focus:bg-white focus:outline-none transition-all placeholder:text-slate-400"
+              />
+              {patientSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPatientSearchQuery('');
+                    setIsPatientDropdownOpen(false);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Autocomplete Dropdown List */}
+              {isPatientDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100">
+                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between sticky top-0 z-10">
+                    <span>Registered Patients ({matchedPatients.length} found)</span>
+                    <span className="text-[10px] text-purple-800 font-semibold">Click to select &amp; auto-fill</span>
+                  </div>
+                  {matchedPatients.length > 0 ? (
+                    matchedPatients.map((p) => (
+                      <div
+                        key={p.id || p.uhid}
+                        onClick={() => handleSelectPatientForInvoice(p)}
+                        className="p-2.5 hover:bg-purple-50/80 cursor-pointer flex items-center justify-between transition-colors gap-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900 text-xs">{p.full_name}</span>
+                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 bg-purple-100 text-purple-900 rounded border border-purple-200">
+                              {p.uhid}
+                            </span>
+                            {p.gender && (
+                              <span className="text-[10px] text-slate-500">
+                                {p.gender}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                            <span className="font-mono font-medium text-slate-700">{p.phone}</span>
+                            {p.city && <span>• {p.city}</span>}
+                            {p.service_line && (
+                              <span className="text-purple-800 font-semibold">• {p.service_line}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded bg-[#301444] text-white hover:bg-purple-950 transition-colors shadow-2xs pointer-events-none"
+                        >
+                          Select
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-slate-500 space-y-1">
+                      <p>No registered patient matching &quot;{patientSearchQuery}&quot;</p>
+                      <p className="text-[11px] text-slate-400">
+                        You can still manually type the details below for walk-in patients.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Selected Patient Confirmation Banner */}
+            {selectedPatientRecord && (
+              <div className="p-2 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-emerald-950 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Linked Patient: <strong>{selectedPatientRecord.full_name}</strong> (<strong className="font-mono">{selectedPatientRecord.uhid}</strong>) • {selectedPatientRecord.phone}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearSelectedPatient}
+                  className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 underline cursor-pointer shrink-0"
+                >
+                  Clear / Change
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID (Optional)</label>
@@ -1093,7 +1320,12 @@ export const BillingPage = () => {
                 type="text"
                 placeholder="VN-26-0082"
                 value={newUhid}
-                onChange={(e) => setNewUhid(e.target.value)}
+                onChange={(e) => {
+                  setNewUhid(e.target.value);
+                  if (selectedPatientRecord && e.target.value !== selectedPatientRecord.uhid) {
+                    setSelectedPatientRecord(null);
+                  }
+                }}
                 className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
               />
             </div>
@@ -1104,7 +1336,12 @@ export const BillingPage = () => {
                 required
                 placeholder="e.g. Ramesh Shinde"
                 value={newPatientName}
-                onChange={(e) => setNewPatientName(e.target.value)}
+                onChange={(e) => {
+                  setNewPatientName(e.target.value);
+                  if (selectedPatientRecord && e.target.value !== selectedPatientRecord.full_name) {
+                    setSelectedPatientRecord(null);
+                  }
+                }}
                 className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
               />
             </div>
