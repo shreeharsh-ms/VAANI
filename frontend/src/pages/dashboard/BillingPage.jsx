@@ -268,10 +268,14 @@ export const BillingPage = () => {
   const [invoices, setInvoices] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_invoices_v1');
-      return saved ? JSON.parse(saved) : INITIAL_INVOICES;
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       return INITIAL_INVOICES;
     }
+    return INITIAL_INVOICES;
   });
 
   // Search & Filter State

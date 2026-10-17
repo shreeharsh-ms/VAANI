@@ -196,23 +196,14 @@ export const SEED_APPOINTMENTS = [
 export const getAllAppointments = () => {
   try {
     const saved = localStorage.getItem('vaani_appointments_v1');
-    if (!saved) {
-      localStorage.setItem('vaani_appointments_v1', JSON.stringify(SEED_APPOINTMENTS));
-      return SEED_APPOINTMENTS;
-    }
-    const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return SEED_APPOINTMENTS;
-    }
-    // Ensure all seed appointments exist
-    const existingIds = new Set(parsed.map((a) => a.id));
-    const merged = [...parsed];
-    for (const seed of SEED_APPOINTMENTS) {
-      if (!existingIds.has(seed.id)) {
-        merged.push(seed);
+    if (saved !== null) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed;
       }
     }
-    return merged;
+    localStorage.setItem('vaani_appointments_v1', JSON.stringify(SEED_APPOINTMENTS));
+    return SEED_APPOINTMENTS;
   } catch (e) {
     console.warn('Failed to load appointments from localStorage:', e);
     return SEED_APPOINTMENTS;

@@ -38,14 +38,10 @@ export const ReportsPage = () => {
   const [allReports, setAllReports] = useState(() => {
     try {
       const stored = localStorage.getItem('vaani_clinical_reports_v1');
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge custom stored reports on top of default ones
-          const defaultFiltered = DEFAULT_ASSESSMENTS.filter(
-            (def) => !parsed.some((p) => p.report_number === def.report_number)
-          );
-          return [...parsed, ...defaultFiltered];
+        if (Array.isArray(parsed)) {
+          return parsed;
         }
       }
     } catch (e) {

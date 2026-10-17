@@ -156,10 +156,14 @@ export const PatientsPage = () => {
   const [patients, setPatients] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_patients_v1');
-      return saved ? JSON.parse(saved) : SEED_PATIENTS;
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       return SEED_PATIENTS;
     }
+    return SEED_PATIENTS;
   });
 
   // Search & Filter State
@@ -180,6 +184,14 @@ export const PatientsPage = () => {
   // Sync with patientService if available
   const fetchPatients = async () => {
     try {
+      const saved = localStorage.getItem('vaani_patients_v1');
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setPatients(parsed);
+          return;
+        }
+      }
       const data = await patientService.getPatients().catch(() => null);
       if (data && data.length > 0) {
         setPatients(data);

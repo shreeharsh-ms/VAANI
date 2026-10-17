@@ -42,3 +42,6 @@ htmlcov/
 .idea/
 *.swp
 *.swo
+
+# Local scratch
+scratch/

@@ -64,9 +64,9 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
   const allRegisteredPatients = useMemo(() => {
     try {
       const saved = localStorage.getItem('vaani_patients_v1');
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
     return SEED_PATIENTS;

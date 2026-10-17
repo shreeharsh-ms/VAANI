@@ -143,10 +143,14 @@ export const InventoryPage = () => {
   const [devices, setDevices] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_inventory_v1');
-      return saved ? JSON.parse(saved) : INITIAL_DEVICES;
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       return INITIAL_DEVICES;
     }
+    return INITIAL_DEVICES;
   });
 
   // Search & Filter State

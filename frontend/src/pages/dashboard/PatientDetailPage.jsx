@@ -83,17 +83,23 @@ export const PatientDetailPage = () => {
 
   // Resolve Patient from LocalStorage or SEED_PATIENTS or PATIENT_DOSSIERS
   const patient = useMemo(() => {
-    let list = SEED_PATIENTS;
+    let list = [];
+    let hasSavedData = false;
     try {
       const saved = localStorage.getItem('vaani_patients_v1');
-      if (saved) {
+      if (saved !== null) {
+        hasSavedData = true;
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           list = parsed;
         }
       }
     } catch {
       // Fallback
+    }
+
+    if (!hasSavedData) {
+      list = SEED_PATIENTS;
     }
 
     const normalizedId = (id || '').trim().toLowerCase();
@@ -105,25 +111,27 @@ export const PatientDetailPage = () => {
 
     if (found) return found;
 
-    // Direct dossier match fallback
-    const upperId = (id || '').trim().toUpperCase();
-    if (PATIENT_DOSSIERS[upperId]) {
-      const dossierDemo = PATIENT_DOSSIERS[upperId].demographics;
-      return {
-        id: `p_${upperId}`,
-        uhid: dossierDemo.uhid,
-        full_name: dossierDemo.fullName,
-        date_of_birth: dossierDemo.dob,
-        gender: dossierDemo.sex,
-        phone: dossierDemo.primaryPhone,
-        guardian_name: dossierDemo.guardians?.[0]?.name || 'Self',
-        guardian_phone: dossierDemo.guardians?.[0]?.phone || dossierDemo.primaryPhone,
-        service_line: 'CLINICAL',
-        city: dossierDemo.locality,
-      };
+    // Direct dossier match fallback only if not explicitly purged
+    if (!hasSavedData) {
+      const upperId = (id || '').trim().toUpperCase();
+      if (PATIENT_DOSSIERS[upperId]) {
+        const dossierDemo = PATIENT_DOSSIERS[upperId].demographics;
+        return {
+          id: `p_${upperId}`,
+          uhid: dossierDemo.uhid,
+          full_name: dossierDemo.fullName,
+          date_of_birth: dossierDemo.dob,
+          gender: dossierDemo.sex,
+          phone: dossierDemo.primaryPhone,
+          guardian_name: dossierDemo.guardians?.[0]?.name || 'Self',
+          guardian_phone: dossierDemo.guardians?.[0]?.phone || dossierDemo.primaryPhone,
+          service_line: 'CLINICAL',
+          city: dossierDemo.locality,
+        };
+      }
     }
 
-    return list[0];
+    return list[0] || null;
   }, [id, patientRefreshTick]);
 
   const { notify } = useNotification();

@@ -115,10 +115,14 @@ export const RecallsPage = () => {
   const [recalls, setRecalls] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_recalls_v1');
-      return saved ? JSON.parse(saved) : INITIAL_RECALLS;
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       return INITIAL_RECALLS;
     }
+    return INITIAL_RECALLS;
   });
 
   // Filter & Search State

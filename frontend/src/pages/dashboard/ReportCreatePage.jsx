@@ -42,9 +42,9 @@ export const ReportCreatePage = () => {
   const [allPatients, setAllPatients] = useState(() => {
     try {
       const stored = localStorage.getItem('vaani_patients_v1');
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }

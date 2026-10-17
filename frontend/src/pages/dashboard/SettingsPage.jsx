@@ -31,6 +31,13 @@ import {
   Info,
   UploadCloud,
   Image as ImageIcon,
+  Database,
+  HardDrive,
+  AlertTriangle,
+  ShieldAlert,
+  Archive,
+  FileSpreadsheet,
+  FileCheck,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -328,11 +335,11 @@ export const SettingsPage = () => {
   const [showPan, setShowPan] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sync active tab if navigated via URL query parameter (e.g. ?tab=smtp)
+  // Sync active tab if navigated via URL query parameter (e.g. ?tab=smtp or ?tab=data_lifecycle)
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['booking', 'credentials', 'hours', 'billing', 'communications', 'smtp', 'features', 'profile', 'audit'].includes(tabParam)) {
-      setActiveTab(tabParam);
+    if (tabParam && ['booking', 'credentials', 'hours', 'billing', 'communications', 'smtp', 'features', 'profile', 'audit', 'data_lifecycle', 'backup'].includes(tabParam)) {
+      setActiveTab(tabParam === 'backup' ? 'data_lifecycle' : tabParam);
     }
   }, [searchParams]);
 
@@ -781,6 +788,308 @@ export const SettingsPage = () => {
     }
   };
 
+  // ── DATA MANAGEMENT, BACKUP & PURGE STATE & ENGINE ──
+  const [isWipeModalOpen, setIsWipeModalOpen] = useState(false);
+  const [wipeConfirmText, setWipeConfirmText] = useState('');
+  const [autoBackupBeforeWipe, setAutoBackupBeforeWipe] = useState(true);
+  const [isWiping, setIsWiping] = useState(false);
+  const [storageTick, setStorageTick] = useState(0);
+  const backupImportInputRef = useRef(null);
+
+  // Storage Metrics & Inventory Table Computation
+  const storageMetrics = useMemo(() => {
+    const userStored = localStorage.getItem('vaani_user');
+    const clinicStored = localStorage.getItem('vaani_clinic_settings_v1');
+    const ratesStored = localStorage.getItem('vaani_service_rates_v1');
+    const holidaysStored = localStorage.getItem('vaani_clinic_holidays_v1');
+
+    const patientsStored = localStorage.getItem('vaani_patients_v1');
+    const aptsStored = localStorage.getItem('vaani_appointments_v1');
+    const invsStored = localStorage.getItem('vaani_invoices_v1');
+    const billInvsStored = localStorage.getItem('vaani_billing_invoices_v1');
+    const reportsStored = localStorage.getItem('vaani_clinical_reports_v1');
+    const inventoryStored = localStorage.getItem('vaani_inventory_v1');
+    const recallsStored = localStorage.getItem('vaani_recalls_v1');
+    const mailStored = localStorage.getItem('vaani_clinic_mail_logs_v1');
+
+    let edhCount = 0;
+    let therapyCount = 0;
+    let soapCount = 0;
+    let totalTransactionalBytes = 0;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const val = localStorage.getItem(key) || '';
+      if (key && key.startsWith('vaani_edh_')) {
+        edhCount++;
+        totalTransactionalBytes += val.length;
+      } else if (key && key.startsWith('vaani_therapy_')) {
+        therapyCount++;
+        totalTransactionalBytes += val.length;
+      } else if (key && key.startsWith('vaani_soap_')) {
+        soapCount++;
+        totalTransactionalBytes += val.length;
+      }
+    }
+
+    const safeParseArray = (raw) => {
+      try {
+        const p = JSON.parse(raw);
+        return Array.isArray(p) ? p : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const patientCount = safeParseArray(patientsStored).length;
+    const aptCount = safeParseArray(aptsStored).length;
+    const invCount = safeParseArray(invsStored).length + safeParseArray(billInvsStored).length;
+    const reportCount = safeParseArray(reportsStored).length;
+    const inventoryCount = safeParseArray(inventoryStored).length;
+    const recallCount = safeParseArray(recallsStored).length;
+    const mailCount = safeParseArray(mailStored).length;
+
+    totalTransactionalBytes +=
+      (patientsStored?.length || 0) +
+      (aptsStored?.length || 0) +
+      (invsStored?.length || 0) +
+      (billInvsStored?.length || 0) +
+      (reportsStored?.length || 0) +
+      (inventoryStored?.length || 0) +
+      (recallsStored?.length || 0) +
+      (mailStored?.length || 0);
+
+    const totalTransactionalRecords =
+      patientCount +
+      aptCount +
+      invCount +
+      reportCount +
+      edhCount +
+      therapyCount +
+      soapCount +
+      inventoryCount +
+      recallCount +
+      mailCount;
+
+    return {
+      patientCount,
+      aptCount,
+      invCount,
+      reportCount,
+      edhCount,
+      therapyCount,
+      soapCount,
+      inventoryCount,
+      recallCount,
+      mailCount,
+      totalTransactionalRecords,
+      totalTransactionalBytes: Math.round(totalTransactionalBytes / 1024),
+      hasUserSession: Boolean(userStored),
+      hasClinicProfile: Boolean(clinicStored),
+      rateCount: safeParseArray(ratesStored).length || serviceRates.length,
+      holidayCount: safeParseArray(holidaysStored).length || holidays.length,
+    };
+  }, [storageTick, serviceRates.length, holidays.length]);
+
+  // Export Full JSON System Backup
+  const handleExportBackup = () => {
+    try {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+      const edhRecords = {};
+      const therapyPlans = {};
+      const soapNotes = {};
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (k.startsWith('vaani_edh_')) {
+          try { edhRecords[k] = JSON.parse(localStorage.getItem(k) || '{}'); } catch {}
+        } else if (k.startsWith('vaani_therapy_')) {
+          try { therapyPlans[k] = JSON.parse(localStorage.getItem(k) || '{}'); } catch {}
+        } else if (k.startsWith('vaani_soap_')) {
+          try { soapNotes[k] = JSON.parse(localStorage.getItem(k) || '{}'); } catch {}
+        }
+      }
+
+      const backupData = {
+        metadata: {
+          version: '1.0',
+          appName: 'Vaani Speech & Hearing Clinic Governance Suite',
+          exportedAt: now.toISOString(),
+          exportedBy: `${user?.name || 'Dr. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
+          clinicLegalName: settings.identity.legalName,
+          rciRegistration: settings.credentials.rciNumber,
+          gstin: settings.credentials.gstin,
+        },
+        protectedIdentity: {
+          clinicSettings: JSON.parse(localStorage.getItem('vaani_clinic_settings_v1') || 'null') || settings,
+          serviceRates: JSON.parse(localStorage.getItem('vaani_service_rates_v1') || 'null') || serviceRates,
+          holidays: JSON.parse(localStorage.getItem('vaani_clinic_holidays_v1') || 'null') || holidays,
+          userSession: JSON.parse(localStorage.getItem('vaani_user') || 'null'),
+        },
+        transactionalData: {
+          patients: JSON.parse(localStorage.getItem('vaani_patients_v1') || '[]'),
+          appointments: JSON.parse(localStorage.getItem('vaani_appointments_v1') || '[]'),
+          invoices: JSON.parse(localStorage.getItem('vaani_invoices_v1') || '[]'),
+          billingInvoices: JSON.parse(localStorage.getItem('vaani_billing_invoices_v1') || '[]'),
+          clinicalReports: JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]'),
+          inventory: JSON.parse(localStorage.getItem('vaani_inventory_v1') || '[]'),
+          recalls: JSON.parse(localStorage.getItem('vaani_recalls_v1') || '[]'),
+          mailLogs: JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]'),
+          auditLogs: JSON.parse(localStorage.getItem('vaani_clinic_audit_v1') || '[]'),
+          edhRecords,
+          therapyPlans,
+          soapNotes,
+        },
+      };
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `vaani_clinic_full_backup_${timestamp}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      notify.success('Full system data backup downloaded successfully!');
+      return true;
+    } catch (err) {
+      console.error('Backup export failed:', err);
+      notify.error('Failed to export backup: ' + err.message);
+      return false;
+    }
+  };
+
+  // Import / Restore Full JSON System Backup
+  const handleImportBackup = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (!imported || (!imported.metadata && !imported.transactionalData && !imported.protectedIdentity)) {
+          throw new Error('Invalid or unrecognized Vaani backup file format.');
+        }
+
+        if (window.confirm('Restore clinical records from backup file? Existing transactional records will be replaced. User accounts and firm details will remain preserved.')) {
+          const trans = imported.transactionalData || {};
+          if (trans.patients) localStorage.setItem('vaani_patients_v1', JSON.stringify(trans.patients));
+          if (trans.appointments) localStorage.setItem('vaani_appointments_v1', JSON.stringify(trans.appointments));
+          if (trans.invoices) localStorage.setItem('vaani_invoices_v1', JSON.stringify(trans.invoices));
+          if (trans.billingInvoices) localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(trans.billingInvoices));
+          if (trans.clinicalReports) localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(trans.clinicalReports));
+          if (trans.inventory) localStorage.setItem('vaani_inventory_v1', JSON.stringify(trans.inventory));
+          if (trans.recalls) localStorage.setItem('vaani_recalls_v1', JSON.stringify(trans.recalls));
+          if (trans.mailLogs) {
+            localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify(trans.mailLogs));
+            setMailLogs(trans.mailLogs);
+          }
+          if (trans.edhRecords) {
+            Object.entries(trans.edhRecords).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+          }
+          if (trans.therapyPlans) {
+            Object.entries(trans.therapyPlans).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+          }
+          if (trans.soapNotes) {
+            Object.entries(trans.soapNotes).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+          }
+
+          setStorageTick((t) => t + 1);
+          window.dispatchEvent(new CustomEvent('vaani-clinic-data-purged'));
+          window.dispatchEvent(new Event('storage'));
+          notify.success('Backup file restored successfully!');
+        }
+      } catch (err) {
+        notify.error('Restore failed: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // Wipe All Transactional Data (Leaving Users & Firm Details Intact)
+  const handleWipeAllClinicalData = () => {
+    if (wipeConfirmText.trim().toUpperCase() !== 'DELETE') {
+      notify.error('Please type DELETE to confirm clinical data purge.');
+      return;
+    }
+
+    setIsWiping(true);
+
+    try {
+      if (autoBackupBeforeWipe) {
+        handleExportBackup();
+      }
+
+      // 1. Wipe all transactional array keys
+      localStorage.setItem('vaani_patients_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_appointments_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_invoices_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_inventory_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_recalls_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([]));
+      sessionStorage.removeItem('vaani_preview_report');
+
+      // 2. Remove all dynamic clinical keys (EDH, Therapy, SOAP)
+      const dynamicKeysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (
+          k &&
+          (k.startsWith('vaani_edh_') ||
+           k.startsWith('vaani_therapy_') ||
+           k.startsWith('vaani_soap_'))
+        ) {
+          dynamicKeysToRemove.push(k);
+        }
+      }
+      dynamicKeysToRemove.forEach((k) => localStorage.removeItem(k));
+
+      // 3. Strictly PRESERVE users & firm details:
+      // vaani_clinic_settings_v1 -> PRESERVED
+      // vaani_user, vaani_token -> PRESERVED
+      // vaani_service_rates_v1 -> PRESERVED
+      // vaani_clinic_holidays_v1 -> PRESERVED
+
+      // 4. Reset Mail logs state
+      setMailLogs([]);
+
+      // 5. Tamper-evident Purge Ledger Record
+      const purgeAudit = [
+        {
+          id: `aud_${Date.now()}`,
+          ts: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          actor: `${user?.name || 'Dr. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
+          action: 'CLINICAL_DATA_PURGED',
+          summary: 'Authorized database purge completed. All transactional patients, appointments, invoices, clinical reports, EDH dossiers, therapy plans & SOAP notes wiped. Clinician user accounts, login session, clinic NAP & firm identity safely preserved.',
+          hash: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`,
+        },
+      ];
+      setAuditLogs(purgeAudit);
+      localStorage.setItem('vaani_clinic_audit_v1', JSON.stringify(purgeAudit));
+
+      setStorageTick((t) => t + 1);
+      window.dispatchEvent(new CustomEvent('vaani-clinic-data-purged'));
+      window.dispatchEvent(new Event('storage'));
+
+      setIsWipeModalOpen(false);
+      setWipeConfirmText('');
+      notify.success('All clinical transactional data deleted! User accounts and firm details remain safely preserved.');
+    } catch (err) {
+      console.error('Data purge failed:', err);
+      notify.error('Failed to wipe data: ' + err.message);
+    } finally {
+      setIsWiping(false);
+    }
+  };
+
   // Tabs Definition
   const tabs = [
     { id: 'booking', label: 'Booking Policy', icon: CalendarCheck, count: '9 rules' },
@@ -792,6 +1101,7 @@ export const SettingsPage = () => {
     { id: 'features', label: 'Features & Security', icon: Sliders, count: '9 mods' },
     { id: 'profile', label: 'Profile & NAP', icon: Building, count: '14 fields' },
     { id: 'audit', label: 'Audit Trail', icon: History, count: `${auditLogs.length} logs` },
+    { id: 'data_lifecycle', label: 'Backup & Wipe Data', icon: Database, count: `${storageMetrics.totalTransactionalRecords} recs` },
   ];
 
   return (
@@ -840,6 +1150,31 @@ export const SettingsPage = () => {
               </button>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={handleExportBackup}
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all cursor-pointer shadow-2xs"
+            title="Download full clinic data backup (.JSON)"
+          >
+            <Download className="w-3 h-3 text-purple-700" />
+            <span className="hidden sm:inline">Backup (.JSON)</span>
+            <span className="sm:hidden">Backup</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('data_lifecycle');
+              setIsWipeModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer shadow-2xs"
+            title="Wipe transactional data while preserving user accounts & firm details"
+          >
+            <Trash2 className="w-3 h-3 text-rose-600" />
+            <span className="hidden sm:inline">Wipe Data</span>
+            <span className="sm:hidden">Wipe</span>
+          </button>
 
           <button
             type="button"
@@ -3029,6 +3364,554 @@ export const SettingsPage = () => {
           </div>
         </div>
       )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          TAB: BACKUP & DATA PURGE (CLINICAL DATA LIFECYCLE & DANGER ZONE)
+          ══════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'data_lifecycle' && (
+        <div className="space-y-3">
+          
+          {/* Top Metric Cards Strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Transactional Records</span>
+                <span className="p-1 rounded bg-purple-50 text-purple-700">
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-1 text-lg font-black text-[#301444] font-mono">
+                {storageMetrics.totalTransactionalRecords}
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium">Purgeable across 10 clinical modules</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Storage Footprint</span>
+                <span className="p-1 rounded bg-blue-50 text-blue-700">
+                  <HardDrive className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-1 text-lg font-black text-slate-800 font-mono">
+                ~{storageMetrics.totalTransactionalBytes} KB
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium">Local browser storage volume</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">User Account Status</span>
+                <span className="p-1 rounded bg-emerald-50 text-emerald-700">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-1 text-xs font-bold text-emerald-800 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>PROTECTED (PRESERVED)</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium truncate">
+                {user?.name || 'Dr. Palak Paresh Gandhi'} ({user?.role || 'OWNER'})
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Firm &amp; Clinic Details</span>
+                <span className="p-1 rounded bg-emerald-50 text-emerald-700">
+                  <Building className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-1 text-xs font-bold text-emerald-800 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>PROTECTED (PRESERVED)</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium truncate">
+                {settings.identity.legalName} • CRR {settings.credentials.rciNumber}
+              </p>
+            </div>
+          </div>
+
+          {/* Backup & Disaster Recovery Card */}
+          <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-2">
+              <div>
+                <h3 className="text-xs font-extrabold text-[#301444] uppercase tracking-wider flex items-center gap-1.5">
+                  <Archive className="w-4 h-4 text-purple-700" />
+                  Full System Data Backup &amp; Disaster Recovery Vault
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Export an unencrypted, structured JSON snapshot of all clinic configurations, clinical dossiers, invoices, and diagnostic records.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="file"
+                  ref={backupImportInputRef}
+                  onChange={handleImportBackup}
+                  accept=".json,application/json"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => backupImportInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+                  title="Restore clinical data from a previous JSON backup file"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Restore from Backup (.JSON)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportBackup}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white transition-all cursor-pointer shadow-2xs"
+                  title="Generate and download full system JSON backup"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export Full Backup (.JSON)</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px] text-slate-600 bg-purple-50/40 p-2 rounded border border-purple-100">
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                <span>Includes complete patient dossiers, EDH histories &amp; SMART plans</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                <span>Includes statutory tax invoices, GST vouchers &amp; diagnostic reports</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                <span>DPDP Act 2023 compliant portable JSON schema</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Excel-style Data Inventory & Retention Table */}
+          <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
+                  Clinic Data Inventory &amp; Protection Ledger
+                </span>
+                <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
+                  14 Key Vaults
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                Users &amp; Firm Profile Protected • Transactional Records Purgeable
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="py-2 px-2.5 w-10 text-center text-slate-400">#</th>
+                    <th className="py-2 px-3 w-48">Module / Domain</th>
+                    <th className="py-2 px-3 w-56 font-mono text-[10px]">Storage Key(s)</th>
+                    <th className="py-2 px-3 w-32">Live Record Count</th>
+                    <th className="py-2 px-3 w-44">Retention Policy</th>
+                    <th className="py-2 px-3">Purge &amp; Delete Disposition</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-normal">
+                  {/* Protected Item 1: User Accounts */}
+                  <tr className="hover:bg-emerald-50/30 transition-colors bg-emerald-50/15">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">1</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">User Accounts &amp; Session</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_user, vaani_token</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-slate-800">1 Active User</td>
+                    <td className="py-1.5 px-3 text-slate-600">Continuous Clinician Auth</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        PROTECTED (PRESERVED ON PURGE)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Protected Item 2: Clinic Settings */}
+                  <tr className="hover:bg-emerald-50/30 transition-colors bg-emerald-50/15">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">2</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Clinic Identity, Logo &amp; NAP</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_clinic_settings_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-slate-800">1 Master Firm Profile</td>
+                    <td className="py-1.5 px-3 text-slate-600">Clinical Establishments Act</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        PROTECTED (PRESERVED ON PURGE)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Protected Item 3: Service Tariff */}
+                  <tr className="hover:bg-emerald-50/30 transition-colors bg-emerald-50/15">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">3</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Clinical Service Rates Tariff</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_service_rates_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-slate-800">{storageMetrics.rateCount} Service Rates</td>
+                    <td className="py-1.5 px-3 text-slate-600">Standard Tariff Master</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        PROTECTED (PRESERVED ON PURGE)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Protected Item 4: Holidays */}
+                  <tr className="hover:bg-emerald-50/30 transition-colors bg-emerald-50/15">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">4</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Clinic Calendar &amp; Holidays</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_clinic_holidays_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-slate-800">{storageMetrics.holidayCount} Gazetted Days</td>
+                    <td className="py-1.5 px-3 text-slate-600">State Gazetted Calendar</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        PROTECTED (PRESERVED ON PURGE)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 5: Patients */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">5</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Registered Patients Master</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_patients_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.patientCount} Patients</td>
+                    <td className="py-1.5 px-3 text-slate-600">7-Year Statutory Default</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 6: Appointments */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">6</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">OPD Appointments &amp; Slots</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_appointments_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.aptCount} Bookings</td>
+                    <td className="py-1.5 px-3 text-slate-600">OPD Day Register</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 7: Invoices */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">7</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Statutory GST Invoices &amp; Vouchers</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_invoices_v1, vaani_billing_invoices_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.invCount} Invoices</td>
+                    <td className="py-1.5 px-3 text-slate-600">8-Year GST Compliance</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 8: Clinical Reports */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">8</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Diagnostic Clinical Reports</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_clinical_reports_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.reportCount} Reports</td>
+                    <td className="py-1.5 px-3 text-slate-600">Medical Diagnostic Battery</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 9: EDH */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">9</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Early Developmental Histories</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_edh_*</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.edhCount} Dossiers</td>
+                    <td className="py-1.5 px-3 text-slate-600">Paediatric Milestones</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (KEYS DELETED)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 10: Therapy Plans */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">10</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Therapy Rehabilitation SMART Plans</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_therapy_*</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.therapyCount} Plans</td>
+                    <td className="py-1.5 px-3 text-slate-600">Clinical Rehab Protocol</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (KEYS DELETED)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 11: SOAP Notes */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">11</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Clinical SOAP Session Notes</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_soap_*</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.soapCount} Sessions</td>
+                    <td className="py-1.5 px-3 text-slate-600">Daily Encounters Ledger</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (KEYS DELETED)
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 12: Inventory */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">12</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Hearing Aid Inventory Stock</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_inventory_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.inventoryCount} Devices</td>
+                    <td className="py-1.5 px-3 text-slate-600">Serial Device Register</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 13: Recalls */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">13</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">Clinical Recalls &amp; Reviews</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_recalls_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.recallCount} Recalls</td>
+                    <td className="py-1.5 px-3 text-slate-600">Acoustic Recall Schedule</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+
+                  {/* Purgeable Item 14: Mail Logs */}
+                  <tr className="hover:bg-rose-50/30 transition-colors">
+                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">14</td>
+                    <td className="py-1.5 px-3 font-semibold text-slate-900">SMTP Email Dispatch Logs</td>
+                    <td className="py-1.5 px-3 font-mono text-[10px] text-slate-600">vaani_clinic_mail_logs_v1</td>
+                    <td className="py-1.5 px-3 font-mono font-bold text-rose-700">{storageMetrics.mailCount} Logs</td>
+                    <td className="py-1.5 px-3 text-slate-600">Outbound Dispatch Trail</td>
+                    <td className="py-1.5 px-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        PURGEABLE (WIPES TO EMPTY [])
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Danger Zone: Clinical Data Purge Container */}
+          <div className="bg-rose-50/60 border-2 border-rose-300 rounded-lg p-3.5 shadow-2xs space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-rose-100 text-rose-700 shrink-0 mt-0.5">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xs font-black text-rose-900 uppercase tracking-wider">
+                  Danger Zone: Clinical Transactional Data Purge &amp; Fresh Start
+                </h3>
+                <p className="text-xs text-rose-800 mt-1 leading-relaxed">
+                  Permanently delete all transactional data across patients, appointments, billing invoices, diagnostic reports, therapy plans, and SOAP notes.
+                  <strong className="font-bold text-emerald-900 ml-1">
+                    Your clinician login account, credentials, clinic legal name, brand logo, address, bank/UPI details, GSTIN, and master service rates will NOT be deleted and will remain safely preserved.
+                  </strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/90 border border-rose-200 rounded p-2.5 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                <span className="font-semibold text-rose-950">
+                  Ready to purge {storageMetrics.totalTransactionalRecords} transactional records? A full JSON backup will be created automatically before wiping.
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleExportBackup}
+                  className="px-3 py-1.5 rounded text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all cursor-pointer shadow-2xs inline-flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Download Backup First</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsWipeModalOpen(true)}
+                  className="px-4 py-1.5 rounded text-xs font-black text-white bg-rose-600 hover:bg-rose-700 transition-all cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete All Clinical Data...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ── MODAL: WIPE ALL CLINICAL DATA CONFIRMATION ── */}
+      <Modal
+        isOpen={isWipeModalOpen}
+        onClose={() => {
+          if (!isWiping) {
+            setIsWipeModalOpen(false);
+            setWipeConfirmText('');
+          }
+        }}
+        title="Confirm Clinical Transactional Data Purge"
+        size="md"
+      >
+        <div className="space-y-3 font-sans text-xs">
+          
+          {/* Red Alert Banner */}
+          <div className="p-2.5 rounded bg-rose-50 border border-rose-200 flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-rose-900">
+                Warning: This action will permanently wipe all clinical transactional records.
+              </p>
+              <p className="text-rose-800 leading-normal">
+                This will delete {storageMetrics.totalTransactionalRecords} items including all registered patients, appointment bookings, invoices, clinical diagnostic reports, early developmental histories, and therapy SOAP notes.
+              </p>
+            </div>
+          </div>
+
+          {/* Breakdown: Preserved vs Deleted */}
+          <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="p-2 rounded bg-emerald-50 border border-emerald-200">
+              <p className="font-bold text-emerald-900 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Will Remain Preserved:
+              </p>
+              <ul className="space-y-0.5 text-emerald-800">
+                <li>• Clinician User Accounts &amp; Login</li>
+                <li>• Clinic Legal Name &amp; Trade Name</li>
+                <li>• Brand Logo &amp; Letterhead Title</li>
+                <li>• Address, Phone &amp; Contact Info</li>
+                <li>• Bank Account, IFSC &amp; UPI ID</li>
+                <li>• GSTIN &amp; HSN/SAC Codes</li>
+                <li>• Master Service Tariff Schedule</li>
+              </ul>
+            </div>
+
+            <div className="p-2 rounded bg-rose-50 border border-rose-200">
+              <p className="font-bold text-rose-900 uppercase tracking-wider mb-1 flex items-center gap-1">
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                Will Be Deleted:
+              </p>
+              <ul className="space-y-0.5 text-rose-800">
+                <li>• All Registered Patients ({storageMetrics.patientCount})</li>
+                <li>• All OPD Appointments ({storageMetrics.aptCount})</li>
+                <li>• All GST Invoices &amp; Billing ({storageMetrics.invCount})</li>
+                <li>• All Diagnostic Reports ({storageMetrics.reportCount})</li>
+                <li>• All Developmental Histories ({storageMetrics.edhCount})</li>
+                <li>• All Therapy Plans &amp; SOAP Notes</li>
+                <li>• Inventory Stock &amp; Recall Slips</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Automatic Backup Checkbox */}
+          <label className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+            <input
+              type="checkbox"
+              checked={autoBackupBeforeWipe}
+              onChange={(e) => setAutoBackupBeforeWipe(e.target.checked)}
+              className="w-4 h-4 text-purple-700 rounded border-slate-300 focus:ring-purple-600"
+            />
+            <span className="font-semibold text-slate-800">
+              Download timestamped JSON backup archive before wiping (Highly Recommended)
+            </span>
+          </label>
+
+          {/* Confirmation Input */}
+          <div className="space-y-1 pt-1">
+            <label className="font-bold text-slate-800 block">
+              To proceed, please type <span className="font-mono text-rose-700 uppercase font-black">DELETE</span> in the box below:
+            </label>
+            <input
+              type="text"
+              value={wipeConfirmText}
+              onChange={(e) => setWipeConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="h-8 w-full px-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-rose-600 focus:outline-none focus:ring-1 focus:ring-rose-600 placeholder-slate-400"
+              autoFocus
+            />
+          </div>
+
+          {/* Modal Actions */}
+          <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsWipeModalOpen(false);
+                setWipeConfirmText('');
+              }}
+              disabled={isWiping}
+              className="px-3 py-1.5 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleWipeAllClinicalData}
+              disabled={wipeConfirmText.trim().toUpperCase() !== 'DELETE' || isWiping}
+              className="px-4 py-1.5 rounded text-xs font-black text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              {isWiping ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Purging Clinical Data...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Confirm Complete Data Wipe</span>
+                </>
+              )}
+            </button>
+          </div>
+
+        </div>
+      </Modal>
 
       {/* ── MODAL: ADD CLINICAL SERVICE RATE ── */}
       <Modal
