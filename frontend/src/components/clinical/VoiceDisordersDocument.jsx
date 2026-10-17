@@ -3,6 +3,7 @@ import { Eye, Activity, Wind, Volume2, CheckCircle2, AlertCircle } from 'lucide-
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
+import { OfficialReportTitle } from './OfficialReportTitle';
 
 /**
  * Voice Disorders Official Clinical Dossier (3-Page Production Layout)
@@ -60,11 +61,10 @@ export const VoiceDisordersDocument = ({
           {renderHeader(1)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-amber-800 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              VOICE DISORDERS CLINICAL DOSSIER — CASE INTAKE &amp; VOCAL HISTORY
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Voice Disorders Clinical Dossier"
+            subtitle="Case Intake &amp; Vocal History"
+          />
 
           {/* Demographics Bar */}
           <div className="bg-slate-50 border border-slate-300 rounded p-1.5 shrink-0 grid grid-cols-4 gap-x-2 gap-y-1 text-[9px]">
@@ -263,11 +263,10 @@ export const VoiceDisordersDocument = ({
           {renderHeader(2)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-amber-800 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              VOICE ASSESSMENT — AERODYNAMIC, PERCEPTUAL (GRBAS) &amp; ACOUSTIC BATTERY
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Voice Assessment Protocol"
+            subtitle="Aerodynamic, Perceptual (GRBAS) &amp; Acoustic Battery"
+          />
 
           {/* SECTION 5: AERODYNAMIC EVALUATION & PULMONARY SUPPORT */}
           <div className="border border-slate-300 rounded overflow-hidden shrink-0">
@@ -491,11 +490,10 @@ export const VoiceDisordersDocument = ({
           {renderHeader(3)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-amber-800 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              LARYNGEAL VIDEOSTROBOSCOPIC EVALUATION OF VOICE (PAGE 3 PROTOCOL)
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Laryngeal Videostroboscopic Evaluation"
+            subtitle="Glottic Protocol &amp; ENT Laryngology Endorsement"
+          />
 
           {/* Stroboscopy Examination Context Bar */}
           <div className="bg-slate-50 border border-slate-300 rounded p-1.5 shrink-0 grid grid-cols-4 gap-2 text-[8.5px]">

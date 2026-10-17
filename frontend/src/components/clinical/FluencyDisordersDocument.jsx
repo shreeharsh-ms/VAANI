@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
+import { OfficialReportTitle } from './OfficialReportTitle';
 
 /**
  * Fluency / Stuttering Assessment (SSI-4) Official Clinical Dossier (2-Page Production Layout)
@@ -75,11 +76,10 @@ export const FluencyDisordersDocument = ({
           {renderHeader(1)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-rose-800 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              FLUENCY &amp; STUTTERING DISORDERS CLINICAL DOSSIER (SSI-4 PROTOCOL)
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Fluency &amp; Stuttering Clinical Dossier"
+            subtitle="Case Intake, Reactions &amp; Listener Dynamics (SSI-4 Protocol)"
+          />
 
           {/* Demographics Bar */}
           <div className="bg-slate-50 border border-slate-300 rounded p-1.5 shrink-0 grid grid-cols-4 gap-x-2 gap-y-1 text-[9px]">
@@ -388,11 +388,10 @@ export const FluencyDisordersDocument = ({
           {renderHeader(2)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-rose-800 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              FLUENCY ASSESSMENT — OBJECTIVE SAMPLE ANALYSIS &amp; DIAGNOSTIC BATTERY
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Fluency Assessment Protocol"
+            subtitle="Objective Sample Analysis &amp; Diagnostic Battery"
+          />
 
           {/* SECTION 7: ANALYSIS OF SPEECH & READING SAMPLE */}
           <div className="border border-slate-300 rounded overflow-hidden shrink-0">

@@ -6,6 +6,7 @@ import { VoiceDisordersDocument } from './VoiceDisordersDocument';
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
+import { OfficialReportTitle } from './OfficialReportTitle';
 
 /**
  * Official Clinical Document Template
@@ -127,9 +128,7 @@ export const OfficialClinicalDocument = ({
           /* ── CBT REPORT VIEW (Exact Layout matching official Psychological & CBT Document) ── */
           <div className="space-y-2.5 text-slate-900">
             {/* Title Banner */}
-            <div className="bg-[#0f172a] text-white text-center py-1 font-bold text-xs uppercase tracking-wider">
-              PSYCHOLOGICAL &amp; COGNITIVE BEHAVIOURAL THERAPY (CBT) REPORT
-            </div>
+            <OfficialReportTitle title="Psychological &amp; Cognitive Behavioural Therapy (CBT) Report" />
 
             {/* Demographics Box */}
             <div className="border border-slate-400 text-[10px]">
@@ -397,15 +396,7 @@ export const OfficialClinicalDocument = ({
           /* ── AUDIOLOGICAL EVALUATION VIEW (Exact Real-World Layout with Dual Audiogram Graphs & Legend) ── */
           <div className="space-y-1.5 text-slate-900">
             {/* Simple & Professional Clinical Title */}
-            <div className="text-center my-0.5 shrink-0">
-              <div className="inline-flex items-center justify-center gap-3">
-                <div className="h-0.5 w-8 sm:w-14 bg-gradient-to-r from-transparent via-purple-300 to-purple-800 rounded-full" />
-                <h2 className="font-serif font-black text-xs sm:text-sm tracking-[0.22em] text-purple-950 uppercase">
-                  AUDIOLOGICAL EVALUATION
-                </h2>
-                <div className="h-0.5 w-8 sm:w-14 bg-gradient-to-l from-transparent via-purple-300 to-purple-800 rounded-full" />
-              </div>
-            </div>
+            <OfficialReportTitle title="Audiological Evaluation" />
 
             {/* Demographics & Test Context Matrix */}
             <div className="border border-purple-300 rounded-lg overflow-hidden text-[10px] bg-white/85 backdrop-blur-2xs shadow-2xs">
@@ -720,9 +711,7 @@ export const OfficialClinicalDocument = ({
           /* ── STANDARD GENERAL / AUDIOLOGY REPORT VIEW ── */
           <>
             {/* ── REPORT TITLE BANNER ── */}
-            <div className="text-center py-1 bg-purple-900 text-white rounded font-bold uppercase tracking-wider text-xs shadow-2xs">
-              {service.title}
-            </div>
+            <OfficialReportTitle title={service.title} />
 
             {/* ── PATIENT DEMOGRAPHIC MATRIX ── */}
             <div className="border border-slate-300 rounded overflow-hidden text-xs">

@@ -25,7 +25,50 @@ export const OfficialReportFooter = ({
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
   const examinerName = formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP';
 
-  // Use the official decorative footer banner
+  const isLastPage = !totalPages || totalPages <= 1 || (pageNumber && pageNumber === totalPages);
+
+  // For intermediate pages (Page 1 of 2, Page 1 of 3, etc.):
+  // Render clean clinical footer with address, contact number, email, and page number / total number
+  if (!isLastPage) {
+    return (
+      <div className={`official-report-intermediate-footer mt-auto pt-2 shrink-0 select-none print:break-inside-avoid ${className}`}>
+        {/* Subtle decorative divider flourish */}
+        <div className="flex items-center justify-center gap-2 mb-1.5 text-purple-400">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
+          <span className="text-[8px] text-purple-800">✦ ❖ ✦</span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
+        </div>
+
+        <div className="flex items-end justify-between gap-3 text-[8.5px] print:text-[8px] text-slate-700 px-1 py-0.5">
+          {/* Clinic Address & Contact Info */}
+          <div className="text-left space-y-0.5">
+            <p className="font-bold text-purple-950 text-[9px] print:text-[8.5px] leading-tight">
+              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+            </p>
+            <p className="text-[8px] print:text-[7.5px] text-slate-600 leading-tight">
+              Tel: <span className="font-bold text-purple-900">+91 2162 234567</span> • Mob: <span className="font-bold text-purple-900">+91 94220 11223</span> • Email: <span className="font-bold text-purple-900">clinic@vaaniclinic.com</span>
+            </p>
+          </div>
+
+          {/* Page Number & Document Reference */}
+          <div className="text-right shrink-0 flex items-center gap-2">
+            <span className="font-mono text-[8px] print:text-[7.5px] font-bold text-slate-600 bg-purple-50/90 px-2 py-0.5 rounded border border-purple-200">
+              {reportNumber}
+            </span>
+            <span className="font-mono font-bold text-[9px] print:text-[8.5px] text-purple-950 bg-white px-2.5 py-0.5 rounded border border-purple-300 shadow-2xs">
+              Page {pageNumber} / {totalPages}
+            </span>
+          </div>
+        </div>
+
+        <p className="text-[6.5px] print:text-[6px] text-center text-slate-400 mt-1 leading-tight">
+          Strictly Confidential Medical Record under DPDP Act 2023 • Vaani Speech &amp; Hearing Clinic
+        </p>
+      </div>
+    );
+  }
+
+  // Use the official decorative footer banner for the LAST page (or single-page reports)
   if (useImage) {
     return (
       <div className={`official-report-footer shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mb-6 sm:-mx-7 sm:-mb-7 print:m-0 print:w-full select-none ${className}`}>

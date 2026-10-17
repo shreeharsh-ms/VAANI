@@ -2,6 +2,7 @@ import React from 'react';
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
+import { OfficialReportTitle } from './OfficialReportTitle';
 
 /**
  * Early Developmental History (EDH) Official Clinical Dossier (3-Page Production Layout)
@@ -58,11 +59,10 @@ export const EarlyDevelopmentalHistoryDocument = ({
           {renderHeader(1)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-[#0284c7] text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-2xs">
-              EARLY DEVELOPMENTAL HISTORY (EDH) — CASE INTAKE &amp; BIRTH HISTORY
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Early Developmental History (EDH)"
+            subtitle="Case Intake &amp; Birth History Foundations"
+          />
 
           {/* Demographics & Informant Context Box */}
           <div className="border border-slate-700 text-[9px] bg-white shrink-0">
@@ -278,11 +278,10 @@ export const EarlyDevelopmentalHistoryDocument = ({
           {renderHeader(2)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              EARLY DEVELOPMENTAL HISTORY — LANGUAGE, BEHAVIOR &amp; ORAL MECHANISM
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Developmental Milestones"
+            subtitle="Language, Behavioral Profile &amp; Oral Mechanism"
+          />
 
           {/* Detailed Language Comprehension & Expression Checklist */}
           <div className="border border-slate-400 text-[8.5px] bg-white">
@@ -456,11 +455,10 @@ export const EarlyDevelopmentalHistoryDocument = ({
           {renderHeader(3)}
 
           {/* Title Banner */}
-          <div className="text-center my-0.5 shrink-0">
-            <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-[11px] tracking-wider px-5 py-0.5 rounded-full uppercase shadow-xs border border-purple-400/40">
-              EARLY DEVELOPMENTAL HISTORY — FORMAL TESTS &amp; CLINICAL FORMULATION
-            </span>
-          </div>
+          <OfficialReportTitle
+            title="Clinical Formulation &amp; Battery"
+            subtitle="Formal Tests (REELS), Multidisciplinary Summary &amp; Recommendations"
+          />
 
           {/* Oral Developmental Skills & Feeding Mechanism */}
           <div className="border border-slate-400 text-[8.5px] bg-white">
