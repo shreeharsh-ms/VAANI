@@ -27,6 +27,7 @@ import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfi
 import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
 import { FluencyDisordersForm } from '../../components/clinical/FluencyDisordersForm';
+import { VoiceDisordersForm } from '../../components/clinical/VoiceDisordersForm';
 
 
 export const ReportCreatePage = () => {
@@ -1281,67 +1282,11 @@ export const ReportCreatePage = () => {
 
         {/* 3. VOICE DISORDERS ENTRY */}
         {activeService.code === 'RP-CLN-VOI' && (
-          <div className="space-y-3 text-xs">
-            <span className="text-[10px] font-bold uppercase text-amber-900 block">CAPE-V Scores (0-100 Visual Analog)</span>
-            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
-              {['capeV_overall', 'capeV_roughness', 'capeV_breathiness', 'capeV_strain', 'capeV_pitch', 'capeV_loudness'].map((k) => (
-                <div key={k} className="p-2 border border-slate-200 rounded bg-slate-50 text-center">
-                  <label className="text-[10px] text-slate-500 font-bold block uppercase">{k.replace('capeV_', '')}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.parameters[k] ?? 40}
-                    onChange={(e) => handleParamChange(k, Number(e.target.value))}
-                    className="w-16 text-center py-1 mt-1 border border-slate-300 rounded font-black text-amber-800 text-sm"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">MPT /a/ (sec)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.parameters.mptA ?? 9.2}
-                  onChange={(e) => handleParamChange('mptA', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">s/z Ratio</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.parameters.szRatio ?? 1.58}
-                  onChange={(e) => handleParamChange('szRatio', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">GRBAS Grade (0-3)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="3"
-                  value={formData.parameters.grbas_grade ?? 2}
-                  onChange={(e) => handleParamChange('grbas_grade', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">VHI-10 Score (/40)</label>
-                <input
-                  type="number"
-                  value={formData.parameters.vhi10Score ?? 24}
-                  onChange={(e) => handleParamChange('vhi10Score', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-            </div>
-          </div>
+          <VoiceDisordersForm
+            formData={formData}
+            handleParamChange={handleParamChange}
+            notify={notify}
+          />
         )}
 
         {/* 4. FLUENCY SSI-4 ENTRY */}

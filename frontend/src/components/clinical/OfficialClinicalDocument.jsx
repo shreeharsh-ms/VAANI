@@ -3,6 +3,7 @@ import { QrCode } from 'lucide-react';
 import { DualAudiogramSection } from './AudiogramGraph';
 import { EarlyDevelopmentalHistoryDocument } from './EarlyDevelopmentalHistoryDocument';
 import { FluencyDisordersDocument } from './FluencyDisordersDocument';
+import { VoiceDisordersDocument } from './VoiceDisordersDocument';
 
 /**
  * Official Clinical Document Template
@@ -58,6 +59,7 @@ export const OfficialClinicalDocument = ({
   const isCBT = service.code === 'RP-CLN-CBT';
   const isEDH = service.code === 'RP-CLN-EDH';
   const isFLU = service.code === 'RP-CLN-FLU';
+  const isVOI = service.code === 'RP-CLN-VOI';
 
   if (isEDH) {
     return (
@@ -77,6 +79,20 @@ export const OfficialClinicalDocument = ({
     return (
       <div id="official-report-a4-page" className="multi-page-doc">
         <FluencyDisordersDocument
+          service={service}
+          patient={patient}
+          patientDossier={patientDossier}
+          formData={formData}
+          renderBulletPoints={renderBulletPoints}
+        />
+      </div>
+    );
+  }
+
+  if (isVOI) {
+    return (
+      <div id="official-report-a4-page" className="multi-page-doc">
+        <VoiceDisordersDocument
           service={service}
           patient={patient}
           patientDossier={patientDossier}
