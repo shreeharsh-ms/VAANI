@@ -30,7 +30,7 @@ import Modal from '../../components/common/Modal';
 import { clinicService } from '../../services/clinicService';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
-import { DEFAULT_ASSESSMENTS } from '../../data/clinicalReportsData';
+import { DEFAULT_ASSESSMENTS, getAllClinicalReports } from '../../data/clinicalReportsData';
 
 export const ReportsPage = () => {
   const navigate = useNavigate();

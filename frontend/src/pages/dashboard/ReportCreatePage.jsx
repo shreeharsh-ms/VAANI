@@ -254,16 +254,22 @@ export const ReportCreatePage = () => {
   const [formData, setFormData] = useState(() => {
     const s = CLINICAL_SERVICES.find((srv) => srv.code === initialTypeCode) || CLINICAL_SERVICES[0];
     if (existingReport) {
+      const defParams = s.defaultParameters || {};
+      const repParams = existingReport.parameters || {};
       return {
         reportNumber: existingReport.report_number || existingReport.id,
         reportDate: existingReport.date || new Date().toISOString().split('T')[0],
         examinerName: existingReport.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
         rciNumber: existingReport.rci_number || 'A79214',
         parameters: {
-          ...(s.defaultParameters || {}),
-          ...(existingReport.parameters || {}),
-          provisionalDiagnosis: existingReport.diagnosis || existingReport.parameters?.provisionalDiagnosis || s.description || '',
-          recommendations: existingReport.recommendations || existingReport.parameters?.recommendations || 'Follow up as clinically indicated.',
+          ...defParams,
+          ...repParams,
+          rightEarAC: { ...(defParams.rightEarAC || {}), ...(repParams.rightEarAC || {}) },
+          rightEarBC: { ...(defParams.rightEarBC || {}), ...(repParams.rightEarBC || {}) },
+          leftEarAC: { ...(defParams.leftEarAC || {}), ...(repParams.leftEarAC || {}) },
+          leftEarBC: { ...(defParams.leftEarBC || {}), ...(repParams.leftEarBC || {}) },
+          provisionalDiagnosis: existingReport.diagnosis || repParams.provisionalDiagnosis || defParams.provisionalDiagnosis || '',
+          recommendations: existingReport.recommendations || repParams.recommendations || defParams.recommendations || '',
         },
       };
     }
@@ -276,20 +282,50 @@ export const ReportCreatePage = () => {
     };
   });
 
-  const isInitialServiceMount = useRef(true);
+  // Track previous service code to only reset parameters when user explicitly switches service template
+  const previousServiceCodeRef = useRef(initialTypeCode);
 
-  // When active service changes, load its default parameters (unless initial mount for editing)
+  // Sync formData whenever existingReport changes or is resolved
   useEffect(() => {
-    if (isInitialServiceMount.current) {
-      isInitialServiceMount.current = false;
-      return;
-    }
-    const s = CLINICAL_SERVICES.find((srv) => srv.code === selectedServiceCode);
-    if (s) {
+    if (existingReport) {
+      const s = CLINICAL_SERVICES.find((srv) => srv.code === existingReport.service_code) || CLINICAL_SERVICES[0];
+      const defParams = s.defaultParameters || {};
+      const repParams = existingReport.parameters || {};
       setFormData((prev) => ({
         ...prev,
-        parameters: { ...s.defaultParameters },
+        reportNumber: existingReport.report_number || existingReport.id,
+        reportDate: existingReport.date || prev.reportDate,
+        examinerName: existingReport.examiner || prev.examinerName,
+        rciNumber: existingReport.rci_number || prev.rciNumber,
+        parameters: {
+          ...defParams,
+          ...repParams,
+          rightEarAC: { ...(defParams.rightEarAC || {}), ...(repParams.rightEarAC || {}) },
+          rightEarBC: { ...(defParams.rightEarBC || {}), ...(repParams.rightEarBC || {}) },
+          leftEarAC: { ...(defParams.leftEarAC || {}), ...(repParams.leftEarAC || {}) },
+          leftEarBC: { ...(defParams.leftEarBC || {}), ...(repParams.leftEarBC || {}) },
+          provisionalDiagnosis: existingReport.diagnosis || repParams.provisionalDiagnosis || defParams.provisionalDiagnosis || '',
+          recommendations: existingReport.recommendations || repParams.recommendations || defParams.recommendations || '',
+        },
       }));
+      if (existingReport.service_code) {
+        setSelectedServiceCode(existingReport.service_code);
+        previousServiceCodeRef.current = existingReport.service_code;
+      }
+    }
+  }, [existingReport]);
+
+  // When user explicitly clicks a different service button in the template bar:
+  useEffect(() => {
+    if (previousServiceCodeRef.current !== selectedServiceCode) {
+      previousServiceCodeRef.current = selectedServiceCode;
+      const s = CLINICAL_SERVICES.find((srv) => srv.code === selectedServiceCode);
+      if (s) {
+        setFormData((prev) => ({
+          ...prev,
+          parameters: { ...s.defaultParameters },
+        }));
+      }
     }
   }, [selectedServiceCode]);
 

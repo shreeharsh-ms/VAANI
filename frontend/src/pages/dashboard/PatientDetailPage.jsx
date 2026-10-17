@@ -51,7 +51,7 @@ import {
   PATIENT_DOSSIERS,
   getPatientClinicalDossier,
 } from '../../data/patientClinicalProfiles';
-import { getReportsForPatient } from '../../data/clinicalReportsData';
+import { getReportsForPatient, getAllClinicalReports } from '../../data/clinicalReportsData';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { patientService } from '../../services/patientService';

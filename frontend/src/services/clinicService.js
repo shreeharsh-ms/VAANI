@@ -13,9 +13,17 @@ export const clinicService = {
   },
 
   async getClinicalAssessments(patientId = null) {
-    const endpoint = patientId ? `/clinical/assessments?patient_id=${patientId}` : '/clinical/assessments';
-    const res = await apiClient.get(endpoint);
-    return res.data;
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('vaani_token') : null;
+      if (!token || token.includes('mock_')) {
+        return [];
+      }
+      const endpoint = patientId ? `/clinical/assessments?patient_id=${patientId}` : '/clinical/assessments';
+      const res = await apiClient.get(endpoint);
+      return res.data || [];
+    } catch {
+      return [];
+    }
   },
 };
 
