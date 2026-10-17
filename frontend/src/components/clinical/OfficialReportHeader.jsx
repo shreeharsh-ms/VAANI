@@ -27,6 +27,32 @@ export const OfficialReportHeader = ({
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
   const disciplineName = discipline || service?.discipline || 'AUDIOLOGY';
 
+  // Official header banner using the user's custom high-resolution letterhead
+  if (useImage) {
+    return (
+      <div className={`official-report-header shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mt-6 sm:-mx-7 sm:-mt-7 print:m-0 print:w-full mb-3 select-none ${className}`}>
+        <div className="relative w-full overflow-hidden">
+          {/* User's custom official banner - uncropped, 100% full width edge-to-edge, zero border-radius */}
+          <img
+            src="/vaani-header-banner.png"
+            alt="Vaani Speech and Hearing Clinic"
+            className="w-full h-auto block rounded-none"
+          />
+
+          {/* Clinic Address, Contact Number & Email directly below SPEAK • HEAR • CONNECT */}
+          <div className="absolute left-[40.2%] top-[72%] right-[4%] bottom-[4%] flex flex-col justify-center">
+            <p className="text-[9px] sm:text-[10px] print:text-[8px] font-semibold text-purple-950 tracking-wide leading-tight">
+              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+            </p>
+            <p className="text-[8px] sm:text-[9px] print:text-[7.5px] font-medium text-slate-700 tracking-tight leading-tight mt-0.5">
+              Tel: <span className="font-bold text-purple-900">+91 2162 234567</span> • Mob: <span className="font-bold text-purple-900">+91 94220 11223</span> • Email: <span className="font-bold text-purple-900">clinic@vaaniclinic.com</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isCBT) {
     return (
       <div className={`official-report-header mb-2.5 shrink-0 ${className}`}>
@@ -74,31 +100,6 @@ export const OfficialReportHeader = ({
     );
   }
 
-  // Official header banner using the user's custom high-resolution letterhead
-  if (useImage) {
-    return (
-      <div className={`official-report-header shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mt-6 sm:-mx-7 sm:-mt-7 print:m-0 print:w-full mb-3 select-none ${className}`}>
-        <div className="relative w-full overflow-hidden">
-          {/* User's custom official banner - uncropped, 100% full width edge-to-edge, zero border-radius */}
-          <img
-            src="/vaani-header-banner.png"
-            alt="Vaani Speech and Hearing Clinic"
-            className="w-full h-auto block rounded-none"
-          />
-
-          {/* Clinic Address, Contact Number & Email directly below SPEAK • HEAR • CONNECT */}
-          <div className="absolute left-[40.2%] top-[72%] right-[4%] bottom-[4%] flex flex-col justify-center">
-            <p className="text-[9px] sm:text-[10px] print:text-[8px] font-semibold text-purple-950 tracking-wide leading-tight">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
-            </p>
-            <p className="text-[8px] sm:text-[9px] print:text-[7.5px] font-medium text-slate-700 tracking-tight leading-tight mt-0.5">
-              Tel: <span className="font-bold text-purple-900">+91 2162 234567</span> • Mob: <span className="font-bold text-purple-900">+91 94220 11223</span> • Email: <span className="font-bold text-purple-900">clinic@vaaniclinic.com</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`official-report-header mb-1.5 shrink-0 ${compact ? 'mb-1' : ''} ${className}`}>

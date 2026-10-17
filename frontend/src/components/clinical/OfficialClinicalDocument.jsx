@@ -152,34 +152,35 @@ export const OfficialClinicalDocument = ({
             />
 
             {/* 1. STANDARDIZED PSYCHOMETRIC SCALES */}
-            <div>
-              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
-                1. STANDARDIZED PSYCHOMETRIC SCALES (PHQ-9, GAD-7, PSS-10)
-              </h3>
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+            <div className="border border-purple-200/80 rounded-lg overflow-hidden bg-white/85 backdrop-blur-2xs shadow-2xs">
+              <div className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 px-2.5 py-0.5 border-b border-purple-200 font-bold text-[9.5px] text-purple-950 uppercase flex items-center justify-between">
+                <span>1. Standardized Psychometric Scales (PHQ-9, GAD-7, PSS-10)</span>
+                <span className="text-[8px] font-mono font-bold text-purple-800">SECTION 1.0</span>
+              </div>
+              <table className="w-full border-collapse text-[9.5px]">
                 <thead>
-                  <tr className="bg-[#0f172a] text-white text-left font-bold">
-                    <th className="p-1 border border-slate-400 w-2/6">INSTRUMENT</th>
-                    <th className="p-1 border border-slate-400 w-1/6">RAW SCORE</th>
-                    <th className="p-1 border border-slate-400 w-2/6">SCORE RANGE &amp; CUTOFF</th>
-                    <th className="p-1 border border-slate-400 w-2/6">CLINICAL SEVERITY LEVEL</th>
+                  <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
+                    <th className="p-1.5 border-r border-purple-200 w-2/6">INSTRUMENT</th>
+                    <th className="p-1.5 border-r border-purple-200 w-1/6">RAW SCORE</th>
+                    <th className="p-1.5 border-r border-purple-200 w-2/6">SCORE RANGE &amp; CUTOFF</th>
+                    <th className="p-1.5 text-purple-950 w-2/6">CLINICAL SEVERITY LEVEL</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-300">
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold">
+                <tbody className="divide-y divide-purple-100">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
                       PHQ-9<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Patient Health Questionnaire - Depression)</span>
                     </td>
-                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.phq9Score ?? 14} / 27
                     </td>
-                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-4: Minimal | 5-9: Mild<br />
                       10-14: Moderate | 15-19: Mod. Severe | 20-27: Severe
                     </td>
-                    <td className="p-1 border border-slate-300">
-                      <span className="font-bold text-slate-900 block uppercase">
+                    <td className="p-1.5">
+                      <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.phq9Severity || 'MODERATE DEPRESSION'}
                       </span>
                       {formData?.parameters?.phq9Item9Note && (
@@ -190,20 +191,20 @@ export const OfficialClinicalDocument = ({
                     </td>
                   </tr>
 
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
                       GAD-7<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Generalised Anxiety Disorder Scale)</span>
                     </td>
-                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.gad7Score ?? 12} / 21
                     </td>
-                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-4: Minimal | 5-9: Mild<br />
                       10-14: Moderate | 15-21: Severe
                     </td>
-                    <td className="p-1 border border-slate-300">
-                      <span className="font-bold text-slate-900 block uppercase">
+                    <td className="p-1.5">
+                      <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.gad7Severity || 'MODERATE ANXIETY'}
                       </span>
                       {formData?.parameters?.gad7Note && (
@@ -214,20 +215,20 @@ export const OfficialClinicalDocument = ({
                     </td>
                   </tr>
 
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
                       PSS-10<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Perceived Stress Scale)</span>
                     </td>
-                    <td className="p-1 border border-slate-300 font-mono font-bold text-slate-900">
+                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.pss10Score ?? 24} / 40
                     </td>
-                    <td className="p-1 border border-slate-300 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-13: Low Stress | 14-26: Moderate Stress<br />
                       27-40: High Stress
                     </td>
-                    <td className="p-1 border border-slate-300">
-                      <span className="font-bold text-slate-900 block uppercase">
+                    <td className="p-1.5">
+                      <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.pss10Severity || 'MODERATE-HIGH PERCEIVED STRESS'}
                       </span>
                     </td>
@@ -237,26 +238,27 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* 2. CLINICAL RISK ASSESSMENT & MANDATORY REFERRAL MATRIX */}
-            <div>
-              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
-                2. CLINICAL RISK ASSESSMENT &amp; MANDATORY REFERRAL MATRIX
-              </h3>
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+            <div className="border border-purple-200/80 rounded-lg overflow-hidden bg-white/85 backdrop-blur-2xs shadow-2xs">
+              <div className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 px-2.5 py-0.5 border-b border-purple-200 font-bold text-[9.5px] text-purple-950 uppercase flex items-center justify-between">
+                <span>2. Clinical Risk Assessment &amp; Mandatory Referral Matrix</span>
+                <span className="text-[8px] font-mono font-bold text-purple-800">SECTION 2.0</span>
+              </div>
+              <table className="w-full border-collapse text-[9.5px]">
                 <thead>
-                  <tr className="bg-[#0f172a] text-white text-left font-bold">
-                    <th className="p-1 border border-slate-400 w-1/4">RISK PARAMETER</th>
-                    <th className="p-1 border border-slate-400 w-1/2">CLINICAL ASSESSMENT FINDING</th>
-                    <th className="p-1 border border-slate-400 w-1/4">SYSTEM ACTION / SAFETY TRIGGER</th>
+                  <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
+                    <th className="p-1.5 border-r border-purple-200 w-1/4">RISK PARAMETER</th>
+                    <th className="p-1.5 border-r border-purple-200 w-1/2">CLINICAL ASSESSMENT FINDING</th>
+                    <th className="p-1.5 text-purple-950 w-1/4">SYSTEM ACTION / SAFETY TRIGGER</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-300">
+                <tbody className="divide-y divide-purple-100">
                   <tr>
-                    <td className="p-1 border border-slate-300 font-bold align-top">Suicidal Ideation / Intent</td>
-                    <td className="p-1 border border-slate-300 align-top">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Suicidal Ideation / Intent</td>
+                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.suicidalIdeation || 'Passive thoughts ("wish I didn\'t wake up"), NO active plan, NO specific intent.'}
                     </td>
-                    <td rowSpan={4} className="p-1.5 border border-slate-300 bg-rose-50/20 align-top">
-                      <span className="font-black text-rose-700 uppercase block mb-1 text-[9.5px]">
+                    <td rowSpan={4} className="p-1.5 bg-purple-50/60 align-top">
+                      <span className="font-black text-purple-950 uppercase block mb-1 text-[9.5px]">
                         OVERALL RISK LEVEL: {formData?.parameters?.overallRiskLevel || 'MODERATE RISK'}
                       </span>
                       <ul className="text-[8.5px] text-slate-700 space-y-0.5">
@@ -269,7 +271,7 @@ export const OfficialClinicalDocument = ({
                             ]
                         ).map((trigger, i) => (
                           <li key={i} className="flex items-start gap-1">
-                            <span>•</span>
+                            <span className="text-purple-700 font-bold">•</span>
                             <span className="leading-tight">{trigger.replace(/^[•\-\*]\s*/, '')}</span>
                           </li>
                         ))}
@@ -278,22 +280,22 @@ export const OfficialClinicalDocument = ({
                   </tr>
 
                   <tr>
-                    <td className="p-1 border border-slate-300 font-bold align-top">Self-Harm History</td>
-                    <td className="p-1 border border-slate-300 align-top">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Self-Harm History</td>
+                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.selfHarmHistory || 'No prior suicide attempt; intermittent non-suicidal self-harm urges under high stress.'}
                     </td>
                   </tr>
 
                   <tr>
-                    <td className="p-1 border border-slate-300 font-bold align-top">Means Access &amp; Control</td>
-                    <td className="p-1 border border-slate-300 align-top">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Means Access &amp; Control</td>
+                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.meansAccess || 'No firearms; medication access managed by family.'}
                     </td>
                   </tr>
 
                   <tr>
-                    <td className="p-1 border border-slate-300 font-bold align-top">Protective Factors</td>
-                    <td className="p-1 border border-slate-300 align-top">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Protective Factors</td>
+                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.protectiveFactors || 'Strong supportive sister, highly motivated for CBT, employed, no substance abuse.'}
                     </td>
                   </tr>
@@ -302,51 +304,52 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* 3. PATIENT 5-STEP SAFETY PLAN MATRIX */}
-            <div>
-              <h3 className="font-black text-[10.5px] uppercase tracking-wide text-slate-900 mb-0.5">
-                3. PATIENT 5-STEP SAFETY PLAN MATRIX
-              </h3>
-              <table className="w-full border-collapse border border-slate-400 text-[9.5px]">
+            <div className="border border-purple-200/80 rounded-lg overflow-hidden bg-white/85 backdrop-blur-2xs shadow-2xs">
+              <div className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 px-2.5 py-0.5 border-b border-purple-200 font-bold text-[9.5px] text-purple-950 uppercase flex items-center justify-between">
+                <span>3. Patient 5-Step Safety Plan Matrix</span>
+                <span className="text-[8px] font-mono font-bold text-purple-800">SECTION 3.0</span>
+              </div>
+              <table className="w-full border-collapse text-[9.5px]">
                 <thead>
-                  <tr className="bg-[#0f172a] text-white text-left font-bold">
-                    <th className="p-1 border border-slate-400 w-20">STEP NUMBER</th>
-                    <th className="p-1 border border-slate-400 w-1/4">SAFETY PLAN DOMAIN</th>
-                    <th className="p-1 border border-slate-400">PATIENT-SPECIFIC AGREED INTERVENTION</th>
+                  <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
+                    <th className="p-1.5 border-r border-purple-200 w-20 text-center">STEP</th>
+                    <th className="p-1.5 border-r border-purple-200 w-1/4">SAFETY PLAN DOMAIN</th>
+                    <th className="p-1.5 text-purple-950">PATIENT-SPECIFIC AGREED INTERVENTION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-300">
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold text-center">Step 1</td>
-                    <td className="p-1 border border-slate-300 font-semibold">Recognizing Warning Signs</td>
-                    <td className="p-1 border border-slate-300 text-slate-800">
+                <tbody className="divide-y divide-purple-100">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 1</td>
+                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Recognizing Warning Signs</td>
+                    <td className="p-1.5 text-slate-800">
                       {formData?.parameters?.safetyStep1 || 'Racing thoughts, isolating in bedroom, skipping meals, feeling heavy pressure in chest.'}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold text-center">Step 2</td>
-                    <td className="p-1 border border-slate-300 font-semibold">Internal Coping Strategies</td>
-                    <td className="p-1 border border-slate-300 text-slate-800">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 2</td>
+                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Internal Coping Strategies</td>
+                    <td className="p-1.5 text-slate-800">
                       {formData?.parameters?.safetyStep2 || 'Box breathing (4-4-4-4), 5-4-3-2-1 sensory grounding, listening to calming classical music.'}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold text-center">Step 3</td>
-                    <td className="p-1 border border-slate-300 font-semibold">Social Distractions &amp; Support</td>
-                    <td className="p-1 border border-slate-300 text-slate-800">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 3</td>
+                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Social Distractions &amp; Support</td>
+                    <td className="p-1.5 text-slate-800">
                       {formData?.parameters?.safetyStep3 || 'Calling sister (Pooja: +91-98220-XXXXX), sitting in clinic garden, walking pet dog.'}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold text-center">Step 4</td>
-                    <td className="p-1 border border-slate-300 font-semibold">Family / Crisis Contacts</td>
-                    <td className="p-1 border border-slate-300 text-slate-800">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 4</td>
+                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Family / Crisis Contacts</td>
+                    <td className="p-1.5 text-slate-800">
                       {formData?.parameters?.safetyStep4 || 'Primary Contact: Sister (Pooja Kulkarni); Secondary Contact: Vani\'s Clinic Support.'}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="p-1 border border-slate-300 font-bold text-center">Step 5</td>
-                    <td className="p-1 border border-slate-300 font-semibold">Professional &amp; Emergency Care</td>
-                    <td className="p-1 border border-slate-300 text-slate-800">
+                  <tr className="hover:bg-purple-50/30">
+                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 5</td>
+                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Professional &amp; Emergency Care</td>
+                    <td className="p-1.5 text-slate-800">
                       {formData?.parameters?.safetyStep5 || 'Vani\'s Clinic Crisis Line (+91-98220-XXXXX) | Satara District Hospital Helpline (02162-XXXXXX).'}
                     </td>
                   </tr>
@@ -355,22 +358,22 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* FORMULATION & CBT TREATMENT PLAN */}
-            <div className="border border-emerald-300 bg-emerald-50/40 rounded p-2 text-[9.5px] space-y-1">
-              <span className="font-bold text-emerald-950 block uppercase tracking-wide">
-                FORMULATION &amp; CBT TREATMENT PLAN:
+            <div className="border border-purple-200/80 rounded-lg p-2.5 bg-purple-50/40 text-[9.5px] space-y-1.5 shadow-2xs">
+              <span className="font-black text-purple-950 block uppercase tracking-wide">
+                Formulation &amp; CBT Treatment Plan:
               </span>
               <p className="text-slate-800 leading-snug">
-                <span className="font-bold text-slate-900">1. COGNITIVE FORMULATION:</span>{' '}
+                <span className="font-bold text-purple-950">1. COGNITIVE FORMULATION:</span>{' '}
                 {formData?.parameters?.cognitiveFormulation ||
                   'Automatic thoughts ("I am a failure if I am not perfect"), cognitive distortions (Catastrophising, All-or-Nothing thinking).'}
               </p>
               <p className="text-slate-800 leading-snug">
-                <span className="font-bold text-slate-900">2. CBT PLAN:</span>{' '}
+                <span className="font-bold text-purple-950">2. CBT PLAN:</span>{' '}
                 {formData?.parameters?.cbtPlan ||
                   '12 weekly sessions targeting Cognitive Restructuring, Behavioural Activation (activity scheduling), and Mindfulness-Based Stress Reduction (MBSR).'}
               </p>
               <p className="text-slate-700 leading-snug">
-                <span className="font-bold text-slate-900">3. CONFIDENTIALITY NOTE:</span>{' '}
+                <span className="font-bold text-purple-950">3. CONFIDENTIALITY NOTE:</span>{' '}
                 {formData?.parameters?.confidentialityNote ||
                   'Record encrypted under AES-256 field encryption. Access restricted to authorized CBT clinician.'}
               </p>
@@ -525,46 +528,34 @@ export const OfficialClinicalDocument = ({
           </div>
         ) : isOAE ? (
           /* ── OAE SCREENING REPORT VIEW (Exact Real-World Clinic Layout with Ear Illustrations) ── */
-          <div className="space-y-5 pt-1">
-            {/* Centered Rounded Pill Banner */}
-            <div className="text-center my-1.5">
-              <span className="inline-block bg-sky-500 text-white font-bold text-xs sm:text-sm tracking-wide px-8 py-1.5 rounded-full shadow-2xs">
-                Oto-Acoustic Emission (OAE) Screening Report
-              </span>
-            </div>
+          <div className="space-y-3 pt-1">
+            {/* Simple & Professional Title matching Audiological Evaluation */}
+            <OfficialReportTitle title="Oto-Acoustic Emission (OAE) Screening Report" />
 
-            {/* Clean Boxed Patient Demographics */}
-            <div className="border border-slate-700 rounded p-3 text-xs bg-white">
-              <div className="grid grid-cols-12 gap-y-2 gap-x-3">
-                <div className="col-span-7">
-                  <span className="font-bold text-slate-900">Name : </span>
-                  <span className="font-medium text-slate-800">{patient.full_name}</span>
+            {/* Standardized Demographics Matrix (Unified Audiological Evaluation Layout) */}
+            <PatientDemographicsMatrix
+              formData={formData}
+              patient={patient}
+              refLabel="OAE No. :"
+              refValue={formData?.reportNumber || patient.uhid || 'REP-26-3872'}
+              extraRow={
+                <div className="grid grid-cols-2 divide-x divide-purple-200">
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-20 shrink-0 text-purple-950">DOB :</span>
+                    <span className="font-medium text-slate-800">{patient.date_of_birth || '—'}</span>
+                  </div>
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-28 shrink-0 text-purple-950">Screening Protocol :</span>
+                    <span className="font-medium text-slate-800">{formData?.parameters?.protocol || 'DPOAE / TEOAE Screening'}</span>
+                  </div>
                 </div>
-                <div className="col-span-5 text-right sm:text-left">
-                  <span className="font-bold text-slate-900">Date : </span>
-                  <span className="font-medium text-slate-800">{formData?.reportDate}</span>
-                </div>
-                <div className="col-span-5">
-                  <span className="font-bold text-slate-900">Age/ Gender : </span>
-                  <span className="font-medium text-slate-800">
-                    {patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : patient.gender}
-                  </span>
-                </div>
-                <div className="col-span-4">
-                  <span className="font-bold text-slate-900">OAE No : </span>
-                  <span className="font-mono font-bold text-purple-900">{formData?.reportNumber || patient.uhid}</span>
-                </div>
-                <div className="col-span-3 text-right sm:text-left">
-                  <span className="font-bold text-slate-900">DOB : </span>
-                  <span className="font-medium text-slate-800">{patient.date_of_birth}</span>
-                </div>
-              </div>
-            </div>
+              }
+            />
 
             {/* Bilateral Ear Drawings & Pass/Refer Checkboxes */}
-            <div className="my-10 py-4 flex items-center justify-around">
-              {/* Right Ear Column (Red Ear on Left) */}
-              <div className="flex items-center gap-4 sm:gap-6">
+            <div className="my-3 p-4 rounded-xl border border-purple-200/80 bg-white/85 backdrop-blur-2xs shadow-2xs flex items-center justify-around">
+              {/* Right Ear Column (Red Ear on Left - Audiometric Standard) */}
+              <div className="flex items-center gap-4 sm:gap-6 p-2.5 rounded-lg bg-rose-50/20 border border-rose-200/60">
                 <svg
                   viewBox="0 0 100 140"
                   className="w-16 h-24 sm:w-20 sm:h-28 text-rose-600 fill-none stroke-current stroke-[3.2] stroke-linecap-round stroke-linejoin-round shrink-0"
@@ -575,12 +566,12 @@ export const OfficialClinicalDocument = ({
                   <path d="M 64 74 C 58 76, 58 86, 66 88" />
                 </svg>
                 <div className="space-y-2.5">
-                  <span className="block font-black text-sm sm:text-base text-slate-900">Right Ear</span>
+                  <span className="block font-black text-sm sm:text-base text-rose-700 uppercase tracking-wide">Right Ear</span>
                   <div className="flex items-center justify-between gap-5">
                     <span className="text-xs sm:text-sm font-bold text-slate-800">Pass</span>
                     <div
-                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-slate-900 rounded-xs flex items-center justify-center font-black text-sm ${
-                        formData?.parameters?.rightOutcome !== 'REFER' ? 'bg-emerald-50 text-emerald-700' : 'text-transparent'
+                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-purple-400 rounded-xs flex items-center justify-center font-black text-sm ${
+                        formData?.parameters?.rightOutcome !== 'REFER' ? 'bg-purple-100 text-purple-950 border-purple-700' : 'text-transparent bg-white'
                       }`}
                     >
                       {formData?.parameters?.rightOutcome !== 'REFER' ? '✓' : ''}
@@ -589,8 +580,8 @@ export const OfficialClinicalDocument = ({
                   <div className="flex items-center justify-between gap-5">
                     <span className="text-xs sm:text-sm font-bold text-slate-800">Refer</span>
                     <div
-                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-slate-900 rounded-xs flex items-center justify-center font-black text-sm ${
-                        formData?.parameters?.rightOutcome === 'REFER' ? 'bg-rose-50 text-rose-700' : 'text-transparent'
+                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-purple-400 rounded-xs flex items-center justify-center font-black text-sm ${
+                        formData?.parameters?.rightOutcome === 'REFER' ? 'bg-purple-100 text-purple-950 border-purple-700' : 'text-transparent bg-white'
                       }`}
                     >
                       {formData?.parameters?.rightOutcome === 'REFER' ? '✓' : ''}
@@ -599,15 +590,15 @@ export const OfficialClinicalDocument = ({
                 </div>
               </div>
 
-              {/* Left Ear Column (Blue Ear on Right) */}
-              <div className="flex items-center gap-4 sm:gap-6">
+              {/* Left Ear Column (Blue Ear on Right - Audiometric Standard) */}
+              <div className="flex items-center gap-4 sm:gap-6 p-2.5 rounded-lg bg-blue-50/20 border border-blue-200/60">
                 <div className="space-y-2.5">
-                  <span className="block font-black text-sm sm:text-base text-slate-900">Left Ear</span>
+                  <span className="block font-black text-sm sm:text-base text-blue-700 uppercase tracking-wide">Left Ear</span>
                   <div className="flex items-center justify-between gap-5">
                     <span className="text-xs sm:text-sm font-bold text-slate-800">Pass</span>
                     <div
-                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-slate-900 rounded-xs flex items-center justify-center font-black text-sm ${
-                        formData?.parameters?.leftOutcome !== 'REFER' ? 'bg-emerald-50 text-emerald-700' : 'text-transparent'
+                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-purple-400 rounded-xs flex items-center justify-center font-black text-sm ${
+                        formData?.parameters?.leftOutcome !== 'REFER' ? 'bg-purple-100 text-purple-950 border-purple-700' : 'text-transparent bg-white'
                       }`}
                     >
                       {formData?.parameters?.leftOutcome !== 'REFER' ? '✓' : ''}
@@ -616,8 +607,8 @@ export const OfficialClinicalDocument = ({
                   <div className="flex items-center justify-between gap-5">
                     <span className="text-xs sm:text-sm font-bold text-slate-800">Refer</span>
                     <div
-                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-slate-900 rounded-xs flex items-center justify-center font-black text-sm ${
-                        formData?.parameters?.leftOutcome === 'REFER' ? 'bg-rose-50 text-rose-700' : 'text-transparent'
+                      className={`w-5 h-5 sm:w-6 sm:h-6 border-2 border-purple-400 rounded-xs flex items-center justify-center font-black text-sm ${
+                        formData?.parameters?.leftOutcome === 'REFER' ? 'bg-purple-100 text-purple-950 border-purple-700' : 'text-transparent bg-white'
                       }`}
                     >
                       {formData?.parameters?.leftOutcome === 'REFER' ? '✓' : ''}
@@ -638,29 +629,29 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* Impression & Recommendation */}
-            <div className="space-y-4 pt-3">
-              <div>
-                <span className="font-black text-xs sm:text-sm uppercase tracking-wide text-slate-900 block">
-                  IMPRESSION:
+            <div className="space-y-2 pt-1">
+              <div className="border border-purple-200/80 rounded-lg p-2.5 bg-purple-50/40 text-[10px] space-y-1">
+                <span className="font-black uppercase tracking-wider text-purple-950 block text-[10.5px]">
+                  IMPRESSION :
                 </span>
-                <div className="text-xs sm:text-sm font-medium">
+                <div className="text-[10px] text-slate-800 font-medium">
                   {renderBulletPoints(
                     formData?.parameters?.provisionalDiagnosis,
                     '• Bilateral Otoacoustic Emissions (OAE) PASS.\n• Outer hair cell function is robust bilaterally within normal limits.',
-                    'bg-slate-900'
+                    'bg-purple-900'
                   )}
                 </div>
               </div>
 
-              <div>
-                <span className="font-black text-xs sm:text-sm uppercase tracking-wide text-slate-900 block">
+              <div className="border border-purple-200/70 rounded-lg p-2.5 bg-white/70 text-[10px] space-y-1">
+                <span className="font-black uppercase tracking-wider text-purple-950 block text-[10.5px]">
                   RECOMMENDATION :
                 </span>
-                <div className="text-xs sm:text-sm font-medium">
+                <div className="text-[10px] text-slate-800 font-medium">
                   {renderBulletPoints(
                     formData?.parameters?.recommendations,
                     '• Routine developmental auditory and speech-language milestones tracking.\n• Repeat evaluation if parental concern arises.',
-                    'bg-slate-900'
+                    'bg-purple-900'
                   )}
                 </div>
               </div>
@@ -710,31 +701,31 @@ export const OfficialClinicalDocument = ({
                     </span>
                   </div>
 
-                  <div className="border border-slate-300 rounded overflow-hidden">
+                  <div className="border border-purple-200/80 rounded-lg overflow-hidden bg-white/85 backdrop-blur-2xs shadow-2xs">
                     <table className="w-full text-center text-xs">
-                      <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase border-b border-slate-300">
+                      <thead className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 text-[10px] font-bold text-purple-950 uppercase border-b border-purple-200">
                         <tr>
-                          <th className="px-3 py-1.5 text-left border-r border-slate-300">Ear &amp; Conduction</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">250 Hz</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">500 Hz</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">1000 Hz</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">2000 Hz</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">4000 Hz</th>
-                          <th className="px-2 py-1.5 border-r border-slate-200">8000 Hz</th>
-                          <th className="px-2 py-1.5 bg-purple-50 text-purple-950 font-black border-r border-slate-200">PTA Avg (dB)</th>
-                          <th className="px-2 py-1.5 bg-purple-50 text-purple-950 font-black">WHO Degree of Loss</th>
+                          <th className="px-3 py-1.5 text-left border-r border-purple-200">Ear &amp; Conduction</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">250 Hz</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">500 Hz</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">1000 Hz</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">2000 Hz</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">4000 Hz</th>
+                          <th className="px-2 py-1.5 border-r border-purple-200">8000 Hz</th>
+                          <th className="px-2 py-1.5 bg-purple-100 text-purple-950 font-black border-r border-purple-200">PTA Avg (dB)</th>
+                          <th className="px-2 py-1.5 bg-purple-100 text-purple-950 font-black">WHO Degree of Loss</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200">
+                      <tbody className="divide-y divide-purple-100">
                         {/* Right Ear AC (Red) */}
                         <tr className="text-rose-700 font-bold bg-rose-50/20">
-                          <td className="px-3 py-1.5 text-left border-r border-slate-200">Right Ear (AC - O)</td>
+                          <td className="px-3 py-1.5 text-left border-r border-purple-100">Right Ear (AC - O)</td>
                           {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                            <td key={f} className="px-2 py-1.5 border-r border-slate-200 font-mono">
+                            <td key={f} className="px-2 py-1.5 border-r border-purple-100 font-mono">
                               {formData?.parameters?.rightEarAC?.[f] ?? '—'}
                             </td>
                           ))}
-                          <td className="px-2 py-1.5 bg-rose-50 font-mono font-black border-r border-slate-200">
+                          <td className="px-2 py-1.5 bg-rose-50 font-mono font-black border-r border-purple-100">
                             {computedPTA?.rightAvg ?? '31.7'} dB
                           </td>
                           <td className="px-2 py-1.5 bg-rose-50 text-[10px] font-black">
@@ -744,13 +735,13 @@ export const OfficialClinicalDocument = ({
 
                         {/* Right Ear BC (Red) */}
                         <tr className="text-rose-600 bg-rose-50/5">
-                          <td className="px-3 py-1 text-left border-r border-slate-200 font-semibold">Right Ear (BC - &lt;)</td>
+                          <td className="px-3 py-1 text-left border-r border-purple-100 font-semibold">Right Ear (BC - &lt;)</td>
                           {['250', '500', '1000', '2000', '4000'].map((f) => (
-                            <td key={f} className="px-2 py-1 border-r border-slate-200 font-mono">
+                            <td key={f} className="px-2 py-1 border-r border-purple-100 font-mono">
                               {formData?.parameters?.rightEarBC?.[f] ?? '—'}
                             </td>
                           ))}
-                          <td className="px-2 py-1 border-r border-slate-200 text-slate-300">—</td>
+                          <td className="px-2 py-1 border-r border-purple-100 text-slate-300">—</td>
                           <td colSpan={2} className="px-2 py-1 text-[10px] text-slate-500 text-left pl-3">
                             Bone conduction thresholds
                           </td>
@@ -758,13 +749,13 @@ export const OfficialClinicalDocument = ({
 
                         {/* Left Ear AC (Blue) */}
                         <tr className="text-blue-700 font-bold bg-blue-50/20">
-                          <td className="px-3 py-1.5 text-left border-r border-slate-200">Left Ear (AC - X)</td>
+                          <td className="px-3 py-1.5 text-left border-r border-purple-100">Left Ear (AC - X)</td>
                           {['250', '500', '1000', '2000', '4000', '8000'].map((f) => (
-                            <td key={f} className="px-2 py-1.5 border-r border-slate-200 font-mono">
+                            <td key={f} className="px-2 py-1.5 border-r border-purple-100 font-mono">
                               {formData?.parameters?.leftEarAC?.[f] ?? '—'}
                             </td>
                           ))}
-                          <td className="px-2 py-1.5 bg-blue-50 font-mono font-black border-r border-slate-200">
+                          <td className="px-2 py-1.5 bg-blue-50 font-mono font-black border-r border-purple-100">
                             {computedPTA?.leftAvg ?? '25'} dB
                           </td>
                           <td className="px-2 py-1.5 bg-blue-50 text-[10px] font-black">
@@ -774,13 +765,13 @@ export const OfficialClinicalDocument = ({
 
                         {/* Left Ear BC (Blue) */}
                         <tr className="text-blue-600 bg-blue-50/5">
-                          <td className="px-3 py-1 text-left border-r border-slate-200 font-semibold">Left Ear (BC - &gt;)</td>
+                          <td className="px-3 py-1 text-left border-r border-purple-100 font-semibold">Left Ear (BC - &gt;)</td>
                           {['250', '500', '1000', '2000', '4000'].map((f) => (
-                            <td key={f} className="px-2 py-1 border-r border-slate-200 font-mono">
+                            <td key={f} className="px-2 py-1 border-r border-purple-100 font-mono">
                               {formData?.parameters?.leftEarBC?.[f] ?? '—'}
                             </td>
                           ))}
-                          <td className="px-2 py-1 border-r border-slate-200 text-slate-300">—</td>
+                          <td className="px-2 py-1 border-r border-purple-100 text-slate-300">—</td>
                           <td colSpan={2} className="px-2 py-1 text-[10px] text-slate-500 text-left pl-3">
                             Bone conduction thresholds
                           </td>
@@ -791,24 +782,24 @@ export const OfficialClinicalDocument = ({
 
                   {/* Speech & Immittance Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    <div className="p-2 border border-slate-300 rounded bg-slate-50">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase block">Speech Reception (SRT)</span>
+                    <div className="p-2 border border-purple-200/80 rounded-lg bg-white/80 shadow-2xs">
+                      <span className="text-[10px] font-bold text-purple-950 uppercase block">Speech Reception (SRT)</span>
                       <p className="mt-1 font-bold">
                         <span className="text-rose-700">R: {formData?.parameters?.rightSRT ?? 35} dB</span> |{' '}
                         <span className="text-blue-700">L: {formData?.parameters?.leftSRT ?? 25} dB</span>
                       </p>
                     </div>
 
-                    <div className="p-2 border border-slate-300 rounded bg-slate-50">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase block">Word Recognition (WRS)</span>
+                    <div className="p-2 border border-purple-200/80 rounded-lg bg-white/80 shadow-2xs">
+                      <span className="text-[10px] font-bold text-purple-950 uppercase block">Word Recognition (WRS)</span>
                       <p className="mt-1 font-bold">
                         <span className="text-rose-700">R: {formData?.parameters?.rightWRS ?? 84}%</span> |{' '}
                         <span className="text-blue-700">L: {formData?.parameters?.leftWRS ?? 96}%</span>
                       </p>
                     </div>
 
-                    <div className="p-2 border border-slate-300 rounded bg-slate-50 col-span-2">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase block">Immittance &amp; Tympanometry (Jerger)</span>
+                    <div className="p-2 border border-purple-200/80 rounded-lg bg-white/80 shadow-2xs col-span-2">
+                      <span className="text-[10px] font-bold text-purple-950 uppercase block">Immittance &amp; Tympanometry (Jerger)</span>
                       <p className="mt-1 text-[11px] text-slate-800">
                         <strong className="text-rose-700">Right:</strong> {formData?.parameters?.tympanometryRight || 'Type A'} |{' '}
                         <strong className="text-blue-700">Left:</strong> {formData?.parameters?.tympanometryLeft || 'Type A'}
@@ -820,34 +811,34 @@ export const OfficialClinicalDocument = ({
 
               {/* 3. VOICE (CAPE-V / GRBAS) */}
               {service.code === 'RP-CLN-VOI' && (
-                <div className="space-y-2 border border-slate-300 rounded p-2.5 bg-amber-50/20 text-xs">
-                  <span className="text-[10px] font-black uppercase text-amber-950 block">
+                <div className="space-y-2 border border-purple-200/80 rounded-lg p-2.5 bg-purple-50/20 text-xs">
+                  <span className="text-[10px] font-black uppercase text-purple-950 block">
                     CAPE-V Visual Analog Ratings (0-100 mm) &amp; Perceptual Voice Battery
                   </span>
                   <div className="grid grid-cols-6 gap-2 text-center">
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Overall</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_overall ?? 48}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_overall ?? 48}</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Roughness</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_roughness ?? 52}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_roughness ?? 52}</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Breathiness</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_breathiness ?? 38}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_breathiness ?? 38}</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Strain</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_strain ?? 45}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_strain ?? 45}</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Pitch</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_pitch ?? 30}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_pitch ?? 30}</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-300 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 uppercase block font-bold">Loudness</span>
-                      <span className="font-black text-amber-900">{formData?.parameters?.capeV_loudness ?? 25}</span>
+                      <span className="font-black text-purple-950">{formData?.parameters?.capeV_loudness ?? 25}</span>
                     </div>
                   </div>
                 </div>
@@ -855,32 +846,32 @@ export const OfficialClinicalDocument = ({
 
               {/* 4. FLUENCY (SSI-4) */}
               {service.code === 'RP-CLN-FLU' && (
-                <div className="border border-slate-300 rounded p-2.5 bg-slate-50 text-xs space-y-2">
-                  <span className="text-[10px] font-black uppercase text-slate-800 block">
+                <div className="border border-purple-200/80 rounded-lg p-2.5 bg-purple-50/20 text-xs space-y-2">
+                  <span className="text-[10px] font-black uppercase text-purple-950 block">
                     Stuttering Severity Instrument (SSI-4) Protocol Metrics
                   </span>
                   <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">% Syllables Stuttered</span>
                       <span className="font-mono font-black text-purple-950 text-sm">
                         {formData?.parameters?.ssi4_percentageSS ?? 8.4}%
                       </span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Physical Concomitants</span>
                       <span className="font-mono font-bold text-slate-800">
                         {formData?.parameters?.ssi4_physicalConcomitants ?? 'Moderate'}
                       </span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Speech Rate</span>
                       <span className="font-mono font-bold text-slate-800">
                         {formData?.parameters?.ssi4_speechRateSPM ?? 142} SPM
                       </span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded bg-purple-50">
-                      <span className="text-[9px] text-purple-800 font-bold block uppercase">Severity Classification</span>
-                      <span className="font-black text-purple-900">
+                    <div className="p-1.5 bg-purple-100/80 border border-purple-300 rounded">
+                      <span className="text-[9px] text-purple-950 font-bold block uppercase">Severity Classification</span>
+                      <span className="font-black text-purple-950">
                         {formData?.parameters?.ssi4_severityGrade ?? 'Moderate Stuttering'}
                       </span>
                     </div>
@@ -890,24 +881,24 @@ export const OfficialClinicalDocument = ({
 
               {/* 5. SPEECH & LANGUAGE (REELS / PLS-5) */}
               {service.code === 'RP-CLN-SLA' && (
-                <div className="border border-slate-300 rounded p-2.5 bg-slate-50 text-xs space-y-2">
-                  <span className="text-[10px] font-black uppercase text-slate-800 block">
+                <div className="border border-purple-200/80 rounded-lg p-2.5 bg-purple-50/20 text-xs space-y-2">
+                  <span className="text-[10px] font-black uppercase text-purple-950 block">
                     Comprehensive Developmental Language Battery (REELS / 3DLAT)
                   </span>
                   <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Chronological Age</span>
                       <span className="font-mono font-bold text-slate-800">{formData?.parameters?.reels_caMonths ?? 36} Mo</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Receptive Age (RLA)</span>
                       <span className="font-mono font-bold text-slate-800">{formData?.parameters?.reels_rlaMonths ?? 28} Mo</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded">
+                    <div className="p-1.5 bg-white border border-purple-200 rounded">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Expressive Age (ELA)</span>
                       <span className="font-mono font-bold text-slate-800">{formData?.parameters?.reels_elaMonths ?? 22} Mo</span>
                     </div>
-                    <div className="p-1.5 bg-purple-100/70 border border-purple-300 rounded shadow-2xs">
+                    <div className="p-1.5 bg-purple-100/80 border border-purple-300 rounded shadow-2xs">
                       <span className="text-[9px] text-purple-950 font-bold block uppercase">Expressive Delay</span>
                       <span className="font-mono font-black text-purple-950">{formData?.parameters?.reels_expressiveDelayMonths ?? 14} Mo</span>
                     </div>
@@ -917,8 +908,8 @@ export const OfficialClinicalDocument = ({
 
               {/* General Other Services fallback */}
               {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA'].includes(service.code) && (
-                <div className="border border-slate-300 rounded p-3 bg-slate-50 text-xs">
-                  <span className="text-[10px] font-black uppercase text-purple-900 block mb-1">
+                <div className="border border-purple-200/80 rounded-lg p-3 bg-purple-50/30 text-xs">
+                  <span className="text-[10px] font-black uppercase text-purple-950 block mb-1">
                     Assessment Battery Details
                   </span>
                   <p className="text-slate-800 leading-relaxed font-medium">
@@ -929,7 +920,7 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* ── CLINICAL IMPRESSION / DIAGNOSIS ── */}
-            <div className="border border-purple-200 rounded p-3 bg-purple-50/40 text-xs space-y-1">
+            <div className="border border-purple-200/80 rounded-lg p-3 bg-purple-50/40 text-xs space-y-1 shadow-2xs">
               <span className="text-[10px] font-black uppercase tracking-wider text-purple-950 block">
                 Clinical Impression &amp; Findings:
               </span>
@@ -943,15 +934,15 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* ── CLINICAL RECOMMENDATIONS & MANAGEMENT PLAN ── */}
-            <div className="border border-slate-300 rounded p-3 bg-slate-50 text-xs space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 block">
+            <div className="border border-purple-200/70 rounded-lg p-3 bg-white/70 text-xs space-y-1 shadow-2xs">
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-950 block">
                 Clinical Recommendations &amp; Rehabilitation Protocol:
               </span>
               <div className="font-medium text-slate-800">
                 {renderBulletPoints(
                   formData?.parameters?.recommendations,
                   'Follow up as clinically indicated.',
-                  'bg-slate-800'
+                  'bg-purple-900'
                 )}
               </div>
             </div>
