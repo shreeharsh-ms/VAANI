@@ -37,20 +37,6 @@ export const OfficialReportFooter = ({
             className="w-full h-auto block rounded-none"
           />
 
-          {/* Tamper-Evident Verification text next to the QR code */}
-          <div className="absolute left-[29%] top-[20%] bottom-[16%] flex flex-col justify-center text-[7.5px] print:text-[7px] text-purple-950 space-y-0.5">
-            <div className="font-bold font-mono tracking-wider text-[8px] print:text-[7.5px] text-purple-900 flex items-center gap-1">
-              <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 inline shrink-0" />
-              QR VERIFIED • DPDP COMPLIANT
-            </div>
-            <div className="text-[7px] print:text-[6.5px] text-slate-600 hidden sm:block">
-              Cryptographically authentic record
-            </div>
-            <div className="text-[7px] print:text-[6.5px] font-mono text-purple-800">
-              vaaniclinic.com/verify-doc/{reportNumber}
-              {totalPages && totalPages > 1 ? ` • Pg ${pageNumber}/${totalPages}` : ''}
-            </div>
-          </div>
 
           {/* Clinician Digital Authentication & Signature Block in the open right area */}
           <div className="absolute right-[5%] top-[10%] bottom-[10%] flex flex-col justify-center text-right">
