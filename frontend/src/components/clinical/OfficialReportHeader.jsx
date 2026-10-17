@@ -30,7 +30,7 @@ export const OfficialReportHeader = ({
   // Official header banner using the user's custom high-resolution letterhead
   if (useImage) {
     return (
-      <div className={`official-report-header shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mt-6 sm:-mx-7 sm:-mt-7 print:m-0 print:w-full mb-3 select-none ${className}`}>
+      <div className={`official-report-header shrink-0 w-full m-0 p-0 mb-3 select-none ${className}`}>
         <div className="relative w-full overflow-hidden">
           {/* User's custom official banner - uncropped, 100% full width edge-to-edge, zero border-radius */}
           <img

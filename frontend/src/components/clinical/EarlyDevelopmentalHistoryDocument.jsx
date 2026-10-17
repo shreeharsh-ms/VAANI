@@ -39,7 +39,7 @@ export const EarlyDevelopmentalHistoryDocument = ({
 
   // Reusable Lavender Statutory Footer Component
   const renderFooter = (pageNumber) => (
-    <div className="relative z-10 shrink-0 mt-auto">
+    <div className="relative z-10 shrink-0 mt-auto w-full">
       <OfficialReportFooter
         formData={formData}
         pageNumber={pageNumber}
@@ -55,10 +55,11 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, BIRTH HISTORY & SENSORY/COGNITIVE FOUNDATIONS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(1)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -256,6 +257,7 @@ export const EarlyDevelopmentalHistoryDocument = ({
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {renderFooter(1)}
@@ -264,10 +266,11 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: LANGUAGE, SPEECH MILESTONES, BEHAVIOR, CONCEPTS & ORAL STRUCTURES
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(2)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -433,6 +436,7 @@ export const EarlyDevelopmentalHistoryDocument = ({
               <span className="font-bold text-purple-950">Structural Evaluation Notes:</span> Oral structures are intact with adequate symmetrical tone, strength, and range of motion for developmental age.
             </div>
           </div>
+          </div>
         </div>
 
         {renderFooter(2)}
@@ -441,10 +445,11 @@ export const EarlyDevelopmentalHistoryDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 3: ORAL SKILLS & FEEDING, LITERACY, FORMAL TESTS & CLINICAL FORMULATION
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(3)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -612,6 +617,7 @@ export const EarlyDevelopmentalHistoryDocument = ({
                 <p className="text-[7.5px] text-slate-600 font-semibold">RCI CRR No: <span className="font-mono text-purple-950">A79214</span> • Consultant SLP &amp; Audiologist</p>
               </div>
             </div>
+          </div>
           </div>
         </div>
 

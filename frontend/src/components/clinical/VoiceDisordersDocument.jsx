@@ -40,7 +40,7 @@ export const VoiceDisordersDocument = ({
 
   // Reusable Lavender Statutory Footer Component
   const renderFooter = (pageNumber) => (
-    <div className="relative z-10 shrink-0 mt-auto">
+    <div className="relative z-10 shrink-0 mt-auto w-full">
       <OfficialReportFooter
         formData={formData}
         pageNumber={pageNumber}
@@ -56,10 +56,11 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, CLINICAL HISTORY, VOCAL DEMANDS & RISKS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(1)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -218,6 +219,7 @@ export const VoiceDisordersDocument = ({
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Pinned Statutory Footer */}
@@ -227,10 +229,11 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: OBJECTIVE AERODYNAMICS, ACOUSTIC, PERCEPTUAL & PLAN
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(2)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -476,6 +479,7 @@ export const VoiceDisordersDocument = ({
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Pinned Statutory Footer */}
@@ -485,10 +489,11 @@ export const VoiceDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 3: STROBOSCOPIC EVALUATION OF VOICE & ENT SIGN-OFF
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none">
         <ClinicalReportBackground />
-        <div className="relative z-10 flex-1 flex flex-col space-y-1.5 pb-1">
+        <div className="relative z-10 flex-1 flex flex-col">
           {renderHeader(3)}
+          <div className="flex-1 flex flex-col space-y-1.5 pb-1 px-7 sm:px-8">
 
           {/* Title Banner */}
           <OfficialReportTitle
@@ -692,6 +697,7 @@ export const VoiceDisordersDocument = ({
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
 

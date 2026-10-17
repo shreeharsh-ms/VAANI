@@ -110,13 +110,13 @@ export const OfficialClinicalDocument = ({
   return (
     <div
       id="official-report-a4-page"
-      className="relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none"
+      className="relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none"
     >
       {/* ── BACKGROUND LAYER: BOTANICAL LAVENDER WATERCOLOR FLOWER (From Overview Page) ── */}
       <ClinicalReportBackground />
 
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
-      <div className="relative z-10 flex-1 flex flex-col space-y-1.5">
+      <div className="relative z-10 flex-1 flex flex-col">
         {/* ── REUSABLE DECORATIVE CLINICAL LETTERHEAD ── */}
         <OfficialReportHeader
           formData={formData}
@@ -124,32 +124,34 @@ export const OfficialClinicalDocument = ({
           isCBT={isCBT}
         />
 
-        {/* ── CONDITIONAL REPORT BODY: CBT VS OAE VS GENERAL / PTA ── */}
-        {isCBT ? (
-          /* ── CBT REPORT VIEW (Exact Layout matching official Psychological & CBT Document) ── */
-          <div className="space-y-2.5 text-slate-900">
-            {/* Title Banner */}
-            <OfficialReportTitle title="Psychological &amp; Cognitive Behavioural Therapy (CBT) Report" />
+        {/* ── CLINICAL BODY PADDED WRAPPER (Uniform Left & Right Margins) ── */}
+        <div className="flex-1 flex flex-col space-y-1.5 print:space-y-1 px-7 sm:px-8 pb-1">
+          {/* ── CONDITIONAL REPORT BODY: CBT VS OAE VS GENERAL / PTA ── */}
+          {isCBT ? (
+            /* ── CBT REPORT VIEW (Exact Layout matching official Psychological & CBT Document) ── */
+            <div className="space-y-2 print:space-y-1 text-slate-900">
+              {/* Title Banner */}
+              <OfficialReportTitle title="Psychological &amp; Cognitive Behavioural Therapy (CBT) Report" />
 
-            {/* Demographics Matrix (Unified Audiological Evaluation Layout) */}
-            <PatientDemographicsMatrix
-              formData={formData}
-              patient={patient}
-              refLabel="Report No. :"
-              refValue={formData?.reportNumber || 'REP-26-0001'}
-              extraRow={
-                <div className="grid grid-cols-2 divide-x divide-purple-200">
-                  <div className="p-1 px-2.5 flex items-center">
-                    <span className="font-bold w-36 shrink-0 text-purple-950">Assessment Session :</span>
-                    <span className="font-medium text-slate-800">{formData?.parameters?.assessmentSession || 'Intake & Diagnostic Formulation'}</span>
+              {/* Demographics Matrix (Unified Audiological Evaluation Layout) */}
+              <PatientDemographicsMatrix
+                formData={formData}
+                patient={patient}
+                refLabel="Report No. :"
+                refValue={formData?.reportNumber || 'REP-26-0001'}
+                extraRow={
+                  <div className="grid grid-cols-2 divide-x divide-purple-200">
+                    <div className="p-1 px-2.5 flex items-center">
+                      <span className="font-bold w-36 shrink-0 text-purple-950">Assessment Session :</span>
+                      <span className="font-medium text-slate-800">{formData?.parameters?.assessmentSession || 'Intake & Diagnostic Formulation'}</span>
+                    </div>
+                    <div className="p-1 px-2.5 flex items-center">
+                      <span className="font-bold w-32 shrink-0 text-purple-950">Consent Status :</span>
+                      <span className="font-medium text-slate-800">{formData?.parameters?.consentStatus || 'Signed CBT Consent Form Verified'}</span>
+                    </div>
                   </div>
-                  <div className="p-1 px-2.5 flex items-center">
-                    <span className="font-bold w-32 shrink-0 text-purple-950">Consent Status :</span>
-                    <span className="font-medium text-slate-800">{formData?.parameters?.consentStatus || 'Signed CBT Consent Form Verified'}</span>
-                  </div>
-                </div>
-              }
-            />
+                }
+              />
 
             {/* 1. STANDARDIZED PSYCHOMETRIC SCALES */}
             <div className="border border-purple-200/80 rounded-lg overflow-hidden bg-white/85 backdrop-blur-2xs shadow-2xs">
@@ -160,26 +162,26 @@ export const OfficialClinicalDocument = ({
               <table className="w-full border-collapse text-[9.5px]">
                 <thead>
                   <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
-                    <th className="p-1.5 border-r border-purple-200 w-2/6">INSTRUMENT</th>
-                    <th className="p-1.5 border-r border-purple-200 w-1/6">RAW SCORE</th>
-                    <th className="p-1.5 border-r border-purple-200 w-2/6">SCORE RANGE &amp; CUTOFF</th>
-                    <th className="p-1.5 text-purple-950 w-2/6">CLINICAL SEVERITY LEVEL</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-2/6">INSTRUMENT</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-1/6">RAW SCORE</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-2/6">SCORE RANGE &amp; CUTOFF</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 text-purple-950 w-2/6">CLINICAL SEVERITY LEVEL</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-100">
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950">
                       PHQ-9<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Patient Health Questionnaire - Depression)</span>
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.phq9Score ?? 14} / 27
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-4: Minimal | 5-9: Mild<br />
                       10-14: Moderate | 15-19: Mod. Severe | 20-27: Severe
                     </td>
-                    <td className="p-1.5">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1">
                       <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.phq9Severity || 'MODERATE DEPRESSION'}
                       </span>
@@ -192,18 +194,18 @@ export const OfficialClinicalDocument = ({
                   </tr>
 
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950">
                       GAD-7<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Generalised Anxiety Disorder Scale)</span>
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.gad7Score ?? 12} / 21
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-4: Minimal | 5-9: Mild<br />
                       10-14: Moderate | 15-21: Severe
                     </td>
-                    <td className="p-1.5">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1">
                       <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.gad7Severity || 'MODERATE ANXIETY'}
                       </span>
@@ -216,18 +218,18 @@ export const OfficialClinicalDocument = ({
                   </tr>
 
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950">
                       PSS-10<br />
                       <span className="font-normal text-[8.5px] text-slate-600">(Perceived Stress Scale)</span>
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 font-mono font-bold text-slate-900">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-mono font-bold text-slate-900">
                       {formData?.parameters?.pss10Score ?? 24} / 40
                     </td>
-                    <td className="p-1.5 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-[8.5px] text-slate-700 leading-tight">
                       0-13: Low Stress | 14-26: Moderate Stress<br />
                       27-40: High Stress
                     </td>
-                    <td className="p-1.5">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1">
                       <span className="font-bold text-purple-950 block uppercase">
                         {formData?.parameters?.pss10Severity || 'MODERATE-HIGH PERCEIVED STRESS'}
                       </span>
@@ -246,18 +248,18 @@ export const OfficialClinicalDocument = ({
               <table className="w-full border-collapse text-[9.5px]">
                 <thead>
                   <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
-                    <th className="p-1.5 border-r border-purple-200 w-1/4">RISK PARAMETER</th>
-                    <th className="p-1.5 border-r border-purple-200 w-1/2">CLINICAL ASSESSMENT FINDING</th>
-                    <th className="p-1.5 text-purple-950 w-1/4">SYSTEM ACTION / SAFETY TRIGGER</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-1/4">RISK PARAMETER</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-1/2">CLINICAL ASSESSMENT FINDING</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 text-purple-950 w-1/4">SYSTEM ACTION / SAFETY TRIGGER</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-100">
                   <tr>
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Suicidal Ideation / Intent</td>
-                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950 align-top">Suicidal Ideation / Intent</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.suicidalIdeation || 'Passive thoughts ("wish I didn\'t wake up"), NO active plan, NO specific intent.'}
                     </td>
-                    <td rowSpan={4} className="p-1.5 bg-purple-50/60 align-top">
+                    <td rowSpan={4} className="py-1 px-1.5 print:py-0.5 print:px-1 bg-purple-50/60 align-top">
                       <span className="font-black text-purple-950 uppercase block mb-1 text-[9.5px]">
                         OVERALL RISK LEVEL: {formData?.parameters?.overallRiskLevel || 'MODERATE RISK'}
                       </span>
@@ -280,22 +282,22 @@ export const OfficialClinicalDocument = ({
                   </tr>
 
                   <tr>
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Self-Harm History</td>
-                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950 align-top">Self-Harm History</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.selfHarmHistory || 'No prior suicide attempt; intermittent non-suicidal self-harm urges under high stress.'}
                     </td>
                   </tr>
 
                   <tr>
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Means Access &amp; Control</td>
-                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950 align-top">Means Access &amp; Control</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.meansAccess || 'No firearms; medication access managed by family.'}
                     </td>
                   </tr>
 
                   <tr>
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-purple-950 align-top">Protective Factors</td>
-                    <td className="p-1.5 border-r border-purple-100 text-slate-800 align-top">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-purple-950 align-top">Protective Factors</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 text-slate-800 align-top">
                       {formData?.parameters?.protectiveFactors || 'Strong supportive sister, highly motivated for CBT, employed, no substance abuse.'}
                     </td>
                   </tr>
@@ -312,44 +314,44 @@ export const OfficialClinicalDocument = ({
               <table className="w-full border-collapse text-[9.5px]">
                 <thead>
                   <tr className="bg-purple-100/70 text-purple-950 text-left font-bold border-b border-purple-200">
-                    <th className="p-1.5 border-r border-purple-200 w-20 text-center">STEP</th>
-                    <th className="p-1.5 border-r border-purple-200 w-1/4">SAFETY PLAN DOMAIN</th>
-                    <th className="p-1.5 text-purple-950">PATIENT-SPECIFIC AGREED INTERVENTION</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-20 text-center">STEP</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-200 w-1/4">SAFETY PLAN DOMAIN</th>
+                    <th className="py-1 px-1.5 print:py-0.5 print:px-1 text-purple-950">PATIENT-SPECIFIC AGREED INTERVENTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-purple-100">
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 1</td>
-                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Recognizing Warning Signs</td>
-                    <td className="p-1.5 text-slate-800">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-center text-purple-950">Step 1</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-semibold text-purple-950">Recognizing Warning Signs</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 text-slate-800">
                       {formData?.parameters?.safetyStep1 || 'Racing thoughts, isolating in bedroom, skipping meals, feeling heavy pressure in chest.'}
                     </td>
                   </tr>
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 2</td>
-                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Internal Coping Strategies</td>
-                    <td className="p-1.5 text-slate-800">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-center text-purple-950">Step 2</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-semibold text-purple-950">Internal Coping Strategies</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 text-slate-800">
                       {formData?.parameters?.safetyStep2 || 'Box breathing (4-4-4-4), 5-4-3-2-1 sensory grounding, listening to calming classical music.'}
                     </td>
                   </tr>
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 3</td>
-                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Social Distractions &amp; Support</td>
-                    <td className="p-1.5 text-slate-800">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-center text-purple-950">Step 3</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-semibold text-purple-950">Social Distractions &amp; Support</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 text-slate-800">
                       {formData?.parameters?.safetyStep3 || 'Calling sister (Pooja: +91-98220-XXXXX), sitting in clinic garden, walking pet dog.'}
                     </td>
                   </tr>
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 4</td>
-                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Family / Crisis Contacts</td>
-                    <td className="p-1.5 text-slate-800">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-center text-purple-950">Step 4</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-semibold text-purple-950">Family / Crisis Contacts</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 text-slate-800">
                       {formData?.parameters?.safetyStep4 || 'Primary Contact: Sister (Pooja Kulkarni); Secondary Contact: Vani\'s Clinic Support.'}
                     </td>
                   </tr>
                   <tr className="hover:bg-purple-50/30">
-                    <td className="p-1.5 border-r border-purple-100 font-bold text-center text-purple-950">Step 5</td>
-                    <td className="p-1.5 border-r border-purple-100 font-semibold text-purple-950">Professional &amp; Emergency Care</td>
-                    <td className="p-1.5 text-slate-800">
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-bold text-center text-purple-950">Step 5</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 border-r border-purple-100 font-semibold text-purple-950">Professional &amp; Emergency Care</td>
+                    <td className="py-1 px-1.5 print:py-0.5 print:px-1 text-slate-800">
                       {formData?.parameters?.safetyStep5 || 'Vani\'s Clinic Crisis Line (+91-98220-XXXXX) | Satara District Hospital Helpline (02162-XXXXXX).'}
                     </td>
                   </tr>
@@ -948,10 +950,11 @@ export const OfficialClinicalDocument = ({
             </div>
           </>
         )}
+        </div>
       </div>
 
       {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
-      <div className="relative z-10">
+      <div className="relative z-10 mt-auto shrink-0 w-full">
         <OfficialReportFooter
           formData={formData}
           service={service}

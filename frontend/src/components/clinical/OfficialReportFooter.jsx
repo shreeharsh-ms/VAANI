@@ -31,7 +31,7 @@ export const OfficialReportFooter = ({
   // Render clean clinical footer with address, contact number, email, and page number / total number
   if (!isLastPage) {
     return (
-      <div className={`official-report-intermediate-footer mt-auto pt-2 shrink-0 select-none print:break-inside-avoid ${className}`}>
+      <div className={`official-report-intermediate-footer mt-auto pt-2 pb-3 px-7 sm:px-8 shrink-0 select-none print:break-inside-avoid ${className}`}>
         {/* Subtle decorative divider flourish */}
         <div className="flex items-center justify-center gap-2 mb-1.5 text-purple-400">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
@@ -71,7 +71,7 @@ export const OfficialReportFooter = ({
   // Use the official decorative footer banner for the LAST page (or single-page reports)
   if (useImage) {
     return (
-      <div className={`official-report-footer shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mb-6 sm:-mx-7 sm:-mb-7 print:m-0 print:w-full select-none ${className}`}>
+      <div className={`official-report-footer shrink-0 w-full m-0 p-0 select-none mt-auto ${className}`}>
         <div className="relative w-full overflow-hidden">
           {/* User's custom official footer banner - uncropped, full width, zero border-radius */}
           <img
