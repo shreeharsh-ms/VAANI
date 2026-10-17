@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import {
   FileText,
   Printer,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
+import { DEFAULT_ASSESSMENTS } from '../../data/clinicalReportsData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
@@ -68,22 +69,83 @@ export const ReportCreatePage = () => {
     referringDoctor: '',
   });
 
-  // Determine initial service from query param (supports type, service, code, id)
-  const serviceParam = searchParams.get('type') || searchParams.get('service') || searchParams.get('code') || '';
-  const matchedService = CLINICAL_SERVICES.find(
-    (s) => s.code.toLowerCase() === serviceParam.toLowerCase() || s.id.toLowerCase() === serviceParam.toLowerCase()
-  );
-  const initialTypeCode = matchedService ? matchedService.code : 'RP-CLN-AUD';
+  const { id: routeId } = useParams();
+  const editId = routeId || searchParams.get('editId') || searchParams.get('edit') || searchParams.get('id') || '';
 
-  const patientParam = searchParams.get('patientId') || searchParams.get('patient') || searchParams.get('uhid') || '';
-  const matchedPatient = allPatients.find(
-    (p) => p.id === patientParam || p.uhid === patientParam
-  );
-  const initialPatientId = matchedPatient ? matchedPatient.id : (allPatients[0]?.id || '');
+  // Check if an existing report should be loaded for editing
+  const existingReport = useMemo(() => {
+    if (!editId) return null;
+    try {
+      const stored = JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]');
+      const foundInStorage = stored.find(
+        (r) => r.report_number === editId || r.id === editId || r.report_number?.toLowerCase() === editId.toLowerCase()
+      );
+      if (foundInStorage) return foundInStorage;
+    } catch (e) {
+      console.warn('Error reading vaani_clinical_reports_v1 for edit', e);
+    }
+    // Also check DEFAULT_ASSESSMENTS
+    return (
+      DEFAULT_ASSESSMENTS.find(
+        (r) => r.report_number === editId || r.id === editId || r.report_number?.toLowerCase() === editId.toLowerCase()
+      ) || null
+    );
+  }, [editId]);
+
+  // Determine initial service from existing report or query param (supports type, service, code, id)
+  const initialTypeCode = useMemo(() => {
+    if (existingReport?.service_code) {
+      return existingReport.service_code;
+    }
+    const serviceParam = searchParams.get('type') || searchParams.get('service') || searchParams.get('code') || '';
+    const matchedService = CLINICAL_SERVICES.find(
+      (s) => s.code.toLowerCase() === serviceParam.toLowerCase() || s.id.toLowerCase() === serviceParam.toLowerCase()
+    );
+    return matchedService ? matchedService.code : 'RP-CLN-AUD';
+  }, [existingReport, searchParams]);
+
+  // Determine initial patient
+  const initialPatientId = useMemo(() => {
+    if (existingReport) {
+      const matched = allPatients.find(
+        (p) => p.uhid === existingReport.uhid || p.id === existingReport.patient_id || p.full_name?.toLowerCase() === existingReport.patient_name?.toLowerCase()
+      );
+      if (matched) return matched.id;
+    }
+    const patientParam = searchParams.get('patientId') || searchParams.get('patient') || searchParams.get('uhid') || '';
+    const matchedPatient = allPatients.find(
+      (p) => p.id === patientParam || p.uhid === patientParam
+    );
+    return matchedPatient ? matchedPatient.id : (allPatients[0]?.id || '');
+  }, [existingReport, allPatients, searchParams]);
 
   const [selectedServiceCode, setSelectedServiceCode] = useState(initialTypeCode);
   const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // If editing an existing report for a patient not yet in state, synthesize the patient record
+  useEffect(() => {
+    if (existingReport && existingReport.patient_name) {
+      const exists = allPatients.some(
+        (p) => p.uhid === existingReport.uhid || p.full_name?.toLowerCase() === existingReport.patient_name?.toLowerCase()
+      );
+      if (!exists) {
+        const synthPatient = {
+          id: existingReport.patient_id || `pt_${Date.now()}`,
+          uhid: existingReport.uhid || 'VN-26-0001',
+          full_name: existingReport.patient_name,
+          gender: existingReport.patient_age_sex?.includes('Female') ? 'FEMALE' : 'MALE',
+          date_of_birth: existingReport.patient_age_sex?.split(',')[1]?.trim() || '1990-01-01',
+          phone: existingReport.phone || '+91 98220 11223',
+          guardian_name: existingReport.guardian || 'Self',
+          city: existingReport.city || 'Satara, Maharashtra',
+          service_line: existingReport.discipline === 'Speech Therapy' ? 'SPEECH_LANGUAGE' : 'AUDIOLOGY',
+        };
+        setAllPatients((prev) => [synthPatient, ...prev]);
+        setSelectedPatientId(synthPatient.id);
+      }
+    }
+  }, [existingReport, allPatients]);
 
   // Type & Search Patient Combobox State
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
@@ -189,16 +251,39 @@ export const ReportCreatePage = () => {
   };
 
   // Form Parameters state for the active report
-  const [formData, setFormData] = useState({
-    reportNumber: `REP-26-${Math.floor(1000 + Math.random() * 9000)}`,
-    reportDate: new Date().toISOString().split('T')[0],
-    examinerName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-    rciNumber: 'A79214',
-    parameters: { ...activeService.defaultParameters },
+  const [formData, setFormData] = useState(() => {
+    const s = CLINICAL_SERVICES.find((srv) => srv.code === initialTypeCode) || CLINICAL_SERVICES[0];
+    if (existingReport) {
+      return {
+        reportNumber: existingReport.report_number || existingReport.id,
+        reportDate: existingReport.date || new Date().toISOString().split('T')[0],
+        examinerName: existingReport.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+        rciNumber: existingReport.rci_number || 'A79214',
+        parameters: {
+          ...(s.defaultParameters || {}),
+          ...(existingReport.parameters || {}),
+          provisionalDiagnosis: existingReport.diagnosis || existingReport.parameters?.provisionalDiagnosis || s.description || '',
+          recommendations: existingReport.recommendations || existingReport.parameters?.recommendations || 'Follow up as clinically indicated.',
+        },
+      };
+    }
+    return {
+      reportNumber: `REP-26-${Math.floor(1000 + Math.random() * 9000)}`,
+      reportDate: new Date().toISOString().split('T')[0],
+      examinerName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      rciNumber: 'A79214',
+      parameters: { ...(s.defaultParameters || {}) },
+    };
   });
 
-  // When active service changes, load its default parameters
+  const isInitialServiceMount = useRef(true);
+
+  // When active service changes, load its default parameters (unless initial mount for editing)
   useEffect(() => {
+    if (isInitialServiceMount.current) {
+      isInitialServiceMount.current = false;
+      return;
+    }
     const s = CLINICAL_SERVICES.find((srv) => srv.code === selectedServiceCode);
     if (s) {
       setFormData((prev) => ({
@@ -477,19 +562,21 @@ export const ReportCreatePage = () => {
     try {
       const existingReports = JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]');
       const newReportRecord = {
-        id: `asmt_${Date.now()}`,
+        id: existingReport?.id || `asmt_${Date.now()}`,
         report_number: formData.reportNumber,
         title: `${activeService.title}`,
         service_code: activeService.code,
         discipline: activeService.discipline,
-        patient_id: selectedPatient.id,
-        uhid: selectedPatient.uhid,
-        patient_name: selectedPatient.full_name,
-        patient_age_sex: `${selectedPatient.gender === 'MALE' ? 'Male' : selectedPatient.gender === 'FEMALE' ? 'Female' : 'Other'}, ${selectedPatient.date_of_birth}`,
-        guardian: selectedPatient.guardian_name,
-        phone: selectedPatient.phone,
-        city: selectedPatient.city,
-        referring_doctor: patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni (ENT)',
+        patient_id: selectedPatient?.id || existingReport?.patient_id || '',
+        uhid: selectedPatient?.uhid || existingReport?.uhid || '',
+        patient_name: selectedPatient?.full_name || existingReport?.patient_name || '',
+        patient_age_sex: selectedPatient
+          ? `${selectedPatient.gender === 'MALE' ? 'Male' : selectedPatient.gender === 'FEMALE' ? 'Female' : 'Other'}, ${selectedPatient.date_of_birth}`
+          : existingReport?.patient_age_sex || '',
+        guardian: selectedPatient?.guardian_name || existingReport?.guardian || '',
+        phone: selectedPatient?.phone || existingReport?.phone || '',
+        city: selectedPatient?.city || existingReport?.city || '',
+        referring_doctor: patientDossier?.demographics?.referringDoctor || existingReport?.referring_doctor || 'Dr. A. P. Kulkarni (ENT)',
         date: formData.reportDate,
         examiner: formData.examinerName,
         rci_number: formData.rciNumber,
@@ -497,14 +584,36 @@ export const ReportCreatePage = () => {
         recommendations: formData.parameters.recommendations || 'Follow up as clinically indicated.',
         parameters: formData.parameters,
         computed: computedPTA,
-        status: 'FINAL',
-        created_at: new Date().toISOString(),
+        status: existingReport?.status || 'FINAL',
+        updated_at: new Date().toISOString(),
+        created_at: existingReport?.created_at || new Date().toISOString(),
       };
 
-      const updated = [newReportRecord, ...existingReports];
+      const existingIndex = existingReports.findIndex(
+        (r) =>
+          r.report_number === formData.reportNumber ||
+          (existingReport && (r.id === existingReport.id || r.report_number === existingReport.report_number))
+      );
+
+      let updated;
+      if (existingIndex >= 0) {
+        updated = [...existingReports];
+        updated[existingIndex] = { ...updated[existingIndex], ...newReportRecord };
+      } else {
+        updated = [newReportRecord, ...existingReports];
+      }
+
       localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(updated));
 
-      notify.success(`Report ${formData.reportNumber} saved successfully for ${selectedPatient.full_name}!`);
+      notify.success(
+        existingReport
+          ? `Clinical Report ${formData.reportNumber} updated successfully!`
+          : `Report ${formData.reportNumber} saved successfully for ${selectedPatient?.full_name || 'patient'}!`
+      );
+
+      setTimeout(() => {
+        navigate('/dashboard/reports');
+      }, 700);
     } catch (e) {
       console.error(e);
       notify.error('Failed to save report. Please try again.');
@@ -528,10 +637,21 @@ export const ReportCreatePage = () => {
           <div>
             <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-700" />
-              Clinical Report Intake &amp; Data Entry
+              {existingReport ? (
+                <span className="flex items-center gap-2">
+                  <span>Edit Clinical Report:</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-mono text-xs">{formData.reportNumber}</span>
+                </span>
+              ) : (
+                <span>Clinical Report Intake &amp; Data Entry</span>
+              )}
             </h1>
             <p className="text-[10px] text-slate-500">
-              Input patient findings • Computes diagnostic metrics • Prints official letterhead with clinic logo &amp; RCI CRR No. {formData.rciNumber}
+              {existingReport ? (
+                <span className="text-purple-700 font-medium">Modifying clinical findings for {selectedPatient?.full_name} ({selectedPatient?.uhid}) • Click Save to update registry</span>
+              ) : (
+                <span>Input patient findings • Computes diagnostic metrics • Prints official letterhead with clinic logo &amp; RCI CRR No. {formData.rciNumber}</span>
+              )}
             </p>
           </div>
         </div>
@@ -544,7 +664,7 @@ export const ReportCreatePage = () => {
             title="Save report to clinical records (Ctrl/Cmd + S)"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>Save Report</span>
+            <span>{existingReport ? 'Update Report' : 'Save Report'}</span>
             <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-800/80 text-[9px] rounded font-mono">⌘S</kbd>
           </button>
 
@@ -2074,7 +2194,7 @@ export const ReportCreatePage = () => {
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
             >
               <Save className="w-3.5 h-3.5" />
-              <span>Save Clinical Report</span>
+              <span>{existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}</span>
             </button>
 
             <button

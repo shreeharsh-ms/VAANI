@@ -134,15 +134,7 @@ export const ReportsPage = () => {
   const [editingReport, setEditingReport] = useState(null);
 
   const handleOpenEditModal = (rep) => {
-    setEditingReport({
-      ...rep,
-      diagnosis: rep.diagnosis || '',
-      recommendations: rep.recommendations || '',
-      status: rep.status || 'FINAL',
-      examiner: rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      date: rep.date || new Date().toISOString().substring(0, 10),
-    });
-    setIsEditModalOpen(true);
+    navigate(`/dashboard/reports/create?editId=${encodeURIComponent(rep.report_number || rep.id)}`);
   };
 
   const handleSaveEditReport = (e) => {

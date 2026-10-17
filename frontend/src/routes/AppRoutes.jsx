@@ -81,6 +81,9 @@ export const AppRoutes = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="records" element={<ReportsPage />} />
         <Route path="reports/create" element={<ReportCreatePage />} />
+        <Route path="reports/edit/:id" element={<ReportCreatePage />} />
+        <Route path="records/create" element={<ReportCreatePage />} />
+        <Route path="records/edit/:id" element={<ReportCreatePage />} />
         <Route path="billing" element={<BillingPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="recalls" element={<RecallsPage />} />
