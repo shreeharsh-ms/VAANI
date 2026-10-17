@@ -1,5 +1,6 @@
 import React from 'react';
 import { QrCode } from 'lucide-react';
+import { DualAudiogramSection } from './AudiogramGraph';
 
 /**
  * Official Clinical Document Template
@@ -50,6 +51,7 @@ export const OfficialClinicalDocument = ({
 }) => {
   if (!service || !patient) return null;
 
+  const isAAE = service.code === 'RP-CLN-AAE' || service.code === 'RP-CLN-AUD';
   const isOAE = service.code === 'RP-CLN-OAE';
   const isCBT = service.code === 'RP-CLN-CBT';
 
@@ -398,6 +400,182 @@ export const OfficialClinicalDocument = ({
                 {formData?.parameters?.confidentialityNote ||
                   'Record encrypted under AES-256 field encryption. Access restricted to authorized CBT clinician.'}
               </p>
+            </div>
+          </div>
+        ) : isAAE ? (
+          /* ── AUDIOLOGICAL EVALUATION VIEW (Exact Real-World Layout with Dual Audiogram Graphs & Legend) ── */
+          <div className="space-y-2.5 text-slate-900">
+            {/* Centered Rounded Pill Title Banner */}
+            <div className="text-center my-0.5">
+              <span className="inline-block bg-[#0284c7] text-white font-black text-xs sm:text-sm tracking-wider px-8 py-1 rounded-full uppercase shadow-2xs">
+                AUDIOLOGICAL EVALUATION
+              </span>
+            </div>
+
+            {/* Demographics & Test Context Matrix (3-row clean border box matching Image 2) */}
+            <div className="border border-slate-700 text-[10px] bg-white">
+              {/* Row 1 */}
+              <div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">
+                <div className="p-1 px-2.5 flex items-center">
+                  <span className="font-bold w-14 shrink-0 text-slate-800">Date :</span>
+                  <span className="font-semibold text-slate-900">{formData?.reportDate || '16/10/2026'}</span>
+                </div>
+                <div className="p-1 px-2.5 flex items-center">
+                  <span className="font-bold w-18 shrink-0 text-slate-800">Reg. No. :</span>
+                  <span className="font-mono font-bold text-slate-900">{patient.uhid}</span>
+                </div>
+                <div className="p-1 px-2.5 flex items-center">
+                  <span className="font-bold w-18 shrink-0 text-slate-800">PTA No. :</span>
+                  <span className="font-mono font-bold text-slate-900">{formData?.parameters?.ptaNo || '64/2026'}</span>
+                </div>
+              </div>
+
+              {/* Row 2 */}
+              <div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">
+                <div className="p-1 px-2.5 flex items-center col-span-2">
+                  <span className="font-bold w-32 shrink-0 text-slate-800">Name of Patient :</span>
+                  <span className="font-black text-slate-900 text-[11px]">{patient.full_name}</span>
+                </div>
+                <div className="p-1 px-2.5 flex items-center">
+                  <span className="font-bold w-18 shrink-0 text-slate-800">Age/Sex :</span>
+                  <span className="font-semibold text-slate-900">
+                    {patient.date_of_birth} / {patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : patient.gender}
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 3 */}
+              <div className="grid grid-cols-3 divide-x divide-slate-700">
+                <div className="p-1 px-2.5 flex items-center">
+                  <span className="font-bold w-24 shrink-0 text-slate-800">Audiometer :</span>
+                  <span className="font-bold text-slate-900">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
+                </div>
+                <div className="p-1 px-2.5 flex items-center col-span-2">
+                  <span className="font-bold w-24 shrink-0 text-slate-800">Responses :</span>
+                  <div className="flex items-center gap-3 text-[9.5px]">
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-slate-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                        {formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? '✓' : ''}
+                      </span>
+                      Consistent
+                    </span>
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-slate-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                        {formData?.parameters?.responses === 'Fairly Consistent' ? '✓' : ''}
+                      </span>
+                      Fairly Consistent
+                    </span>
+                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-slate-950' : 'text-slate-600'}`}>
+                      <span className="w-3.5 h-3.5 border border-slate-700 rounded-xs inline-flex items-center justify-center text-[10px] font-bold">
+                        {formData?.parameters?.responses === 'Inconsistent' ? '✓' : ''}
+                      </span>
+                      Inconsistent
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* DUAL AUDIOGRAM GRAPHS SECTION */}
+            <DualAudiogramSection
+              rightAC={formData?.parameters?.rightEarAC}
+              rightBC={formData?.parameters?.rightEarBC}
+              leftAC={formData?.parameters?.leftEarAC}
+              leftBC={formData?.parameters?.leftEarBC}
+            />
+
+            {/* AUDIOMETRIC SUMMARY TABLE */}
+            <div className="border border-slate-700 overflow-hidden text-[9px]">
+              <table className="w-full border-collapse text-center">
+                <thead>
+                  <tr className="bg-slate-100 font-bold border-b border-slate-700">
+                    <th className="p-1 border-r border-slate-700 w-20"></th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      PTA<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      PTA 2<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      SDT<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      SRT<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      WRS %<br /><span className="text-[7.5px] font-normal text-slate-600">at _ dBHL</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      MCL<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 leading-tight">
+                      UCL<br /><span className="text-[7.5px] font-normal text-slate-600">(dB HL)</span>
+                    </th>
+                    <th className="p-1 border-r border-slate-700 font-bold">Rinne</th>
+                    <th className="p-1 font-bold">Weber</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300">
+                  <tr>
+                    <td className="p-1 font-bold text-rose-700 border-r border-slate-700">Right Ear</td>
+                    <td className="p-1 font-mono font-bold text-rose-900 border-r border-slate-700">
+                      {computedPTA?.rightAvg ? `${computedPTA.rightAvg} dB` : formData?.parameters?.rightPTA || '05 dB'}
+                    </td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightPTA2 || '—'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightSDT || '10 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightSRT || '15 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightWRS || '96% at 50 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightMCL || '55 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.rightUCL || '90 dB'}</td>
+                    <td className="p-1 font-bold border-r border-slate-700 text-slate-800">{formData?.parameters?.rightRinne || '+ve'}</td>
+                    <td rowSpan={2} className="p-1 font-bold align-middle text-slate-800 bg-slate-50/50">
+                      {formData?.parameters?.weber || 'Central'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-1 font-bold text-blue-700 border-r border-slate-700">Left Ear</td>
+                    <td className="p-1 font-mono font-bold text-blue-900 border-r border-slate-700">
+                      {computedPTA?.leftAvg ? `${computedPTA.leftAvg} dB` : formData?.parameters?.leftPTA || '06.66 dB'}
+                    </td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftPTA2 || '—'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftSDT || '10 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftSRT || '15 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftWRS || '96% at 50 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftMCL || '55 dB'}</td>
+                    <td className="p-1 font-mono border-r border-slate-700">{formData?.parameters?.leftUCL || '90 dB'}</td>
+                    <td className="p-1 font-bold border-r border-slate-700 text-slate-800">{formData?.parameters?.leftRinne || '+ve'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* INTERPRETATION & RECOMMENDATIONS */}
+            <div className="space-y-1.5 pt-0.5 text-xs">
+              <div>
+                <span className="font-black uppercase tracking-wide text-slate-900 block text-[10.5px]">
+                  Interpretation :
+                </span>
+                <div className="text-[10px] text-slate-800 font-medium">
+                  {renderBulletPoints(
+                    formData?.parameters?.provisionalDiagnosis,
+                    '• Bilateral hearing sensitivity within normal limits.\n• Symmetrical bilateral air conduction thresholds.',
+                    'bg-slate-900'
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <span className="font-black uppercase tracking-wide text-slate-900 block text-[10.5px]">
+                  Recommendations :
+                </span>
+                <div className="text-[10px] text-slate-800 font-medium">
+                  {renderBulletPoints(
+                    formData?.parameters?.recommendations,
+                    '• Speech evaluation.\n• Care of ears.\n• Follow up after 6 months or if parental concern arises.',
+                    'bg-slate-900'
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         ) : isOAE ? (

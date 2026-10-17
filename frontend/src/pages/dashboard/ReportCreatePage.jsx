@@ -24,6 +24,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
+import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 
 
 export const ReportCreatePage = () => {
@@ -116,13 +117,15 @@ export const ReportCreatePage = () => {
   }, [formData, selectedPatient, activeService]);
 
   // Auto-calculated clinical metrics
-  // PTA Average calculation: (500 + 1000 + 2000) / 3
+  // PTA Average calculation: (500 + 1000 + 2000) / 3 and 4-freq PTA 2: (500 + 1000 + 2000 + 4000) / 4
   const computedPTA = useMemo(() => {
-    if (activeService.code !== 'RP-CLN-AUD') return null;
+    if (!['RP-CLN-AUD', 'RP-CLN-AAE'].includes(activeService.code)) return null;
     const rAC = formData.parameters.rightEarAC || {};
     const lAC = formData.parameters.leftEarAC || {};
     const rAvg = Math.round(((Number(rAC['500'] || 0) + Number(rAC['1000'] || 0) + Number(rAC['2000'] || 0)) / 3) * 10) / 10;
     const lAvg = Math.round(((Number(lAC['500'] || 0) + Number(lAC['1000'] || 0) + Number(lAC['2000'] || 0)) / 3) * 10) / 10;
+    const rAvg4 = Math.round(((Number(rAC['500'] || 0) + Number(rAC['1000'] || 0) + Number(rAC['2000'] || 0) + Number(rAC['4000'] || 0)) / 4) * 10) / 10;
+    const lAvg4 = Math.round(((Number(lAC['500'] || 0) + Number(lAC['1000'] || 0) + Number(lAC['2000'] || 0) + Number(lAC['4000'] || 0)) / 4) * 10) / 10;
 
     const classify = (avg) => {
       if (avg <= 25) return 'Normal Hearing Sensitivity';
@@ -136,6 +139,8 @@ export const ReportCreatePage = () => {
     return {
       rightAvg: rAvg,
       leftAvg: lAvg,
+      rightAvg4: rAvg4,
+      leftAvg4: lAvg4,
       rightDegree: classify(rAvg),
       leftDegree: classify(lAvg),
     };
@@ -163,6 +168,112 @@ export const ReportCreatePage = () => {
         },
       },
     }));
+  };
+
+  // Audiology quick preset applicator
+  const applyAudiologyPreset = (type) => {
+    if (type === 'sample_case') {
+      setFormData((prev) => ({
+        ...prev,
+        parameters: {
+          ...prev.parameters,
+          audiometer: 'Proton SX5',
+          responses: 'Consistent',
+          ptaNo: '64/2026',
+          transducer: 'TDH-39 Supra-aural Earphones',
+          rightEarAC: { '125': 20, '250': 20, '500': 25, '750': 28, '1000': 30, '1500': 35, '2000': 40, '3000': 48, '4000': 55, '6000': 58, '8000': 60 },
+          leftEarAC: { '125': 15, '250': 15, '500': 20, '750': 22, '1000': 25, '1500': 28, '2000': 30, '3000': 32, '4000': 35, '6000': 38, '8000': 40 },
+          rightEarBC: { '250': 15, '500': 20, '1000': 25, '2000': 35, '4000': 50 },
+          leftEarBC: { '250': 10, '500': 15, '1000': 20, '2000': 25, '4000': 30 },
+          rightPTA: '31.7 dB',
+          leftPTA: '25.0 dB',
+          rightPTA2: '41.7 dB',
+          leftPTA2: '30.0 dB',
+          rightSDT: '30 dB',
+          leftSDT: '20 dB',
+          rightSRT: '35 dB',
+          leftSRT: '25 dB',
+          rightWRS: '84% at 70 dB',
+          leftWRS: '96% at 65 dB',
+          rightMCL: '75 dB',
+          leftMCL: '65 dB',
+          rightUCL: '95 dB',
+          leftUCL: '90 dB',
+          rightRinne: '+ve',
+          leftRinne: '+ve',
+          weber: 'Lateralized to Left',
+          provisionalDiagnosis: '• Bilateral mild-to-moderate sensorineural hearing loss, greater in high frequencies.',
+          recommendations: '• Bilateral digital hearing aid trial (Receiver-in-Canal, RIC).\n• Annual audiometric monitoring.',
+        },
+      }));
+      notify.info('Applied Clinic Case Preset');
+    } else if (type === 'normal') {
+      const normalAC = { '125': 15, '250': 15, '500': 15, '750': 15, '1000': 15, '1500': 15, '2000': 15, '3000': 15, '4000': 15, '6000': 15, '8000': 15 };
+      const normalBC = { '250': 10, '500': 10, '1000': 10, '2000': 10, '4000': 10 };
+      setFormData((prev) => ({
+        ...prev,
+        parameters: {
+          ...prev.parameters,
+          responses: 'Consistent',
+          rightEarAC: { ...normalAC },
+          leftEarAC: { ...normalAC },
+          rightEarBC: { ...normalBC },
+          leftEarBC: { ...normalBC },
+          rightPTA: '15 dB',
+          leftPTA: '15 dB',
+          rightPTA2: '15 dB',
+          leftPTA2: '15 dB',
+          rightSDT: '15 dB',
+          leftSDT: '15 dB',
+          rightSRT: '15 dB',
+          leftSRT: '15 dB',
+          rightWRS: '100% at 50 dB',
+          leftWRS: '100% at 50 dB',
+          rightMCL: '55 dB',
+          leftMCL: '55 dB',
+          rightUCL: '90 dB',
+          leftUCL: '90 dB',
+          rightRinne: '+ve',
+          leftRinne: '+ve',
+          weber: 'Central',
+          provisionalDiagnosis: '• Bilateral hearing sensitivity within normal limits.\n• Symmetrical bilateral air conduction thresholds.',
+          recommendations: '• Routine hearing conservation.\n• Repeat evaluation if concern arises.',
+        },
+      }));
+      notify.info('Applied Normal Hearing Preset');
+    } else if (type === 'conductive') {
+      setFormData((prev) => ({
+        ...prev,
+        parameters: {
+          ...prev.parameters,
+          responses: 'Consistent',
+          rightEarAC: { '125': 45, '250': 50, '500': 50, '750': 45, '1000': 45, '1500': 40, '2000': 35, '3000': 30, '4000': 30, '6000': 25, '8000': 20 },
+          leftEarAC: { '125': 15, '250': 15, '500': 15, '750': 15, '1000': 15, '1500': 15, '2000': 15, '3000': 15, '4000': 15, '6000': 15, '8000': 15 },
+          rightEarBC: { '250': 10, '500': 10, '1000': 10, '2000': 10, '4000': 10 },
+          leftEarBC: { '250': 10, '500': 10, '1000': 10, '2000': 10, '4000': 10 },
+          rightPTA: '43.3 dB',
+          leftPTA: '15.0 dB',
+          rightPTA2: '40.0 dB',
+          leftPTA2: '15.0 dB',
+          rightSDT: '40 dB',
+          leftSDT: '15 dB',
+          rightSRT: '45 dB',
+          leftSRT: '15 dB',
+          rightWRS: '96% at 80 dB',
+          leftWRS: '100% at 50 dB',
+          rightMCL: '75 dB',
+          leftMCL: '55 dB',
+          rightUCL: '100 dB',
+          leftUCL: '90 dB',
+          rightRinne: '-ve',
+          leftRinne: '+ve',
+          weber: 'Lateralized to Right',
+          provisionalDiagnosis: '• Right ear moderate conductive hearing loss with significant air-bone gap (35-40 dB).\n• Left ear within normal limits.',
+          recommendations: '• ENT evaluation for middle ear pathology / Otoscopic examination.\n• Repeat audiometry post medical clearance.',
+        },
+      }));
+      notify.info('Applied Conductive Loss Preset');
+    }
   };
 
   // Bullet point helpers for Clinical Impression & Recommendations
@@ -512,186 +623,451 @@ export const ReportCreatePage = () => {
           </span>
         </div>
 
-        {/* 1. AUDIOLOGY EVALUATION (PTA) ENTRY */}
-        {activeService.code === 'RP-CLN-AUD' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-700 uppercase">
-                Air Conduction (AC) &amp; Bone Conduction (BC) Thresholds (dB HL)
-              </span>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-[10px] font-bold text-slate-500">Transducer:</span>
-                <input
-                  type="text"
-                  value={formData.parameters.transducer || 'TDH-39 Supra-aural'}
-                  onChange={(e) => handleParamChange('transducer', e.target.value)}
-                  className="px-2 py-0.5 text-xs border border-slate-200 rounded bg-slate-50 w-44"
+        {/* 1. AUDIOLOGY EVALUATION (PTA & DUAL AUDIOGRAM) ENTRY */}
+        {['RP-CLN-AUD', 'RP-CLN-AAE'].includes(activeService.code) && (
+          <div className="space-y-4">
+            {/* Context & Test Metadata Bar */}
+            <div className="p-3 bg-purple-50/50 border border-purple-200 rounded-lg space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-200/60 pb-2">
+                <span className="text-[11px] font-black text-purple-950 uppercase tracking-wide flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-purple-700" />
+                  Test Context &amp; Patient Responses
+                </span>
+                
+                {/* Clinical Preset Buttons */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase mr-1">Presets:</span>
+                  <button
+                    type="button"
+                    onClick={() => applyAudiologyPreset('sample_case')}
+                    className="px-2 py-0.5 text-[10px] font-bold text-purple-800 bg-white hover:bg-purple-100 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+                  >
+                    ★ Clinic Sample Case
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyAudiologyPreset('normal')}
+                    className="px-2 py-0.5 text-[10px] font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 rounded shadow-2xs transition-colors cursor-pointer"
+                  >
+                    Normal (15 dB)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyAudiologyPreset('conductive')}
+                    className="px-2 py-0.5 text-[10px] font-bold text-amber-800 bg-white hover:bg-amber-50 border border-amber-300 rounded shadow-2xs transition-colors cursor-pointer"
+                  >
+                    Conductive Loss (A-B Gap)
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                    Audiometer Model
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.parameters.audiometer || 'Proton SX5'}
+                    onChange={(e) => handleParamChange('audiometer', e.target.value)}
+                    className="w-full px-2 py-1 text-xs font-semibold border border-purple-200 rounded bg-white"
+                    placeholder="e.g. Proton SX5 / Interacoustics"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                    PTA Record No.
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.parameters.ptaNo || '64/2026'}
+                    onChange={(e) => handleParamChange('ptaNo', e.target.value)}
+                    className="w-full px-2 py-1 text-xs font-mono font-bold border border-purple-200 rounded bg-white text-purple-950"
+                    placeholder="e.g. 64/2026"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                    Transducer
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.parameters.transducer || 'TDH-39 Supra-aural Earphones'}
+                    onChange={(e) => handleParamChange('transducer', e.target.value)}
+                    className="w-full px-2 py-1 text-xs font-semibold border border-purple-200 rounded bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                    Patient Responses
+                  </label>
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    {['Consistent', 'Fairly Consistent', 'Inconsistent'].map((resp) => {
+                      const isSelected = (formData.parameters.responses || 'Consistent') === resp;
+                      return (
+                        <button
+                          key={resp}
+                          type="button"
+                          onClick={() => handleParamChange('responses', resp)}
+                          className={`flex-1 py-1 text-[9.5px] font-bold rounded border transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-purple-700 text-white border-purple-800 shadow-2xs'
+                              : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                          }`}
+                        >
+                          {resp === 'Fairly Consistent' ? 'Fairly' : resp}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* LIVE DUAL AUDIOGRAM FORMATION PREVIEW (Forms graph dynamically as clinician types) */}
+            <div className="border border-purple-300 rounded-lg p-3 bg-slate-50/60 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-700 animate-pulse"></span>
+                  Real-Time Audiogram Formation Visualizer
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Plots Right Ear (Red ○ / &lt;) &amp; Left Ear (Blue ✕ / &gt;) side-by-side with official legend
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <DualAudiogramSection
+                  rightAC={formData.parameters.rightEarAC}
+                  rightBC={formData.parameters.rightEarBC}
+                  leftAC={formData.parameters.leftEarAC}
+                  leftBC={formData.parameters.leftEarBC}
+                  className="shadow-inner"
                 />
               </div>
             </div>
 
-            {/* PTA Input Grid */}
-            <div className="overflow-x-auto border border-slate-200 rounded">
-              <table className="w-full text-center text-xs">
-                <thead className="bg-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Ear &amp; Conduction</th>
-                    <th className="px-2 py-2">250 Hz</th>
-                    <th className="px-2 py-2">500 Hz</th>
-                    <th className="px-2 py-2">1000 Hz</th>
-                    <th className="px-2 py-2">2000 Hz</th>
-                    <th className="px-2 py-2">4000 Hz</th>
-                    <th className="px-2 py-2">8000 Hz</th>
-                    <th className="px-2 py-2 bg-purple-50 text-purple-900">Computed PTA Avg</th>
-                    <th className="px-2 py-2 bg-purple-50 text-purple-900">Classification</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {/* Right Ear AC (Red) */}
-                  <tr className="bg-rose-50/40">
-                    <td className="px-3 py-1.5 text-left font-bold text-rose-700">Right Ear (AC)</td>
-                    {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
-                      <td key={freq} className="px-1 py-1">
-                        <input
-                          type="number"
-                          value={formData.parameters.rightEarAC?.[freq] ?? ''}
-                          onChange={(e) => handleNestedParamChange('rightEarAC', freq, Number(e.target.value))}
-                          className="w-14 text-center py-1 text-xs font-bold text-rose-800 border border-rose-300 rounded bg-white focus:ring-1 focus:ring-rose-500"
-                        />
-                      </td>
-                    ))}
-                    <td className="px-2 py-1 font-mono font-black text-rose-800 bg-rose-50">
-                      {computedPTA?.rightAvg} dB HL
-                    </td>
-                    <td className="px-2 py-1 text-[11px] font-bold text-rose-800 bg-rose-50">
-                      {computedPTA?.rightDegree}
-                    </td>
-                  </tr>
-
-                  {/* Right Ear BC (Red) */}
-                  <tr className="bg-rose-50/10">
-                    <td className="px-3 py-1.5 text-left font-semibold text-rose-600">Right Ear (BC)</td>
-                    {['250', '500', '1000', '2000', '4000'].map((freq) => (
-                      <td key={freq} className="px-1 py-1">
-                        <input
-                          type="number"
-                          value={formData.parameters.rightEarBC?.[freq] ?? ''}
-                          onChange={(e) => handleNestedParamChange('rightEarBC', freq, Number(e.target.value))}
-                          className="w-14 text-center py-1 text-xs font-semibold text-rose-700 border border-rose-200 rounded bg-white"
-                        />
-                      </td>
-                    ))}
-                    <td className="text-slate-300">—</td>
-                    <td colSpan={2} className="text-[10px] text-slate-400">Bone Conduction Unmasked/Masked</td>
-                  </tr>
-
-                  {/* Left Ear AC (Blue) */}
-                  <tr className="bg-blue-50/40">
-                    <td className="px-3 py-1.5 text-left font-bold text-blue-700">Left Ear (AC)</td>
-                    {['250', '500', '1000', '2000', '4000', '8000'].map((freq) => (
-                      <td key={freq} className="px-1 py-1">
-                        <input
-                          type="number"
-                          value={formData.parameters.leftEarAC?.[freq] ?? ''}
-                          onChange={(e) => handleNestedParamChange('leftEarAC', freq, Number(e.target.value))}
-                          className="w-14 text-center py-1 text-xs font-bold text-blue-800 border border-blue-300 rounded bg-white focus:ring-1 focus:ring-blue-500"
-                        />
-                      </td>
-                    ))}
-                    <td className="px-2 py-1 font-mono font-black text-blue-800 bg-blue-50">
-                      {computedPTA?.leftAvg} dB HL
-                    </td>
-                    <td className="px-2 py-1 text-[11px] font-bold text-blue-800 bg-blue-50">
-                      {computedPTA?.leftDegree}
-                    </td>
-                  </tr>
-
-                  {/* Left Ear BC (Blue) */}
-                  <tr className="bg-blue-50/10">
-                    <td className="px-3 py-1.5 text-left font-semibold text-blue-600">Left Ear (BC)</td>
-                    {['250', '500', '1000', '2000', '4000'].map((freq) => (
-                      <td key={freq} className="px-1 py-1">
-                        <input
-                          type="number"
-                          value={formData.parameters.leftEarBC?.[freq] ?? ''}
-                          onChange={(e) => handleNestedParamChange('leftEarBC', freq, Number(e.target.value))}
-                          className="w-14 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-100 rounded bg-white"
-                        />
-                      </td>
-                    ))}
-                    <td className="text-slate-300">—</td>
-                    <td colSpan={2} className="text-[10px] text-slate-400">Bone Conduction Unmasked/Masked</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Speech Audiometry & Immittance Form Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-2">
-                <span className="text-[10px] font-bold text-slate-600 uppercase block">Speech Audiometry</span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label className="text-[10px] text-rose-700 font-bold block">Right SRT (dB)</label>
-                    <input
-                      type="number"
-                      value={formData.parameters.rightSRT ?? 35}
-                      onChange={(e) => handleParamChange('rightSRT', Number(e.target.value))}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-blue-700 font-bold block">Left SRT (dB)</label>
-                    <input
-                      type="number"
-                      value={formData.parameters.leftSRT ?? 25}
-                      onChange={(e) => handleParamChange('leftSRT', Number(e.target.value))}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-rose-700 font-bold block">Right WRS (%)</label>
-                    <input
-                      type="number"
-                      value={formData.parameters.rightWRS ?? 84}
-                      onChange={(e) => handleParamChange('rightWRS', Number(e.target.value))}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-blue-700 font-bold block">Left WRS (%)</label>
-                    <input
-                      type="number"
-                      value={formData.parameters.leftWRS ?? 96}
-                      onChange={(e) => handleParamChange('leftWRS', Number(e.target.value))}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                </div>
+            {/* Comprehensive Octave & Inter-Octave Threshold Entry Grid */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide">
+                  Air Conduction (AC) &amp; Bone Conduction (BC) Pure-Tone Thresholds (dB HL)
+                </span>
+                <span className="text-[10px] text-purple-700 font-bold">
+                  Range: -10 dB to 120 dB HL
+                </span>
               </div>
 
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-2 md:col-span-2">
-                <span className="text-[10px] font-bold text-slate-600 uppercase block">Tympanometry &amp; Acoustic Reflexes</span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label className="text-[10px] text-rose-700 font-bold block">Right Ear Tympanogram</label>
-                    <input
-                      type="text"
-                      value={formData.parameters.tympanometryRight || ''}
-                      onChange={(e) => handleParamChange('tympanometryRight', e.target.value)}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-blue-700 font-bold block">Left Ear Tympanogram</label>
-                    <input
-                      type="text"
-                      value={formData.parameters.tympanometryLeft || ''}
-                      onChange={(e) => handleParamChange('tympanometryLeft', e.target.value)}
-                      className="w-full px-2 py-1 bg-white border border-slate-300 rounded"
-                    />
-                  </div>
-                </div>
+              <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-2xs">
+                <table className="w-full text-center text-xs border-collapse">
+                  <thead className="bg-slate-100 text-[10px] font-black text-slate-700 uppercase tracking-wider border-b border-slate-300">
+                    <tr>
+                      <th className="px-2.5 py-2 text-left w-36">Ear &amp; Conduction</th>
+                      {['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'].map((freq) => (
+                        <th key={freq} className="px-1.5 py-2 font-mono">
+                          {freq}<br /><span className="text-[8px] font-normal text-slate-500">Hz</span>
+                        </th>
+                      ))}
+                      <th className="px-2 py-2 bg-purple-100 text-purple-950 font-black">PTA Avg</th>
+                      <th className="px-2 py-2 bg-purple-100 text-purple-950 font-black">Degree</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {/* Right Ear AC (Red) */}
+                    <tr className="bg-rose-50/50">
+                      <td className="px-2.5 py-1.5 text-left font-black text-rose-700">
+                        <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-rose-600 mr-1.5 align-middle"></span>
+                        Right Ear (AC)
+                      </td>
+                      {['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'].map((freq) => (
+                        <td key={freq} className="px-0.5 py-1">
+                          <input
+                            type="number"
+                            min={-10}
+                            max={120}
+                            step={5}
+                            value={formData.parameters.rightEarAC?.[freq] ?? ''}
+                            onChange={(e) => handleNestedParamChange('rightEarAC', freq, e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-11 text-center py-1 text-xs font-bold text-rose-800 border border-rose-300 rounded bg-white focus:ring-1 focus:ring-rose-500"
+                          />
+                        </td>
+                      ))}
+                      <td className="px-2 py-1 font-mono font-black text-rose-900 bg-rose-100/70">
+                        {computedPTA?.rightAvg !== undefined ? `${computedPTA.rightAvg} dB` : '—'}
+                      </td>
+                      <td className="px-2 py-1 text-[10.5px] font-bold text-rose-900 bg-rose-100/70">
+                        {computedPTA?.rightDegree || '—'}
+                      </td>
+                    </tr>
+
+                    {/* Right Ear BC (Red) */}
+                    <tr className="bg-rose-50/20">
+                      <td className="px-2.5 py-1.5 text-left font-semibold text-rose-700">
+                        <span className="inline-block font-mono font-black text-rose-600 mr-1.5">&lt;</span>
+                        Right Ear (BC)
+                      </td>
+                      {['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'].map((freq) => {
+                        const isBcSupported = ['250', '500', '1000', '2000', '4000'].includes(freq);
+                        return (
+                          <td key={freq} className="px-0.5 py-1">
+                            {isBcSupported ? (
+                              <input
+                                type="number"
+                                min={-10}
+                                max={80}
+                                step={5}
+                                value={formData.parameters.rightEarBC?.[freq] ?? ''}
+                                onChange={(e) => handleNestedParamChange('rightEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}
+                                className="w-11 text-center py-1 text-xs font-semibold text-rose-700 border border-rose-200 rounded bg-white"
+                              />
+                            ) : (
+                              <span className="text-slate-300 font-mono text-[11px]">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td colSpan={2} className="px-2 py-1 text-[9.5px] text-slate-500 bg-slate-50 italic">
+                        Unmasked / Masked Bone Conduction
+                      </td>
+                    </tr>
+
+                    {/* Left Ear AC (Blue) */}
+                    <tr className="bg-blue-50/50">
+                      <td className="px-2.5 py-1.5 text-left font-black text-blue-700">
+                        <span className="inline-block font-mono font-black text-blue-600 mr-1.5">✕</span>
+                        Left Ear (AC)
+                      </td>
+                      {['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'].map((freq) => (
+                        <td key={freq} className="px-0.5 py-1">
+                          <input
+                            type="number"
+                            min={-10}
+                            max={120}
+                            step={5}
+                            value={formData.parameters.leftEarAC?.[freq] ?? ''}
+                            onChange={(e) => handleNestedParamChange('leftEarAC', freq, e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-11 text-center py-1 text-xs font-bold text-blue-800 border border-blue-300 rounded bg-white focus:ring-1 focus:ring-blue-500"
+                          />
+                        </td>
+                      ))}
+                      <td className="px-2 py-1 font-mono font-black text-blue-900 bg-blue-100/70">
+                        {computedPTA?.leftAvg !== undefined ? `${computedPTA.leftAvg} dB` : '—'}
+                      </td>
+                      <td className="px-2 py-1 text-[10.5px] font-bold text-blue-900 bg-blue-100/70">
+                        {computedPTA?.leftDegree || '—'}
+                      </td>
+                    </tr>
+
+                    {/* Left Ear BC (Blue) */}
+                    <tr className="bg-blue-50/20">
+                      <td className="px-2.5 py-1.5 text-left font-semibold text-blue-700">
+                        <span className="inline-block font-mono font-black text-blue-600 mr-1.5">&gt;</span>
+                        Left Ear (BC)
+                      </td>
+                      {['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'].map((freq) => {
+                        const isBcSupported = ['250', '500', '1000', '2000', '4000'].includes(freq);
+                        return (
+                          <td key={freq} className="px-0.5 py-1">
+                            {isBcSupported ? (
+                              <input
+                                type="number"
+                                min={-10}
+                                max={80}
+                                step={5}
+                                value={formData.parameters.leftEarBC?.[freq] ?? ''}
+                                onChange={(e) => handleNestedParamChange('leftEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}
+                                className="w-11 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-200 rounded bg-white"
+                              />
+                            ) : (
+                              <span className="text-slate-300 font-mono text-[11px]">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td colSpan={2} className="px-2 py-1 text-[9.5px] text-slate-500 bg-slate-50 italic">
+                        Unmasked / Masked Bone Conduction
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* AUDIOMETRIC SUMMARY & SPEECH AUDIOMETRY TABLE ENTRY */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide block">
+                Audiometric Summary &amp; Speech Audiometry Metrics (Report Table)
+              </span>
+
+              <div className="overflow-x-auto border border-slate-300 rounded-lg shadow-2xs">
+                <table className="w-full text-center text-xs border-collapse">
+                  <thead className="bg-slate-100 text-[10px] font-black text-slate-700 uppercase tracking-wider border-b border-slate-300">
+                    <tr>
+                      <th className="px-2 py-1.5 text-left w-24">Ear</th>
+                      <th className="px-2 py-1.5">PTA (dB HL)</th>
+                      <th className="px-2 py-1.5">PTA 2 (dB HL)</th>
+                      <th className="px-2 py-1.5">SDT (dB HL)</th>
+                      <th className="px-2 py-1.5">SRT (dB HL)</th>
+                      <th className="px-2 py-1.5">WRS % at _ dBHL</th>
+                      <th className="px-2 py-1.5">MCL (dB HL)</th>
+                      <th className="px-2 py-1.5">UCL (dB HL)</th>
+                      <th className="px-2 py-1.5">Rinne</th>
+                      <th className="px-2 py-1.5">Weber</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {/* Right Ear */}
+                    <tr className="bg-rose-50/30">
+                      <td className="px-2.5 py-1.5 text-left font-black text-rose-700">Right Ear</td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightPTA || (computedPTA?.rightAvg ? `${computedPTA.rightAvg} dB` : '31.7 dB')}
+                          onChange={(e) => handleParamChange('rightPTA', e.target.value)}
+                          className="w-18 text-center py-1 font-bold text-rose-800 border border-rose-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightPTA2 || (computedPTA?.rightAvg4 ? `${computedPTA.rightAvg4} dB` : '41.7 dB')}
+                          onChange={(e) => handleParamChange('rightPTA2', e.target.value)}
+                          className="w-18 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightSDT || '30 dB'}
+                          onChange={(e) => handleParamChange('rightSDT', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightSRT || '35 dB'}
+                          onChange={(e) => handleParamChange('rightSRT', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightWRS || '84% at 70 dB'}
+                          onChange={(e) => handleParamChange('rightWRS', e.target.value)}
+                          className="w-24 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                          placeholder="e.g. 84% at 70 dB"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightMCL || '75 dB'}
+                          onChange={(e) => handleParamChange('rightMCL', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightUCL || '95 dB'}
+                          onChange={(e) => handleParamChange('rightUCL', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.rightRinne || '+ve'}
+                          onChange={(e) => handleParamChange('rightRinne', e.target.value)}
+                          className="w-16 text-center py-1 font-bold text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td rowSpan={2} className="px-2 py-1 align-middle bg-slate-50 border-l border-slate-200">
+                        <input
+                          type="text"
+                          value={formData.parameters.weber || 'Lateralized to Left'}
+                          onChange={(e) => handleParamChange('weber', e.target.value)}
+                          className="w-32 text-center py-1.5 font-bold text-purple-950 border border-purple-300 rounded bg-white text-xs"
+                          placeholder="Central / Lat to Left"
+                        />
+                      </td>
+                    </tr>
+
+                    {/* Left Ear */}
+                    <tr className="bg-blue-50/30">
+                      <td className="px-2.5 py-1.5 text-left font-black text-blue-700">Left Ear</td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftPTA || (computedPTA?.leftAvg ? `${computedPTA.leftAvg} dB` : '25.0 dB')}
+                          onChange={(e) => handleParamChange('leftPTA', e.target.value)}
+                          className="w-18 text-center py-1 font-bold text-blue-800 border border-blue-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftPTA2 || (computedPTA?.leftAvg4 ? `${computedPTA.leftAvg4} dB` : '30.0 dB')}
+                          onChange={(e) => handleParamChange('leftPTA2', e.target.value)}
+                          className="w-18 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftSDT || '20 dB'}
+                          onChange={(e) => handleParamChange('leftSDT', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftSRT || '25 dB'}
+                          onChange={(e) => handleParamChange('leftSRT', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftWRS || '96% at 65 dB'}
+                          onChange={(e) => handleParamChange('leftWRS', e.target.value)}
+                          className="w-24 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                          placeholder="e.g. 96% at 65 dB"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftMCL || '65 dB'}
+                          onChange={(e) => handleParamChange('leftMCL', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftUCL || '90 dB'}
+                          onChange={(e) => handleParamChange('leftUCL', e.target.value)}
+                          className="w-16 text-center py-1 text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                      <td className="px-1 py-1">
+                        <input
+                          type="text"
+                          value={formData.parameters.leftRinne || '+ve'}
+                          onChange={(e) => handleParamChange('leftRinne', e.target.value)}
+                          className="w-16 text-center py-1 font-bold text-slate-800 border border-slate-300 rounded bg-white text-xs"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1459,7 +1835,7 @@ export const ReportCreatePage = () => {
         )}
 
         {/* 7. OTHER CLINICAL SERVICES */}
-        {!['RP-CLN-AUD', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA', 'RP-CLN-CBT'].includes(activeService.code) && (
+        {!['RP-CLN-AUD', 'RP-CLN-AAE', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA', 'RP-CLN-CBT'].includes(activeService.code) && (
           <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
             <span className="text-[10px] font-bold text-slate-600 uppercase block">Proforma Parameters &amp; Clinical Notes</span>
             <p className="text-slate-600 leading-relaxed">
