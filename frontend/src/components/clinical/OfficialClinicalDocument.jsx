@@ -7,6 +7,7 @@ import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
 import { OfficialReportTitle } from './OfficialReportTitle';
+import { PatientDemographicsMatrix } from './PatientDemographicsMatrix';
 
 /**
  * Official Clinical Document Template
@@ -130,42 +131,25 @@ export const OfficialClinicalDocument = ({
             {/* Title Banner */}
             <OfficialReportTitle title="Psychological &amp; Cognitive Behavioural Therapy (CBT) Report" />
 
-            {/* Demographics Box */}
-            <div className="border border-slate-400 text-[10px]">
-              <div className="grid grid-cols-2 divide-x divide-slate-400 border-b border-slate-400">
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">Patient Name:</span>
-                  <span className="font-semibold text-slate-900">{patient.full_name}</span>
+            {/* Demographics Matrix (Unified Audiological Evaluation Layout) */}
+            <PatientDemographicsMatrix
+              formData={formData}
+              patient={patient}
+              refLabel="Report No. :"
+              refValue={formData?.reportNumber || 'REP-26-0001'}
+              extraRow={
+                <div className="grid grid-cols-2 divide-x divide-purple-200">
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-36 shrink-0 text-purple-950">Assessment Session :</span>
+                    <span className="font-medium text-slate-800">{formData?.parameters?.assessmentSession || 'Intake & Diagnostic Formulation'}</span>
+                  </div>
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-32 shrink-0 text-purple-950">Consent Status :</span>
+                    <span className="font-medium text-slate-800">{formData?.parameters?.consentStatus || 'Signed CBT Consent Form Verified'}</span>
+                  </div>
                 </div>
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">UHID:</span>
-                  <span className="font-mono font-bold text-slate-900">{patient.uhid}</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-slate-400 border-b border-slate-400">
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">Age / Gender:</span>
-                  <span>
-                    {patient.gender === 'FEMALE' ? 'Female' : patient.gender === 'MALE' ? 'Male' : patient.gender}
-                    {patient.date_of_birth ? ` • ${patient.date_of_birth}` : ''}
-                  </span>
-                </div>
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">Date of Assessment:</span>
-                  <span>{formData?.reportDate || 'October 09, 2026'}</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-slate-400">
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">Assessment Session:</span>
-                  <span>{formData?.parameters?.assessmentSession || 'Intake & Diagnostic Formulation'}</span>
-                </div>
-                <div className="p-1 px-2.5 flex">
-                  <span className="font-bold w-32 shrink-0">Consent Status:</span>
-                  <span>{formData?.parameters?.consentStatus || 'Signed CBT Consent Form Verified'}</span>
-                </div>
-              </div>
-            </div>
+              }
+            />
 
             {/* 1. STANDARDIZED PSYCHOMETRIC SCALES */}
             <div>
@@ -399,68 +383,43 @@ export const OfficialClinicalDocument = ({
             <OfficialReportTitle title="Audiological Evaluation" />
 
             {/* Demographics & Test Context Matrix */}
-            <div className="border border-purple-300 rounded-lg overflow-hidden text-[10px] bg-white/85 backdrop-blur-2xs shadow-2xs">
-              {/* Row 1 */}
-              <div className="grid grid-cols-3 divide-x divide-purple-200 border-b border-purple-200">
-                <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-14 shrink-0 text-purple-950">Date :</span>
-                  <span className="font-semibold text-slate-900">{formData?.reportDate || '16/10/2026'}</span>
-                </div>
-                <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-purple-950">Reg. No. :</span>
-                  <span className="font-mono font-bold text-slate-900">{patient.uhid}</span>
-                </div>
-                <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-purple-950">PTA No. :</span>
-                  <span className="font-mono font-bold text-purple-900">{formData?.parameters?.ptaNo || '64/2026'}</span>
-                </div>
-              </div>
-
-              {/* Row 2 */}
-              <div className="grid grid-cols-3 divide-x divide-purple-200 border-b border-purple-200">
-                <div className="p-1 px-2.5 flex items-center col-span-2">
-                  <span className="font-bold w-32 shrink-0 text-purple-950">Name of Patient :</span>
-                  <span className="font-black text-slate-950 text-[11px]">{patient.full_name}</span>
-                </div>
-                <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-18 shrink-0 text-purple-950">Age/Sex :</span>
-                  <span className="font-semibold text-slate-900">
-                    {patient.date_of_birth} / {patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : patient.gender}
-                  </span>
-                </div>
-              </div>
-
-              {/* Row 3 */}
-              <div className="grid grid-cols-3 divide-x divide-purple-200">
-                <div className="p-1 px-2.5 flex items-center">
-                  <span className="font-bold w-24 shrink-0 text-purple-950">Audiometer :</span>
-                  <span className="font-bold text-slate-900">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
-                </div>
-                <div className="p-1 px-2.5 flex items-center col-span-2">
-                  <span className="font-bold w-24 shrink-0 text-purple-950">Responses :</span>
-                  <div className="flex items-center gap-3 text-[9.5px]">
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-purple-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
-                        {formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? '✓' : ''}
+            <PatientDemographicsMatrix
+              formData={formData}
+              patient={patient}
+              refLabel="PTA No. :"
+              refValue={formData?.parameters?.ptaNo || '64/2026'}
+              extraRow={
+                <div className="grid grid-cols-3 divide-x divide-purple-200">
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-24 shrink-0 text-purple-950">Audiometer :</span>
+                    <span className="font-bold text-slate-900">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
+                  </div>
+                  <div className="p-1 px-2.5 flex items-center col-span-2">
+                    <span className="font-bold w-24 shrink-0 text-purple-950">Responses :</span>
+                    <div className="flex items-center gap-3 text-[9.5px]">
+                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                        <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
+                          {formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? '✓' : ''}
+                        </span>
+                        Consistent
                       </span>
-                      Consistent
-                    </span>
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
-                        {formData?.parameters?.responses === 'Fairly Consistent' ? '✓' : ''}
+                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                        <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
+                          {formData?.parameters?.responses === 'Fairly Consistent' ? '✓' : ''}
+                        </span>
+                        Fairly Consistent
                       </span>
-                      Fairly Consistent
-                    </span>
-                    <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
-                      <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
-                        {formData?.parameters?.responses === 'Inconsistent' ? '✓' : ''}
+                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                        <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
+                          {formData?.parameters?.responses === 'Inconsistent' ? '✓' : ''}
+                        </span>
+                        Inconsistent
                       </span>
-                      Inconsistent
-                    </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              }
+            />
 
             {/* DUAL AUDIOGRAM GRAPHS SECTION */}
             <DualAudiogramSection
@@ -713,63 +672,29 @@ export const OfficialClinicalDocument = ({
             {/* ── REPORT TITLE BANNER ── */}
             <OfficialReportTitle title={service.title} />
 
-            {/* ── PATIENT DEMOGRAPHIC MATRIX ── */}
-            <div className="border border-slate-300 rounded overflow-hidden text-xs">
-              <table className="w-full border-collapse">
-                <tbody>
-                  <tr className="border-b border-slate-200">
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 w-1/6 border-r border-slate-200">
-                      Patient Full Name:
-                    </td>
-                    <td className="px-3 py-1.5 font-bold text-slate-900 w-2/6 border-r border-slate-200">
-                      {patient.full_name}
-                    </td>
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 w-1/6 border-r border-slate-200">
-                      Patient UHID:
-                    </td>
-                    <td className="px-3 py-1.5 font-mono font-black text-purple-900 w-2/6">
-                      {patient.uhid}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200">
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 border-r border-slate-200">
-                      Biological Sex &amp; Age:
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-800 border-r border-slate-200">
-                      {patient.gender} • DOB {patient.date_of_birth}
-                    </td>
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 border-r border-slate-200">
-                      Primary Contact:
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-800 font-mono">
-                      {patient.phone}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-slate-200">
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 border-r border-slate-200">
-                      Guardian / Escort:
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-800 border-r border-slate-200">
-                      {patient.guardian_name || 'Self'}
-                    </td>
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 border-r border-slate-200">
-                      Residential Locality:
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-800">
-                      {patient.city || 'Satara, Maharashtra'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-3 py-1.5 font-bold text-slate-700 bg-slate-50 border-r border-slate-200">
-                      Referring Consultant:
-                    </td>
-                    <td className="px-3 py-1.5 text-purple-950 font-bold" colSpan={3}>
-                      {patientDossier?.demographics?.referringDoctor || 'Dr. A. P. Kulkarni, MS (ENT), Civil Hospital Satara'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {/* ── PATIENT DEMOGRAPHIC MATRIX (Unified Audiological Evaluation Layout) ── */}
+            <PatientDemographicsMatrix
+              formData={formData}
+              patient={patient}
+              refLabel="Ref. No. :"
+              refValue={formData?.reportNumber || 'REP-26-0001'}
+              extraRow={
+                <div className="grid grid-cols-3 divide-x divide-purple-200">
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-18 shrink-0 text-purple-950">Contact :</span>
+                    <span className="font-mono text-slate-800 truncate">{patient.phone || '—'}</span>
+                  </div>
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-18 shrink-0 text-purple-950">Locality :</span>
+                    <span className="font-medium text-slate-800 truncate">{patient.city || 'Satara, Maharashtra'}</span>
+                  </div>
+                  <div className="p-1 px-2.5 flex items-center">
+                    <span className="font-bold w-18 shrink-0 text-purple-950">Referral :</span>
+                    <span className="font-medium text-slate-800 truncate">{patientDossier?.demographics?.referringDoctor || 'Civil Hospital Satara'}</span>
+                  </div>
+                </div>
+              }
+            />
 
             {/* ── CLINICAL FINDINGS & PARAMETER TABLES ── */}
             <div className="space-y-3">
@@ -982,9 +907,9 @@ export const OfficialClinicalDocument = ({
                       <span className="text-[9px] text-slate-500 font-bold block uppercase">Expressive Age (ELA)</span>
                       <span className="font-mono font-bold text-slate-800">{formData?.parameters?.reels_elaMonths ?? 22} Mo</span>
                     </div>
-                    <div className="p-1.5 bg-white border border-slate-200 rounded bg-rose-50">
-                      <span className="text-[9px] text-rose-800 font-bold block uppercase">Expressive Delay</span>
-                      <span className="font-mono font-black text-rose-900">{formData?.parameters?.reels_expressiveDelayMonths ?? 14} Mo</span>
+                    <div className="p-1.5 bg-purple-100/70 border border-purple-300 rounded shadow-2xs">
+                      <span className="text-[9px] text-purple-950 font-bold block uppercase">Expressive Delay</span>
+                      <span className="font-mono font-black text-purple-950">{formData?.parameters?.reels_expressiveDelayMonths ?? 14} Mo</span>
                     </div>
                   </div>
                 </div>
