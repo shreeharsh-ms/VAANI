@@ -10,8 +10,10 @@ import {
   CalendarCheck,
   Search,
   CheckCircle2,
+  AlertCircle,
   Sparkles,
   X,
+  ExternalLink,
   ChevronDown,
 } from 'lucide-react';
 import Input from '../common/Input';
@@ -21,6 +23,7 @@ import Alert from '../common/Alert';
 import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
 import { getAllAppointments } from '../../data/appointmentsData';
+import { SEED_PATIENTS } from '../../data/patientClinicalProfiles';
 
 export const PatientForm = ({ onSuccess, onCancel }) => {
   const navigate = useNavigate();
@@ -57,10 +60,52 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
     return getAllAppointments();
   }, []);
 
+  // Load registered patients to detect if customer already exists (e.g. Aarav Sachin Shinde)
+  const allRegisteredPatients = useMemo(() => {
+    try {
+      const saved = localStorage.getItem('vaani_patients_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return SEED_PATIENTS;
+  }, []);
+
+  // Detect existing patient match
+  const existingPatientMatch = useMemo(() => {
+    // 1. By appointment uhid if set
+    if (selectedAppointment?.patient_uhid) {
+      const byUhid = allRegisteredPatients.find(
+        (p) => p.uhid?.toLowerCase() === selectedAppointment.patient_uhid.toLowerCase()
+      );
+      if (byUhid) return byUhid;
+    }
+
+    // 2. By Name or Phone match in current form
+    const currentFullName = `${formData.first_name || ''} ${formData.last_name || ''}`.trim().toLowerCase();
+    const currentPhone = (formData.phone || '').trim().replace(/\D/g, '');
+
+    if (currentFullName.length < 3 && currentPhone.length < 10) return null;
+
+    return (
+      allRegisteredPatients.find((p) => {
+        const pName = (p.full_name || '').trim().toLowerCase();
+        const pPhone = (p.phone || '').trim().replace(/\D/g, '');
+
+        const exactName = currentFullName.length > 3 && pName === currentFullName;
+        const nameContains = currentFullName.length > 5 && (pName.includes(currentFullName) || currentFullName.includes(pName));
+        const phoneMatch = currentPhone.length >= 10 && pPhone.length >= 10 && pPhone.slice(-10) === currentPhone.slice(-10);
+
+        return exactName || (nameContains && phoneMatch) || phoneMatch;
+      }) || null
+    );
+  }, [selectedAppointment, formData.first_name, formData.last_name, formData.phone, allRegisteredPatients]);
+
   // Filter appointments for auto-complete lookup
   const filteredAppointments = useMemo(() => {
     if (!appointmentSearch.trim()) {
-      return availableAppointments.slice(0, 8);
+      return availableAppointments.slice(0, 10);
     }
     const q = appointmentSearch.toLowerCase().trim();
     return availableAppointments.filter((apt) => {
@@ -136,7 +181,12 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
     setSelectedAppointment(apt);
     setShowAppointmentDropdown(false);
     setAppointmentSearch('');
-    notify.info(`Auto-filled patient details for "${fullName}" from appointment schedule.`);
+
+    if (apt.patient_uhid) {
+      notify.info(`Loaded appointment for registered patient ${fullName} (${apt.patient_uhid})`);
+    } else {
+      notify.info(`Auto-filled new client details for "${fullName}" from appointment schedule.`);
+    }
   };
 
   const handleClearAutofill = () => {
@@ -149,19 +199,36 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
     setLoading(true);
 
     try {
-      const newPatient = await patientService.createPatient(formData);
-      notify.success(`Patient registered successfully! UHID: ${newPatient.uhid}`);
-      
+      const payload = {
+        ...formData,
+        ...(existingPatientMatch
+          ? {
+              id: existingPatientMatch.id,
+              uhid: existingPatientMatch.uhid,
+              date_of_birth: existingPatientMatch.date_of_birth || formData.date_of_birth,
+            }
+          : {}),
+      };
+
+      const resultPatient = await patientService.createPatient(payload);
+
+      if (existingPatientMatch) {
+        notify.success(`Patient profile for ${resultPatient.full_name} (${resultPatient.uhid}) updated!`);
+      } else {
+        notify.success(`Patient registered successfully! UHID: ${resultPatient.uhid}`);
+      }
+
       if (onSuccess) {
-        onSuccess(newPatient, nextAction);
+        onSuccess(resultPatient, nextAction);
       }
 
       if (nextAction === 'EDH') {
-        navigate(`/dashboard/reports/create?type=RP-CLN-EDH&patient=${newPatient.uhid || newPatient.id}`);
+        const targetUhid = resultPatient.uhid || existingPatientMatch?.uhid || resultPatient.id;
+        navigate(`/dashboard/reports/create?type=RP-CLN-EDH&patient=${targetUhid}`);
       }
     } catch (err) {
-      setError(err.message || 'Failed to register patient.');
-      notify.error('Registration failed.');
+      setError(err.message || 'Failed to save patient profile.');
+      notify.error('Could not save patient record.');
     } finally {
       setLoading(false);
     }
@@ -170,6 +237,58 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
   return (
     <form ref={formRef} onSubmit={(e) => handleSubmit(e, 'DEFAULT')} className="space-y-3.5 bg-white text-slate-800 font-sans">
       {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* ── ALREADY REGISTERED PATIENT NOTICE (e.g. Aarav Sachin Shinde) ── */}
+      {existingPatientMatch && (
+        <div className="p-3 rounded-lg bg-amber-50/90 border border-amber-300 text-amber-950 space-y-2 animate-in fade-in duration-150">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="font-bold text-xs">
+                Patient Already Exists in Registry:
+              </span>
+              <strong className="text-xs text-slate-900">{existingPatientMatch.full_name}</strong>
+              <span className="font-mono text-[10px] font-black bg-purple-900 text-white px-2 py-0.5 rounded shadow-2xs">
+                {existingPatientMatch.uhid}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+              Active Patient Dossier
+            </span>
+          </div>
+
+          <p className="text-[11px] text-amber-900 leading-relaxed">
+            <strong>{existingPatientMatch.full_name}</strong> is already registered under <strong>{existingPatientMatch.uhid}</strong>. Submitting will update their existing clinical file without generating duplicates. You can also jump straight to Early Dev History or view their complete dossier.
+          </p>
+
+          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-amber-200">
+            <button
+              type="button"
+              onClick={() => {
+                if (onCancel) onCancel();
+                navigate(`/dashboard/reports/create?type=RP-CLN-EDH&patient=${existingPatientMatch.uhid || existingPatientMatch.id}`);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-purple-200" />
+              <span>Proceed to Early Dev History (EDH)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (onCancel) onCancel();
+                navigate(`/dashboard/patients/${existingPatientMatch.uhid || existingPatientMatch.id}`);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 transition-colors cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5 text-purple-800" />
+              <span>Open Patient Dossier [{existingPatientMatch.uhid}]</span>
+              <ExternalLink className="w-3 h-3 text-slate-400" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── QUICK IMPORT FROM APPOINTMENTS & NEW ARRIVED VISITORS ── */}
       <div ref={appointmentDropdownRef} className="p-3 rounded-lg bg-gradient-to-r from-purple-50/90 via-purple-50/50 to-indigo-50/60 border border-purple-200/90 space-y-2">
@@ -222,11 +341,24 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
               className="h-8 px-2 text-xs bg-white border border-purple-300 rounded-md font-medium text-slate-700 focus:border-purple-600 focus:outline-hidden cursor-pointer max-w-[200px] truncate"
             >
               <option value="">Choose Appointment...</option>
-              {availableAppointments.map((apt) => (
-                <option key={apt.id} value={apt.id}>
-                  {apt.patient_name || apt.patientName} ({apt.start_time || apt.time || 'Apt'}) {!apt.patient_uhid ? '★ New Walk-in' : `[${apt.patient_uhid}]`}
-                </option>
-              ))}
+              <optgroup label="★ New Walk-in Clients (Need Registration)">
+                {availableAppointments
+                  .filter((a) => !a.patient_uhid)
+                  .map((apt) => (
+                    <option key={apt.id} value={apt.id}>
+                      {apt.patient_name || apt.patientName} ({apt.start_time || apt.time || 'Apt'}) [New Walk-in]
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="📁 Registered Patients (On Schedule)">
+                {availableAppointments
+                  .filter((a) => Boolean(a.patient_uhid))
+                  .map((apt) => (
+                    <option key={apt.id} value={apt.id}>
+                      {apt.patient_name || apt.patientName} ({apt.start_time || apt.time || 'Apt'}) [{apt.patient_uhid}]
+                    </option>
+                  ))}
+              </optgroup>
             </select>
           </div>
 
@@ -426,19 +558,19 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
             </button>
           )}
 
-          {/* Action 1: Register & Fill Early Dev History (EDH) */}
+          {/* Action 1: Save & Fill Early Dev History (EDH) */}
           <button
             type="button"
             onClick={(e) => handleSubmit(e, 'EDH')}
             disabled={loading}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-950 border border-purple-300 shadow-2xs transition-colors cursor-pointer"
-            title="Save patient and immediately proceed to Early Developmental History questionnaire"
+            title="Save patient profile and immediately proceed to Early Developmental History questionnaire"
           >
             <FileText className="w-3.5 h-3.5 text-purple-800" />
             <span>Save &amp; Fill Early Dev History</span>
           </button>
 
-          {/* Action 2: Standard Register Patient */}
+          {/* Action 2: Save / Update Patient */}
           <Button
             type="submit"
             variant="primary"
@@ -446,7 +578,7 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
             className="justify-center bg-[#301444] hover:bg-[#200b30] text-white font-semibold px-4 py-2 text-xs rounded-lg shadow-xs"
             isLoading={loading}
           >
-            <span>Register Patient</span>
+            <span>{existingPatientMatch ? 'Update Patient Record' : 'Register Patient'}</span>
             <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
               <span>Ctrl+↵</span>
               <span className="opacity-60">/</span>

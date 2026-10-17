@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FileText,
@@ -21,6 +21,8 @@ import {
   X,
   ListPlus,
   Edit3,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
@@ -82,6 +84,33 @@ export const ReportCreatePage = () => {
   const [selectedServiceCode, setSelectedServiceCode] = useState(initialTypeCode);
   const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Type & Search Patient Combobox State
+  const [patientSearchTerm, setPatientSearchTerm] = useState('');
+  const [isPatientDropdownOpen, setIsPatientDropdownOpen] = useState(false);
+  const patientDropdownRef = useRef(null);
+
+  const filteredPatients = useMemo(() => {
+    if (!patientSearchTerm.trim()) return allPatients;
+    const q = patientSearchTerm.toLowerCase().trim();
+    return allPatients.filter((p) => {
+      const name = (p.full_name || '').toLowerCase();
+      const uhid = (p.uhid || '').toLowerCase();
+      const phone = (p.phone || '').toLowerCase();
+      const srv = (p.service_line || '').toLowerCase();
+      return name.includes(q) || uhid.includes(q) || phone.includes(q) || srv.includes(q);
+    });
+  }, [allPatients, patientSearchTerm]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target)) {
+        setIsPatientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Active Service definition
   const activeService = useMemo(() => {
@@ -609,22 +638,116 @@ export const ReportCreatePage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {/* Patient Dropdown */}
-          <div>
-            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Select Patient *
-            </label>
-            <select
-              value={selectedPatientId}
-              onChange={(e) => setSelectedPatientId(e.target.value)}
-              className="w-full text-xs font-bold text-slate-900 bg-purple-50/60 border border-purple-300 rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-700 cursor-pointer"
-            >
-              {allPatients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.uhid} — {p.full_name} ({p.service_line || p.gender})
-                </option>
-              ))}
-            </select>
+          {/* Searchable Patient Combobox (Type & Search) */}
+          <div ref={patientDropdownRef} className="relative">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                Select Patient (Type &amp; Search) *
+              </label>
+              <span className="text-[9px] text-purple-700 font-bold font-mono">
+                {selectedPatient?.uhid}
+              </span>
+            </div>
+
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={
+                  isPatientDropdownOpen
+                    ? patientSearchTerm
+                    : selectedPatient
+                    ? `${selectedPatient.uhid} — ${selectedPatient.full_name}`
+                    : ''
+                }
+                onChange={(e) => {
+                  setPatientSearchTerm(e.target.value);
+                  setIsPatientDropdownOpen(true);
+                }}
+                onFocus={() => {
+                  setIsPatientDropdownOpen(true);
+                  if (!patientSearchTerm) {
+                    setPatientSearchTerm('');
+                  }
+                }}
+                placeholder="Type name, UHID, or phone to search..."
+                className="w-full text-xs font-bold text-slate-900 bg-purple-50/70 border border-purple-300 rounded pl-8 pr-14 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-700"
+              />
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                {patientSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPatientSearchTerm('');
+                    }}
+                    className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsPatientDropdownOpen((prev) => !prev)}
+                  className="p-1 text-slate-500 hover:text-purple-900 cursor-pointer"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Dropdown Results */}
+            {isPatientDropdownOpen && (
+              <div className="absolute z-30 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white rounded-lg border border-purple-300 shadow-xl divide-y divide-slate-100 animate-in fade-in duration-100">
+                <div className="p-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Search Results:</span>
+                  <span className="text-purple-700 font-mono font-bold">{filteredPatients.length} Patients</span>
+                </div>
+                {filteredPatients.length > 0 ? (
+                  filteredPatients.map((p) => {
+                    const isSelected = p.id === selectedPatientId || p.uhid === selectedPatientId;
+                    return (
+                      <div
+                        key={p.id || p.uhid}
+                        onClick={() => {
+                          setSelectedPatientId(p.id);
+                          setPatientSearchTerm('');
+                          setIsPatientDropdownOpen(false);
+                          notify.info(`Loaded patient: ${p.full_name} (${p.uhid})`);
+                        }}
+                        className={`p-2.5 hover:bg-purple-50/80 transition-colors cursor-pointer flex items-center justify-between text-xs gap-2 ${
+                          isSelected ? 'bg-purple-100/70 font-bold' : ''
+                        }`}
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-[10px] font-black bg-purple-900 text-white px-1.5 py-0.2 rounded shadow-2xs">
+                              {p.uhid}
+                            </span>
+                            <span className="font-bold text-slate-900">{p.full_name}</span>
+                            <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700">
+                              {p.service_line || p.gender}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                            <span>{p.phone}</span>
+                            {p.city && <span>• {p.city}</span>}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span className="text-[10px] font-bold text-purple-950 bg-purple-200 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-3 text-center text-xs text-slate-500">
+                    No registered patient matching &quot;{patientSearchTerm}&quot;
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Doc ID & Date */}
