@@ -40,6 +40,9 @@ import {
   QrCode,
   MessageCircle,
   Users,
+  Eye,
+  AlertTriangle,
+  Package,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
@@ -279,6 +282,284 @@ export const PatientDetailPage = () => {
 
   const handleViewDownloadReport = (rep) => {
     window.open(`/dashboard/reports/view/${rep.report_number || rep.id}`, '_blank');
+  };
+
+  // ── EDIT REPORT MODAL STATE & ACTIONS ──
+  const [isEditReportModalOpen, setIsEditReportModalOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState(null);
+
+  const handleOpenEditReportModal = (rep) => {
+    setEditingReport({
+      ...rep,
+      diagnosis: rep.diagnosis || '',
+      recommendations: rep.recommendations || '',
+      status: rep.status || 'FINAL',
+      examiner: rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+      date: rep.date || new Date().toISOString().substring(0, 10),
+    });
+    setIsEditReportModalOpen(true);
+  };
+
+  const handleSaveEditReport = (e) => {
+    e.preventDefault();
+    if (!editingReport) return;
+
+    const repKey = editingReport.report_number || editingReport.id;
+    try {
+      const all = JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]');
+      const updated = all.map((r) =>
+        (r.report_number === repKey || r.id === repKey) ? { ...r, ...editingReport } : r
+      );
+      if (!all.some((r) => r.report_number === repKey || r.id === repKey)) {
+        updated.unshift({ ...editingReport });
+      }
+      localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(updated));
+    } catch (err) {
+      console.warn('Failed saving report edit:', err);
+    }
+
+    setReportsRefreshTick((prev) => prev + 1);
+    setIsEditReportModalOpen(false);
+    notify.success(`Clinical Report ${repKey} updated successfully!`);
+  };
+
+  // ── DELETE REPORT MODAL STATE & ACTIONS ──
+  const [isDeleteReportModalOpen, setIsDeleteReportModalOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
+
+  const handlePromptDeleteReport = (rep) => {
+    setReportToDelete(rep);
+    setIsDeleteReportModalOpen(true);
+  };
+
+  const handleConfirmDeleteReport = () => {
+    if (!reportToDelete) return;
+    const repKey = reportToDelete.report_number || reportToDelete.id;
+    try {
+      const all = JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]');
+      const filtered = all.filter((r) => r.report_number !== repKey && r.id !== repKey);
+      localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('Failed deleting report:', err);
+    }
+
+    setReportsRefreshTick((prev) => prev + 1);
+    setIsDeleteReportModalOpen(false);
+    setReportToDelete(null);
+    notify.success(`Clinical Report ${repKey} deleted.`);
+  };
+
+  // ── DYNAMIC HEARING AIDS REGISTER & DISPENSING (TAB 4) ──
+  const [hearingAidsRefreshTick, setHearingAidsRefreshTick] = useState(0);
+  const [isDispenseDeviceModalOpen, setIsDispenseDeviceModalOpen] = useState(false);
+  const [dispenseForm, setDispenseForm] = useState({
+    serialNo: '',
+    brand: 'Phonak',
+    model: 'Audéo Lumity L90',
+    ear: 'Right Ear',
+    style: 'RIC (Receiver-in-Canal)',
+    battery: 'Lithium-ion Rechargeable',
+    warrantyYears: 2,
+    invoiceNo: '',
+  });
+
+  const patientHearingAidsList = useMemo(() => {
+    const list = [];
+    const uhidNorm = (demographics.uhid || patient.uhid || id || '').toLowerCase();
+    const nameNorm = (demographics.fullName || patient.full_name || '').toLowerCase();
+
+    // 1. Read from vaani_patient_hearing_aids_v1
+    try {
+      const storedMap = JSON.parse(localStorage.getItem('vaani_patient_hearing_aids_v1') || '{}');
+      const found = storedMap[demographics.uhid] || storedMap[patient.uhid] || storedMap[id];
+      if (found && Array.isArray(found.instruments)) {
+        found.instruments.forEach((inst) => {
+          list.push({
+            ...inst,
+            dispensedDate: inst.dispensedDate || found.dispensedDate || '2026-10-17',
+            invoiceNo: inst.invoiceNo || found.invoiceNo || 'INV-2026-0082',
+          });
+        });
+      }
+    } catch {}
+
+    // 2. Read from vaani_inventory_devices_v1 (dispensed units linked to this patient)
+    try {
+      const allDevices = JSON.parse(localStorage.getItem('vaani_inventory_devices_v1') || '[]');
+      if (Array.isArray(allDevices)) {
+        const assigned = allDevices.filter(
+          (d) =>
+            (d.patientUhid && d.patientUhid.toLowerCase() === uhidNorm) ||
+            (d.patientName && d.patientName.toLowerCase() === nameNorm) ||
+            (d.stockStatus === 'DISPENSED' && d.patientUhid && d.patientUhid.toLowerCase() === uhidNorm)
+        );
+        assigned.forEach((d) => {
+          if (!list.some((item) => item.serial === d.serialNo || item.serialNo === d.serialNo)) {
+            list.push({
+              id: d.id,
+              side: d.ear === 'RIGHT' ? 'Right Ear' : d.ear === 'LEFT' ? 'Left Ear' : d.ear === 'BILATERAL' ? 'Bilateral' : (d.ear || 'Right Ear'),
+              make: `${d.brand} ${d.model}`,
+              brand: d.brand,
+              model: d.model,
+              serial: d.serialNo,
+              serialNo: d.serialNo,
+              style: d.category || 'RIC',
+              battery: d.batteryType || 'Rechargeable',
+              warrantyUntil: d.warrantyExpiry || '2028-10-18',
+              status: 'FITTED & ACTIVE',
+              dispensedDate: d.saleDate || '2026-10-17',
+              invoiceNo: d.invoiceNo || 'INV-2026-0082',
+              hsnCode: d.hsnCode || '90214090',
+            });
+          }
+        });
+      }
+    } catch {}
+
+    // 3. Fallback to dossier hearingAids
+    if (list.length === 0 && hearingAids?.dispensed) {
+      if (hearingAids.instruments) {
+        list.push(...hearingAids.instruments);
+      } else {
+        if (hearingAids.rightEar?.model) {
+          list.push({
+            side: 'Right Ear',
+            make: hearingAids.rightEar.model,
+            brand: 'Phonak',
+            model: hearingAids.rightEar.model,
+            serial: hearingAids.rightEar.serial || 'PHO-819204',
+            warrantyUntil: hearingAids.rightEar.warrantyUntil || '2028-10-17',
+            status: 'FITTED & ACTIVE',
+            style: 'RIC',
+            battery: 'Lithium-ion',
+          });
+        }
+        if (hearingAids.leftEar?.model) {
+          list.push({
+            side: 'Left Ear',
+            make: hearingAids.leftEar.model,
+            brand: 'Phonak',
+            model: hearingAids.leftEar.model,
+            serial: hearingAids.leftEar.serial || 'PHO-819205',
+            warrantyUntil: hearingAids.leftEar.warrantyUntil || '2028-10-17',
+            status: 'FITTED & ACTIVE',
+            style: 'RIC',
+            battery: 'Lithium-ion',
+          });
+        }
+      }
+    }
+
+    return list;
+  }, [demographics.uhid, demographics.fullName, patient.uhid, patient.full_name, id, hearingAids, hearingAidsRefreshTick]);
+
+  const handleSaveDirectDispenseDevice = (e) => {
+    e.preventDefault();
+    if (!dispenseForm.serialNo.trim()) {
+      notify.error('Device Serial Number is required.');
+      return;
+    }
+
+    const serial = dispenseForm.serialNo.trim().toUpperCase();
+    const warrantyDate = new Date();
+    warrantyDate.setFullYear(warrantyDate.getFullYear() + (parseInt(dispenseForm.warrantyYears, 10) || 2));
+    const warrantyStr = warrantyDate.toISOString().substring(0, 10);
+    const todayStr = new Date().toISOString().substring(0, 10);
+
+    // Save to vaani_inventory_devices_v1
+    try {
+      const storedDevices = JSON.parse(localStorage.getItem('vaani_inventory_devices_v1') || '[]');
+      const movements = JSON.parse(localStorage.getItem('vaani_stock_movements_v1') || '[]');
+      const existingIdx = storedDevices.findIndex((d) => d.serialNo === serial);
+
+      if (existingIdx >= 0) {
+        storedDevices[existingIdx] = {
+          ...storedDevices[existingIdx],
+          stockStatus: 'DISPENSED',
+          patientUhid: demographics.uhid,
+          patientName: demographics.fullName,
+          ear: dispenseForm.ear,
+          warrantyExpiry: warrantyStr,
+          saleDate: todayStr,
+          invoiceNo: dispenseForm.invoiceNo || 'INV-CLINIC-DIRECT',
+        };
+      } else {
+        storedDevices.push({
+          id: `dev_${Date.now()}`,
+          serialNo: serial,
+          brand: dispenseForm.brand,
+          model: dispenseForm.model,
+          category: dispenseForm.style,
+          channels: 16,
+          batteryType: dispenseForm.battery,
+          hsnCode: '90214090',
+          gstPercent: 18,
+          stockStatus: 'DISPENSED',
+          patientUhid: demographics.uhid,
+          patientName: demographics.fullName,
+          ear: dispenseForm.ear,
+          warrantyExpiry: warrantyStr,
+          saleDate: todayStr,
+          invoiceNo: dispenseForm.invoiceNo || 'INV-CLINIC-DIRECT',
+        });
+      }
+
+      movements.unshift({
+        id: `mov_${Date.now()}`,
+        type: 'SOLD_DISPENSED',
+        itemName: dispenseForm.model,
+        brand: dispenseForm.brand,
+        serialNo: serial,
+        hsnCode: '90214090',
+        qtyChange: -1,
+        refDoc: dispenseForm.invoiceNo || 'DIRECT-DISPENSE',
+        patientName: demographics.fullName,
+        patientUhid: demographics.uhid,
+        notes: `Hearing aid registered directly to ${demographics.fullName} (${dispenseForm.ear})`,
+        date: todayStr,
+        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+      });
+
+      localStorage.setItem('vaani_inventory_devices_v1', JSON.stringify(storedDevices));
+      localStorage.setItem('vaani_stock_movements_v1', JSON.stringify(movements));
+    } catch {}
+
+    // Save to vaani_patient_hearing_aids_v1
+    try {
+      const patientHAs = JSON.parse(localStorage.getItem('vaani_patient_hearing_aids_v1') || '{}');
+      const uhid = demographics.uhid;
+      if (!patientHAs[uhid]) {
+        patientHAs[uhid] = {
+          uhid: uhid,
+          patientName: demographics.fullName,
+          dispensed: true,
+          dispensedDate: todayStr,
+          invoiceNo: dispenseForm.invoiceNo || 'DIRECT-DISPENSE',
+          instruments: [],
+        };
+      }
+      if (!Array.isArray(patientHAs[uhid].instruments)) {
+        patientHAs[uhid].instruments = [];
+      }
+      patientHAs[uhid].instruments.push({
+        side: dispenseForm.ear,
+        make: `${dispenseForm.brand} ${dispenseForm.model}`,
+        brand: dispenseForm.brand,
+        model: dispenseForm.model,
+        serial: serial,
+        style: dispenseForm.style,
+        battery: dispenseForm.battery,
+        status: 'FITTED & ACTIVE',
+        warrantyUntil: warrantyStr,
+        invoiceNo: dispenseForm.invoiceNo || 'DIRECT-DISPENSE',
+        dispensedDate: todayStr,
+      });
+      localStorage.setItem('vaani_patient_hearing_aids_v1', JSON.stringify(patientHAs));
+    } catch {}
+
+    setHearingAidsRefreshTick((prev) => prev + 1);
+    setIsDispenseDeviceModalOpen(false);
+    notify.success(`Hearing aid ${dispenseForm.brand} ${dispenseForm.model} (${serial}) registered to patient!`);
   };
 
   // ── PATIENT PROFILE EDIT & DELETE STATE ──
@@ -775,7 +1056,7 @@ export const PatientDetailPage = () => {
     { id: 'demographics', label: '1. Identity & Demographics', count: '14 fields' },
     { id: 'consents', label: '2. DPDP Consents', count: `${consents.length} rules` },
     { id: 'clinical', label: '3. Clinical Diagnostics & EMR', count: `${patientReports.length} Reports` },
-    { id: 'hearingAids', label: '4. Hearing Aids & Devices', count: hearingAids?.dispensed ? 'Bilateral' : 'Screened' },
+    { id: 'hearingAids', label: '4. Hearing Aids & Devices', count: patientHearingAidsList.length > 0 ? `${patientHearingAidsList.length} Fitted` : (hearingAids?.dispensed ? 'Bilateral' : 'Screened') },
     { id: 'therapy', label: '5. Therapy Goals & SOAP', count: `${therapyPlans.length} Plans` },
     { id: 'billing', label: '6. Billing & Recalls', count: `${patientInvoices.length} Invoices` },
     { id: 'retention', label: '7. Retention & Legal Audit', count: 'Statutory' },
@@ -1465,31 +1746,41 @@ export const PatientDetailPage = () => {
                               </td>
 
                               <td className="py-2 px-3 text-right whitespace-nowrap">
-                                <div className="inline-flex items-center gap-1.5">
+                                <div className="inline-flex items-center gap-1">
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleViewDownloadReport(rep);
                                     }}
-                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 rounded shadow-2xs transition-colors cursor-pointer"
-                                    title="Open and download official printable PDF document"
+                                    className="w-7 h-7 flex items-center justify-center rounded text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
+                                    title="View Official Report in New Tab"
                                   >
-                                    <Download className="w-3 h-3 text-purple-700" />
-                                    <span>Download</span>
+                                    <Eye className="w-3.5 h-3.5" />
                                   </button>
 
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleOpenEmailModal(rep);
+                                      handleOpenEditReportModal(rep);
                                     }}
-                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded shadow-2xs transition-colors cursor-pointer"
-                                    title="Dispatch cryptographically signed report via email"
+                                    className="w-7 h-7 flex items-center justify-center rounded text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                                    title="Edit / Update Clinical Report"
                                   >
-                                    <Mail className="w-3 h-3 text-purple-700" />
-                                    <span>Email</span>
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewDownloadReport(rep);
+                                    }}
+                                    className="w-7 h-7 flex items-center justify-center rounded text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors cursor-pointer"
+                                    title="Print / Download PDF"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
                                   </button>
 
                                   <button
@@ -1498,11 +1789,34 @@ export const PatientDetailPage = () => {
                                       e.stopPropagation();
                                       handleSendWhatsApp(rep);
                                     }}
-                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs transition-colors cursor-pointer"
-                                    title="Send official report summary directly to patient via WhatsApp"
+                                    className="w-7 h-7 flex items-center justify-center rounded text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+                                    title="Send Report Summary via WhatsApp"
                                   >
-                                    <Share2 className="w-3 h-3 text-white" />
-                                    <span>WhatsApp</span>
+                                    <Share2 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEmailModal(rep);
+                                    }}
+                                    className="w-7 h-7 flex items-center justify-center rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
+                                    title="Send Report via Email"
+                                  >
+                                    <Mail className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePromptDeleteReport(rep);
+                                    }}
+                                    className="w-7 h-7 flex items-center justify-center rounded text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
+                                    title="Delete Clinical Report"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               </td>
@@ -1788,71 +2102,114 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'hearingAids' && (
           <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-            <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-              <span>Hearing Aid Dispensing &amp; Device Register (Section 5.5.26)</span>
-              <span className="font-mono text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
-                Serial Tracking &amp; Warranty
-              </span>
+            <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-purple-900" />
+                <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                  Hearing Aid Dispensing &amp; Device Register (Section 5.5.26)
+                </span>
+                <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                  {patientHearingAidsList.length} {patientHearingAidsList.length === 1 ? 'Device Fitted' : 'Devices Fitted'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline font-mono text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                  DPDP Act Compliant Serial Registry
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsDispenseDeviceModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Dispense / Link Device</span>
+                </button>
+              </div>
             </div>
 
-            <div className="p-3.5 space-y-3 text-xs">
-              {hearingAids?.dispensed ? (
+            <div className="p-3.5 space-y-3.5 text-xs">
+              {patientHearingAidsList.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {hearingAids.instruments ? (
-                      hearingAids.instruments.map((inst, i) => (
-                        <div key={i} className="p-3 rounded border border-purple-200 bg-purple-50/20 space-y-1.5">
+                    {patientHearingAidsList.map((inst, i) => (
+                      <div
+                        key={inst.id || inst.serial || i}
+                        className="p-3.5 rounded-lg border border-purple-200 bg-purple-50/20 hover:bg-purple-50/30 transition-colors space-y-2 shadow-2xs"
+                      >
+                        <div className="flex items-center justify-between border-b border-purple-100 pb-1.5">
+                          <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-purple-700"></span>
+                            <span>{inst.side || (i === 0 ? 'Right Ear' : 'Left Ear')}</span>
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {inst.status || 'FITTED & ACTIVE'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <p className="font-extrabold text-purple-950 text-sm">{inst.make || `${inst.brand || ''} ${inst.model || ''}`}</p>
+                          <span className="text-[10px] text-slate-500 block font-medium">
+                            Style: {inst.style || 'RIC (Receiver-in-Canal)'} • Battery: {inst.battery || 'Rechargeable'}
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded bg-white border border-purple-100 text-[11px] font-mono space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-slate-900 text-xs">{inst.side}</span>
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              {inst.status}
+                            <span className="text-slate-500 font-sans">Serial Number:</span>
+                            <strong className="text-purple-950 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                              {inst.serial || inst.serialNo || '—'}
+                            </strong>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-sans">Warranty Coverage:</span>
+                            <span className="text-emerald-700 font-bold">
+                              Valid until {inst.warrantyUntil || '2028-10-18'}
                             </span>
                           </div>
-                          <p className="font-bold text-purple-950 text-sm">{inst.make}</p>
-                          <div className="text-[11px] text-slate-600 space-y-0.5 font-mono">
-                            <p>Style: <span className="font-sans font-medium text-slate-800">{inst.style}</span></p>
-                            <p>Serial: <strong className="text-slate-900">{inst.serial}</strong></p>
-                            <p>Battery: <span className="font-sans font-medium text-slate-800">{inst.battery}</span></p>
-                            <p>Warranty Until: <span className="text-emerald-700 font-bold">{inst.warrantyUntil}</span></p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-500 font-sans">Dispense / Bill Ref:</span>
+                            <span className="text-purple-800 font-semibold font-mono">
+                              {inst.invoiceNo || 'INV-2026-0082'}
+                            </span>
                           </div>
+                          {inst.dispensedDate && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500 font-sans">Fitting Date:</span>
+                              <span className="text-slate-700">{inst.dispensedDate}</span>
+                            </div>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className="p-3 rounded border border-purple-200 bg-purple-50/20 space-y-1.5">
-                          <span className="font-bold text-slate-900 text-xs block">Right Ear</span>
-                          <p className="font-bold text-purple-950 text-sm">{hearingAids.rightEar?.model}</p>
-                          <div className="text-[11px] text-slate-600 font-mono">
-                            <p>Serial: <strong>{hearingAids.rightEar?.serial}</strong></p>
-                            <p>Warranty: <strong className="text-emerald-700">{hearingAids.rightEar?.warrantyUntil}</strong></p>
-                          </div>
-                        </div>
-                        <div className="p-3 rounded border border-purple-200 bg-purple-50/20 space-y-1.5">
-                          <span className="font-bold text-slate-900 text-xs block">Left Ear</span>
-                          <p className="font-bold text-purple-950 text-sm">{hearingAids.leftEar?.model}</p>
-                          <div className="text-[11px] text-slate-600 font-mono">
-                            <p>Serial: <strong>{hearingAids.leftEar?.serial}</strong></p>
-                            <p>Warranty: <strong className="text-emerald-700">{hearingAids.leftEar?.warrantyUntil}</strong></p>
-                          </div>
-                        </div>
-                      </>
-                    )}
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Real-Ear Measurement (REM) &amp; Fitting Verification Target
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Real-Ear Measurement (REM) &amp; Fitting Verification Target (RCI Protocol)
                     </span>
                     <p className="text-slate-800 font-medium pt-0.5">
-                      Target Prescription: NAL-NL2 Adult Binaural achieved within ±2 dB target across 250 Hz to 4000 Hz. Real-Ear Aided Response (REAR) verified.
+                      Target Prescription: NAL-NL2 Adult/Pediatric Binaural target achieved within ±2 dB target across 250 Hz to 4000 Hz. Real-Ear Aided Response (REAR) verified.
                     </p>
                   </div>
                 </>
               ) : (
-                <div className="py-8 text-center text-slate-500">
-                  <Activity className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                  <p className="font-semibold text-slate-700">No Hearing Aids Dispensed For This Patient</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{hearingAids?.note || 'Diagnostic thresholds within normal limits or conservative management in progress.'}</p>
+                <div className="py-10 text-center text-slate-500">
+                  <Activity className="w-10 h-10 mx-auto text-slate-300 mb-2.5" />
+                  <p className="font-bold text-slate-800 text-sm">No Hearing Aids Dispensed For This Patient</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                    No hearing instruments have been linked to this patient dossier yet. When an invoice is issued with a hearing aid serial number, it will automatically register here.
+                  </p>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsDispenseDeviceModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Dispense / Link Hearing Aid Now</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -3799,6 +4156,303 @@ export const PatientDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* ── MODAL: EDIT CLINICAL REPORT ── */}
+      <Modal
+        isOpen={isEditReportModalOpen}
+        onClose={() => setIsEditReportModalOpen(false)}
+        title={editingReport ? `Edit Clinical Report: ${editingReport.report_number || editingReport.id}` : 'Edit Report'}
+        size="md"
+      >
+        {editingReport && (
+          <form onSubmit={handleSaveEditReport} className="space-y-3 font-sans text-xs">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Report Ref #</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={editingReport.report_number || editingReport.id}
+                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-slate-100 border border-slate-300 rounded text-slate-600"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Examination Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={editingReport.date}
+                  onChange={(e) => setEditingReport({ ...editingReport, date: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-mono font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Report Title / Investigation Type *</label>
+              <input
+                type="text"
+                required
+                value={editingReport.title}
+                onChange={(e) => setEditingReport({ ...editingReport, title: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Clinical Findings / Impression / Diagnosis *</label>
+              <textarea
+                rows={3}
+                required
+                value={editingReport.diagnosis}
+                onChange={(e) => setEditingReport({ ...editingReport, diagnosis: e.target.value })}
+                className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none leading-relaxed"
+                placeholder="Enter clinical impression and diagnostic interpretation..."
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Clinical Recommendations / Follow-up</label>
+              <textarea
+                rows={2}
+                value={editingReport.recommendations || ''}
+                onChange={(e) => setEditingReport({ ...editingReport, recommendations: e.target.value })}
+                className="w-full p-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none leading-relaxed"
+                placeholder="e.g. Bilateral digital hearing aid trial, speech therapy bi-weekly..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Attending Clinician (RCI CRR)</label>
+                <input
+                  type="text"
+                  value={editingReport.examiner}
+                  onChange={(e) => setEditingReport({ ...editingReport, examiner: e.target.value })}
+                  className="h-8 w-full px-2 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-0.5">Report Status</label>
+                <select
+                  value={editingReport.status || 'FINAL'}
+                  onChange={(e) => setEditingReport({ ...editingReport, status: e.target.value })}
+                  className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+                >
+                  <option value="FINAL">FINAL • VERIFIED</option>
+                  <option value="AMENDED">AMENDED / REVISED</option>
+                  <option value="PROVISIONAL">PROVISIONAL</option>
+                  <option value="DRAFT">DRAFT</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditReportModalOpen(false)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] text-white hover:bg-[#200b30] shadow-2xs cursor-pointer"
+              >
+                Save Report Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── MODAL: DELETE CLINICAL REPORT ── */}
+      <Modal
+        isOpen={isDeleteReportModalOpen}
+        onClose={() => setIsDeleteReportModalOpen(false)}
+        title="Delete Clinical Report"
+        size="sm"
+      >
+        {reportToDelete && (
+          <div className="space-y-3 font-sans text-xs">
+            <div className="flex items-center gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-800">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+              <div>
+                <p className="font-bold">Are you sure you want to delete this report?</p>
+                <p className="text-[11px] text-rose-700 mt-0.5">
+                  Report: <strong>{reportToDelete.report_number || reportToDelete.id}</strong> ({reportToDelete.title})
+                </p>
+              </div>
+            </div>
+            <p className="text-slate-600">
+              Patient: <strong>{demographics.fullName}</strong> (UHID: {demographics.uhid})
+            </p>
+            <p className="text-[11px] text-slate-500">
+              This action will remove the record from both the Clinical Records register and the patient&apos;s dossier.
+            </p>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteReportModalOpen(false)}
+                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteReport}
+                className="px-4 py-1.5 rounded text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-2xs cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ── MODAL: DISPENSE / LINK HEARING AID DIRECTLY (TAB 4) ── */}
+      <Modal
+        isOpen={isDispenseDeviceModalOpen}
+        onClose={() => setIsDispenseDeviceModalOpen(false)}
+        title={`Dispense / Link Hearing Aid to ${demographics.fullName}`}
+        size="md"
+      >
+        <form onSubmit={handleSaveDirectDispenseDevice} className="space-y-3 font-sans text-xs">
+          <div className="p-2.5 rounded bg-purple-50/70 border border-purple-200 text-purple-950 space-y-0.5">
+            <span className="font-bold text-xs">Patient Serial Registration</span>
+            <p className="text-[11px] text-purple-800">
+              UHID: <strong>{demographics.uhid}</strong> • Name: <strong>{demographics.fullName}</strong>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Device Serial Number (from Barcode) *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. PHO-891240"
+                value={dispenseForm.serialNo}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, serialNo: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Ear / Side *</label>
+              <select
+                value={dispenseForm.ear}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, ear: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value="Right Ear">Right Ear</option>
+                <option value="Left Ear">Left Ear</option>
+                <option value="Bilateral">Bilateral (Both Ears)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Manufacturer / Brand</label>
+              <select
+                value={dispenseForm.brand}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, brand: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded"
+              >
+                <option value="Phonak">Phonak (Sonova)</option>
+                <option value="Oticon">Oticon (Demant)</option>
+                <option value="Signia">Signia (WSAudology)</option>
+                <option value="Widex">Widex (WSAudology)</option>
+                <option value="Resound">GN ReSound</option>
+                <option value="Starkey">Starkey</option>
+              </select>
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Model Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Audéo Lumity L90-R"
+                value={dispenseForm.model}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, model: e.target.value })}
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Style / Form</label>
+              <select
+                value={dispenseForm.style}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, style: e.target.value })}
+                className="h-8 w-full px-1 text-xs bg-white border border-slate-300 rounded"
+              >
+                <option value="RIC (Receiver-in-Canal)">RIC</option>
+                <option value="BTE (Behind-the-Ear)">BTE</option>
+                <option value="CIC (Completely-in-Canal)">CIC</option>
+                <option value="ITC (In-the-Canal)">ITC</option>
+                <option value="IIC (Invisible-in-Canal)">IIC</option>
+              </select>
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Battery Type</label>
+              <select
+                value={dispenseForm.battery}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, battery: e.target.value })}
+                className="h-8 w-full px-1 text-xs bg-white border border-slate-300 rounded"
+              >
+                <option value="Lithium-ion Rechargeable">Rechargeable</option>
+                <option value="Zinc-Air Size 312">Zinc-Air 312</option>
+                <option value="Zinc-Air Size 10">Zinc-Air 10</option>
+                <option value="Zinc-Air Size 13">Zinc-Air 13</option>
+                <option value="Zinc-Air Size 675">Zinc-Air 675</option>
+              </select>
+            </div>
+            <div>
+              <label className="font-semibold text-slate-700 block mb-0.5">Warranty</label>
+              <select
+                value={dispenseForm.warrantyYears}
+                onChange={(e) => setDispenseForm({ ...dispenseForm, warrantyYears: e.target.value })}
+                className="h-8 w-full px-1 text-xs bg-white border border-slate-300 rounded"
+              >
+                <option value="1">1 Year</option>
+                <option value="2">2 Years (Standard)</option>
+                <option value="3">3 Years (Extended)</option>
+                <option value="4">4 Years</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="font-semibold text-slate-700 block mb-0.5">Invoice / Receipt Reference (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. INV-2026-0082"
+              value={dispenseForm.invoiceNo}
+              onChange={(e) => setDispenseForm({ ...dispenseForm, invoiceNo: e.target.value })}
+              className="h-8 w-full px-2 text-xs font-mono bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsDispenseDeviceModalOpen(false)}
+              className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] text-white hover:bg-[#200b30] shadow-2xs cursor-pointer"
+            >
+              Register &amp; Link Device
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

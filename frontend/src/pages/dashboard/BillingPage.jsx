@@ -328,10 +328,378 @@ export const BillingPage = () => {
   const [newUhid, setNewUhid] = useState('');
   const [newPatientName, setNewPatientName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [newService, setNewService] = useState('Pure Tone Audiometry (PTA)');
-  const [newAmount, setNewAmount] = useState(800);
-  const [newTaxType, setNewTaxType] = useState('HEALTHCARE_EXEMPT');
   const [newPaymentMode, setNewPaymentMode] = useState('UPI');
+
+  // In-stock Hearing Aid Devices for Serial Number Autocomplete
+  const [inStockDevices, setInStockDevices] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('vaani_inventory_devices_v1') || '[]');
+      return Array.isArray(stored) ? stored.filter((d) => d.stockStatus === 'IN_STOCK') : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const refreshInStockDevices = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('vaani_inventory_devices_v1') || '[]');
+      setInStockDevices(Array.isArray(stored) ? stored.filter((d) => d.stockStatus === 'IN_STOCK') : []);
+    } catch {}
+  };
+
+  // Multi-Item Invoice Line Items State (CREATE MODAL)
+  const [invoiceItems, setInvoiceItems] = useState([
+    {
+      id: 'item_1',
+      service: 'Pure Tone Audiometry (PTA)',
+      serviceCode: 'SVC-AUD-001',
+      hsnSac: '999312',
+      taxType: 'HEALTHCARE_EXEMPT',
+      gstPercent: 0,
+      baseRate: 800,
+      qty: 1,
+      taxAmount: 0,
+      totalAmount: 800,
+      serialNo: '',
+      ear: 'Right Ear',
+      brand: '',
+      model: '',
+    }
+  ]);
+
+  const handleAddItemRow = () => {
+    const defaultSvc = serviceRates[0] || { name: 'Clinical Consultation', code: 'SVC-CLN-001', hsnSac: '999312', baseRate: 500, taxType: 'HEALTHCARE_EXEMPT' };
+    setInvoiceItems(prev => [
+      ...prev,
+      {
+        id: `item_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+        service: defaultSvc.name,
+        serviceCode: defaultSvc.code || 'SVC-CLN-001',
+        hsnSac: defaultSvc.hsnSac || '999312',
+        taxType: defaultSvc.taxType || 'HEALTHCARE_EXEMPT',
+        gstPercent: defaultSvc.taxType === 'TAXABLE_GOODS' ? 18 : 0,
+        baseRate: defaultSvc.baseRate || 500,
+        qty: 1,
+        taxAmount: defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 500) * 0.18) : 0,
+        totalAmount: (defaultSvc.baseRate || 500) + (defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 500) * 0.18) : 0),
+        serialNo: '',
+        ear: 'Right Ear',
+        brand: '',
+        model: '',
+      }
+    ]);
+  };
+
+  const handleRemoveItemRow = (idx) => {
+    if (invoiceItems.length <= 1) {
+      notify.error('At least one line item is required on the tax invoice.');
+      return;
+    }
+    setInvoiceItems(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleUpdateItemRow = (idx, field, value) => {
+    setInvoiceItems(prev => {
+      const copy = [...prev];
+      const item = { ...copy[idx], [field]: value };
+
+      if (field === 'service') {
+        const matched = serviceRates.find(s => s.name === value);
+        if (matched) {
+          item.serviceCode = matched.code;
+          item.hsnSac = matched.hsnSac || (matched.taxType === 'TAXABLE_GOODS' ? '90214090' : '999312');
+          item.taxType = matched.taxType;
+          item.gstPercent = matched.taxType === 'TAXABLE_GOODS' ? 18 : 0;
+          item.baseRate = matched.baseRate;
+        }
+      }
+
+      if (field === 'selectedDeviceSerial') {
+        const dev = inStockDevices.find(d => d.serialNo === value);
+        if (dev) {
+          item.serialNo = dev.serialNo;
+          item.brand = dev.brand;
+          item.model = dev.model;
+          item.service = `${dev.brand} ${dev.model} (Hearing Aid)`;
+          item.serviceCode = 'RP-CLN-HAF';
+          item.hsnSac = dev.hsnCode || '90214090';
+          item.taxType = 'TAXABLE_GOODS';
+          item.gstPercent = dev.gstPercent || 18;
+          item.baseRate = dev.mrp || dev.unitCost || item.baseRate;
+          item.ear = dev.ear || item.ear || 'Right Ear';
+        }
+      }
+
+      if (field === 'taxType') {
+        item.gstPercent = value === 'TAXABLE_GOODS' ? 18 : 0;
+      }
+
+      const rate = parseFloat(item.baseRate) || 0;
+      const qty = parseInt(item.qty, 10) || 1;
+      const subtotal = rate * qty;
+      const gst = item.taxType === 'TAXABLE_GOODS' || item.gstPercent > 0
+        ? Math.round(subtotal * ((parseFloat(item.gstPercent) || 18) / 100))
+        : 0;
+      item.taxAmount = gst;
+      item.totalAmount = subtotal + gst;
+
+      copy[idx] = item;
+      return copy;
+    });
+  };
+
+  const invoiceCalculations = useMemo(() => {
+    let subtotal = 0;
+    let totalTax = 0;
+    invoiceItems.forEach(it => {
+      const r = parseFloat(it.baseRate) || 0;
+      const q = parseInt(it.qty, 10) || 1;
+      const lineBase = r * q;
+      const lineGst = it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0
+        ? Math.round(lineBase * ((parseFloat(it.gstPercent) || 18) / 100))
+        : 0;
+      subtotal += lineBase;
+      totalTax += lineGst;
+    });
+    return {
+      subtotal,
+      totalTax,
+      netTotal: subtotal + totalTax,
+    };
+  }, [invoiceItems]);
+
+  // ── MULTI-ITEM EDIT INVOICE STATE ──
+  const [editInvoiceItems, setEditInvoiceItems] = useState([]);
+
+  const handleEditAddItemRow = () => {
+    const defaultSvc = serviceRates[0] || { name: 'Clinical Consultation', code: 'SVC-CLN-001', hsnSac: '999312', baseRate: 500, taxType: 'HEALTHCARE_EXEMPT' };
+    setEditInvoiceItems(prev => [
+      ...prev,
+      {
+        id: `edit_item_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+        service: defaultSvc.name,
+        serviceCode: defaultSvc.code || 'SVC-CLN-001',
+        hsnSac: defaultSvc.hsnSac || '999312',
+        taxType: defaultSvc.taxType || 'HEALTHCARE_EXEMPT',
+        gstPercent: defaultSvc.taxType === 'TAXABLE_GOODS' ? 18 : 0,
+        baseRate: defaultSvc.baseRate || 500,
+        qty: 1,
+        taxAmount: defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 500) * 0.18) : 0,
+        totalAmount: (defaultSvc.baseRate || 500) + (defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 500) * 0.18) : 0),
+        serialNo: '',
+        ear: 'Right Ear',
+        brand: '',
+        model: '',
+      }
+    ]);
+  };
+
+  const handleEditRemoveItemRow = (idx) => {
+    if (editInvoiceItems.length <= 1) {
+      notify.error('At least one line item is required on the tax invoice.');
+      return;
+    }
+    setEditInvoiceItems(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleEditUpdateItemRow = (idx, field, value) => {
+    setEditInvoiceItems(prev => {
+      const copy = [...prev];
+      const item = { ...copy[idx], [field]: value };
+
+      if (field === 'service') {
+        const matched = serviceRates.find(s => s.name === value);
+        if (matched) {
+          item.serviceCode = matched.code;
+          item.hsnSac = matched.hsnSac || (matched.taxType === 'TAXABLE_GOODS' ? '90214090' : '999312');
+          item.taxType = matched.taxType;
+          item.gstPercent = matched.taxType === 'TAXABLE_GOODS' ? 18 : 0;
+          item.baseRate = matched.baseRate;
+        }
+      }
+
+      if (field === 'selectedDeviceSerial') {
+        const dev = inStockDevices.find(d => d.serialNo === value);
+        if (dev) {
+          item.serialNo = dev.serialNo;
+          item.brand = dev.brand;
+          item.model = dev.model;
+          item.service = `${dev.brand} ${dev.model} (Hearing Aid)`;
+          item.serviceCode = 'RP-CLN-HAF';
+          item.hsnSac = dev.hsnCode || '90214090';
+          item.taxType = 'TAXABLE_GOODS';
+          item.gstPercent = dev.gstPercent || 18;
+          item.baseRate = dev.mrp || dev.unitCost || item.baseRate;
+          item.ear = dev.ear || item.ear || 'Right Ear';
+        }
+      }
+
+      if (field === 'taxType') {
+        item.gstPercent = value === 'TAXABLE_GOODS' ? 18 : 0;
+      }
+
+      const rate = parseFloat(item.baseRate) || 0;
+      const qty = parseInt(item.qty, 10) || 1;
+      const subtotal = rate * qty;
+      const gst = item.taxType === 'TAXABLE_GOODS' || item.gstPercent > 0
+        ? Math.round(subtotal * ((parseFloat(item.gstPercent) || 18) / 100))
+        : 0;
+      item.taxAmount = gst;
+      item.totalAmount = subtotal + gst;
+
+      copy[idx] = item;
+      return copy;
+    });
+  };
+
+  const editInvoiceCalculations = useMemo(() => {
+    let subtotal = 0;
+    let totalTax = 0;
+    editInvoiceItems.forEach(it => {
+      const r = parseFloat(it.baseRate) || 0;
+      const q = parseInt(it.qty, 10) || 1;
+      const lineBase = r * q;
+      const lineGst = it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0
+        ? Math.round(lineBase * ((parseFloat(it.gstPercent) || 18) / 100))
+        : 0;
+      subtotal += lineBase;
+      totalTax += lineGst;
+    });
+    return {
+      subtotal,
+      totalTax,
+      netTotal: subtotal + totalTax,
+    };
+  }, [editInvoiceItems]);
+
+  // ── HELPER: SYNC DISPENSED HEARING AID DEVICES TO INVENTORY & PATIENT DOSSIER ──
+  const syncDispensedHearingAids = (inv, items) => {
+    try {
+      const haItems = items.filter(
+        it => it.serialNo?.trim() || (it.service && it.service.toLowerCase().includes('hearing aid'))
+      );
+      if (haItems.length === 0) return;
+
+      const storedDevices = JSON.parse(localStorage.getItem('vaani_inventory_devices_v1') || '[]');
+      const movements = JSON.parse(localStorage.getItem('vaani_stock_movements_v1') || '[]');
+      const patientHAs = JSON.parse(localStorage.getItem('vaani_patient_hearing_aids_v1') || '{}');
+      const uhid = inv.uhid || 'MH-STR-2026-0001';
+
+      if (!patientHAs[uhid]) {
+        patientHAs[uhid] = {
+          uhid: uhid,
+          patientName: inv.patientName,
+          dispensed: true,
+          dispensedDate: inv.date,
+          invoiceNo: inv.invoiceNo,
+          instruments: [],
+        };
+      }
+      if (!Array.isArray(patientHAs[uhid].instruments)) {
+        patientHAs[uhid].instruments = [];
+      }
+
+      haItems.forEach((it) => {
+        const serial = (it.serialNo || '').trim() || `HA-${Date.now().toString().slice(-6)}`;
+        const devIdx = storedDevices.findIndex((d) => d.serialNo === serial);
+
+        if (devIdx >= 0) {
+          storedDevices[devIdx] = {
+            ...storedDevices[devIdx],
+            stockStatus: 'DISPENSED',
+            patientUhid: inv.uhid,
+            patientName: inv.patientName,
+            ear: it.ear || 'Right Ear',
+            invoiceNo: inv.invoiceNo,
+            saleDate: inv.date,
+          };
+          movements.unshift({
+            id: `mov_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            type: 'SOLD_DISPENSED',
+            itemId: storedDevices[devIdx].id,
+            itemName: storedDevices[devIdx].model,
+            brand: storedDevices[devIdx].brand,
+            serialNo: serial,
+            hsnCode: storedDevices[devIdx].hsnCode || '90214090',
+            qtyChange: -1,
+            refDoc: inv.invoiceNo,
+            patientName: inv.patientName,
+            patientUhid: inv.uhid,
+            notes: `Sold & dispensed to ${inv.patientName} on Invoice ${inv.invoiceNo} (${it.ear || 'Right Ear'})`,
+            date: inv.date,
+            time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          });
+        } else {
+          const newDispensedDev = {
+            id: `dev_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+            serialNo: serial,
+            brand: it.brand || 'Phonak',
+            model: it.model || it.service || 'Digital Hearing Aid',
+            category: 'RIC (Receiver-in-Canal)',
+            channels: 16,
+            batteryType: 'Rechargeable',
+            hsnCode: it.hsnSac || '90214090',
+            gstPercent: it.gstPercent || 18,
+            stockStatus: 'DISPENSED',
+            patientUhid: inv.uhid,
+            patientName: inv.patientName,
+            ear: it.ear || 'Right Ear',
+            warrantyExpiry: new Date(Date.now() + 2 * 365 * 86400000).toISOString().split('T')[0],
+            unitCost: it.baseRate || 30000,
+            mrp: it.totalAmount || 45000,
+            vendor: 'Official Clinic Stock',
+            invoiceNo: inv.invoiceNo,
+            saleDate: inv.date,
+          };
+          storedDevices.push(newDispensedDev);
+          movements.unshift({
+            id: `mov_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            type: 'SOLD_DISPENSED',
+            itemId: newDispensedDev.id,
+            itemName: newDispensedDev.model,
+            brand: newDispensedDev.brand,
+            serialNo: serial,
+            hsnCode: '90214090',
+            qtyChange: -1,
+            refDoc: inv.invoiceNo,
+            patientName: inv.patientName,
+            patientUhid: inv.uhid,
+            notes: `Dispensed to patient ${inv.patientName} on Invoice ${inv.invoiceNo}`,
+            date: inv.date,
+            time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          });
+        }
+
+        // Add / Update patient hearing aid record
+        const existingIdx = patientHAs[uhid].instruments.findIndex((inst) => inst.serial === serial);
+        const instRecord = {
+          side: it.ear || 'Right Ear',
+          make: `${it.brand || 'Phonak'} ${it.model || it.service}`,
+          brand: it.brand || 'Phonak',
+          model: it.model || it.service,
+          serial: serial,
+          style: 'RIC',
+          battery: 'Lithium-ion Rechargeable',
+          status: 'FITTED & ACTIVE',
+          warrantyUntil: new Date(Date.now() + 2 * 365 * 86400000).toISOString().split('T')[0],
+          invoiceNo: inv.invoiceNo,
+          dispensedDate: inv.date,
+        };
+        if (existingIdx >= 0) {
+          patientHAs[uhid].instruments[existingIdx] = instRecord;
+        } else {
+          patientHAs[uhid].instruments.push(instRecord);
+        }
+      });
+
+      localStorage.setItem('vaani_inventory_devices_v1', JSON.stringify(storedDevices));
+      localStorage.setItem('vaani_stock_movements_v1', JSON.stringify(movements));
+      localStorage.setItem('vaani_patient_hearing_aids_v1', JSON.stringify(patientHAs));
+      refreshInStockDevices();
+    } catch (e) {
+      console.warn('Failed syncing hearing aids from invoice:', e);
+    }
+  };
 
   // Registered Patient Search & Autocomplete State
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
@@ -398,9 +766,20 @@ export const BillingPage = () => {
       }
 
       if (matchedService) {
-        setNewService(matchedService.name);
-        setNewAmount(matchedService.baseRate);
-        setNewTaxType(matchedService.taxType);
+        setInvoiceItems([
+          {
+            id: 'item_1',
+            service: matchedService.name,
+            serviceCode: matchedService.code,
+            hsnSac: matchedService.hsnSac || '999312',
+            taxType: matchedService.taxType,
+            gstPercent: matchedService.taxType === 'TAXABLE_GOODS' ? 18 : 0,
+            baseRate: matchedService.baseRate,
+            qty: 1,
+            taxAmount: matchedService.taxType === 'TAXABLE_GOODS' ? Math.round(matchedService.baseRate * 0.18) : 0,
+            totalAmount: matchedService.baseRate + (matchedService.taxType === 'TAXABLE_GOODS' ? Math.round(matchedService.baseRate * 0.18) : 0),
+          }
+        ]);
       }
     }
 
@@ -422,10 +801,28 @@ export const BillingPage = () => {
     setNewPatientName('');
     setNewUhid('');
     setNewPhone('');
-    setNewService('Pure Tone Audiometry (PTA)');
-    setNewAmount(800);
-    setNewTaxType('HEALTHCARE_EXEMPT');
     setNewPaymentMode('UPI');
+    const defaultSvc = serviceRates.find(s => s.code === 'SVC-AUD-001') || serviceRates[0] || {
+      name: 'Pure Tone Audiometry (PTA)',
+      code: 'SVC-AUD-001',
+      hsnSac: '999312',
+      taxType: 'HEALTHCARE_EXEMPT',
+      baseRate: 800,
+    };
+    setInvoiceItems([
+      {
+        id: 'item_1',
+        service: defaultSvc.name,
+        serviceCode: defaultSvc.code || 'SVC-AUD-001',
+        hsnSac: defaultSvc.hsnSac || '999312',
+        taxType: defaultSvc.taxType || 'HEALTHCARE_EXEMPT',
+        gstPercent: defaultSvc.taxType === 'TAXABLE_GOODS' ? 18 : 0,
+        baseRate: defaultSvc.baseRate || 800,
+        qty: 1,
+        taxAmount: defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 800) * 0.18) : 0,
+        totalAmount: (defaultSvc.baseRate || 800) + (defaultSvc.taxType === 'TAXABLE_GOODS' ? Math.round((defaultSvc.baseRate || 800) * 0.18) : 0),
+      }
+    ]);
     setIsInvoiceModalOpen(true);
   };
 
@@ -580,15 +977,37 @@ export const BillingPage = () => {
       notify.error('Patient name is required');
       return;
     }
+    if (!invoiceItems || invoiceItems.length === 0) {
+      notify.error('Please add at least one line item to the invoice.');
+      return;
+    }
 
-    const isTaxable = newTaxType === 'TAXABLE_GOODS';
-    const gstRate = isTaxable ? 18 : 0;
-    const base = parseFloat(newAmount) || 0;
-    const tax = isTaxable ? Math.round(base * 0.18) : 0;
-    const total = base + tax;
+    const { subtotal, totalTax, netTotal } = invoiceCalculations;
+    const hasTaxable = invoiceItems.some(it => it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0);
+    const overallTaxType = hasTaxable ? 'TAXABLE_GOODS' : 'HEALTHCARE_EXEMPT';
+    const mainService = invoiceItems.length === 1
+      ? invoiceItems[0].service
+      : `${invoiceItems[0].service} (+${invoiceItems.length - 1} more items)`;
 
     const nextIdNumber = invoices.length + 82;
-    const matched = serviceRates.find(s => s.name === newService);
+
+    const normalizedItems = invoiceItems.map(it => ({
+      service: it.service,
+      serviceCode: it.serviceCode || (it.serialNo ? 'RP-CLN-HAF' : 'SVC-CLINICAL'),
+      hsnSac: it.hsnSac || (it.taxType === 'TAXABLE_GOODS' ? '90214090' : '999312'),
+      discipline: it.service && (it.service.includes('Audiometry') || it.service.includes('Hearing')) ? 'Audiology' : 'Speech-Language',
+      baseRate: parseFloat(it.baseRate) || 0,
+      rate: parseFloat(it.baseRate) || 0,
+      qty: parseInt(it.qty, 10) || 1,
+      amount: (parseFloat(it.baseRate) || 0) * (parseInt(it.qty, 10) || 1),
+      taxRate: it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0 ? `${it.gstPercent || 18}.00%` : '0.00% (Exempt)',
+      taxAmount: it.taxAmount || 0,
+      totalAmount: it.totalAmount || ((parseFloat(it.baseRate) || 0) * (parseInt(it.qty, 10) || 1)),
+      serialNo: it.serialNo || '',
+      ear: it.ear || 'Right Ear',
+      brand: it.brand || '',
+      model: it.model || '',
+    }));
 
     const newInv = {
       id: `inv_${Date.now()}`,
@@ -597,14 +1016,15 @@ export const BillingPage = () => {
       uhid: newUhid.trim() || `VN-26-00${nextIdNumber}`,
       patientName: newPatientName.trim(),
       phone: newPhone.trim() || '+91 98220 00000',
-      service: newService,
-      serviceCode: matched?.code || (isTaxable ? 'INV-HA-GOODS' : 'SVC-HEALTHCARE'),
-      hsnSac: matched?.hsnSac || (isTaxable ? '9021' : '999312'),
-      taxType: newTaxType,
-      amount: base,
-      gstPercent: gstRate,
-      taxAmount: tax,
-      totalAmount: total,
+      service: mainService,
+      serviceCode: invoiceItems[0]?.serviceCode || (hasTaxable ? 'INV-HA-GOODS' : 'SVC-HEALTHCARE'),
+      hsnSac: invoiceItems[0]?.hsnSac || (hasTaxable ? '90214090' : '999312'),
+      taxType: overallTaxType,
+      amount: subtotal,
+      gstPercent: hasTaxable ? 18 : 0,
+      taxAmount: totalTax,
+      totalAmount: netTotal,
+      items: normalizedItems,
       paymentMode: newPaymentMode,
       upiRef: newPaymentMode === 'UPI' ? `UPI/${Math.floor(100000000000 + Math.random() * 900000000000)}` : '-',
       status: 'PAID',
@@ -614,8 +1034,13 @@ export const BillingPage = () => {
     const updated = [newInv, ...invoices];
     setInvoices(updated);
     localStorage.setItem('vaani_invoices_v1', JSON.stringify(updated));
+    localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(updated));
+
+    // Automatically sync hearing aid devices to clinic inventory & patient profile
+    syncDispensedHearingAids(newInv, invoiceItems);
+
     setIsInvoiceModalOpen(false);
-    notify.success(`Invoice ${newInv.invoiceNo} created successfully!`);
+    notify.success(`Invoice ${newInv.invoiceNo} with ${invoiceItems.length} line item(s) created successfully!`);
 
     // Reset Form
     setSelectedPatientRecord(null);
@@ -624,6 +1049,24 @@ export const BillingPage = () => {
     setNewPatientName('');
     setNewUhid('');
     setNewPhone('');
+    setInvoiceItems([
+      {
+        id: 'item_1',
+        service: 'Pure Tone Audiometry (PTA)',
+        serviceCode: 'SVC-AUD-001',
+        hsnSac: '999312',
+        taxType: 'HEALTHCARE_EXEMPT',
+        gstPercent: 0,
+        baseRate: 800,
+        qty: 1,
+        taxAmount: 0,
+        totalAmount: 800,
+        serialNo: '',
+        ear: 'Right Ear',
+        brand: '',
+        model: '',
+      }
+    ]);
   };
 
   // Open Dynamic UPI Modal
@@ -645,38 +1088,106 @@ export const BillingPage = () => {
     printClinicalInvoice(inv);
   };
 
-  // 3. Edit Invoice
+  // 3. Edit Invoice (With Full Multi-Item Products Support)
   const handleStartEditInvoice = (inv) => {
+    refreshInStockDevices();
     setEditingInvoice({ ...inv });
+
+    const initialItems = Array.isArray(inv.items) && inv.items.length > 0
+      ? inv.items.map((it, idx) => ({
+          id: it.id || `edit_item_${idx}_${Date.now()}`,
+          service: it.service || inv.service || 'Clinical Service',
+          serviceCode: it.serviceCode || inv.serviceCode || 'SVC-CLINICAL',
+          hsnSac: it.hsnSac || inv.hsnSac || '999312',
+          taxType: it.taxType || (it.taxRate?.includes('18') ? 'TAXABLE_GOODS' : inv.taxType || 'HEALTHCARE_EXEMPT'),
+          gstPercent: it.gstPercent !== undefined ? it.gstPercent : (it.taxRate?.includes('18') ? 18 : inv.gstPercent || 0),
+          baseRate: it.baseRate !== undefined ? it.baseRate : (it.rate !== undefined ? it.rate : (it.amount || 0)),
+          qty: parseInt(it.qty, 10) || 1,
+          taxAmount: it.taxAmount || 0,
+          totalAmount: it.totalAmount || ((parseFloat(it.baseRate || it.rate || it.amount || 0)) * (parseInt(it.qty, 10) || 1) + (it.taxAmount || 0)),
+          serialNo: it.serialNo || inv.serialNo || '',
+          ear: it.ear || inv.ear || 'Right Ear',
+          brand: it.brand || '',
+          model: it.model || '',
+        }))
+      : [{
+          id: `edit_item_${Date.now()}`,
+          service: inv.service || 'Pure Tone Audiometry (PTA)',
+          serviceCode: inv.serviceCode || 'SVC-AUD-001',
+          hsnSac: inv.hsnSac || '999312',
+          taxType: inv.taxType || 'HEALTHCARE_EXEMPT',
+          gstPercent: inv.gstPercent || 0,
+          baseRate: inv.amount || 800,
+          qty: 1,
+          taxAmount: inv.taxAmount || 0,
+          totalAmount: inv.totalAmount || inv.amount || 800,
+          serialNo: inv.serialNo || '',
+          ear: inv.ear || 'Right Ear',
+          brand: '',
+          model: '',
+        }];
+
+    setEditInvoiceItems(initialItems);
     setIsEditInvoiceModalOpen(true);
   };
 
   const handleSaveEditedInvoice = (e) => {
     e.preventDefault();
     if (!editingInvoice) return;
+    if (!editInvoiceItems || editInvoiceItems.length === 0) {
+      notify.error('Please keep at least one line item on the invoice.');
+      return;
+    }
 
-    const isTaxable = editingInvoice.taxType === 'TAXABLE_GOODS';
-    const base = parseFloat(editingInvoice.amount) || 0;
-    const gstRate = isTaxable ? 18 : 0;
-    const tax = isTaxable ? Math.round(base * 0.18) : 0;
-    const total = base + tax;
+    const { subtotal, totalTax, netTotal } = editInvoiceCalculations;
+    const hasTaxable = editInvoiceItems.some(it => it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0);
+    const overallTaxType = hasTaxable ? 'TAXABLE_GOODS' : 'HEALTHCARE_EXEMPT';
+    const mainService = editInvoiceItems.length === 1
+      ? editInvoiceItems[0].service
+      : `${editInvoiceItems[0].service} (+${editInvoiceItems.length - 1} more items)`;
+
+    const normalizedItems = editInvoiceItems.map(it => ({
+      service: it.service,
+      serviceCode: it.serviceCode || (it.serialNo ? 'RP-CLN-HAF' : 'SVC-CLINICAL'),
+      hsnSac: it.hsnSac || (it.taxType === 'TAXABLE_GOODS' ? '90214090' : '999312'),
+      discipline: it.service && (it.service.includes('Audiometry') || it.service.includes('Hearing')) ? 'Audiology' : 'Speech-Language',
+      baseRate: parseFloat(it.baseRate) || 0,
+      rate: parseFloat(it.baseRate) || 0,
+      qty: parseInt(it.qty, 10) || 1,
+      amount: (parseFloat(it.baseRate) || 0) * (parseInt(it.qty, 10) || 1),
+      taxRate: it.taxType === 'TAXABLE_GOODS' || it.gstPercent > 0 ? `${it.gstPercent || 18}.00%` : '0.00% (Exempt)',
+      taxAmount: it.taxAmount || 0,
+      totalAmount: it.totalAmount || ((parseFloat(it.baseRate) || 0) * (parseInt(it.qty, 10) || 1)),
+      serialNo: it.serialNo || '',
+      ear: it.ear || 'Right Ear',
+      brand: it.brand || '',
+      model: it.model || '',
+    }));
 
     const updatedInv = {
       ...editingInvoice,
-      amount: base,
-      gstPercent: gstRate,
-      taxAmount: tax,
-      totalAmount: total,
+      service: mainService,
+      amount: subtotal,
+      gstPercent: hasTaxable ? 18 : 0,
+      taxAmount: totalTax,
+      totalAmount: netTotal,
+      taxType: overallTaxType,
+      items: normalizedItems,
     };
 
     const updated = invoices.map(i => i.id === updatedInv.id ? updatedInv : i);
     setInvoices(updated);
     localStorage.setItem('vaani_invoices_v1', JSON.stringify(updated));
+    localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(updated));
+
+    // Automatically sync hearing aid devices to clinic inventory & patient profile
+    syncDispensedHearingAids(updatedInv, editInvoiceItems);
+
     setIsEditInvoiceModalOpen(false);
     if (selectedInvoiceForView?.id === updatedInv.id) {
       setSelectedInvoiceForView(updatedInv);
     }
-    notify.success(`Invoice ${updatedInv.invoiceNo} updated successfully!`);
+    notify.success(`Invoice ${updatedInv.invoiceNo} with ${editInvoiceItems.length} line item(s) updated successfully!`);
   };
 
   // 4. Delete Invoice
@@ -1357,80 +1868,188 @@ export const BillingPage = () => {
             </div>
           </div>
 
-          <div>
-            <label className="font-semibold text-slate-700 block mb-0.5">Clinical Service / Product Description *</label>
-            <select
-              value={newService}
-              onChange={(e) => {
-                const sName = e.target.value;
-                setNewService(sName);
-                const matched = serviceRates.find(s => s.name === sName);
-                if (matched) {
-                  setNewAmount(matched.baseRate);
-                  setNewTaxType(matched.taxType);
-                }
-              }}
-              className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-            >
-              {serviceRates.map((s) => (
-                <option key={s.id || s.code} value={s.name}>
-                  {s.name} — ₹{s.baseRate.toLocaleString('en-IN')} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
-                </option>
-              ))}
-            </select>
+          {/* ── MULTI-ITEM CLINICAL SERVICES & PRODUCTS GRID ── */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+              <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-purple-700" />
+                <span>Clinical Services, Investigations &amp; Products ({invoiceItems.length})</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleAddItemRow}
+                className="h-6 px-2.5 rounded bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                <span>+ Add Line Item</span>
+              </button>
+            </div>
+
+            {/* Line Items Table */}
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/40">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                      <th className="py-1.5 px-2 w-7 text-center">#</th>
+                      <th className="py-1.5 px-2 min-w-[200px]">Service / Product Description</th>
+                      <th className="py-1.5 px-2 w-20 text-center">SAC/HSN</th>
+                      <th className="py-1.5 px-2 w-20 text-right">Fee (₹)</th>
+                      <th className="py-1.5 px-1.5 w-14 text-center">Qty</th>
+                      <th className="py-1.5 px-2 w-28">GST Regime</th>
+                      <th className="py-1.5 px-2 w-20 text-right">Total (₹)</th>
+                      <th className="py-1.5 px-1 w-7 text-center"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 font-sans">
+                    {invoiceItems.map((item, idx) => (
+                      <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20">
+                        <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-500">
+                          {idx + 1}
+                        </td>
+                        <td className="py-1.5 px-2 space-y-1">
+                          <select
+                            value={item.service}
+                            onChange={(e) => handleUpdateItemRow(idx, 'service', e.target.value)}
+                            className="w-full h-7 px-1.5 text-xs bg-white border border-slate-300 rounded font-medium focus:border-purple-600 focus:outline-none cursor-pointer"
+                          >
+                            {serviceRates.map((s) => (
+                              <option key={s.id || s.code} value={s.name}>
+                                {s.name} — ₹{s.baseRate} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* Hearing Aid Serial & Ear Integration */}
+                          <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
+                            {inStockDevices.length > 0 && (
+                              <div>
+                                <select
+                                  value={item.serialNo || ''}
+                                  onChange={(e) => handleUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
+                                  className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                                >
+                                  <option value="">— Link In-Stock Clinic Device (Optional) —</option>
+                                  {inStockDevices.map((d) => (
+                                    <option key={d.serialNo} value={d.serialNo}>
+                                      {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Device Serial Number (from Barcode / Box)"
+                                value={item.serialNo || ''}
+                                onChange={(e) => handleUpdateItemRow(idx, 'serialNo', e.target.value)}
+                                className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
+                              />
+                              <select
+                                value={item.ear || 'Right Ear'}
+                                onChange={(e) => handleUpdateItemRow(idx, 'ear', e.target.value)}
+                                className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
+                              >
+                                <option value="Right Ear">Right Ear</option>
+                                <option value="Left Ear">Left Ear</option>
+                                <option value="Bilateral">Bilateral</option>
+                              </select>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-1.5 px-2 text-center">
+                          <input
+                            type="text"
+                            value={item.hsnSac || ''}
+                            placeholder="999312"
+                            onChange={(e) => handleUpdateItemRow(idx, 'hsnSac', e.target.value)}
+                            className="w-full h-7 px-1.5 text-xs font-mono text-center bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                          />
+                        </td>
+                        <td className="py-1.5 px-2 text-right">
+                          <input
+                            type="number"
+                            min="0"
+                            value={item.baseRate}
+                            onChange={(e) => handleUpdateItemRow(idx, 'baseRate', e.target.value)}
+                            className="w-full h-7 px-1.5 text-xs text-right font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                          />
+                        </td>
+                        <td className="py-1.5 px-1.5 text-center">
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.qty || 1}
+                            onChange={(e) => handleUpdateItemRow(idx, 'qty', e.target.value)}
+                            className="w-full h-7 px-1 text-xs text-center font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                          />
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <select
+                            value={item.taxType}
+                            onChange={(e) => handleUpdateItemRow(idx, 'taxType', e.target.value)}
+                            className="w-full h-7 px-1 text-[11px] font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
+                          >
+                            <option value="HEALTHCARE_EXEMPT">0% Exempt</option>
+                            <option value="TAXABLE_GOODS">18% GST</option>
+                          </select>
+                        </td>
+                        <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-900">
+                          ₹{item.totalAmount?.toLocaleString('en-IN') || 0}
+                        </td>
+                        <td className="py-1.5 px-1 text-center">
+                          {invoiceItems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItemRow(idx)}
+                              className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
+                              title="Remove item"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Base Fee (₹) *</label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={newAmount}
-                onChange={(e) => setNewAmount(parseFloat(e.target.value) || 0)}
-                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Tax Regime</label>
-              <select
-                value={newTaxType}
-                onChange={(e) => setNewTaxType(e.target.value)}
-                className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
-              >
-                <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt</option>
-                <option value="TAXABLE_GOODS">18% GST (Goods)</option>
-              </select>
-            </div>
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Payment Mode</label>
+              <label className="font-semibold text-slate-700 block mb-0.5">Payment Settlement Mode</label>
               <select
                 value={newPaymentMode}
                 onChange={(e) => setNewPaymentMode(e.target.value)}
-                className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
               >
                 <option value="UPI">NPCI UPI</option>
-                <option value="CASH">Cash</option>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
+                <option value="CASH">Cash Settlement</option>
+                <option value="BANK_TRANSFER">Bank Transfer / NEFT</option>
                 <option value="CARD">Debit / Credit Card</option>
               </select>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Direct settlement under NPCI UPI / Statutory Healthcare Accounts.
+              </p>
             </div>
-          </div>
 
-          {/* Tax Calculation Preview Box */}
-          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-            <div className="flex items-center justify-between text-slate-600">
-              <span>Base Assessment / Product Fee:</span>
-              <span className="font-mono font-semibold">₹{newAmount.toLocaleString('en-IN')}</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-600">
-              <span>GST ({newTaxType === 'TAXABLE_GOODS' ? '18%' : '0% Exempt'}):</span>
-              <span className="font-mono font-semibold">₹{(newTaxType === 'TAXABLE_GOODS' ? Math.round(newAmount * 0.18) : 0).toLocaleString('en-IN')}</span>
-            </div>
-            <div className="flex items-center justify-between text-[#301444] font-bold text-sm pt-1 border-t border-slate-200">
-              <span>Total Invoice Payable:</span>
-              <span className="font-mono">₹{(newAmount + (newTaxType === 'TAXABLE_GOODS' ? Math.round(newAmount * 0.18) : 0)).toLocaleString('en-IN')}</span>
+            {/* Calculations Summary Card */}
+            <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-1 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal Base Fee:</span>
+                <span className="font-mono font-bold text-slate-900">₹{invoiceCalculations.subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Total GST Applied:</span>
+                <span className="font-mono font-bold text-slate-900">₹{invoiceCalculations.totalTax.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200 pt-1">
+                <span>NET TOTAL PAYABLE:</span>
+                <span className="font-mono text-sm font-black">₹{invoiceCalculations.netTotal.toLocaleString('en-IN')}</span>
+              </div>
             </div>
           </div>
 
@@ -1693,32 +2312,49 @@ export const BillingPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-slate-300 bg-white">
-                    <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-300">01</td>
-                    <td className="py-2 px-2.5 border-r border-slate-300">
-                      <span className="font-bold text-slate-900 block text-xs">{selectedInvoiceForView.service}</span>
-                      <span className="text-[9.5px] font-mono text-purple-800">
-                        Code: {selectedInvoiceForView.serviceCode || 'SVC-CLINICAL'} • ANSI / ISO Protocol
-                      </span>
-                    </td>
-                    <td className="py-2 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
-                      {selectedInvoiceForView.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312')}
-                    </td>
-                    <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-300 text-[10px]">
-                      {selectedInvoiceForView.service?.includes('Audiometry') || selectedInvoiceForView.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language'}
-                    </td>
-                    <td className="py-2 px-2.5 text-right font-mono font-semibold text-slate-800 border-r border-slate-300">
-                      ₹{Number(selectedInvoiceForView.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-2 px-2 text-center border-r border-slate-300 text-[10px]">
-                      <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-700">
-                        {selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST'}
-                      </span>
-                    </td>
-                    <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
-                      ₹{Number(selectedInvoiceForView.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                  </tr>
+                  {(Array.isArray(selectedInvoiceForView.items) && selectedInvoiceForView.items.length > 0
+                    ? selectedInvoiceForView.items
+                    : [
+                        {
+                          service: selectedInvoiceForView.service,
+                          serviceCode: selectedInvoiceForView.serviceCode || 'SVC-CLINICAL',
+                          hsnSac: selectedInvoiceForView.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312'),
+                          discipline: selectedInvoiceForView.service?.includes('Audiometry') || selectedInvoiceForView.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language',
+                          amount: selectedInvoiceForView.amount,
+                          taxRate: selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST',
+                          totalAmount: selectedInvoiceForView.totalAmount,
+                        }
+                      ]
+                  ).map((it, idx) => (
+                    <tr key={idx} className="border-b border-slate-300 bg-white">
+                      <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-300">
+                        {String(idx + 1).padStart(2, '0')}
+                      </td>
+                      <td className="py-2 px-2.5 border-r border-slate-300">
+                        <span className="font-bold text-slate-900 block text-xs">{it.service}</span>
+                        <span className="text-[9.5px] font-mono text-purple-800">
+                          Code: {it.serviceCode || 'SVC-CLINICAL'} {it.qty && it.qty > 1 ? `• Qty: ${it.qty}` : ''} • ANSI / ISO Protocol
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
+                        {it.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312')}
+                      </td>
+                      <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-300 text-[10px]">
+                        {it.discipline || (it.service?.includes('Audiometry') || it.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language')}
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-mono font-semibold text-slate-800 border-r border-slate-300">
+                        ₹{Number(it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-2 px-2 text-center border-r border-slate-300 text-[10px]">
+                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-700">
+                          {it.taxRate || (selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST')}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
+                        ₹{Number(it.totalAmount || it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
 
@@ -1790,7 +2426,7 @@ export const BillingPage = () => {
         isOpen={isEditInvoiceModalOpen}
         onClose={() => setIsEditInvoiceModalOpen(false)}
         title={editingInvoice ? `Edit Invoice: ${editingInvoice.invoiceNo}` : 'Edit Invoice'}
-        size="md"
+        size="xl"
       >
         {editingInvoice && (
           <form onSubmit={handleSaveEditedInvoice} className="space-y-3 font-sans text-xs">
@@ -1847,59 +2483,163 @@ export const BillingPage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Clinical Service / Product Description *</label>
-              <select
-                value={editingInvoice.service}
-                onChange={(e) => {
-                  const sName = e.target.value;
-                  const matched = serviceRates.find(s => s.name === sName);
-                  if (matched) {
-                    setEditingInvoice({
-                      ...editingInvoice,
-                      service: sName,
-                      serviceCode: matched.code,
-                      hsnSac: matched.hsnSac,
-                      amount: matched.baseRate,
-                      taxType: matched.taxType,
-                    });
-                  } else {
-                    setEditingInvoice({ ...editingInvoice, service: sName });
-                  }
-                }}
-                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              >
-                {serviceRates.map((s) => (
-                  <option key={s.id || s.code} value={s.name}>
-                    {s.name} — ₹{s.baseRate.toLocaleString('en-IN')}
-                  </option>
-                ))}
-              </select>
+            {/* ── MULTI-ITEM PRODUCTS / SERVICES REGISTER (EDIT MODAL) ── */}
+            <div className="pt-2 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Clinical Services, Investigations &amp; Products ({editInvoiceItems.length})</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleEditAddItemRow}
+                  className="h-6 px-2.5 rounded bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Add Line Item</span>
+                </button>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/40">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                        <th className="py-1.5 px-2 w-7 text-center">#</th>
+                        <th className="py-1.5 px-2 min-w-[220px]">Service / Product Description</th>
+                        <th className="py-1.5 px-2 w-20 text-center">SAC/HSN</th>
+                        <th className="py-1.5 px-2 w-20 text-right">Fee (₹)</th>
+                        <th className="py-1.5 px-1.5 w-14 text-center">Qty</th>
+                        <th className="py-1.5 px-2 w-24">GST</th>
+                        <th className="py-1.5 px-2 w-20 text-right">Total (₹)</th>
+                        <th className="py-1.5 px-1 w-7 text-center"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-sans">
+                      {editInvoiceItems.map((item, idx) => {
+                        const isHearingAid =
+                          (item.service && item.service.toLowerCase().includes('hearing')) ||
+                          item.serialNo ||
+                          item.serviceCode === 'RP-CLN-HAF';
+                        return (
+                          <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20">
+                            <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-500 align-top pt-2.5">
+                              {idx + 1}
+                            </td>
+                            <td className="py-1.5 px-2 space-y-1">
+                              <select
+                                value={item.service}
+                                onChange={(e) => handleEditUpdateItemRow(idx, 'service', e.target.value)}
+                                className="w-full h-7 px-1.5 text-xs bg-white border border-slate-300 rounded font-medium focus:border-purple-600 focus:outline-none cursor-pointer"
+                              >
+                                {serviceRates.map((s) => (
+                                  <option key={s.id || s.code} value={s.name}>
+                                    {s.name} — ₹{s.baseRate} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
+                                  </option>
+                                ))}
+                              </select>
+
+                              {/* Hearing Aid Serial & Ear Integration */}
+                              <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
+                                {inStockDevices.length > 0 && (
+                                  <div>
+                                    <select
+                                      value={item.serialNo || ''}
+                                      onChange={(e) => handleEditUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
+                                      className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                                    >
+                                      <option value="">— Link In-Stock Clinic Device (Optional) —</option>
+                                      {inStockDevices.map((d) => (
+                                        <option key={d.serialNo} value={d.serialNo}>
+                                          {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="text"
+                                    placeholder="Device Serial Number (from Barcode / Box)"
+                                    value={item.serialNo || ''}
+                                    onChange={(e) => handleEditUpdateItemRow(idx, 'serialNo', e.target.value)}
+                                    className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
+                                  />
+                                  <select
+                                    value={item.ear || 'Right Ear'}
+                                    onChange={(e) => handleEditUpdateItemRow(idx, 'ear', e.target.value)}
+                                    className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
+                                  >
+                                    <option value="Right Ear">Right Ear</option>
+                                    <option value="Left Ear">Left Ear</option>
+                                    <option value="Bilateral">Bilateral</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-1.5 px-2 text-center align-top pt-2">
+                              <input
+                                type="text"
+                                value={item.hsnSac || ''}
+                                placeholder="999312"
+                                onChange={(e) => handleEditUpdateItemRow(idx, 'hsnSac', e.target.value)}
+                                className="w-full h-7 px-1.5 text-xs font-mono text-center bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                              />
+                            </td>
+                            <td className="py-1.5 px-2 text-right align-top pt-2">
+                              <input
+                                type="number"
+                                min="0"
+                                value={item.baseRate}
+                                onChange={(e) => handleEditUpdateItemRow(idx, 'baseRate', e.target.value)}
+                                className="w-full h-7 px-1.5 text-xs text-right font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                              />
+                            </td>
+                            <td className="py-1.5 px-1.5 text-center align-top pt-2">
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.qty || 1}
+                                onChange={(e) => handleEditUpdateItemRow(idx, 'qty', e.target.value)}
+                                className="w-full h-7 px-1 text-xs text-center font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                              />
+                            </td>
+                            <td className="py-1.5 px-2 align-top pt-2">
+                              <select
+                                value={item.taxType}
+                                onChange={(e) => handleEditUpdateItemRow(idx, 'taxType', e.target.value)}
+                                className="w-full h-7 px-1 text-[11px] font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
+                              >
+                                <option value="HEALTHCARE_EXEMPT">0% Exempt</option>
+                                <option value="TAXABLE_GOODS">18% GST</option>
+                              </select>
+                            </td>
+                            <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-900 align-top pt-3">
+                              ₹{item.totalAmount?.toLocaleString('en-IN') || 0}
+                            </td>
+                            <td className="py-1.5 px-1 text-center align-top pt-2.5">
+                              {editInvoiceItems.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditRemoveItemRow(idx)}
+                                  className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
+                                  title="Remove item"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Base Fee (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={editingInvoice.amount}
-                  onChange={(e) => setEditingInvoice({ ...editingInvoice, amount: parseFloat(e.target.value) || 0 })}
-                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Tax Regime</label>
-                <select
-                  value={editingInvoice.taxType}
-                  onChange={(e) => setEditingInvoice({ ...editingInvoice, taxType: e.target.value })}
-                  className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
-                >
-                  <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt</option>
-                  <option value="TAXABLE_GOODS">18% GST (Goods)</option>
-                </select>
-              </div>
               <div>
                 <label className="font-semibold text-slate-700 block mb-0.5">Payment Mode</label>
                 <select
@@ -1913,9 +2653,6 @@ export const BillingPage = () => {
                   <option value="CARD">Debit / Credit Card</option>
                 </select>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="font-semibold text-slate-700 block mb-0.5">Payment Status</label>
                 <select
@@ -1938,22 +2675,24 @@ export const BillingPage = () => {
               </div>
             </div>
 
-            {/* Live Calculation Preview */}
-            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-              <div className="flex items-center justify-between text-slate-600">
-                <span>Base Service Fee:</span>
-                <span className="font-mono font-semibold">₹{(parseFloat(editingInvoice.amount) || 0).toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-600">
-                <span>GST ({editingInvoice.taxType === 'TAXABLE_GOODS' ? '18%' : '0% Exempt'}):</span>
-                <span className="font-mono font-semibold">
-                  ₹{(editingInvoice.taxType === 'TAXABLE_GOODS' ? Math.round((parseFloat(editingInvoice.amount) || 0) * 0.18) : 0).toLocaleString('en-IN')}
+            {/* Calculations Summary Card */}
+            <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-1 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal Base Fee:</span>
+                <span className="font-mono font-bold text-slate-900">
+                  ₹{editInvoiceCalculations.subtotal.toLocaleString('en-IN')}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[#301444] font-bold text-sm pt-1 border-t border-slate-200">
-                <span>Total Invoice Payable:</span>
-                <span className="font-mono">
-                  ₹{((parseFloat(editingInvoice.amount) || 0) + (editingInvoice.taxType === 'TAXABLE_GOODS' ? Math.round((parseFloat(editingInvoice.amount) || 0) * 0.18) : 0)).toLocaleString('en-IN')}
+              <div className="flex justify-between text-slate-600">
+                <span>Total GST Applied:</span>
+                <span className="font-mono font-bold text-slate-900">
+                  ₹{editInvoiceCalculations.totalTax.toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200 pt-1">
+                <span>NET TOTAL PAYABLE:</span>
+                <span className="font-mono text-sm font-black">
+                  ₹{editInvoiceCalculations.netTotal.toLocaleString('en-IN')}
                 </span>
               </div>
             </div>

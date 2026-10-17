@@ -1038,6 +1038,7 @@ export const SettingsPage = () => {
       localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify([]));
       localStorage.setItem('vaani_inventory_v1', JSON.stringify([]));
       localStorage.setItem('vaani_inventory_consumables_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_stock_movements_v1', JSON.stringify([]));
       localStorage.setItem('vaani_recalls_v1', JSON.stringify([]));
       localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([]));
       sessionStorage.removeItem('vaani_preview_report');
