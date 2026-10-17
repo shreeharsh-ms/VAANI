@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
-import { normalizeSlotTime } from '../../utils/formatters';
+import { normalizeSlotTime, normalizeDate, CLINICAL_TIME_SLOTS } from '../../utils/formatters';
 
 const serviceOptions = [
   {
@@ -64,18 +64,7 @@ const serviceOptions = [
   },
 ];
 
-const availableTimeSlots = [
-  '09:30 AM',
-  '10:15 AM',
-  '11:00 AM',
-  '11:45 AM',
-  '02:00 PM',
-  '02:45 PM',
-  '03:30 PM',
-  '04:15 PM',
-  '05:00 PM',
-  '05:45 PM',
-];
+const availableTimeSlots = CLINICAL_TIME_SLOTS;
 
 const testimonials = [
   {
@@ -110,6 +99,7 @@ export const ProfessionalBookingSection = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [loading, setLoading] = useState(false);
   const [bookedSuccess, setBookedSuccess] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -123,10 +113,24 @@ export const ProfessionalBookingSection = () => {
     notes: '',
   });
 
+  // Listen for real-time appointment updates from admin dashboard, storage, or window focus
+  React.useEffect(() => {
+    const handleUpdate = () => setRefreshKey((k) => k + 1);
+    window.addEventListener('vaani-appointments-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('focus', handleUpdate);
+    return () => {
+      window.removeEventListener('vaani-appointments-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('focus', handleUpdate);
+    };
+  }, []);
+
   // Dynamically compute reserved/booked slots for the chosen date
   const bookedSlots = React.useMemo(() => {
-    return appointmentService.getBookedSlotsForDate(formData.appointment_date);
-  }, [formData.appointment_date, currentStep]);
+    const cleanDate = normalizeDate(formData.appointment_date);
+    return appointmentService.getBookedSlotsForDate(cleanDate);
+  }, [formData.appointment_date, currentStep, refreshKey]);
 
   // If current selected time is booked, auto-select first available slot
   React.useEffect(() => {

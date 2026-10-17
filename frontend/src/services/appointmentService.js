@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import { getAllAppointments, SEED_APPOINTMENTS } from '../data/appointmentsData';
-import { normalizeSlotTime, formatTime } from '../utils/formatters';
+import { normalizeSlotTime, formatTime, normalizeDate, getAppointmentSlotsCovered, CLINICAL_TIME_SLOTS } from '../utils/formatters';
 
 const getServiceLineFromName = (name = '') => {
   const n = name.toLowerCase();
@@ -166,30 +166,45 @@ export const appointmentService = {
   },
 
   /**
-   * Returns list of booked slots for a given date string (YYYY-MM-DD).
-   * A slot is considered booked if an appointment is APPROVED, CONFIRMED, CHECKED_IN, or IN_SESSION.
+   * Returns list of booked slots for a given date string.
+   * Uses normalizeDate() to accurately compare dates across formats (ISO, YYYY-MM-DD, DD/MM/YYYY).
+   * Any active appointment that is NOT Cancelled or No-Show blocks the slot (and all covered overlapping slots).
    */
   getBookedSlotsForDate(dateStr) {
     if (!dateStr) return [];
     try {
       const raw = localStorage.getItem('vaani_appointments_v1');
-      if (!raw) return [];
-      const apts = JSON.parse(raw);
-      if (!Array.isArray(apts)) return [];
+      let apts = [];
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) apts = parsed;
+        } catch {}
+      }
+      if (apts.length === 0) {
+        apts = getAllAppointments();
+      }
 
-      const cleanTargetDate = String(dateStr).split('T')[0];
+      const cleanTargetDate = normalizeDate(dateStr);
+      if (!cleanTargetDate) return [];
 
-      return apts
-        .filter((a) => {
-          if (!a.appointment_date) return false;
-          const aDate = String(a.appointment_date).split('T')[0];
-          if (aDate !== cleanTargetDate) return false;
+      const bookedSet = new Set();
 
-          const s = (a.status || '').toUpperCase();
-          // Approved or active consultation locks the slot
-          return s === 'CONFIRMED' || s === 'APPROVED' || s === 'CHECKED_IN' || s === 'IN_SESSION' || s === 'COMPLETED';
-        })
-        .map((a) => normalizeSlotTime(a.start_time));
+      apts.forEach((a) => {
+        if (!a.appointment_date) return;
+        const aDate = normalizeDate(a.appointment_date);
+        if (aDate !== cleanTargetDate) return;
+
+        const s = (a.status || '').toUpperCase();
+        // Cancelled, denied or no-show releases the slot
+        if (s === 'CANCELLED' || s === 'NO_SHOW' || s === 'DENIED') return;
+
+        // Extract all slots covered by this appointment
+        const covered = getAppointmentSlotsCovered(a);
+        covered.forEach((slot) => bookedSet.add(slot));
+      });
+
+      return Array.from(bookedSet);
     } catch (e) {
       console.warn('Error reading booked slots:', e);
       return [];
@@ -197,9 +212,8 @@ export const appointmentService = {
   },
 
   async getAvailableSlots(date) {
-    const defaultSlots = ['09:30 AM', '10:15 AM', '11:00 AM', '11:45 AM', '02:00 PM', '02:45 PM', '03:30 PM', '04:15 PM', '05:00 PM', '05:45 PM'];
     const booked = this.getBookedSlotsForDate(date);
-    return defaultSlots.filter((slot) => !booked.includes(normalizeSlotTime(slot)));
+    return CLINICAL_TIME_SLOTS.filter((slot) => !booked.includes(normalizeSlotTime(slot)));
   },
 };
 

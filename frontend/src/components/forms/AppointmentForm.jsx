@@ -21,6 +21,7 @@ import Alert from '../common/Alert';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
 import { SEED_PATIENTS } from '../../data/patientClinicalProfiles';
+import { CLINICAL_TIME_SLOTS, normalizeSlotTime, normalizeDate } from '../../utils/formatters';
 
 export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) => {
   const { notify } = useNotification();
@@ -69,16 +70,29 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
     patient_uhid: '',
     service_name: initialService || 'Speech & Language Therapy Session',
     appointment_date: new Date().toISOString().split('T')[0],
-    appointment_time: '10:00',
+    appointment_time: '10:15 AM',
     reason: '',
   });
 
-  const [availableSlots, setAvailableSlots] = useState([
-    '09:30', '10:15', '11:00', '11:45', '14:00', '14:45', '15:30', '16:15', '17:00'
-  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Compute live booked slots for selected appointment date
+  const bookedSlots = useMemo(() => {
+    return appointmentService.getBookedSlotsForDate(normalizeDate(formData.appointment_date));
+  }, [formData.appointment_date]);
+
+  // If selected slot is booked, auto-select first available slot
+  useEffect(() => {
+    const norm = normalizeSlotTime(formData.appointment_time);
+    if (bookedSlots.includes(norm)) {
+      const firstAvailable = CLINICAL_TIME_SLOTS.find((s) => !bookedSlots.includes(normalizeSlotTime(s)));
+      if (firstAvailable) {
+        setFormData((prev) => ({ ...prev, appointment_time: firstAvailable }));
+      }
+    }
+  }, [bookedSlots, formData.appointment_date]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -90,25 +104,6 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
-
-  // Fetch slots whenever appointment_date changes
-  useEffect(() => {
-    if (formData.appointment_date) {
-      appointmentService
-        .getAvailableSlots(formData.appointment_date)
-        .then((slots) => {
-          if (slots && slots.length > 0) {
-            setAvailableSlots(slots);
-            if (!slots.includes(formData.appointment_time)) {
-              setFormData((prev) => ({ ...prev, appointment_time: slots[0] }));
-            }
-          }
-        })
-        .catch(() => {
-          // Fallback slots
-        });
-    }
-  }, [formData.appointment_date]);
 
   // Keyboard shortcut listener: Ctrl+Enter or Cmd+Enter to submit
   useEffect(() => {
@@ -441,24 +436,46 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
         />
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Available Time Slot
-          </label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {availableSlots.map((slot) => (
-              <button
-                key={slot}
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, appointment_time: slot }))}
-                className={`py-1.5 px-2 text-xs font-mono font-medium rounded border transition-all cursor-pointer ${
-                  formData.appointment_time === slot
-                    ? 'bg-[#301444] text-white border-[#301444] shadow-xs'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                }`}
-              >
-                {slot}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs font-semibold text-slate-700">
+              Available Time Slot
+            </label>
+            {bookedSlots.length > 0 && (
+              <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.2 rounded">
+                {bookedSlots.length} slot{bookedSlots.length > 1 ? 's' : ''} reserved
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
+            {CLINICAL_TIME_SLOTS.map((slot) => {
+              const norm = normalizeSlotTime(slot);
+              const isBooked = bookedSlots.includes(norm);
+              const isSelected = formData.appointment_time === slot;
+
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  disabled={isBooked}
+                  onClick={() => !isBooked && setFormData((prev) => ({ ...prev, appointment_time: slot }))}
+                  title={isBooked ? 'This slot has already been booked' : `Select ${slot}`}
+                  className={`py-1.5 px-2 text-xs font-mono font-medium rounded border transition-all flex items-center justify-between ${
+                    isBooked
+                      ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-75'
+                      : isSelected
+                      ? 'bg-[#301444] text-white border-[#301444] shadow-xs cursor-pointer'
+                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 cursor-pointer'
+                  }`}
+                >
+                  <span className={isBooked ? 'line-through text-slate-400' : ''}>{slot}</span>
+                  {isBooked && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 border border-rose-300 px-1 rounded leading-none">
+                      Booked
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

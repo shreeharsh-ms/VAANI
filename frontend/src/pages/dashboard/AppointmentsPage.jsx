@@ -33,22 +33,11 @@ import Modal from '../../components/common/Modal';
 import AppointmentForm from '../../components/forms/AppointmentForm';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
-import { formatTime, formatCurrency, normalizeSlotTime } from '../../utils/formatters';
+import { formatTime, formatCurrency, normalizeSlotTime, normalizeDate, getAppointmentSlotsCovered, CLINICAL_TIME_SLOTS } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { getAllAppointments, SEED_APPOINTMENTS } from '../../data/appointmentsData';
 
-const ALL_SLOTS = [
-  '09:30 AM',
-  '10:15 AM',
-  '11:00 AM',
-  '11:45 AM',
-  '02:00 PM',
-  '02:45 PM',
-  '03:30 PM',
-  '04:15 PM',
-  '05:00 PM',
-  '05:45 PM',
-];
+const ALL_SLOTS = CLINICAL_TIME_SLOTS;
 
 export const AppointmentsPage = () => {
   const { notify } = useNotification();
@@ -241,11 +230,12 @@ export const AppointmentsPage = () => {
   // Compute Booked Slots for the selected reschedule date
   const rescheduleBookedSlots = useMemo(() => {
     if (!rescheduleData.newDate) return [];
-    const booked = appointmentService.getBookedSlotsForDate(rescheduleData.newDate);
-    // Exclude currently rescheduling appointment's own slot if on the same date
-    if (reschedulingAppointment && (reschedulingAppointment.appointment_date || '').split('T')[0] === rescheduleData.newDate) {
-      const ownSlot = normalizeSlotTime(reschedulingAppointment.start_time);
-      return booked.filter((s) => s !== ownSlot);
+    const cleanNewDate = normalizeDate(rescheduleData.newDate);
+    const booked = appointmentService.getBookedSlotsForDate(cleanNewDate);
+    // Exclude currently rescheduling appointment's own slots if on the same date
+    if (reschedulingAppointment && normalizeDate(reschedulingAppointment.appointment_date) === cleanNewDate) {
+      const ownSlots = getAppointmentSlotsCovered(reschedulingAppointment);
+      return booked.filter((s) => !ownSlots.includes(s));
     }
     return booked;
   }, [rescheduleData.newDate, reschedulingAppointment]);
@@ -361,19 +351,19 @@ Vaani Speech & Hearing Clinic`;
       const matchesService = serviceFilter === 'ALL' || a.service_line === serviceFilter;
 
       let matchesDate = true;
-      const aDate = (a.appointment_date || '').split('T')[0];
+      const aDate = normalizeDate(a.appointment_date);
 
       if (dateFilter === 'TODAY') {
         matchesDate = aDate === todayStr;
       } else if (dateFilter === 'TOMORROW') {
         matchesDate = aDate === tomorrowStr;
       } else if (dateFilter === 'THIS_WEEK') {
-        const aptTime = new Date(a.appointment_date).getTime();
+        const aptTime = new Date(aDate).getTime();
         const nowTime = new Date().getTime();
         const diffDays = (aptTime - nowTime) / (1000 * 3600 * 24);
         matchesDate = diffDays >= -1 && diffDays <= 7;
       } else if (dateFilter === 'CUSTOM' && customDate) {
-        matchesDate = aDate === customDate;
+        matchesDate = aDate === normalizeDate(customDate);
       }
 
       return matchesSearch && matchesStatus && matchesService && matchesDate;
