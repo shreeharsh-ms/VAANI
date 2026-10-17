@@ -110,7 +110,7 @@ export const OfficialClinicalDocument = ({
       className="bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none"
     >
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
-      <div className="flex-1 flex flex-col space-y-3">
+      <div className="flex-1 flex flex-col space-y-1.5">
         {/* ── REUSABLE DECORATIVE CLINICAL LETTERHEAD ── */}
         <OfficialReportHeader
           formData={formData}
@@ -391,7 +391,7 @@ export const OfficialClinicalDocument = ({
           </div>
         ) : isAAE ? (
           /* ── AUDIOLOGICAL EVALUATION VIEW (Exact Real-World Layout with Dual Audiogram Graphs & Legend) ── */
-          <div className="space-y-2.5 text-slate-900">
+          <div className="space-y-1.5 text-slate-900">
             {/* Centered Rounded Pill Title Banner */}
             <div className="text-center my-0.5">
               <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-xs sm:text-sm tracking-wider px-8 py-1 rounded-full uppercase shadow-xs border border-purple-400/40">

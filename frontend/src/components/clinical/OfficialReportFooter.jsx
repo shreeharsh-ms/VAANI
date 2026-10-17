@@ -17,12 +17,71 @@ export const OfficialReportFooter = ({
   totalPages,
   compact = false,
   isCBT = false,
+  useImage = true,
   className = '',
 }) => {
   const rciNumber = formData?.rciNumber || 'A79214';
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
   const examinerName = formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP';
+
+  // Use the official decorative footer banner
+  if (useImage) {
+    return (
+      <div className={`official-report-footer shrink-0 w-[calc(100%+3rem)] sm:w-[calc(100%+3.5rem)] -mx-6 -mb-6 sm:-mx-7 sm:-mb-7 print:m-0 print:w-full select-none ${className}`}>
+        <div className="relative w-full overflow-hidden">
+          {/* User's custom official footer banner - uncropped, full width, zero border-radius */}
+          <img
+            src="/vaani-footer-banner.png"
+            alt="Vaani Speech and Hearing Clinic Official Footer"
+            className="w-full h-auto block rounded-none"
+          />
+
+          {/* Tamper-Evident Verification text next to the QR code */}
+          <div className="absolute left-[29%] top-[20%] bottom-[16%] flex flex-col justify-center text-[7.5px] print:text-[7px] text-purple-950 space-y-0.5">
+            <div className="font-bold font-mono tracking-wider text-[8px] print:text-[7.5px] text-purple-900 flex items-center gap-1">
+              <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 inline shrink-0" />
+              QR VERIFIED • DPDP COMPLIANT
+            </div>
+            <div className="text-[7px] print:text-[6.5px] text-slate-600 hidden sm:block">
+              Cryptographically authentic record
+            </div>
+            <div className="text-[7px] print:text-[6.5px] font-mono text-purple-800">
+              vaaniclinic.com/verify-doc/{reportNumber}
+              {totalPages && totalPages > 1 ? ` • Pg ${pageNumber}/${totalPages}` : ''}
+            </div>
+          </div>
+
+          {/* Clinician Digital Authentication & Signature Block in the open right area */}
+          <div className="absolute right-[5%] top-[10%] bottom-[10%] flex flex-col justify-center text-right">
+            <div className="inline-block border-b border-purple-900/60 pb-0.5 mb-0.5 text-right">
+              <span className="font-serif italic font-bold text-purple-950 text-[11px] sm:text-xs print:text-[11px] block leading-none">
+                {isCBT ? 'Palak Paresh Gandhi' : 'Shreeharsh M. Shivpuje'}
+              </span>
+              <span className="text-[6.5px] print:text-[6px] text-purple-800 uppercase tracking-widest font-bold flex items-center justify-end gap-1 mt-0.5">
+                <CheckCircle2 className="w-2 h-2 text-emerald-600 inline" />
+                Digitally Authenticated
+              </span>
+            </div>
+            <p className="font-black text-slate-950 text-[9px] print:text-[8px] leading-tight">
+              {isCBT ? 'Ms. Palak Paresh Gandhi' : examinerName}
+            </p>
+            <p className="text-[7.5px] print:text-[7px] font-semibold text-slate-800">
+              RCI CRR No: <span className="font-mono font-bold text-purple-950 bg-white/80 px-1 py-0.2 rounded border border-purple-200">{rciNumber}</span>
+            </p>
+            <p className="text-[7px] print:text-[6.5px] text-slate-600 font-medium">
+              {isCBT ? 'RCI Registered Practitioner & Psychological Counselor' : 'Consultant Audiologist & Speech-Language Pathologist'}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle legal disclaimer below banner */}
+        <p className="text-[6.5px] print:text-[6px] text-center text-slate-500 py-0.5 leading-tight">
+          Strictly Confidential Medical Record under DPDP Act 2023 • Valid without physical ink signature
+        </p>
+      </div>
+    );
+  }
 
   if (isCBT) {
     return (

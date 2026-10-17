@@ -342,7 +342,7 @@ export const DualAudiogramSection = ({
           acData={rightAC}
           bcData={rightBC}
           width={240}
-          height={180}
+          height={165}
         />
       </div>
 
@@ -353,7 +353,7 @@ export const DualAudiogramSection = ({
           acData={leftAC}
           bcData={leftBC}
           width={240}
-          height={180}
+          height={165}
         />
       </div>
 
