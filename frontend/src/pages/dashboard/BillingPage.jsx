@@ -1805,9 +1805,9 @@ export const BillingPage = () => {
         isOpen={isInvoiceModalOpen}
         onClose={() => setIsInvoiceModalOpen(false)}
         title="Generate Tax Invoice / Clinical Receipt"
-        size="md"
+        size="xl"
       >
-        <form ref={invoiceFormRef} onSubmit={handleCreateInvoice} className="space-y-3 font-sans text-xs">
+        <form ref={invoiceFormRef} onSubmit={handleCreateInvoice} className="space-y-4 font-sans text-xs">
           {/* ── PATIENT SEARCH & AUTO-POPULATE COMBOBOX ── */}
           <div className="space-y-1.5" ref={patientDropdownRef}>
             <div className="flex items-center justify-between">
@@ -1821,7 +1821,7 @@ export const BillingPage = () => {
             </div>
 
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Type patient name, UHID (e.g. VN-26-0001), or phone number..."
@@ -1831,7 +1831,7 @@ export const BillingPage = () => {
                   setIsPatientDropdownOpen(true);
                 }}
                 onFocus={() => setIsPatientDropdownOpen(true)}
-                className="h-8.5 w-full pl-8 pr-8 text-xs font-medium bg-purple-50/50 border border-purple-200 rounded-md focus:border-purple-600 focus:bg-white focus:outline-none transition-all placeholder:text-slate-400"
+                className="h-9 w-full pl-9 pr-9 text-xs font-medium bg-purple-50/50 border border-purple-200 rounded-lg focus:border-purple-600 focus:bg-white focus:outline-none transition-all placeholder:text-slate-400 shadow-2xs"
               />
               {patientSearchQuery && (
                 <button
@@ -1840,7 +1840,7 @@ export const BillingPage = () => {
                     setPatientSearchQuery('');
                     setIsPatientDropdownOpen(false);
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1848,8 +1848,8 @@ export const BillingPage = () => {
 
               {/* Autocomplete Dropdown List */}
               {isPatientDropdownOpen && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100">
-                  <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between sticky top-0 z-10">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100">
+                  <div className="px-3.5 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between sticky top-0 z-10">
                     <span>Registered Patients ({matchedPatients.length} found)</span>
                     <span className="text-[10px] text-purple-800 font-semibold">Click to select &amp; auto-fill</span>
                   </div>
@@ -1858,7 +1858,7 @@ export const BillingPage = () => {
                       <div
                         key={p.id || p.uhid}
                         onClick={() => handleSelectPatientForInvoice(p)}
-                        className="p-2.5 hover:bg-purple-50/80 cursor-pointer flex items-center justify-between transition-colors gap-2"
+                        className="p-3 hover:bg-purple-50/80 cursor-pointer flex items-center justify-between transition-colors gap-3"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1882,14 +1882,14 @@ export const BillingPage = () => {
                         </div>
                         <button
                           type="button"
-                          className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded bg-[#301444] text-white hover:bg-purple-950 transition-colors shadow-2xs pointer-events-none"
+                          className="shrink-0 text-[11px] font-bold px-3 py-1 rounded bg-[#301444] text-white hover:bg-purple-950 transition-colors shadow-2xs pointer-events-none"
                         >
                           Select
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="p-3 text-center text-xs text-slate-500 space-y-1">
+                    <div className="p-3.5 text-center text-xs text-slate-500 space-y-1">
                       <p>No registered patient matching &quot;{patientSearchQuery}&quot;</p>
                       <p className="text-[11px] text-slate-400">
                         You can still manually type the details below for walk-in patients.
@@ -1902,7 +1902,7 @@ export const BillingPage = () => {
 
             {/* Selected Patient Confirmation Banner */}
             {selectedPatientRecord && (
-              <div className="p-2 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+              <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2 text-emerald-950 font-medium">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
@@ -1920,9 +1920,9 @@ export const BillingPage = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID (Optional)</label>
+              <label className="font-semibold text-slate-700 block mb-1">Patient UHID (Optional)</label>
               <input
                 type="text"
                 placeholder="VN-26-0082"
@@ -1933,11 +1933,11 @@ export const BillingPage = () => {
                     setSelectedPatientRecord(null);
                   }
                 }}
-                className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                className="h-8.5 w-full px-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
               />
             </div>
             <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Patient Full Name *</label>
+              <label className="font-semibold text-slate-700 block mb-1">Patient Full Name *</label>
               <input
                 type="text"
                 required
@@ -1949,65 +1949,65 @@ export const BillingPage = () => {
                     setSelectedPatientRecord(null);
                   }
                 }}
-                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                className="h-8.5 w-full px-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
               />
             </div>
             <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Phone (WhatsApp / SMS)</label>
+              <label className="font-semibold text-slate-700 block mb-1">Phone (WhatsApp / SMS)</label>
               <input
                 type="text"
                 placeholder="+91 98220 11223"
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
-                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                className="h-8.5 w-full px-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
               />
             </div>
           </div>
 
           {/* ── MULTI-ITEM CLINICAL SERVICES & PRODUCTS GRID ── */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-purple-700" />
+                <FileText className="w-4 h-4 text-purple-700" />
                 <span>Clinical Services, Investigations &amp; Products ({invoiceItems.length})</span>
               </label>
               <button
                 type="button"
                 onClick={handleAddItemRow}
-                className="h-6 px-2.5 rounded bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors"
+                className="h-6.5 px-3 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors shadow-2xs"
               >
-                <Plus className="w-3 h-3" />
-                <span>+ Add Line Item</span>
+                <Plus className="w-3.5 h-3.5 text-purple-700" />
+                <span>Add Line Item</span>
               </button>
             </div>
 
-            {/* Line Items Table */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/40">
+            {/* Line Items Table with Generous Professional Widths */}
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-2xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
+                <table className="w-full text-xs text-left min-w-[760px]">
                   <thead>
                     <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                      <th className="py-1.5 px-2 w-7 text-center">#</th>
-                      <th className="py-1.5 px-2 min-w-[200px]">Service / Product Description</th>
-                      <th className="py-1.5 px-2 w-20 text-center">SAC/HSN</th>
-                      <th className="py-1.5 px-2 w-20 text-right">Fee (₹)</th>
-                      <th className="py-1.5 px-1.5 w-14 text-center">Qty</th>
-                      <th className="py-1.5 px-2 w-28">GST Regime</th>
-                      <th className="py-1.5 px-2 w-20 text-right">Total (₹)</th>
-                      <th className="py-1.5 px-1 w-7 text-center"></th>
+                      <th className="py-2.5 px-3 w-10 text-center">#</th>
+                      <th className="py-2.5 px-3 min-w-[280px]">Service / Product Description</th>
+                      <th className="py-2.5 px-2.5 w-24 text-center">SAC/HSN</th>
+                      <th className="py-2.5 px-2.5 w-24 text-right">Fee (₹)</th>
+                      <th className="py-2.5 px-2 w-16 text-center">Qty</th>
+                      <th className="py-2.5 px-2.5 w-32 text-left">GST Regime</th>
+                      <th className="py-2.5 px-3 w-28 text-right">Total (₹)</th>
+                      <th className="py-2.5 px-2 w-10 text-center"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 font-sans">
                     {invoiceItems.map((item, idx) => (
-                      <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20">
-                        <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-500">
+                      <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20 transition-colors">
+                        <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 align-middle">
                           {idx + 1}
                         </td>
-                        <td className="py-1.5 px-2 space-y-1">
+                        <td className="py-2.5 px-3 space-y-1.5 align-middle">
                           <select
                             value={item.service}
                             onChange={(e) => handleUpdateItemRow(idx, 'service', e.target.value)}
-                            className="w-full h-7 px-1.5 text-xs bg-white border border-slate-300 rounded font-medium focus:border-purple-600 focus:outline-none cursor-pointer"
+                            className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded-md font-semibold text-slate-800 focus:border-purple-600 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             {serviceRates.map((s) => (
                               <option key={s.id || s.code} value={s.name}>
@@ -2018,7 +2018,7 @@ export const BillingPage = () => {
 
                           {/* Hearing Aid Serial & Ear Integration (Only for actual hearing aid instruments) */}
                           {isHearingAidItem(item) ? (
-                            <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
+                            <div className="p-2 rounded-md bg-purple-50/70 border border-purple-200 space-y-1.5">
                               <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-purple-900 flex items-center gap-1">
                                   <Sparkles className="w-3 h-3 text-purple-600" />
@@ -2027,7 +2027,7 @@ export const BillingPage = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateItemRow(idx, 'isCustomHearingAid', false)}
-                                  className="text-[9.5px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                                  className="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer font-bold px-1"
                                   title="Hide device linking"
                                 >
                                   ✕
@@ -2038,7 +2038,7 @@ export const BillingPage = () => {
                                   <select
                                     value={item.serialNo || ''}
                                     onChange={(e) => handleUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
-                                    className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
+                                    className="w-full h-7 px-2 text-xs bg-white border border-purple-300 rounded-md text-purple-950 font-semibold focus:border-purple-600 cursor-pointer shadow-2xs"
                                   >
                                     <option value="">— Link In-Stock Clinic Device (Optional) —</option>
                                     {inStockDevices.map((d) => (
@@ -2049,18 +2049,18 @@ export const BillingPage = () => {
                                   </select>
                                 </div>
                               )}
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-2">
                                 <input
                                   type="text"
                                   placeholder="Device Serial Number (from Barcode / Box)"
                                   value={item.serialNo || ''}
                                   onChange={(e) => handleUpdateItemRow(idx, 'serialNo', e.target.value)}
-                                  className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
+                                  className="flex-1 h-7 px-2 text-xs font-mono font-bold bg-white border border-purple-300 rounded-md text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600 shadow-2xs"
                                 />
                                 <select
                                   value={item.ear || 'Right Ear'}
                                   onChange={(e) => handleUpdateItemRow(idx, 'ear', e.target.value)}
-                                  className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
+                                  className="h-7 px-2 text-xs font-semibold bg-white border border-purple-300 rounded-md text-slate-700 cursor-pointer shadow-2xs"
                                 >
                                   <option value="Right Ear">Right Ear</option>
                                   <option value="Left Ear">Left Ear</option>
@@ -2073,7 +2073,7 @@ export const BillingPage = () => {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateItemRow(idx, 'isCustomHearingAid', true)}
-                                className="text-[10px] text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                className="text-[10.5px] text-purple-700 hover:text-purple-900 hover:underline inline-flex items-center gap-1 cursor-pointer font-semibold"
                                 title="Click to link a hearing aid device serial number & ear side to this line item"
                               >
                                 <span>+ Link Hearing Aid Device Serial &amp; Ear</span>
@@ -2081,52 +2081,52 @@ export const BillingPage = () => {
                             </div>
                           )}
                         </td>
-                        <td className="py-1.5 px-2 text-center">
+                        <td className="py-2.5 px-2.5 text-center align-middle">
                           <input
                             type="text"
                             value={item.hsnSac || ''}
                             placeholder="999312"
                             onChange={(e) => handleUpdateItemRow(idx, 'hsnSac', e.target.value)}
-                            className="w-full h-7 px-1.5 text-xs font-mono text-center bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                            className="w-full h-8 px-2 text-xs font-mono font-semibold text-center bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none text-slate-700 shadow-2xs"
                           />
                         </td>
-                        <td className="py-1.5 px-2 text-right">
+                        <td className="py-2.5 px-2.5 text-right align-middle">
                           <input
                             type="number"
                             min="0"
                             value={item.baseRate}
                             onChange={(e) => handleUpdateItemRow(idx, 'baseRate', e.target.value)}
-                            className="w-full h-7 px-1.5 text-xs text-right font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                            className="w-full h-8 px-2 text-xs font-mono font-bold text-right bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none text-slate-800 shadow-2xs"
                           />
                         </td>
-                        <td className="py-1.5 px-1.5 text-center">
+                        <td className="py-2.5 px-2 text-center align-middle">
                           <input
                             type="number"
                             min="1"
                             value={item.qty || 1}
                             onChange={(e) => handleUpdateItemRow(idx, 'qty', e.target.value)}
-                            className="w-full h-7 px-1 text-xs text-center font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                            className="w-full h-8 px-1.5 text-xs font-mono font-bold text-center bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none text-slate-800 shadow-2xs"
                           />
                         </td>
-                        <td className="py-1.5 px-2">
+                        <td className="py-2.5 px-2.5 align-middle">
                           <select
                             value={item.taxType}
                             onChange={(e) => handleUpdateItemRow(idx, 'taxType', e.target.value)}
-                            className="w-full h-7 px-1 text-[11px] font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
+                            className="w-full h-8 px-2 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none cursor-pointer shadow-2xs"
                           >
                             <option value="HEALTHCARE_EXEMPT">0% Exempt</option>
                             <option value="TAXABLE_GOODS">18% GST</option>
                           </select>
                         </td>
-                        <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-900">
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 text-xs align-middle">
                           ₹{item.totalAmount?.toLocaleString('en-IN') || 0}
                         </td>
-                        <td className="py-1.5 px-1 text-center">
+                        <td className="py-2.5 px-2 text-center align-middle">
                           {invoiceItems.length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveItemRow(idx)}
-                              className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
+                              className="w-7 h-7 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
                               title="Remove item"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -2141,26 +2141,26 @@ export const BillingPage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Payment Settlement Mode</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
+            <div className="space-y-1.5">
+              <label className="font-bold text-slate-800 block text-xs">Payment Settlement Mode</label>
               <select
                 value={newPaymentMode}
                 onChange={(e) => setNewPaymentMode(e.target.value)}
-                className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
+                className="h-8.5 w-full px-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none cursor-pointer shadow-2xs"
               >
                 <option value="UPI">NPCI UPI</option>
                 <option value="CASH">Cash Settlement</option>
                 <option value="BANK_TRANSFER">Bank Transfer / NEFT</option>
                 <option value="CARD">Debit / Credit Card</option>
               </select>
-              <p className="text-[10px] text-slate-500 mt-1">
+              <p className="text-[10px] text-slate-500">
                 Direct settlement under NPCI UPI / Statutory Healthcare Accounts.
               </p>
             </div>
 
             {/* Calculations Summary Card */}
-            <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-1 text-xs">
+            <div className="p-3.5 rounded-lg bg-purple-50/80 border border-purple-200 space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal Base Fee:</span>
                 <span className="font-mono font-bold text-slate-900">₹{invoiceCalculations.subtotal.toLocaleString('en-IN')}</span>
@@ -2169,36 +2169,36 @@ export const BillingPage = () => {
                 <span>Total GST Applied:</span>
                 <span className="font-mono font-bold text-slate-900">₹{invoiceCalculations.totalTax.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200 pt-1">
+              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200/80 pt-1.5">
                 <span>NET TOTAL PAYABLE:</span>
-                <span className="font-mono text-sm font-black">₹{invoiceCalculations.netTotal.toLocaleString('en-IN')}</span>
+                <span className="font-mono text-sm font-black text-purple-950">₹{invoiceCalculations.netTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
               <span>Submit:</span>
-              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+              <span className="font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
                 Ctrl+↵
               </span>
               <span className="text-slate-400">or</span>
-              <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
+              <span className="font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
                 ⌘↵ (Mac)
               </span>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
               <button
                 type="button"
                 onClick={() => setIsInvoiceModalOpen(false)}
-                className="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cancel <span className="opacity-60 text-[10px] font-mono">[Esc]</span>
               </button>
               <button
                 type="submit"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-sm transition-all cursor-pointer"
               >
                 <span>Issue &amp; Save Invoice</span>
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
@@ -2552,250 +2552,245 @@ export const BillingPage = () => {
         size="xl"
       >
         {editingInvoice && (
-          <form onSubmit={handleSaveEditedInvoice} className="space-y-3 font-sans text-xs">
-            <div className="grid grid-cols-3 gap-2">
+          <form onSubmit={handleSaveEditedInvoice} className="space-y-4 font-sans text-xs">
+            {/* Patient & Invoice Header Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Invoice #</label>
+                <label className="font-semibold text-slate-700 block mb-1">Invoice #</label>
                 <input
                   type="text"
                   readOnly
                   value={editingInvoice.invoiceNo}
-                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-slate-100 border border-slate-300 rounded text-slate-600"
+                  className="h-8.5 w-full px-2.5 text-xs font-mono font-bold bg-slate-100 border border-slate-300 rounded-md text-slate-600 shadow-2xs"
                 />
               </div>
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Invoice Date *</label>
+                <label className="font-semibold text-slate-700 block mb-1">Invoice Date *</label>
                 <input
                   type="date"
                   required
                   value={editingInvoice.date}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, date: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-mono font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  className="h-8.5 w-full px-2.5 text-xs font-mono font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
                 />
               </div>
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Patient UHID</label>
+                <label className="font-semibold text-slate-700 block mb-1">Patient UHID</label>
                 <input
                   type="text"
                   value={editingInvoice.uhid}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, uhid: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  className="h-8.5 w-full px-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Patient Full Name *</label>
+                <label className="font-semibold text-slate-700 block mb-1">Patient Full Name *</label>
                 <input
                   type="text"
                   required
                   value={editingInvoice.patientName}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, patientName: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  className="h-8.5 w-full px-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
                 />
               </div>
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Phone Number</label>
+                <label className="font-semibold text-slate-700 block mb-1">Phone Number</label>
                 <input
                   type="text"
                   value={editingInvoice.phone || ''}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, phone: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  className="h-8.5 w-full px-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
                 />
               </div>
             </div>
 
             {/* ── MULTI-ITEM PRODUCTS / SERVICES REGISTER (EDIT MODAL) ── */}
-            <div className="pt-2 border-t border-slate-200">
-              <div className="flex items-center justify-between mb-1.5">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
                 <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-purple-700" />
+                  <Package className="w-4 h-4 text-purple-700" />
                   <span>Clinical Services, Investigations &amp; Products ({editInvoiceItems.length})</span>
                 </label>
                 <button
                   type="button"
                   onClick={handleEditAddItemRow}
-                  className="h-6 px-2.5 rounded bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors"
+                  className="h-6.5 px-3 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors shadow-2xs"
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>+ Add Line Item</span>
+                  <Plus className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Add Line Item</span>
                 </button>
               </div>
 
-              {/* Line Items Table */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/40">
+              {/* Line Items Table with Generous Professional Widths */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-2xs">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
+                  <table className="w-full text-xs text-left min-w-[760px]">
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-                        <th className="py-1.5 px-2 w-7 text-center">#</th>
-                        <th className="py-1.5 px-2 min-w-[220px]">Service / Product Description</th>
-                        <th className="py-1.5 px-2 w-20 text-center">SAC/HSN</th>
-                        <th className="py-1.5 px-2 w-20 text-right">Fee (₹)</th>
-                        <th className="py-1.5 px-1.5 w-14 text-center">Qty</th>
-                        <th className="py-1.5 px-2 w-24">GST</th>
-                        <th className="py-1.5 px-2 w-20 text-right">Total (₹)</th>
-                        <th className="py-1.5 px-1 w-7 text-center"></th>
+                        <th className="py-2.5 px-3 w-10 text-center">#</th>
+                        <th className="py-2.5 px-3 min-w-[280px]">Service / Product Description</th>
+                        <th className="py-2.5 px-2.5 w-24 text-center">SAC/HSN</th>
+                        <th className="py-2.5 px-2.5 w-24 text-right">Fee (₹)</th>
+                        <th className="py-2.5 px-2 w-16 text-center">Qty</th>
+                        <th className="py-2.5 px-2.5 w-32 text-left">GST Regime</th>
+                        <th className="py-2.5 px-3 w-28 text-right">Total (₹)</th>
+                        <th className="py-2.5 px-2 w-10 text-center"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 font-sans">
-                      {editInvoiceItems.map((item, idx) => {
-                        const isHearingAid =
-                          (item.service && item.service.toLowerCase().includes('hearing')) ||
-                          item.serialNo ||
-                          item.serviceCode === 'RP-CLN-HAF';
-                        return (
-                          <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20">
-                            <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-500 align-top pt-2.5">
-                              {idx + 1}
-                            </td>
-                            <td className="py-1.5 px-2 space-y-1">
-                              <select
-                                value={item.service}
-                                onChange={(e) => handleEditUpdateItemRow(idx, 'service', e.target.value)}
-                                className="w-full h-7 px-1.5 text-xs bg-white border border-slate-300 rounded font-medium focus:border-purple-600 focus:outline-none cursor-pointer"
-                              >
-                                {serviceRates.map((s) => (
-                                  <option key={s.id || s.code} value={s.name}>
-                                    {s.name} — ₹{s.baseRate} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
-                                  </option>
-                                ))}
-                              </select>
+                      {editInvoiceItems.map((item, idx) => (
+                        <tr key={item.id || idx} className="bg-white hover:bg-purple-50/20 transition-colors">
+                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 align-middle">
+                            {idx + 1}
+                          </td>
+                          <td className="py-2.5 px-3 space-y-1.5 align-middle">
+                            <select
+                              value={item.service}
+                              onChange={(e) => handleEditUpdateItemRow(idx, 'service', e.target.value)}
+                              className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded-md font-semibold text-slate-800 focus:border-purple-600 focus:outline-none cursor-pointer shadow-2xs"
+                            >
+                              {serviceRates.map((s) => (
+                                <option key={s.id || s.code} value={s.name}>
+                                  {s.name} — ₹{s.baseRate} ({s.taxType === 'TAXABLE_GOODS' ? '18% GST' : '0% Exempt'})
+                                </option>
+                              ))}
+                            </select>
 
-                              {/* Hearing Aid Serial & Ear Integration (Only for actual hearing aid instruments) */}
-                              {isHearingAidItem(item) ? (
-                                <div className="p-1.5 rounded bg-purple-50/60 border border-purple-200/70 space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-purple-900 flex items-center gap-1">
-                                      <Sparkles className="w-3 h-3 text-purple-600" />
-                                      <span>Hearing Aid Instrument Linking</span>
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', false)}
-                                      className="text-[9.5px] text-slate-400 hover:text-slate-600 cursor-pointer"
-                                      title="Hide device linking"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                  {inStockDevices.length > 0 && (
-                                    <div>
-                                      <select
-                                        value={item.serialNo || ''}
-                                        onChange={(e) => handleEditUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
-                                        className="w-full h-6 px-1.5 text-[11px] bg-white border border-purple-300 rounded text-purple-950 font-semibold focus:border-purple-600 cursor-pointer"
-                                      >
-                                        <option value="">— Link In-Stock Clinic Device (Optional) —</option>
-                                        {inStockDevices.map((d) => (
-                                          <option key={d.serialNo} value={d.serialNo}>
-                                            {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-1.5">
-                                    <input
-                                      type="text"
-                                      placeholder="Device Serial Number (from Barcode / Box)"
-                                      value={item.serialNo || ''}
-                                      onChange={(e) => handleEditUpdateItemRow(idx, 'serialNo', e.target.value)}
-                                      className="flex-1 h-6 px-1.5 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600"
-                                    />
-                                    <select
-                                      value={item.ear || 'Right Ear'}
-                                      onChange={(e) => handleEditUpdateItemRow(idx, 'ear', e.target.value)}
-                                      className="h-6 px-1 text-[11px] font-semibold bg-white border border-purple-300 rounded text-slate-700 cursor-pointer"
-                                    >
-                                      <option value="Right Ear">Right Ear</option>
-                                      <option value="Left Ear">Left Ear</option>
-                                      <option value="Bilateral">Bilateral</option>
-                                    </select>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="pt-0.5">
+                            {/* Hearing Aid Serial & Ear Integration (Only for actual hearing aid instruments) */}
+                            {isHearingAidItem(item) ? (
+                              <div className="p-2 rounded-md bg-purple-50/70 border border-purple-200 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-purple-900 flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3 text-purple-600" />
+                                    <span>Hearing Aid Instrument Linking</span>
+                                  </span>
                                   <button
                                     type="button"
-                                    onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', true)}
-                                    className="text-[10px] text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                                    title="Click to link a hearing aid device serial number & ear side to this line item"
+                                    onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', false)}
+                                    className="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer font-bold px-1"
+                                    title="Hide device linking"
                                   >
-                                    <span>+ Link Hearing Aid Device Serial &amp; Ear</span>
+                                    ✕
                                   </button>
                                 </div>
-                              )}
-                            </td>
-                            <td className="py-1.5 px-2 text-center align-top pt-2">
-                              <input
-                                type="text"
-                                value={item.hsnSac || ''}
-                                placeholder="999312"
-                                onChange={(e) => handleEditUpdateItemRow(idx, 'hsnSac', e.target.value)}
-                                className="w-full h-7 px-1.5 text-xs font-mono text-center bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                              />
-                            </td>
-                            <td className="py-1.5 px-2 text-right align-top pt-2">
-                              <input
-                                type="number"
-                                min="0"
-                                value={item.baseRate}
-                                onChange={(e) => handleEditUpdateItemRow(idx, 'baseRate', e.target.value)}
-                                className="w-full h-7 px-1.5 text-xs text-right font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                              />
-                            </td>
-                            <td className="py-1.5 px-1.5 text-center align-top pt-2">
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.qty || 1}
-                                onChange={(e) => handleEditUpdateItemRow(idx, 'qty', e.target.value)}
-                                className="w-full h-7 px-1 text-xs text-center font-mono font-bold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                              />
-                            </td>
-                            <td className="py-1.5 px-2 align-top pt-2">
-                              <select
-                                value={item.taxType}
-                                onChange={(e) => handleEditUpdateItemRow(idx, 'taxType', e.target.value)}
-                                className="w-full h-7 px-1 text-[11px] font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
-                              >
-                                <option value="HEALTHCARE_EXEMPT">0% Exempt</option>
-                                <option value="TAXABLE_GOODS">18% GST</option>
-                              </select>
-                            </td>
-                            <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-900 align-top pt-3">
-                              ₹{item.totalAmount?.toLocaleString('en-IN') || 0}
-                            </td>
-                            <td className="py-1.5 px-1 text-center align-top pt-2.5">
-                              {editInvoiceItems.length > 1 && (
+                                {inStockDevices.length > 0 && (
+                                  <div>
+                                    <select
+                                      value={item.serialNo || ''}
+                                      onChange={(e) => handleEditUpdateItemRow(idx, 'selectedDeviceSerial', e.target.value)}
+                                      className="w-full h-7 px-2 text-[11px] bg-white border border-purple-300 rounded-md text-purple-950 font-semibold focus:border-purple-600 cursor-pointer shadow-2xs"
+                                    >
+                                      <option value="">— Link In-Stock Clinic Device (Optional) —</option>
+                                      {inStockDevices.map((d) => (
+                                        <option key={d.serialNo} value={d.serialNo}>
+                                          {d.model} ({d.brand}) • SN: {d.serialNo} • ₹{d.mrp}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Device Serial Number (from Barcode / Box)"
+                                    value={item.serialNo || ''}
+                                    onChange={(e) => handleEditUpdateItemRow(idx, 'serialNo', e.target.value)}
+                                    className="flex-1 h-7 px-2 text-[11px] font-mono font-bold bg-white border border-purple-300 rounded-md text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600 shadow-2xs"
+                                  />
+                                  <select
+                                    value={item.ear || 'Right Ear'}
+                                    onChange={(e) => handleEditUpdateItemRow(idx, 'ear', e.target.value)}
+                                    className="h-7 px-2 text-[11px] font-semibold bg-white border border-purple-300 rounded-md text-slate-700 cursor-pointer shadow-2xs"
+                                  >
+                                    <option value="Right Ear">Right Ear</option>
+                                    <option value="Left Ear">Left Ear</option>
+                                    <option value="Bilateral">Bilateral</option>
+                                  </select>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="pt-0.5">
                                 <button
                                   type="button"
-                                  onClick={() => handleEditRemoveItemRow(idx)}
-                                  className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
-                                  title="Remove item"
+                                  onClick={() => handleEditUpdateItemRow(idx, 'isCustomHearingAid', true)}
+                                  className="text-[10px] text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                                  title="Click to link a hearing aid device serial number & ear side to this line item"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>+ Link Hearing Aid Device Serial &amp; Ear</span>
                                 </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-2.5 text-center align-middle">
+                            <input
+                              type="text"
+                              value={item.hsnSac || ''}
+                              placeholder="999312"
+                              onChange={(e) => handleEditUpdateItemRow(idx, 'hsnSac', e.target.value)}
+                              className="w-full h-8 px-2 text-xs font-mono text-center bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
+                            />
+                          </td>
+                          <td className="py-2.5 px-2.5 text-right align-middle">
+                            <input
+                              type="number"
+                              min="0"
+                              value={item.baseRate}
+                              onChange={(e) => handleEditUpdateItemRow(idx, 'baseRate', e.target.value)}
+                              className="w-full h-8 px-2 text-xs text-right font-mono font-bold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
+                            />
+                          </td>
+                          <td className="py-2.5 px-2 text-center align-middle">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.qty || 1}
+                              onChange={(e) => handleEditUpdateItemRow(idx, 'qty', e.target.value)}
+                              className="w-full h-8 px-1.5 text-xs text-center font-mono font-bold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
+                            />
+                          </td>
+                          <td className="py-2.5 px-2.5 align-middle">
+                            <select
+                              value={item.taxType}
+                              onChange={(e) => handleEditUpdateItemRow(idx, 'taxType', e.target.value)}
+                              className="w-full h-8 px-2 text-[11px] font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none cursor-pointer shadow-2xs"
+                            >
+                              <option value="HEALTHCARE_EXEMPT">0% Exempt</option>
+                              <option value="TAXABLE_GOODS">18% GST</option>
+                            </select>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 align-middle">
+                            ₹{item.totalAmount?.toLocaleString('en-IN') || 0}
+                          </td>
+                          <td className="py-2.5 px-2 text-center align-middle">
+                            {editInvoiceItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleEditRemoveItemRow(idx)}
+                                className="text-slate-400 hover:text-rose-600 p-1.5 rounded hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Remove item"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Payment Mode</label>
+                <label className="font-semibold text-slate-700 block mb-1">Payment Mode</label>
                 <select
                   value={editingInvoice.paymentMode}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentMode: e.target.value })}
-                  className="h-8 w-full px-1.5 text-xs font-semibold bg-white border border-slate-300 rounded focus:border-purple-600"
+                  className="h-8.5 w-full px-2 text-xs font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 shadow-2xs cursor-pointer"
                 >
                   <option value="UPI">NPCI UPI</option>
                   <option value="CASH">Cash</option>
@@ -2804,29 +2799,29 @@ export const BillingPage = () => {
                 </select>
               </div>
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Payment Status</label>
+                <label className="font-semibold text-slate-700 block mb-1">Payment Status</label>
                 <select
                   value={editingInvoice.status}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-bold bg-white border border-slate-300 rounded focus:border-purple-600"
+                  className="h-8.5 w-full px-2 text-xs font-bold bg-white border border-slate-300 rounded-md focus:border-purple-600 shadow-2xs cursor-pointer"
                 >
                   <option value="PAID">PAID</option>
                   <option value="DUE">DUE</option>
                 </select>
               </div>
               <div>
-                <label className="font-semibold text-slate-700 block mb-0.5">Receipt #</label>
+                <label className="font-semibold text-slate-700 block mb-1">Receipt #</label>
                 <input
                   type="text"
                   value={editingInvoice.receiptNo || ''}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, receiptNo: e.target.value })}
-                  className="h-8 w-full px-2 text-xs font-mono font-semibold bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  className="h-8.5 w-full px-2.5 text-xs font-mono font-semibold bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-none shadow-2xs"
                 />
               </div>
             </div>
 
             {/* Calculations Summary Card */}
-            <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-1 text-xs">
+            <div className="p-3.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal Base Fee:</span>
                 <span className="font-mono font-bold text-slate-900">
@@ -2839,25 +2834,25 @@ export const BillingPage = () => {
                   ₹{editInvoiceCalculations.totalTax.toLocaleString('en-IN')}
                 </span>
               </div>
-              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200 pt-1">
+              <div className="flex justify-between text-xs font-black text-purple-950 border-t border-purple-200 pt-1.5">
                 <span>NET TOTAL PAYABLE:</span>
-                <span className="font-mono text-sm font-black">
+                <span className="font-mono text-base font-black text-purple-950">
                   ₹{editInvoiceCalculations.netTotal.toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsEditInvoiceModalOpen(false)}
-                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-md text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-sm transition-colors cursor-pointer"
               >
                 Save Invoice Changes
               </button>
