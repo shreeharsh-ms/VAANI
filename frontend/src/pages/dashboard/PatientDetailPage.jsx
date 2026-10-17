@@ -25,6 +25,11 @@ import {
   Sliders,
   History,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  Search,
+  Filter,
   Share2,
   Edit3,
   Plus,
@@ -100,9 +105,67 @@ export const PatientDetailPage = () => {
   const { demographics, consents, clinical, therapy, hearingAids, financial, recalls, retention } = dossier;
 
   // Load generated clinical reports for this patient
+  const [reportsRefreshTick, setReportsRefreshTick] = useState(0);
   const patientReports = useMemo(() => {
     return getReportsForPatient(demographics.uhid, demographics.fullName);
-  }, [demographics.uhid, demographics.fullName]);
+  }, [demographics.uhid, demographics.fullName, reportsRefreshTick]);
+
+  // Reports Table Search, Filter, Pagination & Expand State
+  const [reportSearch, setReportSearch] = useState('');
+  const [reportDisciplineFilter, setReportDisciplineFilter] = useState('ALL');
+  const [reportCurrentPage, setReportCurrentPage] = useState(1);
+  const [reportPageSize, setReportPageSize] = useState(5);
+  const [expandedReportIds, setExpandedReportIds] = useState(new Set());
+
+  const toggleExpandReport = (id) => {
+    setExpandedReportIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const filteredReports = useMemo(() => {
+    return patientReports.filter((rep) => {
+      const query = reportSearch.toLowerCase().trim();
+      const matchesSearch = !query || (
+        (rep.report_number && rep.report_number.toLowerCase().includes(query)) ||
+        (rep.title && rep.title.toLowerCase().includes(query)) ||
+        (rep.diagnosis && rep.diagnosis.toLowerCase().includes(query)) ||
+        (rep.recommendations && rep.recommendations.toLowerCase().includes(query)) ||
+        (rep.examiner && rep.examiner.toLowerCase().includes(query)) ||
+        (rep.service_code && rep.service_code.toLowerCase().includes(query))
+      );
+
+      const disc = (rep.discipline || rep.service_code || '').toUpperCase();
+      let matchesDiscipline = true;
+      if (reportDisciplineFilter === 'AUDIOLOGY') {
+        matchesDiscipline = disc.includes('AUD') || disc.includes('AAE') || disc.includes('OAE') || disc.includes('AUDIO');
+      } else if (reportDisciplineFilter === 'SPEECH') {
+        matchesDiscipline = disc.includes('SLA') || disc.includes('SPEECH');
+      } else if (reportDisciplineFilter === 'VOICE') {
+        matchesDiscipline = disc.includes('VOI') || disc.includes('VOICE');
+      } else if (reportDisciplineFilter === 'FLUENCY') {
+        matchesDiscipline = disc.includes('FLU') || disc.includes('STUTTER');
+      } else if (reportDisciplineFilter === 'EDH') {
+        matchesDiscipline = disc.includes('EDH') || disc.includes('DEVELOP');
+      } else if (reportDisciplineFilter === 'CBT') {
+        matchesDiscipline = disc.includes('CBT') || disc.includes('PSYCH');
+      }
+
+      return matchesSearch && matchesDiscipline;
+    });
+  }, [patientReports, reportSearch, reportDisciplineFilter]);
+
+  const totalReportPages = Math.max(1, Math.ceil(filteredReports.length / reportPageSize));
+  const paginatedReports = useMemo(() => {
+    const start = (reportCurrentPage - 1) * reportPageSize;
+    return filteredReports.slice(start, start + reportPageSize);
+  }, [filteredReports, reportCurrentPage, reportPageSize]);
 
   // Email Modal State
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -583,129 +646,351 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'clinical' && (
           <div className="space-y-3">
-            {/* ── 3.0 GENERATED CLINICAL REPORTS & DIAGNOSTIC RECORDS ── */}
-            <div className="bg-white border border-purple-200/90 rounded-lg overflow-hidden shadow-2xs">
-              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 font-bold text-[11px] text-purple-950 uppercase tracking-wider flex items-center justify-between flex-wrap gap-2">
+            {/* ── 3.0 EXCEL-STYLE CLINICAL REPORTS & DIAGNOSTIC RECORDS TABLE ── */}
+            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
+              {/* Header Strip with Title, Search, Filter, Refresh & New Report Button */}
+              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2.5">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-purple-900" />
-                  <span>3.0 Official Clinical Reports &amp; Diagnostic Records</span>
+                  <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                    3.0 Official Clinical Reports &amp; Diagnostic Records Register
+                  </span>
                   <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {patientReports.length} {patientReports.length === 1 ? 'Report' : 'Reports'} on File
                   </span>
                 </div>
-                <Link
-                  to={`/dashboard/reports/create?patient=${patient.uhid}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Generate New Report</span>
-                </Link>
-              </div>
 
-              {patientReports.length > 0 ? (
-                <div className="divide-y divide-purple-100">
-                  {patientReports.map((rep) => (
-                    <div key={rep.id || rep.report_number} className="p-3.5 space-y-2.5 hover:bg-purple-50/20 transition-colors">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-xs font-bold bg-purple-100 text-purple-950 px-2 py-0.5 rounded border border-purple-200">
-                              {rep.report_number}
-                            </span>
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                              {rep.title}
-                            </h4>
-                            <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                              {rep.service_code || rep.discipline}
-                            </span>
-                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              <span>FINAL • VERIFIED</span>
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3 text-purple-700" />
-                              <span>Date: <strong className="text-slate-800">{rep.date}</strong></span>
-                            </span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-purple-700" />
-                              <span>Clinician: <strong className="text-slate-800">{rep.examiner || 'Dr. Shreeharsh Shivpuje (A79214)'}</strong></span>
-                            </span>
-                          </div>
-                        </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReportsRefreshTick((t) => t + 1);
+                      notify.info('Clinical reports re-synchronized from local vault.');
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                    title="Reload current reports from master ledger"
+                  >
+                    <RotateCcw className="w-3 h-3 text-purple-700" />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
 
-                        {/* Action Buttons: View/Download, Email, WhatsApp */}
-                        <div className="flex items-center gap-1.5 self-start sm:self-center flex-wrap">
-                          <button
-                            type="button"
-                            onClick={() => handleViewDownloadReport(rep)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 rounded shadow-2xs transition-colors cursor-pointer"
-                            title="Open and download official printable PDF document"
-                          >
-                            <Download className="w-3.5 h-3.5 text-purple-700" />
-                            <span>Download / PDF</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEmailModal(rep)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded shadow-2xs transition-colors cursor-pointer"
-                            title="Dispatch cryptographically signed report via email"
-                          >
-                            <Mail className="w-3.5 h-3.5 text-purple-700" />
-                            <span>Email</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleSendWhatsApp(rep)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs transition-colors cursor-pointer"
-                            title="Send official report summary directly to patient via WhatsApp"
-                          >
-                            <Share2 className="w-3.5 h-3.5 text-white" />
-                            <span>WhatsApp</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Clinical Summary & Recommendations */}
-                      <div className="bg-slate-50 border border-slate-200 rounded p-2.5 text-xs space-y-1">
-                        <div>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                            Provisional Clinical Diagnosis / Findings:
-                          </span>
-                          <p className="text-slate-800 font-medium">
-                            {rep.diagnosis || 'Clinical evaluation completed and authenticated under RCI CRR No. A79214.'}
-                          </p>
-                        </div>
-                        {rep.recommendations && (
-                          <div className="pt-1 border-t border-slate-200/60">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                              Clinical Recommendations:
-                            </span>
-                            <p className="text-slate-700">
-                              {rep.recommendations}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-6 text-center text-xs text-slate-500 space-y-2">
-                  <p>No previous reports found for this patient.</p>
                   <Link
                     to={`/dashboard/reports/create?patient=${patient.uhid}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Create First Clinical Report</span>
+                    <span>+ Generate New Report</span>
                   </Link>
                 </div>
-              )}
+              </div>
+
+              {/* Excel Controls Bar: Search & Service Filters */}
+              <div className="px-3 py-2 bg-slate-50/90 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={reportSearch}
+                      onChange={(e) => {
+                        setReportSearch(e.target.value);
+                        setReportCurrentPage(1);
+                      }}
+                      placeholder="Filter reports by #, test name, clinician, impression..."
+                      className="w-full h-7.5 pl-8 pr-2.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-hidden"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Filter className="w-3.5 h-3.5 text-slate-500 hidden sm:inline" />
+                    <select
+                      value={reportDisciplineFilter}
+                      onChange={(e) => {
+                        setReportDisciplineFilter(e.target.value);
+                        setReportCurrentPage(1);
+                      }}
+                      className="h-7.5 px-2 text-xs bg-white border border-slate-300 rounded font-medium text-slate-700 focus:border-purple-600 focus:outline-hidden cursor-pointer"
+                    >
+                      <option value="ALL">All Disciplines</option>
+                      <option value="AUDIOLOGY">Audiology &amp; Hearing</option>
+                      <option value="SPEECH">Speech &amp; Language</option>
+                      <option value="VOICE">Voice Rehab</option>
+                      <option value="FLUENCY">Fluency &amp; Stuttering</option>
+                      <option value="EDH">Early Dev History (EDH)</option>
+                      <option value="CBT">Psychology &amp; CBT</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-500 self-center">
+                  Showing <strong className="text-slate-800">{filteredReports.length}</strong> of{' '}
+                  <strong className="text-slate-800">{patientReports.length}</strong> recorded records
+                </div>
+              </div>
+
+              {/* Spreadsheet Table Format */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100/90 border-b border-slate-200 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="py-2 px-2 text-center w-8">▾</th>
+                      <th className="py-2 px-2.5 whitespace-nowrap">Report Ref #</th>
+                      <th className="py-2 px-2.5 whitespace-nowrap">Exam Date</th>
+                      <th className="py-2 px-3">Clinical Investigation / Proforma</th>
+                      <th className="py-2 px-2.5 whitespace-nowrap">Discipline Code</th>
+                      <th className="py-2 px-3 whitespace-nowrap">Attending Clinician</th>
+                      <th className="py-2 px-2.5 text-center whitespace-nowrap">Status</th>
+                      <th className="py-2 px-3 text-right whitespace-nowrap">Clinical Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-sans">
+                    {paginatedReports.length > 0 ? (
+                      paginatedReports.map((rep) => {
+                        const repId = rep.id || rep.report_number;
+                        const isExpanded = expandedReportIds.has(repId);
+                        return (
+                          <React.Fragment key={repId}>
+                            <tr
+                              className={`transition-colors cursor-pointer ${
+                                isExpanded ? 'bg-purple-50/40' : 'hover:bg-slate-50/80'
+                              }`}
+                            >
+                              <td className="py-2 px-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleExpandReport(repId);
+                                  }}
+                                  className="w-5 h-5 flex items-center justify-center rounded text-slate-500 hover:text-purple-900 hover:bg-purple-100 transition-colors"
+                                  title={isExpanded ? 'Collapse report details' : 'Expand report details'}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-3.5 h-3.5 text-purple-800 font-bold" />
+                                  ) : (
+                                    <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                                  )}
+                                </button>
+                              </td>
+
+                              <td className="py-2 px-2.5 font-mono font-bold text-purple-950 whitespace-nowrap">
+                                <span className="bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                                  {rep.report_number}
+                                </span>
+                              </td>
+
+                              <td className="py-2 px-2.5 font-mono text-[11px] text-slate-700 whitespace-nowrap">
+                                {rep.date}
+                              </td>
+
+                              <td className="py-2 px-3" onClick={() => toggleExpandReport(repId)}>
+                                <span className="font-bold text-slate-900 hover:text-purple-900 block">
+                                  {rep.title}
+                                </span>
+                                <span className="text-[10px] text-slate-500 line-clamp-1">
+                                  {rep.diagnosis || 'Clinical evaluation completed.'}
+                                </span>
+                              </td>
+
+                              <td className="py-2 px-2.5 whitespace-nowrap">
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                  {rep.service_code || rep.discipline || 'CLINICAL'}
+                                </span>
+                              </td>
+
+                              <td className="py-2 px-3 text-slate-700 whitespace-nowrap">
+                                <span className="font-medium text-slate-800 block text-xs">
+                                  {rep.examiner || 'Dr. Shreeharsh Shivpuje (A79214)'}
+                                </span>
+                                <span className="text-[10px] text-slate-400">RCI CRR Verified</span>
+                              </td>
+
+                              <td className="py-2 px-2.5 text-center whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  <span>FINAL • VERIFIED</span>
+                                </span>
+                              </td>
+
+                              <td className="py-2 px-3 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewDownloadReport(rep);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 rounded shadow-2xs transition-colors cursor-pointer"
+                                    title="Open and download official printable PDF document"
+                                  >
+                                    <Download className="w-3 h-3 text-purple-700" />
+                                    <span>Download</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEmailModal(rep);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded shadow-2xs transition-colors cursor-pointer"
+                                    title="Dispatch cryptographically signed report via email"
+                                  >
+                                    <Mail className="w-3 h-3 text-purple-700" />
+                                    <span>Email</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSendWhatsApp(rep);
+                                    }}
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs transition-colors cursor-pointer"
+                                    title="Send official report summary directly to patient via WhatsApp"
+                                  >
+                                    <Share2 className="w-3 h-3 text-white" />
+                                    <span>WhatsApp</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* Dropdown Extra Details Drawer */}
+                            {isExpanded && (
+                              <tr className="bg-purple-50/25 border-b border-purple-100">
+                                <td colSpan={8} className="p-3.5">
+                                  <div className="bg-white border border-purple-200 rounded-lg p-3.5 space-y-3 shadow-xs">
+                                    <div className="flex items-center justify-between border-b border-purple-100 pb-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold text-xs text-purple-950 uppercase tracking-wide">
+                                          Clinical Impression &amp; Evaluation Findings:
+                                        </span>
+                                        <span className="font-mono text-[10px] text-purple-800 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
+                                          {rep.report_number}
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] font-mono text-slate-500">
+                                        DPDP Compliant Cryptographic Record
+                                      </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                                          Provisional Clinical Diagnosis / Findings
+                                        </span>
+                                        <p className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
+                                          {rep.diagnosis || 'Clinical evaluation completed and authenticated under RCI CRR No. A79214.'}
+                                        </p>
+                                      </div>
+
+                                      <div className="p-2.5 rounded bg-slate-50 border border-slate-200 space-y-1">
+                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                                          Clinical Recommendations &amp; Care Pathway
+                                        </span>
+                                        <p className="text-slate-800 whitespace-pre-line leading-relaxed">
+                                          {rep.recommendations || 'Regular follow-up and clinical rehabilitation protocol advised.'}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Footer details inside accordion drawer */}
+                                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span>Authenticated Clinician: <strong className="text-slate-800">{rep.examiner || 'Dr. Shreeharsh Shivpuje'}</strong></span>
+                                        <span>•</span>
+                                        <span>Verification Link: <strong className="font-mono text-purple-950">vaaniclinic.com/verify-doc/{rep.report_number}</strong></span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleViewDownloadReport(rep)}
+                                          className="text-purple-700 hover:text-purple-950 font-bold underline cursor-pointer"
+                                        >
+                                          Open Full Official Document ↗
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-slate-500 text-xs">
+                          <p className="font-semibold text-slate-700">No matching clinical reports found.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Try adjusting your search query or discipline filter.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Excel Pagination Controls */}
+              <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span>Rows per page:</span>
+                  <select
+                    value={reportPageSize}
+                    onChange={(e) => {
+                      setReportPageSize(Number(e.target.value));
+                      setReportCurrentPage(1);
+                    }}
+                    className="h-6 px-1.5 text-xs bg-white border border-slate-300 rounded font-semibold text-slate-700 focus:outline-hidden cursor-pointer"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <span className="text-[11px] text-slate-400">|</span>
+                  <span className="text-[11px]">
+                    Page <strong className="text-slate-900">{reportCurrentPage}</strong> of{' '}
+                    <strong className="text-slate-900">{totalReportPages}</strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={reportCurrentPage <= 1}
+                    onClick={() => setReportCurrentPage((p) => Math.max(1, p - 1))}
+                    className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                    <span>Prev</span>
+                  </button>
+
+                  {Array.from({ length: totalReportPages }, (_, i) => i + 1).map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setReportCurrentPage(num)}
+                      className={`h-6 w-6 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
+                        num === reportCurrentPage
+                          ? 'bg-purple-900 text-white'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    disabled={reportCurrentPage >= totalReportPages}
+                    onClick={() => setReportCurrentPage((p) => Math.min(totalReportPages, p + 1))}
+                    className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Case History */}

@@ -445,9 +445,11 @@ export const DashboardOverviewPage = () => {
         size="lg"
       >
         <PatientForm
-          onSuccess={() => {
+          onSuccess={(newPatient, nextAction) => {
             setIsPatientModalOpen(false);
-            notify.success('Patient registered successfully!');
+            if (nextAction !== 'EDH') {
+              notify.success('Patient registered successfully!');
+            }
           }}
           onCancel={() => setIsPatientModalOpen(false)}
         />

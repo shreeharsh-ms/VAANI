@@ -593,10 +593,12 @@ export const PatientsPage = () => {
         size="lg"
       >
         <PatientForm
-          onSuccess={() => {
+          onSuccess={(newPatient, nextAction) => {
             setIsModalOpen(false);
             fetchPatients();
-            notify.success('New patient registered successfully!');
+            if (nextAction !== 'EDH') {
+              notify.success('New patient registered successfully!');
+            }
           }}
           onCancel={() => setIsModalOpen(false)}
         />

@@ -24,6 +24,7 @@ import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
 import { formatTime, formatCurrency } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
+import { getAllAppointments } from '../../data/appointmentsData';
 
 const SEED_APPOINTMENTS = [
   {
@@ -150,14 +151,7 @@ const SEED_APPOINTMENTS = [
 
 export const AppointmentsPage = () => {
   const { notify } = useNotification();
-  const [appointments, setAppointments] = useState(() => {
-    try {
-      const saved = localStorage.getItem('vaani_appointments_v1');
-      return saved ? JSON.parse(saved) : SEED_APPOINTMENTS;
-    } catch {
-      return SEED_APPOINTMENTS;
-    }
-  });
+  const [appointments, setAppointments] = useState(() => getAllAppointments());
 
   // Search & Filter State
   const [search, setSearch] = useState('');
