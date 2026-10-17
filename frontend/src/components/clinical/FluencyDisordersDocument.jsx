@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
+import { ClinicalReportBackground } from './ClinicalReportBackground';
 
 /**
  * Fluency / Stuttering Assessment (SSI-4) Official Clinical Dossier (2-Page Production Layout)
@@ -35,12 +36,14 @@ export const FluencyDisordersDocument = ({
 
   // Reusable Lavender Statutory Footer Component
   const renderFooter = (pageNumber) => (
-    <OfficialReportFooter
-      formData={formData}
-      pageNumber={pageNumber}
-      totalPages={2}
-      compact={true}
-    />
+    <div className="relative z-10 shrink-0 mt-auto">
+      <OfficialReportFooter
+        formData={formData}
+        pageNumber={pageNumber}
+        totalPages={2}
+        compact={true}
+      />
+    </div>
   );
 
   // Render Boolean Badge
@@ -66,8 +69,9 @@ export const FluencyDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 1: CASE INTAKE, HISTORY, PROBLEM, CONCOMITANTS & LISTENER DYNAMICS
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
-        <div className="flex-1 flex flex-col space-y-1 pb-1">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+        <ClinicalReportBackground />
+        <div className="relative z-10 flex-1 flex flex-col space-y-1 pb-1">
           {renderHeader(1)}
 
           {/* Title Banner */}
@@ -378,8 +382,9 @@ export const FluencyDisordersDocument = ({
       {/* ═══════════════════════════════════════════════════════════════
           PAGE 2: SAMPLE ANALYSIS TABLE, VOICE/BREATHING, BATTERY & PLAN
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="a4-print-page bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
-        <div className="flex-1 flex flex-col space-y-1 pb-1">
+      <div className="a4-print-page relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none">
+        <ClinicalReportBackground />
+        <div className="relative z-10 flex-1 flex flex-col space-y-1 pb-1">
           {renderHeader(2)}
 
           {/* Title Banner */}

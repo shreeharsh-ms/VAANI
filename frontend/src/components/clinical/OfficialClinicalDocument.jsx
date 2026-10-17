@@ -5,6 +5,7 @@ import { FluencyDisordersDocument } from './FluencyDisordersDocument';
 import { VoiceDisordersDocument } from './VoiceDisordersDocument';
 import { OfficialReportHeader } from './OfficialReportHeader';
 import { OfficialReportFooter } from './OfficialReportFooter';
+import { ClinicalReportBackground } from './ClinicalReportBackground';
 
 /**
  * Official Clinical Document Template
@@ -107,10 +108,13 @@ export const OfficialClinicalDocument = ({
   return (
     <div
       id="official-report-a4-page"
-      className="bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none"
+      className="relative bg-[#faf7fd] text-slate-900 font-sans p-6 sm:p-7 max-w-[210mm] w-full min-h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full print:min-h-0 print:h-[279mm] leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none"
     >
+      {/* ── BACKGROUND LAYER: BOTANICAL LAVENDER WATERCOLOR FLOWER (From Overview Page) ── */}
+      <ClinicalReportBackground />
+
       {/* ── TOP AND CLINICAL BODY WRAPPER ── */}
-      <div className="flex-1 flex flex-col space-y-1.5">
+      <div className="relative z-10 flex-1 flex flex-col space-y-1.5">
         {/* ── REUSABLE DECORATIVE CLINICAL LETTERHEAD ── */}
         <OfficialReportHeader
           formData={formData}
@@ -392,15 +396,19 @@ export const OfficialClinicalDocument = ({
         ) : isAAE ? (
           /* ── AUDIOLOGICAL EVALUATION VIEW (Exact Real-World Layout with Dual Audiogram Graphs & Legend) ── */
           <div className="space-y-1.5 text-slate-900">
-            {/* Centered Rounded Pill Title Banner */}
-            <div className="text-center my-0.5">
-              <span className="inline-block bg-gradient-to-r from-purple-900 via-indigo-700 to-purple-900 text-white font-black text-xs sm:text-sm tracking-wider px-8 py-1 rounded-full uppercase shadow-xs border border-purple-400/40">
-                AUDIOLOGICAL EVALUATION
-              </span>
+            {/* Simple & Professional Clinical Title */}
+            <div className="text-center my-0.5 shrink-0">
+              <div className="inline-flex items-center justify-center gap-3">
+                <div className="h-0.5 w-8 sm:w-14 bg-gradient-to-r from-transparent via-purple-300 to-purple-800 rounded-full" />
+                <h2 className="font-serif font-black text-xs sm:text-sm tracking-[0.22em] text-purple-950 uppercase">
+                  AUDIOLOGICAL EVALUATION
+                </h2>
+                <div className="h-0.5 w-8 sm:w-14 bg-gradient-to-l from-transparent via-purple-300 to-purple-800 rounded-full" />
+              </div>
             </div>
 
             {/* Demographics & Test Context Matrix */}
-            <div className="border border-purple-300 rounded-lg overflow-hidden text-[10px] bg-white shadow-2xs">
+            <div className="border border-purple-300 rounded-lg overflow-hidden text-[10px] bg-white/85 backdrop-blur-2xs shadow-2xs">
               {/* Row 1 */}
               <div className="grid grid-cols-3 divide-x divide-purple-200 border-b border-purple-200">
                 <div className="p-1 px-2.5 flex items-center">
@@ -472,7 +480,7 @@ export const OfficialClinicalDocument = ({
             />
 
             {/* AUDIOMETRIC SUMMARY TABLE */}
-            <div className="border border-purple-300 rounded-lg overflow-hidden text-[9px] bg-white shadow-2xs">
+            <div className="border border-purple-300 rounded-lg overflow-hidden text-[9px] bg-white/85 backdrop-blur-2xs shadow-2xs">
               <table className="w-full border-collapse text-center">
                 <thead>
                   <tr className="bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 text-purple-950 font-bold border-b border-purple-200">
@@ -537,7 +545,7 @@ export const OfficialClinicalDocument = ({
             </div>
 
             {/* INTERPRETATION & RECOMMENDATIONS */}
-            <div className="space-y-1.5 pt-0.5 text-xs bg-white/90 border border-purple-200 rounded-lg p-2.5 shadow-2xs">
+            <div className="space-y-1.5 pt-0.5 text-xs bg-white/85 backdrop-blur-2xs border border-purple-200 rounded-lg p-2.5 shadow-2xs">
               <div>
                 <span className="font-black uppercase tracking-wide text-purple-950 block text-[10.5px]">
                   Interpretation :
@@ -1038,11 +1046,13 @@ export const OfficialClinicalDocument = ({
       </div>
 
       {/* ── STATUTORY SIGN-OFF & TAMPER-EVIDENT QR VERIFICATION ── */}
-      <OfficialReportFooter
-        formData={formData}
-        service={service}
-        isCBT={isCBT}
-      />
+      <div className="relative z-10">
+        <OfficialReportFooter
+          formData={formData}
+          service={service}
+          isCBT={isCBT}
+        />
+      </div>
 
     </div>
   );
