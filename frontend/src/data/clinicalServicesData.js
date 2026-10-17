@@ -251,6 +251,186 @@ export const CLINICAL_SERVICES = [
     },
   },
   {
+    code: 'RP-CLN-EDH',
+    id: 'early-developmental-history',
+    title: 'Early Developmental History (EDH)',
+    shortName: 'Early Dev History',
+    discipline: 'Speech Therapy',
+    color: 'emerald',
+    badge: 'FR-DOC-002EDH',
+    description: 'Comprehensive pediatric developmental case history: prenatal, natal, postnatal milestones, general health, hearing, cognitive prerequisites, speech-language, oral-motor, feeding, and multidisciplinary findings.',
+    defaultParameters: {
+      informant: 'Mother',
+      informantContact: '+91 94220 44556',
+      doa: '17/10/2026',
+      chiefComplaint: 'Delayed speech and language onset, limited words, difficulty communicating needs.',
+      
+      // PRENATAL
+      motherHealthPrenatal: 'Good',
+      prenatalIllnesses: 'None reported',
+      prenatalMedications: 'Routine prenatal multivitamins, iron & folic acid',
+      prenatalTrauma: 'No accidents, falls, or severe psychological trauma',
+      prenatalXRays: 'None',
+      prenatalAbortionMiscarriage: 'None',
+      rhIncompatibility: 'No',
+      consanguinity: 'Non-consanguineous marriage',
+      prenatalNotes: 'Uneventful full-term gestation with regular antenatal checkups.',
+
+      // NATAL
+      placeOfDelivery: 'Hospital',
+      deliveryTerm: 'Full term (39 weeks)',
+      conditionAtBirth: 'Normal',
+      birthCry: 'Immediate',
+      birthWeight: '3.1 kg',
+      complicationsFirstTwoWeeks: 'None reported; no NICU stay, no neonatal jaundice.',
+
+      // POST NATAL & MOTOR
+      feedingPostnatal: 'Breast fed',
+      motorHeadUp: '3 months',
+      motorReaching: '5 months',
+      motorSitting: '6-7 months',
+      motorCrawling: '8-9 months',
+      motorStanding: '10-11 months',
+      motorWalking: '12-13 months',
+      toiletControlPartial: '2.5 Yrs',
+      toiletControlComplete: '3.5 Yrs',
+      handPreference: 'Right',
+      undressing: 'Independent',
+      dressing: 'Dependent (needs assistance with buttons/zippers)',
+
+      // GENERAL HEALTH
+      presentHealthStatus: 'Good',
+      childhoodIllnesses: 'None (No measles, diphtheria, chickenpox, or whooping cough)',
+      accidentFallHistory: 'No',
+      convulsionsHistory: 'No',
+      convulsionsAgeStarted: '—',
+      convulsionsFrequency: '—',
+      presentMedications: 'None',
+      visionStatus: 'Normal (fixes and follows objects binocularly)',
+      sleepHabits: 'Good (8-9 hours continuous night sleep)',
+      breathingPattern: 'Regular nasal breathing (no mouth breathing or snoring)',
+
+      // HEARING
+      responseToSoundBaby: 'By looking at the source of sound',
+      feelsChildHearsNormally: 'Yes',
+      hearingDoubtNotes: 'Parents report good localization to familiar voices and music.',
+      responseClapping: 'Yes',
+      responseLoudSounds: 'Yes',
+      responseEnvironmentalSounds: 'Yes',
+      earInfectionHistory: 'No',
+      earInfectionRecurrent: '—',
+      priorHearingTest: 'Yes (Newborn OAE PASS bilaterally)',
+      priorHearingTestDetails: 'OAE Screening completed at birth: Bilateral PASS.',
+
+      // COGNITIVE PRE-REQUISITES
+      attentionLevel: 'Level 3 (2-3 yrs): Attention to adult choice of activity',
+      intentionLevel: 'Late intentional level (Between 12-18 months)',
+      playDevelopment: 'Relational & Self Pretend (feeds doll, rolls car)',
+
+      // COMPREHENSION
+      ageRespondingToAdult: '3 months (smiling & cooing)',
+      respondToneOfVoice: 'Yes',
+      jointAttention: 'Yes',
+      objectPermanence: 'Yes',
+      understandsGestures: 'Yes',
+      recognitionFamily: 'Yes',
+      respondsSingleWordContext: 'Yes',
+      pointsToPictures: 'Yes',
+      followsOneStageCommands: 'Yes (e.g., "Give ball", "Come here")',
+      followsTwoStageCommands: 'Inconsistent (follows with gestural cues)',
+      answersYesNo: 'Emerging (nods/shakes head)',
+      understandsConversations: 'Emerging (understands familiar routine phrases)',
+      receptiveLexicalRepertoire: 'Common domestic objects, food items, familiar body parts',
+
+      // EXPRESSION
+      communicationModes: 'Reaching/vocalizing, simple gestures (bye-bye/namaste), single words',
+      expressiveLexicalRepertoire: '15-20 functional words (mama, papa, paani, dada, ball, car, doodh)',
+      
+      // SPEECH DEVELOPMENT
+      ageVocalPlay: '4-5 months',
+      ageBabbling: '7-8 months',
+      ageFirstWord: '14 months',
+      ageFirstSentence: 'Not yet developed',
+      familySpeechHistory: 'No known familial history of speech, language, or hearing disorder.',
+      talkingEnvironment: 'Yes (Active verbal stimulation by parents & grandparents)',
+      languageEnvironment: 'Bilingual (Marathi & Hindi)',
+      preferredHomeLanguage: 'Marathi',
+
+      // SOCIAL INTERACTION & COMMUNICATION
+      socialEngages: 'Yes (actively seeks eye contact during play)',
+      socialInitiates: 'Yes (brings toys to parents to initiate interaction)',
+      socialFamiliarPreference: 'Yes',
+      playsWithToys: 'Yes (functional toy play with blocks & vehicles)',
+      playsAlone: 'Yes (plays independently for 10-15 minutes)',
+      playsWithChildren: 'Emerging (parallel play alongside peer cousins)',
+
+      // BEHAVIORAL
+      screenTime: '1 to 2 hours/day (Smart TV & mobile cartoons)',
+      temperTantrums: 'Mild (occasional protest when screen is turned off)',
+      behaviorRestlessStubborn: 'Mildly restless during non-preferred tabletop tasks',
+      strongLikesDislikes: 'Likes: Vehicle toys, rhythm rhymes, animal sounds. Dislikes: loud blender/mixer.',
+      behavioralIssuesNotes: 'No significant behavioral concerns; mild frustration when wants are misunderstood.',
+
+      // CONCEPTS
+      conceptMoney: 'No',
+      conceptDanger: 'Yes (understands "hot", avoids stove and edge of bed)',
+      orderSize: 'Emerging (nests larger cup into smaller cup with guidance)',
+      colorMatching: 'Yes (matches red, blue, yellow blocks)',
+      colorSorting: 'Emerging (sorts two contrasting colors)',
+      colorIdentification: 'Emerging (points to red on request)',
+      colorNaming: 'No (does not verbally name colors yet)',
+      objectUseFunction: 'Yes (comb for hair, cup for drinking, spoon for eating)',
+      objectObjectMatching: 'Yes',
+      objectRecognition: 'Yes',
+      objectPictureMatching: 'Yes (matches toy car to picture of car)',
+
+      // ORAL STRUCTURES & MOTOR
+      oralLips: 'Normal symmetry, intact vermilion border, adequate lip seal',
+      oralTongue: 'Normal size & shape, no ankyloglossia, free movement',
+      oralPalate: 'Intact hard and soft palate, normal vault arch',
+      oralTeeth: 'Complete primary dentition, normal occlusion',
+      oralDefectNotes: 'No structural abnormality or neuromuscular weakness identified.',
+      oralLipClosure: 'Adequate',
+      oralTonguePosture: 'Normal intra-oral resting posture',
+      oralBlowing: 'Present (blows bubbles & whistles)',
+      oralSpitting: 'Emerging',
+      oralSuckingStraw: 'Present',
+      oralSpoonFeeding: 'Independent',
+      feedingTongueMovement: 'Normal front-to-back',
+      feedingMunching: 'Present',
+      feedingChewing: 'True chewing present (handles solid rotis, fruits, rice)',
+      feedingLateralization: 'Present',
+      feedingRotaryJaw: 'Established',
+      feedingSustainedBite: 'Controlled',
+
+      // LITERACY & SCHOOL
+      readingShapes: 'Identifies circle and square',
+      readingNumbers: 'Identifies 1 and 2',
+      readingLetters: 'Not introduced',
+      writingGrip: 'Pincer grasp emerging (holds crayon with thumb & fingers)',
+      writingScribbling: 'Present (spontaneous vertical and circular strokes)',
+      schoolDetails: 'Attends morning playgroup (3 days/week)',
+
+      // FORMAL TEST FINDINGS
+      reelsComprehension: '28 months',
+      reelsExpression: '18 months',
+      reelsChronologicalAge: '30 months (2 yrs 6 mo)',
+      otherFormalTests: 'ALD-MM Expressive Quotient: 60 (Moderate delay). 3D-LAT: Emerging phonology.',
+
+      // MULTIDISCIPLINARY REPORTS
+      summaryHearing: 'Bilateral normal hearing sensitivity confirmed via OAE and screening tympanometry.',
+      summaryENT: 'Bilateral external auditory canals clear; tympanic membranes intact with cone of light.',
+      summaryPediatric: 'Age-appropriate physical and somatic development. Vaccines completed per IAP schedule.',
+      summaryNeurology: 'No neurological deficits or epileptic phenomena reported.',
+      summaryPsychological: 'Non-verbal cognitive potential within normal limits; good social intent.',
+
+      // SUMMARIES & RECOMMENDATIONS
+      speechLanguageSummary: 'Child demonstrates significant expressive language delay (18 months age equivalent) with age-adequate receptive language (28 months) at chronological age of 30 months (12-month expressive delay). Oral-peripheral mechanisms and hearing are within normal limits.',
+      provisionalDiagnosis: '• Expressive Language Delay (ELD) secondary to environmental under-stimulation, with intact hearing and age-appropriate receptive abilities.',
+      recommendations: '• Direct Speech-Language Therapy (2-3 sessions/week) focusing on expressive vocabulary, functional communication, and phrase generation.\n• Parent-Implemented Language Intervention (PILI) at home: dialogic shared reading and parallel-talk.\n• Screen-time elimination (<30 mins/day with active adult co-viewing).\n• Audiological re-screening in 6 months.',
+    },
+  },
+  {
     code: 'RP-CLN-DYS',
     id: 'dysphagia-swallow',
     title: 'Dysphagia Bedside Swallowing Screen',

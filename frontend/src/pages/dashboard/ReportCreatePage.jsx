@@ -25,6 +25,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
+import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
 
 
 export const ReportCreatePage = () => {
@@ -1834,8 +1835,18 @@ export const ReportCreatePage = () => {
           </div>
         )}
 
+        {/* 6. PSYCHOLOGICAL & CBT CLINICAL FORMULATION ENTRY */}
+        {activeService.code === 'RP-CLN-EDH' && (
+          <EarlyDevelopmentalHistoryForm
+            formData={formData}
+            handleParamChange={handleParamChange}
+            handleNestedParamChange={handleNestedParamChange}
+            notify={notify}
+          />
+        )}
+
         {/* 7. OTHER CLINICAL SERVICES */}
-        {!['RP-CLN-AUD', 'RP-CLN-AAE', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA', 'RP-CLN-CBT'].includes(activeService.code) && (
+        {!['RP-CLN-AUD', 'RP-CLN-AAE', 'RP-CLN-OAE', 'RP-CLN-VOI', 'RP-CLN-FLU', 'RP-CLN-SLA', 'RP-CLN-CBT', 'RP-CLN-EDH'].includes(activeService.code) && (
           <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-2">
             <span className="text-[10px] font-bold text-slate-600 uppercase block">Proforma Parameters &amp; Clinical Notes</span>
             <p className="text-slate-600 leading-relaxed">

@@ -1,6 +1,7 @@
 import React from 'react';
 import { QrCode } from 'lucide-react';
 import { DualAudiogramSection } from './AudiogramGraph';
+import { EarlyDevelopmentalHistoryDocument } from './EarlyDevelopmentalHistoryDocument';
 
 /**
  * Official Clinical Document Template
@@ -54,6 +55,21 @@ export const OfficialClinicalDocument = ({
   const isAAE = service.code === 'RP-CLN-AAE' || service.code === 'RP-CLN-AUD';
   const isOAE = service.code === 'RP-CLN-OAE';
   const isCBT = service.code === 'RP-CLN-CBT';
+  const isEDH = service.code === 'RP-CLN-EDH';
+
+  if (isEDH) {
+    return (
+      <div id="official-report-a4-page" className="multi-page-doc">
+        <EarlyDevelopmentalHistoryDocument
+          service={service}
+          patient={patient}
+          patientDossier={patientDossier}
+          formData={formData}
+          renderBulletPoints={renderBulletPoints}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
