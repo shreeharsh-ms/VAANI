@@ -26,6 +26,7 @@ import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
+import { FluencyDisordersForm } from '../../components/clinical/FluencyDisordersForm';
 
 
 export const ReportCreatePage = () => {
@@ -1345,53 +1346,11 @@ export const ReportCreatePage = () => {
 
         {/* 4. FLUENCY SSI-4 ENTRY */}
         {activeService.code === 'RP-CLN-FLU' && (
-          <div className="space-y-3 text-xs">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">Total Syllables Spoken</label>
-                <input
-                  type="number"
-                  value={formData.parameters.totalSyllables ?? 450}
-                  onChange={(e) => handleParamChange('totalSyllables', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">% Syllables Stuttered (%SS)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.parameters.percentageSS ?? 9.3}
-                  onChange={(e) => handleParamChange('percentageSS', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">Longest Block (sec)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.parameters.longestBlock1 ?? 2.8}
-                  onChange={(e) => handleParamChange('longestBlock1', Number(e.target.value))}
-                  className="w-full px-2 py-1 border border-slate-300 rounded"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold block">Overall Severity</label>
-                <select
-                  value={formData.parameters.severityClassification ?? 'MODERATE'}
-                  onChange={(e) => handleParamChange('severityClassification', e.target.value)}
-                  className="w-full px-2 py-1 border border-slate-300 rounded font-bold text-rose-800 bg-rose-50"
-                >
-                  <option value="VERY MILD">VERY MILD</option>
-                  <option value="MILD">MILD</option>
-                  <option value="MODERATE">MODERATE</option>
-                  <option value="SEVERE">SEVERE</option>
-                  <option value="VERY SEVERE">VERY SEVERE</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <FluencyDisordersForm
+            formData={formData}
+            handleParamChange={handleParamChange}
+            notify={notify}
+          />
         )}
 
         {/* 5. SPEECH-LANGUAGE (ALD-MM) ENTRY */}
