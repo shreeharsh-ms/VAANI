@@ -128,7 +128,7 @@ const INITIAL_DEVICES = [
   },
 ];
 
-const CONSUMABLES = [
+const CONSUMABLES_SEED = [
   { item: 'Zinc-Air Batteries (Size 312)', brand: 'PowerOne / Rayovac', currentStock: 48, reorderLevel: 20, status: 'NORMAL' },
   { item: 'Zinc-Air Batteries (Size 10)', brand: 'PowerOne / Rayovac', currentStock: 12, reorderLevel: 15, status: 'LOW_STOCK' },
   { item: 'Zinc-Air Batteries (Size 13)', brand: 'PowerOne / Rayovac', currentStock: 34, reorderLevel: 15, status: 'NORMAL' },
@@ -152,6 +152,44 @@ export const InventoryPage = () => {
     }
     return INITIAL_DEVICES;
   });
+
+  const [consumables, setConsumables] = useState(() => {
+    try {
+      const saved = localStorage.getItem('vaani_inventory_consumables_v1');
+      if (saved !== null) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      return CONSUMABLES_SEED;
+    }
+    return CONSUMABLES_SEED;
+  });
+
+  // Sync state if purged in Settings or modified elsewhere
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const devSaved = localStorage.getItem('vaani_inventory_v1');
+        if (devSaved !== null) {
+          const parsed = JSON.parse(devSaved);
+          if (Array.isArray(parsed)) setDevices(parsed);
+        }
+        const conSaved = localStorage.getItem('vaani_inventory_consumables_v1');
+        if (conSaved !== null) {
+          const parsed = JSON.parse(conSaved);
+          if (Array.isArray(parsed)) setConsumables(parsed);
+        }
+      } catch {}
+    };
+
+    window.addEventListener('vaani-clinic-data-purged', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('vaani-clinic-data-purged', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   // Search & Filter State
   const [search, setSearch] = useState('');
@@ -614,7 +652,7 @@ export const InventoryPage = () => {
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
-            Consumable Batteries, Domes &amp; Impression Material ({CONSUMABLES.length})
+            Consumable Batteries, Domes &amp; Impression Material ({consumables.length})
           </span>
           <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
             Automated Reorder Thresholds
@@ -633,23 +671,33 @@ export const InventoryPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-normal">
-              {CONSUMABLES.map((c, idx) => (
-                <tr key={idx} className="hover:bg-purple-50/30 transition-colors">
-                  <td className="py-1.5 px-3 font-semibold text-slate-800">{c.item}</td>
-                  <td className="py-1.5 px-3 text-slate-600">{c.brand}</td>
-                  <td className="py-1.5 px-3 text-center font-mono font-bold text-slate-900">{c.currentStock} Units</td>
-                  <td className="py-1.5 px-3 text-center font-mono text-slate-500">{c.reorderLevel} Units</td>
-                  <td className="py-1.5 px-2.5 text-center">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                      c.status === 'LOW_STOCK'
-                        ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    }`}>
-                      {c.status === 'LOW_STOCK' ? 'Low Stock' : 'Optimal'}
-                    </span>
+              {consumables.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                    <Box className="w-5 h-5 mx-auto mb-1 text-slate-300" />
+                    <p className="font-semibold text-slate-600">No consumable items in stock</p>
+                    <p className="text-[11px] text-slate-400">All consumable inventory items have been purged or reset.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                consumables.map((c, idx) => (
+                  <tr key={idx} className="hover:bg-purple-50/30 transition-colors">
+                    <td className="py-1.5 px-3 font-semibold text-slate-800">{c.item}</td>
+                    <td className="py-1.5 px-3 text-slate-600">{c.brand}</td>
+                    <td className="py-1.5 px-3 text-center font-mono font-bold text-slate-900">{c.currentStock} Units</td>
+                    <td className="py-1.5 px-3 text-center font-mono text-slate-500">{c.reorderLevel} Units</td>
+                    <td className="py-1.5 px-2.5 text-center">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                        c.status === 'LOW_STOCK'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {c.status === 'LOW_STOCK' ? 'Low Stock' : 'Optimal'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

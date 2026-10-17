@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -79,13 +79,116 @@ const DEFAULT_TODAY_APPOINTMENTS = [
 export const DashboardOverviewPage = () => {
   const navigate = useNavigate();
   const { notify } = useNotification();
-  const [patients, setPatients] = useState([]);
-  const [appointments, setAppointments] = useState(DEFAULT_TODAY_APPOINTMENTS);
+  const [patientsCount, setPatientsCount] = useState(0);
+  const [appointments, setAppointments] = useState([]);
+  const [recalls, setRecalls] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Modals
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isAptModalOpen, setIsAptModalOpen] = useState(false);
+
+  // Synchronize dynamic clinic data from LocalStorage
+  const loadDashboardData = () => {
+    try {
+      // 1. Registered Patients MPI Count
+      const savedPatients = localStorage.getItem('vaani_patients_v1');
+      if (savedPatients !== null) {
+        const parsed = JSON.parse(savedPatients);
+        setPatientsCount(Array.isArray(parsed) ? parsed.length : 0);
+      } else {
+        setPatientsCount(8);
+      }
+
+      // 2. Today's Appointments & Queue
+      const savedApts = localStorage.getItem('vaani_appointments_v1');
+      if (savedApts !== null) {
+        const parsed = JSON.parse(savedApts);
+        if (Array.isArray(parsed)) {
+          const mapped = parsed.map((a, idx) => ({
+            id: a.id || `apt_${idx}`,
+            token: String(idx + 1).padStart(2, '0'),
+            time: a.start_time
+              ? `${a.start_time} ${parseInt(a.start_time.split(':')[0]) >= 12 ? 'PM' : 'AM'}`
+              : a.time || '10:00 AM',
+            uhid: a.patient_uhid || a.uhid || '-',
+            patientName: a.patient_name || a.patientName || 'Walk-in Patient',
+            phone: a.patient_phone || a.phone || '-',
+            service: a.service_name || a.service || 'Consultation',
+            status: a.status === 'CONFIRMED' ? 'SCHEDULED' : a.status || 'SCHEDULED',
+            fee: a.fee_paise ? a.fee_paise / 100 : a.fee || 1000,
+          }));
+          setAppointments(mapped);
+        } else {
+          setAppointments([]);
+        }
+      } else {
+        setAppointments(DEFAULT_TODAY_APPOINTMENTS);
+      }
+
+      // 3. Clinical Recalls Due
+      const savedRecalls = localStorage.getItem('vaani_recalls_v1');
+      if (savedRecalls !== null) {
+        const parsed = JSON.parse(savedRecalls);
+        if (Array.isArray(parsed)) {
+          const mapped = parsed.map((r) => ({
+            id: r.id,
+            patientName: r.patientName,
+            reason: `${r.deviceModel || r.category || 'Recall'} Follow-up`,
+            dueText: r.dueDate || 'Pending',
+            urgency: r.priority || 'MEDIUM',
+          }));
+          setRecalls(mapped);
+        } else {
+          setRecalls([]);
+        }
+      } else {
+        setRecalls([
+          {
+            id: 'rec_1',
+            patientName: 'Sunita Dattatray More',
+            reason: 'Oticon Trial Follow-up & Tuning',
+            dueText: 'Due Today',
+            urgency: 'HIGH',
+          },
+          {
+            id: 'rec_2',
+            patientName: 'Aarav Sachin Shinde',
+            reason: '3-Month Speech Milestone Review',
+            dueText: 'In 4 Days',
+            urgency: 'MEDIUM',
+          },
+        ]);
+      }
+    } catch (e) {
+      console.warn('Dashboard data sync error:', e);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+
+    window.addEventListener('vaani-clinic-data-purged', loadDashboardData);
+    window.addEventListener('storage', loadDashboardData);
+    window.addEventListener('focus', loadDashboardData);
+    return () => {
+      window.removeEventListener('vaani-clinic-data-purged', loadDashboardData);
+      window.removeEventListener('storage', loadDashboardData);
+      window.removeEventListener('focus', loadDashboardData);
+    };
+  }, []);
+
+  // Compute Today's Revenue dynamically
+  const todayFeesTotal = useMemo(() => {
+    try {
+      const sum = appointments
+        .filter((a) => a.status === 'COMPLETED' || a.status === 'IN_SESSION' || a.status === 'CHECKED_IN' || a.fee)
+        .reduce((acc, a) => acc + (Number(a.fee) || 0), 0);
+      return sum;
+    } catch {
+      return 0;
+    }
+  }, [appointments]);
 
   // Universal keyboard shortcut listener (supports macOS Option ⌥ dead keys and Windows Alt)
   useEffect(() => {
@@ -167,7 +270,15 @@ export const DashboardOverviewPage = () => {
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Today&apos;s Schedule</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-lg font-bold font-mono text-slate-900">{appointments.length}</span>
-              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1 py-0.2 rounded">1 In Session</span>
+              <span className={`text-[10px] font-bold px-1 py-0.2 rounded ${
+                appointments.filter(a => a.status === 'IN_SESSION').length > 0
+                  ? 'bg-emerald-50 text-emerald-700 animate-pulse'
+                  : 'bg-slate-100 text-slate-600'
+              }`}>
+                {appointments.filter(a => a.status === 'IN_SESSION').length > 0
+                  ? `${appointments.filter(a => a.status === 'IN_SESSION').length} In Session`
+                  : '0 In Session'}
+              </span>
             </div>
           </div>
           <div className="p-2 rounded-md bg-purple-50 text-purple-700">
@@ -183,7 +294,11 @@ export const DashboardOverviewPage = () => {
               <span className="text-lg font-bold font-mono text-indigo-900">
                 {appointments.filter(a => a.status === 'CHECKED_IN').length}
               </span>
-              <span className="text-[10px] text-indigo-700 font-semibold">Token 02 Calling</span>
+              <span className="text-[10px] text-indigo-700 font-semibold">
+                {appointments.filter(a => a.status === 'CHECKED_IN').length > 0
+                  ? `Token ${appointments.find(a => a.status === 'CHECKED_IN')?.token || '01'} Calling`
+                  : 'Queue Clear'}
+              </span>
             </div>
           </div>
           <div className="p-2 rounded-md bg-indigo-50 text-indigo-700">
@@ -196,7 +311,7 @@ export const DashboardOverviewPage = () => {
           <div>
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Registered MPI</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-lg font-bold font-mono text-slate-900">8</span>
+              <span className="text-lg font-bold font-mono text-slate-900">{patientsCount}</span>
               <span className="text-[10px] text-slate-500 font-medium">UHID Database</span>
             </div>
           </div>
@@ -210,8 +325,14 @@ export const DashboardOverviewPage = () => {
           <div>
             <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Today&apos;s Fees</span>
             <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-lg font-bold font-mono text-emerald-800">₹5,000</span>
-              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1 py-0.2 rounded">100% Settled</span>
+              <span className="text-lg font-bold font-mono text-emerald-800">
+                ₹{todayFeesTotal.toLocaleString('en-IN')}
+              </span>
+              <span className={`text-[10px] font-bold px-1 py-0.2 rounded ${
+                todayFeesTotal > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {todayFeesTotal > 0 ? '100% Settled' : 'Zero Balance'}
+              </span>
             </div>
           </div>
           <div className="p-2 rounded-md bg-emerald-50 text-emerald-700">
@@ -258,61 +379,71 @@ export const DashboardOverviewPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-normal">
-                  {appointments.map((apt) => (
-                    <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
-                      <td className="py-2 px-2.5 text-center font-mono font-bold text-purple-900 bg-purple-50/40">
-                        {apt.token}
-                      </td>
-                      <td className="py-2 px-2.5 font-mono font-semibold text-slate-700">
-                        {apt.time}
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className="font-bold text-slate-800 block truncate">{apt.patientName}</span>
-                        <span className="text-[10px] font-mono text-purple-900 font-semibold">{apt.uhid}</span>
-                      </td>
-                      <td className="py-2 px-3 text-slate-700 truncate max-w-xs">
-                        {apt.service}
-                      </td>
-                      <td className="py-2 px-2.5 text-center">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                          apt.status === 'IN_SESSION'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
-                            : apt.status === 'CHECKED_IN'
-                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                            : 'bg-slate-100 text-slate-700 border-slate-200'
-                        }`}>
-                          {apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        {apt.status === 'CHECKED_IN' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}
-                            className="h-6 px-2.5 rounded bg-[#301444] text-white hover:bg-[#200b30] text-[10px] font-bold shadow-2xs cursor-pointer"
-                          >
-                            Call Patient In
-                          </button>
-                        ) : apt.status === 'IN_SESSION' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(apt.id, 'COMPLETED')}
-                            className="h-6 px-2.5 rounded bg-emerald-700 text-white hover:bg-emerald-800 text-[10px] font-bold shadow-2xs cursor-pointer"
-                          >
-                            Complete Visit
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateStatus(apt.id, 'CHECKED_IN')}
-                            className="h-6 px-2 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-[10px] font-semibold border border-slate-300 cursor-pointer"
-                          >
-                            Mark Arrived
-                          </button>
-                        )}
+                  {appointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        <Calendar className="w-6 h-6 mx-auto mb-1.5 text-slate-300" />
+                        <p className="font-semibold text-slate-700 text-xs">No active consultations scheduled for today</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Use &quot;Schedule Slot&quot; to book a new appointment or register a walk-in patient</p>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    appointments.map((apt) => (
+                      <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
+                        <td className="py-2 px-2.5 text-center font-mono font-bold text-purple-900 bg-purple-50/40">
+                          {apt.token}
+                        </td>
+                        <td className="py-2 px-2.5 font-mono font-semibold text-slate-700">
+                          {apt.time}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="font-bold text-slate-800 block truncate">{apt.patientName}</span>
+                          <span className="text-[10px] font-mono text-purple-900 font-semibold">{apt.uhid}</span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-700 truncate max-w-xs">
+                          {apt.service}
+                        </td>
+                        <td className="py-2 px-2.5 text-center">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                            apt.status === 'IN_SESSION'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
+                              : apt.status === 'CHECKED_IN'
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}>
+                            {apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          {apt.status === 'CHECKED_IN' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}
+                              className="h-6 px-2.5 rounded bg-[#301444] text-white hover:bg-[#200b30] text-[10px] font-bold shadow-2xs cursor-pointer"
+                            >
+                              Call Patient In
+                            </button>
+                          ) : apt.status === 'IN_SESSION' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(apt.id, 'COMPLETED')}
+                              className="h-6 px-2.5 rounded bg-emerald-700 text-white hover:bg-emerald-800 text-[10px] font-bold shadow-2xs cursor-pointer"
+                            >
+                              Complete Visit
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(apt.id, 'CHECKED_IN')}
+                              className="h-6 px-2 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-[10px] font-semibold border border-slate-300 cursor-pointer"
+                            >
+                              Mark Arrived
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -403,33 +534,35 @@ export const DashboardOverviewPage = () => {
           <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                Clinical Recalls Due
+                Clinical Recalls Due ({recalls.length})
               </span>
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/recalls')}
-                className="text-[11px] font-bold text-purple-700 hover:underline"
+                className="text-[11px] font-bold text-purple-700 hover:underline cursor-pointer"
               >
                 View All
               </button>
             </div>
 
             <div className="space-y-1.5">
-              <div className="p-2 rounded border border-rose-100 bg-rose-50/50 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-rose-900 block">Sunita Dattatray More</span>
-                  <span className="text-[10px] text-rose-700">Oticon Trial Follow-up &amp; Tuning</span>
+              {recalls.length === 0 ? (
+                <div className="p-3 text-center text-slate-400 bg-slate-50/60 rounded border border-slate-200">
+                  <CheckCircle2 className="w-4 h-4 mx-auto mb-1 text-emerald-500" />
+                  <p className="font-semibold text-slate-600 text-xs">No pending clinical recalls</p>
+                  <p className="text-[10px] text-slate-400">All patient review schedules are up to date</p>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-rose-800">Due Today</span>
-              </div>
-
-              <div className="p-2 rounded border border-amber-100 bg-amber-50/50 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-amber-900 block">Aarav Sachin Shinde</span>
-                  <span className="text-[10px] text-amber-700">3-Month Speech Milestone Review</span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-amber-800">In 4 Days</span>
-              </div>
+              ) : (
+                recalls.slice(0, 3).map((r) => (
+                  <div key={r.id} className="p-2 rounded border border-rose-100 bg-rose-50/50 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-rose-900 block">{r.patientName}</span>
+                      <span className="text-[10px] text-rose-700">{r.reason}</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-rose-800">{r.dueText}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

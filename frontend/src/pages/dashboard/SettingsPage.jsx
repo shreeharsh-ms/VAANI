@@ -809,6 +809,7 @@ export const SettingsPage = () => {
     const billInvsStored = localStorage.getItem('vaani_billing_invoices_v1');
     const reportsStored = localStorage.getItem('vaani_clinical_reports_v1');
     const inventoryStored = localStorage.getItem('vaani_inventory_v1');
+    const consumablesStored = localStorage.getItem('vaani_inventory_consumables_v1');
     const recallsStored = localStorage.getItem('vaani_recalls_v1');
     const mailStored = localStorage.getItem('vaani_clinic_mail_logs_v1');
 
@@ -845,7 +846,7 @@ export const SettingsPage = () => {
     const aptCount = safeParseArray(aptsStored).length;
     const invCount = safeParseArray(invsStored).length + safeParseArray(billInvsStored).length;
     const reportCount = safeParseArray(reportsStored).length;
-    const inventoryCount = safeParseArray(inventoryStored).length;
+    const inventoryCount = safeParseArray(inventoryStored).length + safeParseArray(consumablesStored).length;
     const recallCount = safeParseArray(recallsStored).length;
     const mailCount = safeParseArray(mailStored).length;
 
@@ -856,6 +857,7 @@ export const SettingsPage = () => {
       (billInvsStored?.length || 0) +
       (reportsStored?.length || 0) +
       (inventoryStored?.length || 0) +
+      (consumablesStored?.length || 0) +
       (recallsStored?.length || 0) +
       (mailStored?.length || 0);
 
@@ -937,6 +939,7 @@ export const SettingsPage = () => {
           billingInvoices: JSON.parse(localStorage.getItem('vaani_billing_invoices_v1') || '[]'),
           clinicalReports: JSON.parse(localStorage.getItem('vaani_clinical_reports_v1') || '[]'),
           inventory: JSON.parse(localStorage.getItem('vaani_inventory_v1') || '[]'),
+          consumables: JSON.parse(localStorage.getItem('vaani_inventory_consumables_v1') || '[]'),
           recalls: JSON.parse(localStorage.getItem('vaani_recalls_v1') || '[]'),
           mailLogs: JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]'),
           auditLogs: JSON.parse(localStorage.getItem('vaani_clinic_audit_v1') || '[]'),
@@ -984,6 +987,7 @@ export const SettingsPage = () => {
           if (trans.billingInvoices) localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify(trans.billingInvoices));
           if (trans.clinicalReports) localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(trans.clinicalReports));
           if (trans.inventory) localStorage.setItem('vaani_inventory_v1', JSON.stringify(trans.inventory));
+          if (trans.consumables) localStorage.setItem('vaani_inventory_consumables_v1', JSON.stringify(trans.consumables));
           if (trans.recalls) localStorage.setItem('vaani_recalls_v1', JSON.stringify(trans.recalls));
           if (trans.mailLogs) {
             localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify(trans.mailLogs));
@@ -1033,6 +1037,7 @@ export const SettingsPage = () => {
       localStorage.setItem('vaani_billing_invoices_v1', JSON.stringify([]));
       localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify([]));
       localStorage.setItem('vaani_inventory_v1', JSON.stringify([]));
+      localStorage.setItem('vaani_inventory_consumables_v1', JSON.stringify([]));
       localStorage.setItem('vaani_recalls_v1', JSON.stringify([]));
       localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([]));
       sessionStorage.removeItem('vaani_preview_report');
