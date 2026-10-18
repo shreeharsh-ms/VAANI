@@ -10,12 +10,56 @@ export const DashboardLayout = () => {
 
   const isHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
 
-  // Global Ctrl + B (or ⌘B) shortcut listener: Redirect to Home from ANY page of admin panel
+  // Global Ctrl + 1..9, Ctrl + B (or ⌘ equivalents) shortcut listener: Redirect from ANY page of admin panel
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.HOME);
+      // Don't intercept if user is typing text in an input or textarea
+      const tag = e.target?.tagName?.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        if (e.key.toLowerCase() === 'b' && !isInput) {
+          e.preventDefault();
+          navigate(ROUTES.DASHBOARD.HOME);
+          return;
+        }
+
+        const navMap = {
+          '1': ROUTES.DASHBOARD.HOME,
+          '2': ROUTES.DASHBOARD.OVERVIEW,
+          '3': ROUTES.DASHBOARD.APPOINTMENTS,
+          '4': ROUTES.DASHBOARD.PATIENTS,
+          '5': ROUTES.DASHBOARD.REPORTS,
+          '6': ROUTES.DASHBOARD.BILLING,
+          '7': ROUTES.DASHBOARD.INVENTORY,
+          '8': ROUTES.DASHBOARD.RECALLS,
+          '9': ROUTES.DASHBOARD.SETTINGS,
+        };
+
+        if (navMap[e.key] && !isInput) {
+          e.preventDefault();
+          navigate(navMap[e.key]);
+          return;
+        }
+      }
+
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !isInput) {
+        const altNavMap = {
+          '1': ROUTES.DASHBOARD.HOME,
+          '2': ROUTES.DASHBOARD.OVERVIEW,
+          '3': ROUTES.DASHBOARD.APPOINTMENTS,
+          '4': ROUTES.DASHBOARD.PATIENTS,
+          '5': ROUTES.DASHBOARD.REPORTS,
+          '6': ROUTES.DASHBOARD.BILLING,
+          '7': ROUTES.DASHBOARD.INVENTORY,
+          '8': ROUTES.DASHBOARD.RECALLS,
+          '9': ROUTES.DASHBOARD.SETTINGS,
+        };
+        if (altNavMap[e.key]) {
+          e.preventDefault();
+          navigate(altNavMap[e.key]);
+          return;
+        }
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);

@@ -32,60 +32,69 @@ export const Sidebar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Global Keyboard Shortcuts Listener (supports macOS Option ⌥ and Windows Alt combinations)
+  // Global Keyboard Shortcuts Listener (supports macOS Command ⌘ and Windows Ctrl combinations)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ctrl + B or Cmd + B -> Admin Home Screen
-      if (isCmdOrCtrl(e) && isKey(e, 'b')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.HOME);
+      // Don't intercept if user is typing text in an input, textarea, or contentEditable
+      const tag = e.target?.tagName?.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
+      if (isInput) return;
+
+      // Ctrl + 1..9 or Cmd + 1..9 -> Fast Directory Navigation
+      if (isCmdOrCtrl(e) && !e.shiftKey) {
+        const keyMap = {
+          '1': ROUTES.DASHBOARD.HOME,
+          '2': ROUTES.DASHBOARD.OVERVIEW,
+          '3': ROUTES.DASHBOARD.APPOINTMENTS,
+          '4': ROUTES.DASHBOARD.PATIENTS,
+          '5': ROUTES.DASHBOARD.REPORTS,
+          '6': ROUTES.DASHBOARD.BILLING,
+          '7': ROUTES.DASHBOARD.INVENTORY,
+          '8': ROUTES.DASHBOARD.RECALLS,
+          '9': ROUTES.DASHBOARD.SETTINGS,
+        };
+
+        if (keyMap[e.key]) {
+          e.preventDefault();
+          navigate(keyMap[e.key]);
+          return;
+        }
+
+        // Ctrl + B or Cmd + B -> Admin Home Screen
+        if (isKey(e, 'b')) {
+          e.preventDefault();
+          navigate(ROUTES.DASHBOARD.HOME);
+          return;
+        }
+
+        // Ctrl + K or Cmd + K -> Open Global Search
+        if (isKey(e, 'k')) {
+          e.preventDefault();
+          setIsSearchOpen((prev) => !prev);
+          return;
+        }
       }
 
-      // Ctrl + K or Cmd + K -> Open Global Search
-      if (isCmdOrCtrl(e) && isKey(e, 'k')) {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-      }
-
-      // Alt + 1 / ⌥1 -> Overview
-      if (isAlt(e) && isKey(e, '1')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.OVERVIEW);
-      }
-      // Alt + 2 / ⌥2 -> Appointments
-      if (isAlt(e) && isKey(e, '2')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.APPOINTMENTS);
-      }
-      // Alt + 3 / ⌥3 -> Patients
-      if (isAlt(e) && isKey(e, '3')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.PATIENTS);
-      }
-      // Alt + 4 / ⌥4 -> Clinical Reports
-      if (isAlt(e) && isKey(e, '4')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.REPORTS);
-      }
-      // Alt + 5 / ⌥5 -> Billing
-      if (isAlt(e) && isKey(e, '5')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.BILLING);
-      }
-      // Alt + 6 / ⌥6 -> Inventory
-      if (isAlt(e) && isKey(e, '6')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.INVENTORY);
-      }
-      // Alt + R / ⌥R -> Recalls
-      if (isAlt(e) && isKey(e, 'r')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.RECALLS);
-      }
-      // Alt + S / ⌥S -> Settings
-      if (isAlt(e) && isKey(e, 's')) {
-        e.preventDefault();
-        navigate(ROUTES.DASHBOARD.SETTINGS);
+      // Alt + 1..9 -> Fast Directory Navigation (Fallback)
+      if (isAlt(e)) {
+        const altMap = {
+          '1': ROUTES.DASHBOARD.HOME,
+          '2': ROUTES.DASHBOARD.OVERVIEW,
+          '3': ROUTES.DASHBOARD.APPOINTMENTS,
+          '4': ROUTES.DASHBOARD.PATIENTS,
+          '5': ROUTES.DASHBOARD.REPORTS,
+          '6': ROUTES.DASHBOARD.BILLING,
+          '7': ROUTES.DASHBOARD.INVENTORY,
+          '8': ROUTES.DASHBOARD.RECALLS,
+          '9': ROUTES.DASHBOARD.SETTINGS,
+          'r': ROUTES.DASHBOARD.RECALLS,
+          's': ROUTES.DASHBOARD.SETTINGS,
+        };
+        if (altMap[e.key.toLowerCase()]) {
+          e.preventDefault();
+          navigate(altMap[e.key.toLowerCase()]);
+          return;
+        }
       }
     };
 
@@ -93,17 +102,17 @@ export const Sidebar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
-  // Primary ERP Navigation Items matching the SRS
+  // Primary ERP Navigation Items matching the SRS with numbered Ctrl shortcuts
   const menuItems = [
-    { label: 'Home', path: ROUTES.DASHBOARD.HOME, icon: Home, shortcut: 'Ctrl+B / ⌘B' },
-    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, shortcut: 'Alt+1 / ⌥1' },
-    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, shortcut: 'Alt+2 / ⌥2' },
-    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, shortcut: 'Alt+3 / ⌥3' },
-    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, shortcut: 'Alt+4 / ⌥4' },
-    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, shortcut: 'Alt+5 / ⌥5' },
-    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, shortcut: 'Alt+6 / ⌥6' },
-    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, shortcut: 'Alt+R / ⌥R' },
-    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, shortcut: 'Alt+S / ⌥S' },
+    { label: 'Home', path: ROUTES.DASHBOARD.HOME, icon: Home, num: 1, shortcut: 'Ctrl+1 / ⌘1' },
+    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, num: 2, shortcut: 'Ctrl+2 / ⌘2' },
+    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, num: 3, shortcut: 'Ctrl+3 / ⌘3' },
+    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, num: 4, shortcut: 'Ctrl+4 / ⌘4' },
+    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, num: 5, shortcut: 'Ctrl+5 / ⌘5' },
+    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, num: 6, shortcut: 'Ctrl+6 / ⌘6' },
+    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, num: 7, shortcut: 'Ctrl+7 / ⌘7' },
+    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, num: 8, shortcut: 'Ctrl+8 / ⌘8' },
+    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, num: 9, shortcut: 'Ctrl+9 / ⌘9' },
   ];
 
   const handleLogout = async () => {
@@ -117,7 +126,7 @@ export const Sidebar = () => {
         
         {/* Top-Left: Logo inside Dark Tab with Inverted Fillets (Santo Home Page Style) */}
         <div className="relative bg-[#301444] text-white px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-br-[18px] sm:rounded-br-[28px] flex items-center self-start flex-shrink-0">
-          <Link to={ROUTES.DASHBOARD.HOME} className="flex items-center group py-0.5" title="Admin Home (Ctrl + B)">
+          <Link to={ROUTES.DASHBOARD.HOME} className="flex items-center group py-0.5" title="Admin Home (Ctrl + 1 / Ctrl + B)">
             <img
               src={displayLogo}
               alt={clinicName}
@@ -155,14 +164,27 @@ export const Sidebar = () => {
               end={item.path === ROUTES.DASHBOARD.HOME || item.path === ROUTES.DASHBOARD.OVERVIEW}
               title={`${item.label} (${item.shortcut})`}
               className={({ isActive }) =>
-                `px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-100 flex items-center gap-1 cursor-pointer ${
+                `group px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-100 flex items-center gap-1.5 cursor-pointer ${
                   isActive
                     ? 'bg-[#301444] text-white shadow-xs'
                     : 'bg-white hover:bg-purple-50 text-slate-800 border border-slate-200 shadow-2xs'
                 }`
               }
             >
-              <span>{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <span>{item.label}</span>
+                  <span
+                    className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded transition-colors ${
+                      isActive
+                        ? 'bg-white/20 text-white border border-white/30'
+                        : 'bg-purple-50 text-purple-900 border border-purple-200/90 group-hover:bg-purple-100'
+                    }`}
+                  >
+                    <span className="hidden xl:inline">Ctrl+</span>{item.num}
+                  </span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -231,7 +253,7 @@ export const Sidebar = () => {
           <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-[#faf8fc] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
             {/* Header inside drawer */}
             <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-purple-100 bg-[#301444] text-white shadow-sm flex-shrink-0">
-              <Link to={ROUTES.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
+              <Link to={ROUTES.DASHBOARD.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
                 <img src={displayLogo} alt={clinicName} className="h-8 w-auto object-contain" />
               </Link>
               <button
@@ -267,7 +289,9 @@ export const Sidebar = () => {
                     <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  <span className="text-[10px] opacity-70 font-mono">{item.shortcut}</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-900 border border-purple-200">
+                    Ctrl+{item.num}
+                  </span>
                 </NavLink>
               ))}
 
