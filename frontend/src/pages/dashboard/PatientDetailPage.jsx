@@ -1126,72 +1126,72 @@ export const PatientDetailPage = () => {
   };
 
   return (
-    <div className="space-y-3 font-sans pb-16">
-      {/* ── BREADCRUMB & TOP ACTIONS TOOLBAR ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white border border-slate-200/90 rounded-lg p-2.5 shadow-2xs">
-        <div className="flex items-center gap-2 flex-wrap text-xs">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/patients')}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-slate-700 hover:text-purple-950 bg-slate-100 hover:bg-slate-200/80 transition-all cursor-pointer border border-slate-200"
-            title="Return to Master Patient Index [Alt+B / Esc]"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-purple-700" />
-            <span>Patients Master Index</span>
-            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+B]</span>
-          </button>
-          
-          <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-          
-          <span className="font-mono font-bold text-purple-950 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-            {demographics.uhid}
-          </span>
-          
-          <span className="font-bold text-slate-800 truncate">
-            {demographics.fullName}
-          </span>
-          {demographics.displayMr && (
-            <span className="text-slate-500 font-medium hidden md:inline">
-              ({demographics.displayMr})
+    <div className="space-y-3 font-sans pb-32 sm:pb-20">
+      {/* ── BREADCRUMB & TOP ACTIONS TOOLBAR (App-like on Mobile, Dense ERP on Desktop) ── */}
+      <div className="bg-white border border-slate-200/90 rounded-xl p-2.5 sm:p-3 shadow-2xs space-y-2">
+        {/* Top Line: Navigation & Status Pill */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs min-w-0">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/patients')}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-700 hover:text-purple-950 bg-slate-100 hover:bg-slate-200/80 transition-all cursor-pointer border border-slate-200 flex-shrink-0"
+              title="Return to Master Patient Index [Alt+B / Esc]"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-purple-700" />
+              <span className="hidden sm:inline">Patients Master Index</span>
+              <span className="sm:hidden">Back</span>
+              <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+B]</span>
+            </button>
+            
+            <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden sm:inline" />
+            
+            <span className="font-mono font-bold text-purple-950 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200 text-xs flex-shrink-0">
+              {demographics.uhid}
             </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>RCI CRR No. {clinicRci} Certified</span>
+            
+            <span className="font-bold text-slate-800 truncate text-xs hidden sm:inline">
+              {demographics.fullName}
+            </span>
           </div>
 
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>RCI CRR {clinicRci} Certified</span>
+          </div>
+        </div>
+
+        {/* Action Buttons Row */}
+        <div className="flex items-center gap-2 pt-1 border-t border-slate-100 flex-wrap sm:flex-nowrap sm:justify-end">
           <button
             type="button"
             onClick={handleOpenEditPatient}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#461963] text-white transition-all cursor-pointer shadow-xs"
             title="Edit Patient Demographic & Clinical Profile"
           >
-            <Edit2 className="w-3.5 h-3.5 text-purple-700" />
+            <Edit2 className="w-3.5 h-3.5 text-purple-200" />
             <span>Edit Profile</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setIsDeletePatientModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all cursor-pointer shadow-2xs"
-            title="Delete Patient Record"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-            <span className="hidden sm:inline">Delete</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-all cursor-pointer shadow-2xs"
             title="Print Clinical Dossier Summary [Alt+P]"
           >
             <Printer className="w-3.5 h-3.5 text-purple-700" />
             <span>Print Dossier</span>
             <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">[Alt+P]</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsDeletePatientModalOpen(true)}
+            className="inline-flex items-center justify-center gap-1 p-2 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all cursor-pointer shadow-2xs flex-shrink-0"
+            title="Delete Patient Record"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">Delete</span>
           </button>
         </div>
       </div>
@@ -1199,9 +1199,9 @@ export const PatientDetailPage = () => {
       {/* ── PATIENT HERO CLINICAL BANNER (REFINED PROFESSIONAL LAVENDER THEME) ── */}
       <div className="bg-gradient-to-r from-purple-50/90 via-white to-purple-50/60 text-slate-900 rounded-xl p-3.5 sm:p-4 shadow-xs border border-purple-200/90">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-black bg-purple-900 text-white px-2.5 py-0.5 rounded tracking-wider shadow-2xs">
+              <span className="font-mono text-xs font-black bg-purple-900 text-white px-2 py-0.5 rounded tracking-wider shadow-2xs">
                 {demographics.uhid}
               </span>
               <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
@@ -1225,47 +1225,60 @@ export const PatientDetailPage = () => {
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap font-medium">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-600 flex-wrap font-medium">
               <span className="font-bold text-slate-800">{demographics.sex}</span>
               <span>•</span>
               <span className="text-purple-950 font-bold">{demographics.ageContextual}</span>
               <span>•</span>
               <span>DOB: <strong className="text-slate-800">{demographics.dob}</strong></span>
               <span>•</span>
-              <span>Phone: <strong className="font-mono text-purple-950 font-bold">{demographics.primaryPhone}</strong></span>
-              <span>•</span>
-              <span>{demographics.locality}, {demographics.district}</span>
+              <span className="inline-flex items-center gap-1">
+                Phone: 
+                <a
+                  href={`tel:${demographics.primaryPhone}`}
+                  className="font-mono text-purple-950 font-bold hover:underline"
+                  title="Tap to call patient"
+                >
+                  {demographics.primaryPhone}
+                </a>
+              </span>
+              {demographics.locality && (
+                <>
+                  <span>•</span>
+                  <span>{demographics.locality}, {demographics.district}</span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Quick Metrics Bar */}
-          <div className="flex items-center gap-2 self-start lg:self-center flex-wrap">
-            <div className="bg-white border border-slate-200/90 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Billed</span>
-              <span className="font-mono font-bold text-slate-900 text-xs">{formatCurrency(financial?.totalBilled || 0)}</span>
+          {/* Quick Metrics Bar: 3-column responsive grid on mobile & row on desktop */}
+          <div className="grid grid-cols-3 gap-2 w-full lg:w-auto">
+            <div className="bg-white border border-slate-200/90 rounded-lg p-2 text-center shadow-2xs">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block truncate">Total Billed</span>
+              <span className="font-mono font-bold text-slate-900 text-xs sm:text-sm block">{formatCurrency(financial?.totalBilled || 0)}</span>
             </div>
-            <div className="bg-emerald-50/70 border border-emerald-200 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-emerald-800 block">Total Paid</span>
-              <span className="font-mono font-bold text-emerald-900 text-xs">{formatCurrency(financial?.totalPaid || 0)}</span>
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-2 text-center shadow-2xs">
+              <span className="text-[9px] uppercase font-bold text-emerald-800 block truncate">Total Paid</span>
+              <span className="font-mono font-bold text-emerald-900 text-xs sm:text-sm block">{formatCurrency(financial?.totalPaid || 0)}</span>
             </div>
-            <div className="bg-white border border-slate-200/90 rounded-md px-3 py-1.5 text-center min-w-[90px] shadow-2xs">
-              <span className="text-[10px] uppercase font-bold text-slate-500 block">Balance Due</span>
-              <span className="font-mono font-bold text-slate-900 text-xs">{formatCurrency(financial?.balance || 0)}</span>
+            <div className="bg-white border border-slate-200/90 rounded-lg p-2 text-center shadow-2xs">
+              <span className="text-[9px] uppercase font-bold text-slate-500 block truncate">Balance Due</span>
+              <span className="font-mono font-bold text-slate-900 text-xs sm:text-sm block">{formatCurrency(financial?.balance || 0)}</span>
             </div>
           </div>
         </div>
 
         {/* Medical Alerts Row */}
         {demographics.medicalAlerts && demographics.medicalAlerts.length > 0 && (
-          <div className="mt-3 pt-2.5 border-t border-purple-200/60 flex items-center gap-2 flex-wrap text-xs">
-            <div className="flex items-center gap-1 font-bold text-amber-800">
+          <div className="mt-3 pt-2.5 border-t border-purple-200/60 flex items-start sm:items-center gap-2 flex-wrap text-xs">
+            <div className="flex items-center gap-1 font-bold text-amber-800 flex-shrink-0">
               <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
               <span>Safety Alerts:</span>
             </div>
             {demographics.medicalAlerts.map((alert, i) => (
               <span
                 key={i}
-                className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-950 border border-amber-300"
+                className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-950 border border-amber-300"
               >
                 {alert.label} • {alert.note}
               </span>
@@ -1274,17 +1287,17 @@ export const PatientDetailPage = () => {
         )}
       </div>
 
-      {/* ── EXCEL-STYLE SHEET TABS STRIP ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-1 flex items-center gap-1 overflow-x-auto shadow-2xs">
+      {/* ── DOSSIER MODULE TABS STRIP (Touch-smooth with no-scrollbar on mobile) ── */}
+      <div className="bg-white border border-slate-200 rounded-xl p-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth shadow-2xs">
         {tabs.map((tab, idx) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold whitespace-nowrap transition-all duration-100 cursor-pointer ${
+              className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-100 cursor-pointer flex-shrink-0 ${
                 isActive
-                  ? 'bg-purple-900 text-white shadow-xs'
+                  ? 'bg-[#301444] text-white shadow-xs'
                   : 'text-slate-700 hover:bg-slate-100 hover:text-purple-950'
               }`}
             >
@@ -1697,8 +1710,90 @@ export const PatientDetailPage = () => {
                 </div>
               </div>
 
-              {/* Spreadsheet Table Format */}
-              <div className="overflow-x-auto">
+              {/* Mobile Clinical Report Cards (md:hidden) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {paginatedReports.length > 0 ? (
+                  paginatedReports.map((rep) => {
+                    const repId = rep.id || rep.report_number;
+                    return (
+                      <div key={repId} className="p-3 hover:bg-purple-50/20 transition-colors space-y-2">
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <span className="font-mono text-xs font-bold text-purple-950 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                            {rep.report_number}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500">
+                            {rep.date}
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 ml-auto">
+                            FINAL • VERIFIED
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-xs">
+                            {rep.title}
+                          </h4>
+                          <p className="text-[11px] text-slate-600 line-clamp-2 mt-0.5">
+                            {rep.diagnosis || 'Clinical evaluation completed.'}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                          <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {rep.service_code || rep.discipline || 'CLINICAL'}
+                          </span>
+                          <span className="truncate max-w-[180px]">
+                            {rep.examiner && !rep.examiner.includes('Shreeharsh') ? rep.examiner : fullLeadPractitioner}
+                          </span>
+                        </div>
+
+                        {/* Mobile Direct Touch Actions */}
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleViewDownloadReport(rep)}
+                            className="flex-1 py-1.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditReportModal(rep)}
+                            className="py-1.5 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleViewDownloadReport(rep)}
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg flex items-center justify-center cursor-pointer"
+                            title="Print / Download PDF"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsApp(rep)}
+                            className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg flex items-center justify-center cursor-pointer"
+                            title="Send WhatsApp"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-8 text-center text-slate-400">
+                    <p className="font-semibold text-slate-700 text-xs">No matching clinical reports found.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Spreadsheet Table Format (hidden md:block) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-100/90 border-b border-slate-200 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
