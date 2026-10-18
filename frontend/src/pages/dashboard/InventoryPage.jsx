@@ -633,7 +633,7 @@ export const InventoryPage = () => {
             title="Add consumable battery or accessory stock"
           >
             <Plus className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-purple-800" />
-            <span>+ Add Consumable</span>
+            <span>Add Consumable</span>
           </button>
 
           <button
@@ -720,7 +720,7 @@ export const InventoryPage = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                 {/* Brand Filter */}
                 <select
                   value={brandFilter}
@@ -728,9 +728,9 @@ export const InventoryPage = () => {
                     setBrandFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
                 >
-                  <option value="ALL">All Manufacturers</option>
+                  <option value="ALL">All Brands</option>
                   <option value="Phonak">Phonak</option>
                   <option value="Oticon">Oticon</option>
                   <option value="Signia">Signia</option>
@@ -745,20 +745,20 @@ export const InventoryPage = () => {
                     setStatusFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
                 >
                   <option value="ALL">All Statuses</option>
-                  <option value="IN_STOCK">In Stock (Available)</option>
+                  <option value="IN_STOCK">In Stock</option>
                   <option value="DISPENSED">Sold / Dispensed</option>
-                  <option value="ON_TRIAL">On Patient Trial</option>
-                  <option value="RETURNED">Returned / Vendor Return</option>
+                  <option value="ON_TRIAL">On Trial</option>
+                  <option value="RETURNED">Returned</option>
                   <option value="IN_SERVICE">In Service / RMA</option>
                 </select>
               </div>
             </div>
 
             {/* Rows selector */}
-            <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+            <div className="hidden sm:flex items-center justify-end gap-1.5 text-xs text-slate-600 w-auto">
               <span className="text-[11px] font-medium">Rows:</span>
               <select
                 value={pageSize}
@@ -775,8 +775,125 @@ export const InventoryPage = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+          {/* ── MOBILE DEVICE CARDS (Visible on screen < md) ── */}
+          <div className="md:hidden space-y-2.5">
+            {paginatedDevices.length === 0 ? (
+              <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
+                <Box className="w-6 h-6 mb-1 text-slate-300 mx-auto" />
+                <p className="font-semibold text-slate-700 text-xs">No hearing aid devices in clinic inventory.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Click &quot;Add Product&quot; to register new units.</p>
+              </div>
+            ) : (
+              paginatedDevices.map((dev) => (
+                <div
+                  key={dev.id}
+                  className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+                >
+                  {/* Top: Serial # & Status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+                      {dev.serialNo}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
+                        dev.stockStatus === 'IN_STOCK'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : dev.stockStatus === 'ON_TRIAL'
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          : dev.stockStatus === 'DISPENSED'
+                          ? 'bg-purple-50 text-purple-800 border-purple-200'
+                          : 'bg-rose-50 text-rose-700 border-rose-200'
+                      }`}
+                    >
+                      {dev.stockStatus === 'IN_STOCK'
+                        ? 'In Stock'
+                        : dev.stockStatus === 'ON_TRIAL'
+                        ? 'On Trial'
+                        : dev.stockStatus === 'DISPENSED'
+                        ? 'Sold / Dispensed'
+                        : 'Returned / RMA'}
+                    </span>
+                  </div>
+
+                  {/* Brand & Model */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900">{dev.brand} {dev.model}</h4>
+                      <p className="text-[11px] text-slate-500">{dev.category} • {dev.batteryType}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-mono font-bold text-slate-900 block">
+                        ₹{dev.mrp.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        HSN {dev.hsnCode || '90214090'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Assigned Patient if any */}
+                  {dev.patientName && dev.patientName !== '-' && (
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Assigned Patient</span>
+                      <span className="font-semibold text-slate-800">{dev.patientName}</span>
+                      <span className="text-[10px] font-mono text-purple-700 ml-1.5 font-bold">({dev.patientUhid} • {dev.ear})</span>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                    {dev.stockStatus === 'IN_STOCK' && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDispenseModal(dev)}
+                          className="flex-1 h-7.5 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>Sell / Dispense</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReturnModal(dev)}
+                          className="h-7.5 px-2.5 rounded text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 cursor-pointer"
+                        >
+                          Return / RMA
+                        </button>
+                      </>
+                    )}
+                    {dev.stockStatus === 'DISPENSED' && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenRestockModal(dev)}
+                        className="flex-1 h-7.5 px-2.5 rounded text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-2xs cursor-pointer"
+                      >
+                        Re-inward / Restock
+                      </button>
+                    )}
+                    {dev.stockStatus === 'RETURNED' && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenRestockModal(dev)}
+                        className="flex-1 h-7.5 px-2.5 rounded text-xs font-bold bg-slate-700 hover:bg-slate-800 text-white shadow-2xs cursor-pointer"
+                      >
+                        Re-inward Stock
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDevice(dev.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 border border-slate-200 rounded cursor-pointer ml-auto"
+                      title="Delete record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* ── DESKTOP EXCEL-STYLE COMPACT DATA GRID TABLE (Visible on md: and above) ── */}
+          <div className="hidden md:block bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
                 <thead>
@@ -937,53 +1054,53 @@ export const InventoryPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Pagination Footer */}
-            <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
-              <div className="font-medium">
-                Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of <span className="font-bold text-slate-900">{totalEntries}</span> serial items
-              </div>
+          {/* Pagination Footer */}
+          <div className="px-3 py-2 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 shadow-2xs">
+            <div className="font-medium">
+              Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of <span className="font-bold text-slate-900">{totalEntries}</span> serial items
+            </div>
 
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                title="Previous Page (Ctrl+Q / ⌘Q)"
+                className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              >
+                <ChevronLeft className="w-3 h-3" />
+                <span>Prev</span>
+                <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                 <button
+                  key={pageNum}
                   type="button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                  title="Previous Page (Ctrl+Q / ⌘Q)"
-                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+                  onClick={() => setPage(pageNum)}
+                  className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                    page === pageNum
+                      ? 'bg-[#301444] text-white shadow-2xs'
+                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
                 >
-                  <ChevronLeft className="w-3 h-3" />
-                  <span>Prev</span>
-                  <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+                  {pageNum}
                 </button>
+              ))}
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => setPage(pageNum)}
-                    className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                      page === pageNum
-                        ? 'bg-[#301444] text-white shadow-2xs'
-                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-
-                <button
-                  type="button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                  title="Next Page (Ctrl+E / ⌘E)"
-                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
-                >
-                  <span>Next</span>
-                  <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                title="Next Page (Ctrl+E / ⌘E)"
+                className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              >
+                <span>Next</span>
+                <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
+                <ChevronRight className="w-3 h-3" />
+              </button>
             </div>
           </div>
         </div>

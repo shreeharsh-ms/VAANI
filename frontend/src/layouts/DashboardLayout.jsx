@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  CalendarCheck,
+  Users,
+  FileText,
+  IndianRupee,
+} from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import Toast from '../components/feedback/Toast';
 import { ROUTES } from '../constants';
@@ -79,6 +86,43 @@ export const DashboardLayout = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
   }, [navigate]);
 
+  const mobileNavItems = [
+    {
+      label: 'Overview',
+      path: ROUTES.DASHBOARD.OVERVIEW,
+      icon: LayoutDashboard,
+      isActive: (pathname) =>
+        pathname === ROUTES.DASHBOARD.HOME ||
+        pathname === ROUTES.DASHBOARD.OVERVIEW ||
+        pathname === '/dashboard' ||
+        pathname === '/dashboard/',
+    },
+    {
+      label: 'Schedule',
+      path: ROUTES.DASHBOARD.APPOINTMENTS,
+      icon: CalendarCheck,
+      isActive: (pathname) => pathname.startsWith(ROUTES.DASHBOARD.APPOINTMENTS),
+    },
+    {
+      label: 'Patients',
+      path: ROUTES.DASHBOARD.PATIENTS,
+      icon: Users,
+      isActive: (pathname) => pathname.startsWith(ROUTES.DASHBOARD.PATIENTS),
+    },
+    {
+      label: 'Records',
+      path: ROUTES.DASHBOARD.REPORTS,
+      icon: FileText,
+      isActive: (pathname) => pathname.startsWith(ROUTES.DASHBOARD.REPORTS),
+    },
+    {
+      label: 'Billing',
+      path: ROUTES.DASHBOARD.BILLING,
+      icon: IndianRupee,
+      isActive: (pathname) => pathname.startsWith(ROUTES.DASHBOARD.BILLING),
+    },
+  ];
+
   return (
     <div className="relative min-h-screen w-full bg-[#301444] print:bg-white p-0 sm:p-3 lg:p-4 print:p-0 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
       
@@ -105,7 +149,7 @@ export const DashboardLayout = () => {
         </div>
 
         {/* ── MAIN CONTENT OUTLET ── */}
-        <main className={`relative z-10 flex-1 w-full ${isHome ? 'p-0 flex flex-col justify-center' : 'p-2 sm:p-3.5 lg:p-4'} print:p-0`}>
+        <main className={`relative z-10 flex-1 w-full ${isHome ? 'p-0 pb-16 lg:pb-0 flex flex-col justify-center' : 'p-2 sm:p-3.5 lg:p-4 pb-20 lg:pb-4'} print:p-0`}>
           <div className={`w-full mx-auto ${isHome ? '' : 'space-y-3'} print:space-y-0`}>
             <Outlet />
           </div>
@@ -113,7 +157,7 @@ export const DashboardLayout = () => {
 
         {/* ── CLINICAL INSTITUTIONAL FOOTER (Hidden on clean Admin Home Screen) ── */}
         {!isHome && (
-          <footer className="relative z-10 w-full py-4.5 text-center bg-white/60 backdrop-blur-xs border-t border-purple-100/80 px-4 sm:px-8 print:hidden">
+          <footer className="relative z-10 w-full py-4.5 mb-16 lg:mb-0 text-center bg-white/60 backdrop-blur-xs border-t border-purple-100/80 px-4 sm:px-8 print:hidden">
             <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
               <p className="text-xs text-purple-900/70 font-medium">
                 © {new Date().getFullYear()} Vaani Speech &amp; Hearing Clinic • Clinical Practice Suite (Satara)
@@ -126,6 +170,31 @@ export const DashboardLayout = () => {
             </div>
           </footer>
         )}
+
+        {/* ── MOBILE NATIVE BOTTOM NAVIGATION BAR (Thumb accessible on Android/iOS) ── */}
+        <nav
+          aria-label="Mobile Bottom Navigation"
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-purple-150 shadow-[0_-4px_20px_rgba(48,20,68,0.08)] px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around print:hidden"
+        >
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = item.isActive(location.pathname);
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all select-none min-w-[56px] ${
+                  active
+                    ? 'text-[#301444] font-bold bg-purple-100/70 scale-102'
+                    : 'text-slate-500 font-medium hover:text-[#301444] hover:bg-purple-50/50'
+                }`}
+              >
+                <Icon className={`w-5 h-5 mb-0.5 transition-transform ${active ? 'stroke-[2.5px] text-[#301444]' : 'stroke-[1.8px]'}`} />
+                <span className="text-[10px] tracking-tight leading-none">{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
 
       </div>
 

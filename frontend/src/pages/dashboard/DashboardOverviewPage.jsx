@@ -248,28 +248,25 @@ export const DashboardOverviewPage = () => {
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         
         {/* Left: Practice Verification & Shift Status */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 self-start">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>RCI CRR No. A79214 • Active Clinical Practice</span>
           </div>
 
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Shift:</span>
-            <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
-              Morning: 10:00 - 13:30 | Evening: 15:30 - 20:00
-            </span>
+          <div className="text-[11px] font-mono font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-300">
+            <span className="font-bold text-slate-900">Shift:</span> 10:00-13:30 • 15:30-20:00
           </div>
         </div>
 
         {/* Right: Quick Action Buttons with Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setIsPatientModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
             title="Register new patient (Alt + N / ⌥N)"
           >
             <Users className="w-3.5 h-3.5 text-purple-700" />
@@ -280,7 +277,7 @@ export const DashboardOverviewPage = () => {
           <button
             type="button"
             onClick={() => setIsAptModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Schedule consultation slot (Alt + A / ⌥A)"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -470,7 +467,108 @@ export const DashboardOverviewPage = () => {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* ── MOBILE LIVE QUEUE CARDS (Visible on screen < md) ── */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {todayAppointments.length === 0 ? (
+                <div className="py-8 px-4 text-center text-slate-400">
+                  <Calendar className="w-6 h-6 mx-auto mb-1.5 text-slate-300" />
+                  <p className="font-semibold text-slate-700 text-xs">No active consultations scheduled for today</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Use &quot;Schedule Slot&quot; to book a new appointment or register a walk-in</p>
+                </div>
+              ) : (
+                todayAppointments.map((apt) => (
+                  <div key={apt.id} className="p-3 space-y-2 hover:bg-purple-50/20 transition-colors">
+                    {/* Header: Token, Slot, Status */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-950 border border-purple-200">
+                          #{apt.token}
+                        </span>
+                        <span className="font-mono font-semibold text-xs text-slate-700 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-purple-600" />
+                          {apt.time}
+                        </span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        apt.status === 'PENDING'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                          : apt.status === 'IN_SESSION'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
+                          : apt.status === 'CHECKED_IN'
+                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          : 'bg-slate-100 text-slate-700 border-slate-200'
+                      }`}>
+                        {apt.status === 'PENDING' ? 'Pending' : apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Queue' : 'Scheduled'}
+                      </span>
+                    </div>
+
+                    {/* Patient & Service */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-900">{apt.patientName}</h4>
+                        <span className="text-[11px] font-mono font-bold text-purple-800">{apt.uhid}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-semibold text-slate-600 block">{apt.service}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="pt-1.5 flex items-center gap-2">
+                      {apt.status === 'PENDING' ? (
+                        <div className="flex items-center gap-2 w-full">
+                          <button
+                            type="button"
+                            onClick={() => handleApproveAppointment(apt.id)}
+                            className="flex-1 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Approve</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDenyAppointment(apt.id)}
+                            className="flex-1 h-8 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-xs font-bold cursor-pointer flex items-center justify-center"
+                          >
+                            Deny
+                          </button>
+                        </div>
+                      ) : apt.status === 'CHECKED_IN' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}
+                          className="w-full h-8 rounded-lg bg-[#301444] text-white hover:bg-[#200b30] text-xs font-bold shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-purple-300" />
+                          <span>Call Patient In</span>
+                        </button>
+                      ) : apt.status === 'IN_SESSION' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(apt.id, 'COMPLETED')}
+                          className="w-full h-8 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-bold shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Complete Visit</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(apt.id, 'CHECKED_IN')}
+                          className="w-full h-8 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Mark Arrived</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* ── DESKTOP LIVE QUEUE TABLE (Visible on screen >= md) ── */}
+            <div className="hidden md:block overflow-x-auto">
               <table {...tableContainerProps} className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">

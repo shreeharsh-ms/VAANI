@@ -613,7 +613,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
 
           {/* Rows selector */}
-          <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+          <div className="hidden sm:flex items-center justify-end gap-1.5 text-xs text-slate-600 w-auto">
             <span className="text-[11px] font-medium">Rows:</span>
             <select
               value={pageSize}
@@ -630,43 +630,43 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
         </div>
 
-        {/* Secondary Filter Row: Status & Clinical Category */}
-        <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 pt-1 border-t border-slate-200 text-xs w-full">
+        {/* Secondary Filter Row: Status & Clinical Category (Compact 2-col on mobile) */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 pt-1 border-t border-slate-200 text-xs w-full">
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto">
-            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap w-16 sm:w-auto flex-shrink-0">Status:</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial w-full sm:w-auto"
+              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
             >
               <option value="ALL">All Statuses</option>
-              <option value="PENDING">Pending Approval</option>
+              <option value="PENDING">Pending</option>
               <option value="CONFIRMED">Confirmed</option>
-              <option value="CHECKED_IN">Checked In (Waiting)</option>
+              <option value="CHECKED_IN">Waiting</option>
               <option value="COMPLETED">Completed</option>
               <option value="NO_SHOW">No Show</option>
-              <option value="CANCELLED">Cancelled / Denied</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
 
           {/* Service Line Filter */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto">
-            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap w-16 sm:w-auto flex-shrink-0">Category:</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Category:</span>
             <select
               value={serviceFilter}
               onChange={(e) => {
                 setServiceFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial w-full sm:w-auto"
+              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
             >
-              <option value="ALL">All Clinical Categories</option>
-              <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
-              <option value="AUDIOLOGY">Audiology Diagnostics</option>
+              <option value="ALL">All Categories</option>
+              <option value="SPEECH_LANGUAGE">Speech Therapy</option>
+              <option value="AUDIOLOGY">Audiology</option>
               <option value="VOICE">Voice Therapy</option>
               <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
             </select>
