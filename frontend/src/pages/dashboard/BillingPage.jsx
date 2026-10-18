@@ -2321,15 +2321,12 @@ export const BillingPage = () => {
                     onError={(e) => { e.target.src = '/vaani-logo.png'; }}
                   />
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-extrabold text-sm tracking-tight text-[#301444]">
                         {clinicName}
                       </span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        RCI CRR No. {clinicRci}
-                      </span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                        ISO 9001:2015
+                      <span className="text-[10px] text-slate-500 font-medium border-l border-slate-300 pl-2">
+                        RCI CRR No. <strong className="text-slate-800 font-mono">{clinicRci}</strong> • ISO 9001:2015 Practice
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
@@ -2338,7 +2335,7 @@ export const BillingPage = () => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-[9.5px] font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 block mb-0.5">
+                  <span className="text-[9.5px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 block mb-0.5">
                     GST SAC: {selectedInvoiceForView.hsnSac || clinicSac}{clinicGstin ? ` • GSTIN: ${clinicGstin}` : ''}
                   </span>
                   <span className="font-mono text-xs font-extrabold text-slate-900 block">
@@ -2359,12 +2356,22 @@ export const BillingPage = () => {
                   <span className="text-slate-500 text-[10px]"> • Original for Recipient</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold border ${
                     selectedInvoiceForView.status === 'PAID'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                      ? 'bg-slate-50 text-slate-900 border-slate-300'
+                      : 'bg-rose-50 text-rose-700 border-rose-300'
                   }`}>
-                    {selectedInvoiceForView.status === 'PAID' ? '✓ PAYMENT RECEIVED' : '● PAYMENT DUE'}
+                    {selectedInvoiceForView.status === 'PAID' ? (
+                      <>
+                        <span className="text-emerald-600 font-extrabold text-xs">✓</span>
+                        <span>PAYMENT RECEIVED</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-rose-600">●</span>
+                        <span>PAYMENT DUE</span>
+                      </>
+                    )}
                   </span>
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 font-bold">
                     {selectedInvoiceForView.paymentMode}
@@ -2514,7 +2521,7 @@ export const BillingPage = () => {
                   <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
                   <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
                   <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
-                  <div className="text-[9.5px] font-mono font-bold text-emerald-700">RCI Registration: CRR No. {clinicRci}</div>
+                  <div className="text-[9.5px] font-mono text-slate-700">RCI Registration: CRR No. <strong>{clinicRci}</strong></div>
                 </div>
               </div>
 

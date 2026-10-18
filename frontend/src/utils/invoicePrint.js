@@ -185,30 +185,42 @@ export function printClinicalInvoice(invoice) {
     }
     .header-right {
       text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
     }
-    .badge-pill {
-      display: inline-block;
-      padding: 2.5px 8px;
+    .statutory-card {
+      border: 1px solid #cbd5e1;
+      background: #fafafc;
       border-radius: 4px;
-      font-size: 9.5px;
-      font-weight: 700;
-      margin-bottom: 3px;
+      padding: 4.5px 9px;
+      text-align: right;
+      min-width: 185px;
     }
-    .badge-rci {
-      background: #ecfdf5;
-      color: #065f46;
-      border: 1px solid #10b981;
-    }
-    .badge-iso {
-      background: #fdf4ff;
-      color: #86198f;
-      border: 1px solid #d946ef;
-    }
-    .hsn-info {
+    .stat-line {
       font-size: 8.5px;
+      line-height: 1.4;
+      color: #475569;
+    }
+    .stat-label {
       color: #64748b;
       font-weight: 600;
-      margin-top: 2px;
+    }
+    .stat-value {
+      color: #0f172a;
+      font-weight: 700;
+      margin-left: 3px;
+    }
+    .stat-value.mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #0f172a;
+    }
+    .stat-tax {
+      border-top: 1px dashed #e2e8f0;
+      margin-top: 2.5px;
+      padding-top: 2.5px;
+      font-size: 8px;
     }
 
     /* Document Title Banner */
@@ -233,22 +245,34 @@ export function printClinicalInvoice(invoice) {
       color: #64748b;
     }
     .status-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 9.5px;
-      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2.5px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
     .status-badge-paid {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #86efac;
+      background: #f8fafc;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
     }
     .status-badge-due {
-      background: #fee2e2;
+      background: #fef2f2;
       color: #991b1b;
-      border: 1px solid #fca5a5;
+      border: 1px solid #fecaca;
+    }
+    .status-check {
+      color: #059669;
+      font-weight: 800;
+      font-size: 9.5px;
+    }
+    .status-dot {
+      color: #dc2626;
+      font-size: 8px;
     }
 
     /* Metadata 2-Column Grid */
@@ -517,9 +541,9 @@ export function printClinicalInvoice(invoice) {
       color: #475569;
     }
     .sign-rci {
-      font-size: 9px;
-      font-weight: 800;
-      color: #047857;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #334155;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     .sign-lic {
@@ -556,9 +580,20 @@ export function printClinicalInvoice(invoice) {
         </div>
       </div>
       <div class="header-right">
-        <div class="badge-pill badge-rci">RCI CRR No. ${rciNo}</div><br/>
-        <div class="badge-pill badge-iso">ISO 9001:2015 Practice</div>
-        <div class="hsn-info">GST SAC: ${sacHsnText}${gstin ? ` • GSTIN: ${gstin}` : ''}</div>
+        <div class="statutory-card">
+          <div class="stat-line">
+            <span class="stat-label">RCI CRR No.:</span>
+            <span class="stat-value mono">${rciNo}</span>
+          </div>
+          <div class="stat-line">
+            <span class="stat-label">Accreditation:</span>
+            <span class="stat-value">ISO 9001:2015 Practice</span>
+          </div>
+          <div class="stat-line stat-tax">
+            <span class="stat-label">GST SAC:</span>
+            <span class="stat-value">${sacHsnText}${gstin ? ` • <strong>GSTIN:</strong> ${gstin}` : ''}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -570,7 +605,7 @@ export function printClinicalInvoice(invoice) {
       </div>
       <div>
         <span class="status-badge ${isPaid ? 'status-badge-paid' : 'status-badge-due'}">
-          ${isPaid ? '✓ PAYMENT RECEIVED' : '● PAYMENT DUE'}
+          ${isPaid ? '<span class="status-check">✓</span> PAYMENT RECEIVED' : '<span class="status-dot">●</span> PAYMENT DUE'}
         </span>
       </div>
     </div>
