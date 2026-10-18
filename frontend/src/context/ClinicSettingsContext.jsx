@@ -15,9 +15,9 @@ export const DEFAULT_CLINIC_SETTINGS = {
     stampNote: 'RCI Registered Practitioner Seal (CRR No. A79214)',
   },
   contact: {
-    primaryPhone: '+91 98220 12345',
+    primaryPhone: '+91 98220 12349',
     whatsappEnabled: true,
-    consultationPhone: '+91 94230 99887',
+    consultationPhone: '+91 94230 99889',
     officialEmail: 'info@vaaniclinic.com',
     websiteUrl: 'https://vaaniclinic.com',
     addressLine1: 'Shop No. 4, Ground Floor, Sadashiv Arcade',
@@ -39,6 +39,8 @@ export const DEFAULT_CLINIC_SETTINGS = {
     rciVerified: true,
     rciValidUntil: '2031-10-15',
     titlePermitted: true,
+    leadPractitioner: 'Ms. Palak Paresh Gandhi',
+    leadDegree: 'MASLP, RCI',
     cbtQualificationVerified: true,
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
     clinicalEstablishmentNo: 'MH-STR-CEA-2024-0081',
@@ -48,14 +50,23 @@ export const DEFAULT_CLINIC_SETTINGS = {
     panMasked: 'ABCDE****F',
   },
   hours: {
+    workingHoursText: 'Mon – Sat: 9:30 AM – 7:30 PM',
+    sundayHoursText: 'Sundays: By Prior Appointment',
     slotGranularityMin: 15,
     timezone: 'Asia/Kolkata',
-    morningStart: '10:00',
+    morningStart: '09:30',
     morningEnd: '13:30',
     eveningStart: '15:30',
-    eveningEnd: '20:00',
+    eveningEnd: '19:30',
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    sundayClosed: true,
+    sundayClosed: false,
+  },
+  social: {
+    instagramUrl: 'https://instagram.com/palakgandhi_maslp',
+    instagramHandle: '@palakgandhi_maslp',
+    youtubeUrl: 'https://youtube.com/@vaaniclinic',
+    facebookUrl: 'https://facebook.com/vaaniclinic',
+    whatsappPhone: '+91 98220 12349',
   },
   bookingPolicy: {
     minNoticeMin: 120,
@@ -170,6 +181,7 @@ export function getClinicSettings() {
 
 /**
  * Persists clinic settings to localStorage and dispatches a custom event.
+ * Also synchronizes with backend SQLite database in the background.
  */
 export function saveClinicSettings(newSettings) {
   if (typeof window === 'undefined') return;
@@ -177,6 +189,16 @@ export function saveClinicSettings(newSettings) {
     const merged = deepMerge(DEFAULT_CLINIC_SETTINGS, newSettings);
     localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent(CLINIC_SETTINGS_EVENT, { detail: merged }));
+
+    // Sync with backend database in the background
+    fetch('/api/v1/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(merged),
+    }).catch((err) => {
+      console.warn('Backend database sync deferred:', err?.message);
+    });
+
     return merged;
   } catch (e) {
     console.error('Failed to save clinic settings:', e);
@@ -218,6 +240,28 @@ export const ClinicSettingsProvider = ({ children }) => {
 
   const refreshSettings = useCallback(() => {
     setSettings(getClinicSettings());
+  }, []);
+
+  // Fetch verified settings from SQLite database on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/v1/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (isMounted && res?.data) {
+          const merged = deepMerge(DEFAULT_CLINIC_SETTINGS, res.data);
+          setSettings(merged);
+          localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+        }
+      })
+      .catch((err) => {
+        // Fall back gracefully to localStorage
+        console.info('Loaded clinic settings from local cache');
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -300,6 +344,17 @@ export const ClinicSettingsProvider = ({ children }) => {
     gstin: settings.credentials.gstin || '27AAAAA0000A1Z5',
     sacCode: settings.billing.sacCode || '999312',
     hsnCode: settings.billing.hsnCode || '9021',
+    leadPractitioner: settings.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
+    leadDegree: settings.credentials.leadDegree || 'MASLP, RCI',
+    workingHours: settings.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
+    sundayHours: settings.hours.sundayHoursText || 'Sundays: By Prior Appointment',
+    social: {
+      instagramUrl: settings.social?.instagramUrl || 'https://instagram.com/palakgandhi_maslp',
+      instagramHandle: settings.social?.instagramHandle || '@palakgandhi_maslp',
+      youtubeUrl: settings.social?.youtubeUrl || 'https://youtube.com/@vaaniclinic',
+      facebookUrl: settings.social?.facebookUrl || 'https://facebook.com/vaaniclinic',
+      whatsappPhone: settings.social?.whatsappPhone || settings.contact.primaryPhone || '+91 98220 12349',
+    },
     bankDetails: {
       upiId: settings.billing.upiId || 'vaaniclinic@okaxis',
       upiName: settings.billing.upiName || settings.identity.legalName || 'Vaani Speech & Hearing Clinic',
@@ -319,7 +374,6 @@ export const ClinicSettingsProvider = ({ children }) => {
 export const useClinicSettings = () => {
   const context = useContext(ClinicSettingsContext);
   if (!context) {
-    // Graceful fallback for components rendered outside the provider
     const s = getClinicSettings();
     return {
       settings: s,
@@ -343,6 +397,17 @@ export const useClinicSettings = () => {
       gstin: s.credentials.gstin || '27AAAAA0000A1Z5',
       sacCode: s.billing.sacCode || '999312',
       hsnCode: s.billing.hsnCode || '9021',
+      leadPractitioner: s.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
+      leadDegree: s.credentials.leadDegree || 'MASLP, RCI',
+      workingHours: s.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
+      sundayHours: s.hours.sundayHoursText || 'Sundays: By Prior Appointment',
+      social: {
+        instagramUrl: s.social?.instagramUrl || 'https://instagram.com/palakgandhi_maslp',
+        instagramHandle: s.social?.instagramHandle || '@palakgandhi_maslp',
+        youtubeUrl: s.social?.youtubeUrl || 'https://youtube.com/@vaaniclinic',
+        facebookUrl: s.social?.facebookUrl || 'https://facebook.com/vaaniclinic',
+        whatsappPhone: s.social?.whatsappPhone || s.contact.primaryPhone || '+91 98220 12349',
+      },
       bankDetails: {
         upiId: s.billing.upiId || 'vaaniclinic@okaxis',
         upiName: s.billing.upiName || s.identity.legalName || 'Vaani Speech & Hearing Clinic',

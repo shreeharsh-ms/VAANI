@@ -10,9 +10,12 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ROUTES, APP_CONFIG } from '../../constants';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 export const ContactPage = () => {
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  const { settings, clinicName, workingHours } = useClinicSettings();
+  const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
+  const googleMapsUrl = settings?.contact?.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     'VAANI Speech and Hearing Clinic Sadashiv Peth Satara Maharashtra 415002'
   )}`;
 
@@ -248,11 +251,11 @@ export const ContactPage = () => {
                 <MapPin className="w-5 h-5 text-purple-200" />
               </div>
               <div className="text-xs sm:text-[13px] leading-tight">
-                <strong className="block text-gray-900 font-bold mb-0.5">VAANI Clinic</strong>
-                <span className="text-gray-600">Sadashiv Peth, Satara, Maharashtra 415002</span>
+                <strong className="block text-gray-900 font-bold mb-0.5">{clinicName || 'VAANI Speech & Hearing Clinic'}</strong>
+                <span className="text-gray-600">{clinicAddress}</span>
                 <span className="block text-emerald-700 font-semibold mt-1 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Mon – Sat: 9:30 AM – 6:30 PM
+                  {workingHours || 'Mon – Sat: 9:30 AM – 7:30 PM'}
                 </span>
               </div>
             </div>

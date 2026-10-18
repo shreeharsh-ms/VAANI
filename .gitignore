@@ -45,3 +45,5 @@ htmlcov/
 
 # Local scratch
 scratch/
+instance/
+*.db

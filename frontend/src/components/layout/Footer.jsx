@@ -17,7 +17,17 @@ import { APP_CONFIG, ROUTES } from '../../constants';
 import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 export const Footer = () => {
-  const { logoUrl, clinicName, settings, rciNumber } = useClinicSettings();
+  const {
+    logoUrl,
+    clinicName,
+    settings,
+    rciNumber,
+    leadPractitioner,
+    leadDegree,
+    workingHours,
+    sundayHours,
+    social,
+  } = useClinicSettings();
   const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
   const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12345';
   const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
@@ -25,6 +35,7 @@ export const Footer = () => {
   const [flowerHovered, setFlowerHovered] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const whatsappDigits = (social?.whatsappPhone || clinicPhone || '919822012345').replace(/[^0-9]/g, '');
 
   return (
     /* Outer wrapper sharing the exact same padding and responsive border frame as the Hero, Services, and Booking sections */
@@ -134,7 +145,8 @@ export const Footer = () => {
                   Lead Audiologist &amp; Speech-Language Pathologist
                 </p>
                 <p className="text-xs sm:text-sm font-semibold text-[#7c3aed]">
-                  Ms. Palak Paresh Gandhi <span className="text-[#301444]/70 font-normal">(MASLP, RCI)</span>
+                  {leadPractitioner || 'Ms. Palak Paresh Gandhi'}{' '}
+                  <span className="text-[#301444]/70 font-normal">({leadDegree || 'MASLP, RCI'})</span>
                 </p>
               </div>
 
@@ -283,8 +295,8 @@ export const Footer = () => {
                 <li className="flex items-start gap-2.5">
                   <Clock className="w-4 h-4 text-[#9333ea] flex-shrink-0 mt-1" />
                   <div className="text-xs sm:text-sm">
-                    <p className="font-semibold text-[#301444]">Mon – Sat: 9:30 AM – 7:30 PM</p>
-                    <p className="text-[#462064]/75">Sundays: By Prior Appointment</p>
+                    <p className="font-semibold text-[#301444]">{workingHours || 'Mon – Sat: 9:30 AM – 7:30 PM'}</p>
+                    <p className="text-[#462064]/75">{sundayHours || 'Sundays: By Prior Appointment'}</p>
                   </div>
                 </li>
               </ul>
@@ -306,7 +318,7 @@ export const Footer = () => {
                 
                 {/* Instagram */}
                 <a
-                  href="https://instagram.com"
+                  href={social?.instagramUrl || 'https://instagram.com/palakgandhi_maslp'}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Follow Vaani Clinic on Instagram"
@@ -329,7 +341,7 @@ export const Footer = () => {
 
                 {/* YouTube */}
                 <a
-                  href="https://youtube.com"
+                  href={social?.youtubeUrl || 'https://youtube.com/@vaaniclinic'}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Subscribe to Vaani Clinic YouTube"
@@ -346,7 +358,7 @@ export const Footer = () => {
 
                 {/* Facebook */}
                 <a
-                  href="https://facebook.com"
+                  href={social?.facebookUrl || 'https://facebook.com/vaaniclinic'}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Follow Vaani Clinic on Facebook"
@@ -363,7 +375,7 @@ export const Footer = () => {
 
                 {/* WhatsApp Quick Chat */}
                 <a
-                  href="https://wa.me/919822012345"
+                  href={`https://wa.me/${whatsappDigits}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Chat on WhatsApp"

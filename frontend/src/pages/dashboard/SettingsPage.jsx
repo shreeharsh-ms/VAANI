@@ -82,6 +82,8 @@ const DEFAULT_SETTINGS = {
     rciVerified: true,
     rciValidUntil: '2031-10-15',
     titlePermitted: true, // Permits "Dr." prefix
+    leadPractitioner: 'Ms. Palak Paresh Gandhi',
+    leadDegree: 'MASLP, RCI',
     cbtQualificationVerified: true, // BR-042
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
     clinicalEstablishmentNo: 'MH-STR-CEA-2024-0081',
@@ -91,14 +93,23 @@ const DEFAULT_SETTINGS = {
     panMasked: 'ABCDE****F',
   },
   hours: {
+    workingHoursText: 'Mon – Sat: 9:30 AM – 7:30 PM',
+    sundayHoursText: 'Sundays: By Prior Appointment',
     slotGranularityMin: 15,
     timezone: 'Asia/Kolkata',
-    morningStart: '10:00',
+    morningStart: '09:30',
     morningEnd: '13:30',
     eveningStart: '15:30',
-    eveningEnd: '20:00',
+    eveningEnd: '19:30',
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    sundayClosed: true,
+    sundayClosed: false,
+  },
+  social: {
+    instagramUrl: 'https://instagram.com/palakgandhi_maslp',
+    instagramHandle: '@palakgandhi_maslp',
+    youtubeUrl: 'https://youtube.com/@vaaniclinic',
+    facebookUrl: 'https://facebook.com/vaaniclinic',
+    whatsappPhone: '+91 98220 12349',
   },
   bookingPolicy: {
     minNoticeMin: 120, // 2 hours
@@ -364,6 +375,26 @@ export const SettingsPage = () => {
       return DEFAULT_SETTINGS;
     }
   });
+
+  // Synchronize Settings with backend SQLite Database on Mount
+  useEffect(() => {
+    fetch('/api/v1/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res?.data) {
+          setSettings((prev) => ({
+            ...prev,
+            ...res.data,
+            credentials: { ...prev.credentials, ...(res.data.credentials || {}) },
+            billing: { ...prev.billing, ...(res.data.billing || {}) },
+            contact: { ...prev.contact, ...(res.data.contact || {}) },
+            hours: { ...prev.hours, ...(res.data.hours || {}) },
+            social: { ...prev.social, ...(res.data.social || {}) },
+          }));
+        }
+      })
+      .catch((err) => console.warn('Backend settings fetch deferred:', err));
+  }, []);
 
   // SMTP Configuration State
   const [smtpForm, setSmtpForm] = useState(() => ({
@@ -635,6 +666,13 @@ export const SettingsPage = () => {
         localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(holidays));
         saveServiceRates(serviceRates);
         window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: settings }));
+
+        // Persist to SQLite Database via Backend API
+        fetch('/api/v1/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        }).catch((err) => console.warn('Database save error:', err));
 
         // Create Tamper-Evident Audit Record
         const newAudit = {
@@ -3184,27 +3222,45 @@ export const SettingsPage = () => {
                     <span className="text-[9px] text-purple-300 mt-1.5 text-center">Used in Top Navbar &amp; Drawer</span>
                   </div>
 
-                  {/* Practitioner Accreditation Card */}
-                  <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/70 shadow-2xs flex flex-col justify-between">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-1 mb-1.5">
+                  {/* Practitioner Accreditation Card - Fully Editable */}
+                  <div className="p-2.5 rounded-lg border border-purple-200 bg-purple-50/40 shadow-2xs flex flex-col justify-between">
+                    <div className="flex items-center justify-between border-b border-purple-200 pb-1 mb-1.5">
                       <span className="text-[11px] font-bold text-slate-800">Practitioner Accreditation</span>
-                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Verified</span>
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Editable • Live Sync</span>
                     </div>
-                    <div className="space-y-1 text-[10.5px] text-slate-700">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">RCI CRR Number:</span>
-                        <span className="font-mono font-bold text-purple-950">{settings.credentials.rciNumber}</span>
+                    <div className="space-y-1.5 text-[10.5px] text-slate-700">
+                      <div className="flex justify-between items-center gap-1.5">
+                        <label className="text-slate-600 font-semibold text-[10px] whitespace-nowrap">RCI CRR Number:</label>
+                        <input
+                          type="text"
+                          value={settings.credentials.rciNumber || ''}
+                          onChange={(e) => handleChange('credentials', 'rciNumber', e.target.value)}
+                          className="h-6 w-32 px-1.5 text-xs font-mono font-bold text-purple-950 bg-white border border-slate-300 rounded text-right focus:border-purple-600 focus:outline-none"
+                          placeholder="A79214"
+                        />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Statutory GSTIN:</span>
-                        <span className="font-mono font-semibold text-slate-900">{settings.credentials.gstin || '27AAAAA0000A1Z5'}</span>
+                      <div className="flex justify-between items-center gap-1.5">
+                        <label className="text-slate-600 font-semibold text-[10px] whitespace-nowrap">Statutory GSTIN:</label>
+                        <input
+                          type="text"
+                          value={settings.credentials.gstin || ''}
+                          onChange={(e) => handleChange('credentials', 'gstin', e.target.value.toUpperCase())}
+                          className="h-6 w-36 px-1.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded text-right uppercase focus:border-purple-600 focus:outline-none"
+                          placeholder="27AAAAA0000A1Z5"
+                        />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Service SAC Code:</span>
-                        <span className="font-mono font-semibold text-slate-900">{settings.billing.sacCode || '999312'}</span>
+                      <div className="flex justify-between items-center gap-1.5">
+                        <label className="text-slate-600 font-semibold text-[10px] whitespace-nowrap">Service SAC Code:</label>
+                        <input
+                          type="text"
+                          value={settings.billing.sacCode || ''}
+                          onChange={(e) => handleChange('billing', 'sacCode', e.target.value)}
+                          className="h-6 w-24 px-1.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded text-right focus:border-purple-600 focus:outline-none"
+                          placeholder="999312"
+                        />
                       </div>
                     </div>
-                    <span className="text-[9px] text-slate-500 mt-1.5 text-center">Synced with RCI Practice License</span>
+                    <span className="text-[9px] text-purple-700 font-medium mt-1.5 text-center">Controls Main Site, Invoices &amp; Reports</span>
                   </div>
                 </div>
               </div>
@@ -3323,6 +3379,130 @@ export const SettingsPage = () => {
                     value={settings.contact.accessibilityNote}
                     onChange={(e) => handleChange('contact', 'accessibilityNote', e.target.value)}
                     className="h-7 w-full px-2 text-xs text-slate-800 bg-white border border-slate-300 rounded"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Official Social Media Channels (Main Site & Footer Sync) */}
+          <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
+                Official Social Media Channels (Live Website Sync)
+              </span>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
+                Footer &amp; About Page Bound
+              </span>
+            </div>
+
+            <div className="p-3 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Instagram Profile URL</label>
+                  <input
+                    type="url"
+                    value={settings.social?.instagramUrl || ''}
+                    onChange={(e) => handleChange('social', 'instagramUrl', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-mono text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="https://instagram.com/palakgandhi_maslp"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Instagram Handle</label>
+                  <input
+                    type="text"
+                    value={settings.social?.instagramHandle || ''}
+                    onChange={(e) => handleChange('social', 'instagramHandle', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-mono font-bold text-purple-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="@palakgandhi_maslp"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">WhatsApp Chat Number</label>
+                  <input
+                    type="text"
+                    value={settings.social?.whatsappPhone || ''}
+                    onChange={(e) => handleChange('social', 'whatsappPhone', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-mono font-bold text-emerald-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="+91 98220 12349"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">YouTube Channel URL</label>
+                  <input
+                    type="url"
+                    value={settings.social?.youtubeUrl || ''}
+                    onChange={(e) => handleChange('social', 'youtubeUrl', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-mono text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="https://youtube.com/@vaaniclinic"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Facebook Page URL</label>
+                  <input
+                    type="url"
+                    value={settings.social?.facebookUrl || ''}
+                    onChange={(e) => handleChange('social', 'facebookUrl', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-mono text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="https://facebook.com/vaaniclinic"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Public Timings & Lead Practitioner Card */}
+          <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
+                Public Operating Timings &amp; Lead Practitioner
+              </span>
+              <span className="text-[10px] text-purple-700 bg-purple-50 font-bold px-1.5 py-0.5 rounded border border-purple-200">
+                Controls Public Website &amp; Reports
+              </span>
+            </div>
+
+            <div className="p-3 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Standard Working Hours Text</label>
+                  <input
+                    type="text"
+                    value={settings.hours?.workingHoursText || ''}
+                    onChange={(e) => handleChange('hours', 'workingHoursText', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="Mon – Sat: 9:30 AM – 7:30 PM"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Sunday / Special Appointment Text</label>
+                  <input
+                    type="text"
+                    value={settings.hours?.sundayHoursText || ''}
+                    onChange={(e) => handleChange('hours', 'sundayHoursText', e.target.value)}
+                    className="h-7 w-full px-2 text-xs text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="Sundays: By Prior Appointment"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Lead Practitioner Full Name</label>
+                  <input
+                    type="text"
+                    value={settings.credentials?.leadPractitioner || ''}
+                    onChange={(e) => handleChange('credentials', 'leadPractitioner', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-bold text-purple-950 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="Ms. Palak Paresh Gandhi"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-0.5">Degree &amp; Professional Qualifications</label>
+                  <input
+                    type="text"
+                    value={settings.credentials?.leadDegree || ''}
+                    onChange={(e) => handleChange('credentials', 'leadDegree', e.target.value)}
+                    className="h-7 w-full px-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                    placeholder="MASLP, RCI"
                   />
                 </div>
               </div>

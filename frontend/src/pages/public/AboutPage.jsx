@@ -16,6 +16,7 @@ import {
 import Container from '../../components/layout/Container';
 import Button from '../../components/common/Button';
 import { APP_CONFIG, ROUTES } from '../../constants';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 
 const CLINICAL_TIMELINE = [
   {
@@ -100,6 +101,7 @@ const CLINICAL_TIMELINE = [
 ];
 
 export const AboutPage = () => {
+  const { rciNumber, social, settings } = useClinicSettings();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isSectionInView, setIsSectionInView] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -295,16 +297,22 @@ export const AboutPage = () => {
             <div className="w-full space-y-3.5 sm:space-y-6 text-left p-2 sm:p-5 lg:p-0">
               
               {/* Social / Practitioner Tag Badge */}
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/95 backdrop-blur-md border border-purple-200/90 shadow-sm self-start">
+              <a
+                href={social?.instagramUrl || 'https://instagram.com/palakgandhi_maslp'}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Follow on Instagram"
+                className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/95 backdrop-blur-md border border-purple-200/90 shadow-sm self-start hover:scale-105 transition-transform"
+              >
                 <img
                   src="/practitioner-headshot.png"
                   alt="Palak Gandhi"
                   className="w-6 h-6 rounded-full object-cover object-top border border-purple-300"
                 />
                 <span className="text-xs sm:text-sm font-bold text-[#301444] tracking-tight">
-                  @palakgandhi_maslp
+                  {social?.instagramHandle || '@palakgandhi_maslp'}
                 </span>
-              </div>
+              </a>
 
               {/* Unified Bold Sans Headline across both lines (Same Font Family & Weight on Mobile & Laptop) */}
               <div>
@@ -326,7 +334,7 @@ export const AboutPage = () => {
               {/* Credential Badge */}
               <div className="pt-1 flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-[#301444]">
                 <ShieldCheck className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                <span>RCI Certified • Registration No. A79214</span>
+                <span>RCI Certified • Registration No. {rciNumber || 'A79214'}</span>
               </div>
 
               {/* Action Buttons: Stacked big one below one on Android / Mobile screens */}
@@ -342,7 +350,7 @@ export const AboutPage = () => {
                 </Link>
 
                 <a
-                  href={`tel:${APP_CONFIG.phone}`}
+                  href={`tel:${(settings?.contact?.primaryPhone || APP_CONFIG.phone).replace(/\s+/g, '')}`}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-full border border-purple-200 dark:border-purple-800 text-sm sm:text-base font-bold text-[#301444] dark:text-purple-200 bg-white/95 hover:bg-purple-50 shadow-sm active:scale-98 transition-all cursor-pointer whitespace-nowrap"
                 >
                   <Phone className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
