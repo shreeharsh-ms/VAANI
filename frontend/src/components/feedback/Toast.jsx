@@ -15,19 +15,24 @@ export const Toast = () => {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    <div className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 z-[9999] flex flex-col gap-2 max-w-full sm:max-w-md pointer-events-none items-center sm:items-end">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto flex items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl text-sm animate-in slide-in-from-bottom-5 duration-200"
+          className="pointer-events-auto w-full flex items-start sm:items-center justify-between gap-2.5 px-3.5 py-3 sm:p-4 rounded-xl border border-gray-200/90 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-2xl text-xs sm:text-sm animate-in slide-in-from-bottom-3 duration-200"
         >
-          <div className="flex items-center gap-3">
-            {icons[toast.type] || icons.info}
-            <span className="text-gray-800 dark:text-gray-200 font-medium">{toast.message}</span>
+          <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+            <div className="mt-0.5 sm:mt-0 flex-shrink-0">
+              {icons[toast.type] || icons.info}
+            </div>
+            <span className="text-gray-800 dark:text-gray-200 font-medium text-xs sm:text-sm leading-snug break-words flex-1">
+              {toast.message}
+            </span>
           </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+            className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 -mr-1 -mt-0.5 sm:mt-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Dismiss notification"
           >
             <X className="w-4 h-4" />
           </button>

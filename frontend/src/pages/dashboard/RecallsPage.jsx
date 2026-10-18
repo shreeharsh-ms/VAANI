@@ -697,8 +697,8 @@ export const RecallsPage = () => {
           recipientName={selectedRecallForWhatsApp.patientName}
           recipientPhone={selectedRecallForWhatsApp.phone || ''}
           uhid={selectedRecallForWhatsApp.uhid}
-          attachedFile={`Recall_Schedule_${selectedRecallForWhatsApp.category?.replace(/\s+/g, '_')}.pdf`}
-          documentTitle={`Clinical Recall: ${selectedRecallForWhatsApp.reason}`}
+          attachedFile={null}
+          documentTitle={null}
           defaultMessage={getRecallWhatsAppMessage(selectedRecallForWhatsApp)}
           onSuccess={({ phone }) => {
             if (phone && phone !== selectedRecallForWhatsApp.phone) {

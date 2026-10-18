@@ -343,34 +343,34 @@ export const ReportsPage = () => {
       {/* ── RECENT PATIENT CLINICAL RECORDS TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         {/* Table Filter Toolbar */}
-        <div className="p-3 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="p-2.5 sm:p-3 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Recent Clinical Reports ({filteredReports.length})
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
             {/* Search Box */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search patient, UHID, or report..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 pr-3 py-1 text-xs text-slate-800 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-700 w-52"
+                className="pl-8 pr-3 py-1.5 sm:py-1 text-xs text-slate-800 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-700 w-full sm:w-52"
               />
             </div>
 
             {/* Discipline Filter */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5">
               {disciplines.slice(0, 5).map((disc) => (
                 <button
                   key={disc}
                   type="button"
                   onClick={() => setSelectedDiscipline(disc)}
-                  className={`px-2 py-1 text-[10px] font-bold rounded cursor-pointer transition-colors ${
+                  className={`px-2 py-1 text-[10px] font-bold rounded cursor-pointer transition-colors whitespace-nowrap ${
                     selectedDiscipline === disc
                       ? 'bg-purple-900 text-white'
                       : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'

@@ -326,7 +326,7 @@ export const PatientsPage = () => {
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
             <User className="w-3.5 h-3.5 text-purple-700" />
             <span>Master Patient Index (MPI)</span>
@@ -347,14 +347,14 @@ export const PatientsPage = () => {
         </div>
 
         {/* Right: Actions with Shortcut Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
             title="Export master patient index to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3 h-3 text-slate-500" />
+            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
             <span>Export CSV</span>
             <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
           </button>
@@ -362,7 +362,7 @@ export const PatientsPage = () => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Register new patient with auto UHID (Alt + N / ⌥N)"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -373,20 +373,20 @@ export const PatientsPage = () => {
       </div>
 
       {/* ── FILTER & SEARCH BAR ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[280px]">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 w-full sm:w-auto">
           {/* Multi-field search */}
-          <div className="relative flex items-center flex-1 max-w-sm">
+          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by UHID, patient name, phone, locality, or diagnosis..."
+              placeholder="Search UHID, name, phone, diagnosis..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
+              className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
             />
             {search && (
               <button
@@ -406,7 +406,7 @@ export const PatientsPage = () => {
               setSelectedService(e.target.value);
               setPage(1);
             }}
-            className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
           >
             <option value="ALL">All Clinical Service Lines</option>
             <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
@@ -417,7 +417,7 @@ export const PatientsPage = () => {
         </div>
 
         {/* Rows selector */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
           <span className="text-[11px] font-medium">Rows:</span>
           <select
             value={pageSize}
@@ -425,7 +425,7 @@ export const PatientsPage = () => {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+            className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
           >
             <option value={10}>10</option>
             <option value={25}>25</option>

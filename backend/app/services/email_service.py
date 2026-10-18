@@ -800,9 +800,14 @@ class EmailService:
             port = smtp_config.get("port", 587)
             now_str = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
-            clean_filename = attached_file_name or (f"{document_title or 'Clinical_Document'}.pdf").replace(" ", "_")
-            if not clean_filename.lower().endswith(".pdf"):
-                clean_filename += ".pdf"
+            # Determine whether this email has a real file attachment
+            # An appointment reminder or general notification should NOT attach any PDF
+            has_attachment = bool(attached_file_name or report_data)
+            clean_filename = None
+            if has_attachment:
+                clean_filename = attached_file_name or (f"{document_title or 'Clinical_Document'}.pdf").replace(" ", "_")
+                if not clean_filename.lower().endswith(".pdf"):
+                    clean_filename += ".pdf"
 
             # 1. Root container (mixed)
             msg = MIMEMultipart("mixed")
@@ -818,15 +823,48 @@ class EmailService:
             alt = MIMEMultipart("alternative")
             related.attach(alt)
 
+            attachment_plain = f"\n\n---\nAttached Clinical Document: {clean_filename}" if has_attachment else ""
             plain_text = (
-                f"{body_text}\n\n"
-                f"---\n"
-                f"Attached Clinical Document: {clean_filename}\n"
+                f"{body_text}"
+                f"{attachment_plain}\n\n"
                 f"Clinic: Vaani Speech & Hearing Clinic\n"
                 f"Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002\n"
                 f"Phone: +91 98220 12345 • Mob: +91 94230 99887\n"
                 f"Chief Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) | RCI CRR No. A79214\n"
             )
+
+            attachment_box_html = f"""
+                    <!-- Attached Document Notification Box -->
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f3ff; border: 1.5px solid #d8b4fe; border-radius: 8px; margin: 20px 0 10px 0;">
+                      <tr>
+                        <td style="padding: 14px 16px;">
+                          <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td width="36" style="vertical-align: middle; font-size: 26px;">
+                                📄
+                              </td>
+                              <td style="vertical-align: middle; padding-left: 8px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #4c1d95;">
+                                  Attached Document: {clean_filename}
+                                </div>
+                                <div style="font-size: 11px; color: #6d28d9; margin-top: 2px;">
+                                  {document_title or 'Clinical Evaluation Report'} • Digitally Signed Clinical PDF
+                                </div>
+                              </td>
+                              <td width="95" style="text-align: right; vertical-align: middle;">
+                                <span style="display: inline-block; background-color: #059669; color: #ffffff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase;">
+                                  Attached
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0; text-align: right;">
+                      ↓ The official report with clinical findings is attached below.
+                    </p>
+            """ if has_attachment else ""
 
             html_body = f"""
             <!DOCTYPE html>
@@ -855,7 +893,7 @@ class EmailService:
                         </td>
                         <td width="50%" style="text-align: right;">
                           <strong>Date:</strong> {now_str.split(',')[0]}<br/>
-                          <span style="color: #7e22ce; font-weight: 600;">Official Medical Record</span>
+                          <span style="color: #7e22ce; font-weight: 600;">Official Medical Communication</span>
                         </td>
                       </tr>
                     </table>
@@ -868,37 +906,7 @@ class EmailService:
                     <div style="margin-bottom: 16px;">
                       {body_text.replace(chr(10), '<br>')}
                     </div>
-
-                    <!-- Attached Document Notification Box -->
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f3ff; border: 1.5px solid #d8b4fe; border-radius: 8px; margin: 20px 0 10px 0;">
-                      <tr>
-                        <td style="padding: 14px 16px;">
-                          <table width="100%" cellpadding="0" cellspacing="0">
-                            <tr>
-                              <td width="36" style="vertical-align: middle; font-size: 26px;">
-                                📄
-                              </td>
-                              <td style="vertical-align: middle; padding-left: 8px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #4c1d95;">
-                                  Attached Document: {clean_filename}
-                                </div>
-                                <div style="font-size: 11px; color: #6d28d9; margin-top: 2px;">
-                                  {document_title or 'Audiological Evaluation Report'} • Digitally Signed Clinical PDF
-                                </div>
-                              </td>
-                              <td width="95" style="text-align: right; vertical-align: middle;">
-                                <span style="display: inline-block; background-color: #059669; color: #ffffff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase;">
-                                  Attached
-                                </span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                    <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0; text-align: right;">
-                      ↓ The official report with dual audiograms, PTA table &amp; clinical findings is attached below.
-                    </p>
+                    {attachment_box_html}
                   </td>
                 </tr>
 
@@ -936,34 +944,40 @@ class EmailService:
                     img_part.add_header("Content-Disposition", "inline", filename="vaani-header-banner.png")
                     related.attach(img_part)
 
-            # 5. Generate and attach the REAL Clinical Evaluation Report PDF
-            pdf_bytes = cls.generate_clinical_pdf(
-                patient_name=patient_name,
-                uhid=uhid,
-                document_title=document_title or "Audiological Evaluation",
-                body_text=body_text,
-                report_data=report_data,
-            )
-            pdf_attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
-            pdf_attachment.add_header(
-                "Content-Disposition",
-                "attachment",
-                filename=clean_filename,
-            )
-            msg.attach(pdf_attachment)
+            # 5. Generate and attach the REAL Clinical Evaluation Report PDF if an attachment was requested
+            if has_attachment:
+                pdf_bytes = cls.generate_clinical_pdf(
+                    patient_name=patient_name,
+                    uhid=uhid,
+                    document_title=document_title or "Clinical Evaluation Report",
+                    body_text=body_text,
+                    report_data=report_data,
+                )
+                pdf_attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
+                pdf_attachment.add_header(
+                    "Content-Disposition",
+                    "attachment",
+                    filename=clean_filename,
+                )
+                msg.attach(pdf_attachment)
 
             # Send through authenticated SMTP server
             server.send_message(msg)
 
+            msg_text = (
+                f"Official clinical report '{clean_filename}' successfully emailed to {to_email} with attached PDF"
+                if has_attachment
+                else f"Email notification successfully sent to {to_email}"
+            )
             return {
                 "success": True,
                 "status": "SENT",
                 "code": 250,
-                "message": f"Official clinical report '{clean_filename}' successfully emailed to {to_email} with attached PDF",
+                "message": msg_text,
                 "timestamp": now_str,
                 "recipient": to_email,
                 "host": f"{host}:{port}",
-                "attachment": clean_filename,
+                "attachment": clean_filename if has_attachment else None,
             }
         except Exception as e:
             return {

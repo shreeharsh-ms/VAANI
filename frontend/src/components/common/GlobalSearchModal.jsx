@@ -96,27 +96,27 @@ export const GlobalSearchModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-24 px-2.5 sm:px-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         className="w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="relative flex items-center px-4 py-3 border-b border-slate-200 bg-slate-50/50">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+        <div className="relative flex items-center px-3 sm:px-4 py-2.5 sm:py-3 border-b border-slate-200 bg-slate-50/50">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 sm:left-4 pointer-events-none" />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Type a patient name, UHID, invoice, report, or jump to page... (Press ↑↓ to navigate, Enter to open, Esc to close)"
+            placeholder="Search patients, UHID, invoices, reports, pages..."
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full pl-7 pr-16 py-1 text-sm bg-transparent border-0 text-slate-900 placeholder-slate-400 focus:outline-none font-medium"
+            className="w-full pl-7 sm:pl-8 pr-16 py-1 text-xs sm:text-sm bg-transparent border-0 text-slate-900 placeholder-slate-400 focus:outline-none font-medium"
           />
-          <div className="absolute right-3 flex items-center gap-1.5">
+          <div className="absolute right-2.5 sm:right-3 flex items-center gap-1.5">
             <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-200/80 px-1.5 py-0.5 rounded border border-slate-300">
               ESC
             </span>

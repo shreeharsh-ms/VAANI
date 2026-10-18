@@ -465,14 +465,14 @@ Kindly reply *CONFIRM* to acknowledge.`;
         </div>
 
         {/* Right: Actions with Shortcut Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
             title="Export appointments to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3 h-3 text-slate-500" />
+            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
             <span>Export CSV</span>
             <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
           </button>
@@ -480,7 +480,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
           <button
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Schedule consultation slot (Alt + N / ⌥N)"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -491,20 +491,20 @@ Kindly reply *CONFIRM* to acknowledge.`;
       </div>
 
       {/* ── FILTER & SEARCH BAR WITH COMPREHENSIVE DATE FILTERS ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           {/* Multi-field search */}
-          <div className="relative flex items-center flex-1 min-w-[240px] max-w-sm">
+          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by patient name, UHID, phone, or service..."
+              placeholder="Search patient, UHID, phone, service..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
+              className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
             />
             {search && (
               <button
@@ -528,13 +528,13 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setDateFilter('ALL');
                 setPage(1);
               }}
-              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+              className={`px-2 py-1 sm:py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
                 dateFilter === 'ALL'
                   ? 'bg-[#301444] text-white border-[#301444]'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
               }`}
             >
-              All Dates
+              All
             </button>
             <button
               type="button"
@@ -542,7 +542,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setDateFilter('TODAY');
                 setPage(1);
               }}
-              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+              className={`px-2 py-1 sm:py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
                 dateFilter === 'TODAY'
                   ? 'bg-[#301444] text-white border-[#301444]'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -556,7 +556,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setDateFilter('TOMORROW');
                 setPage(1);
               }}
-              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+              className={`px-2 py-1 sm:py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
                 dateFilter === 'TOMORROW'
                   ? 'bg-[#301444] text-white border-[#301444]'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
@@ -570,13 +570,13 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setDateFilter('THIS_WEEK');
                 setPage(1);
               }}
-              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
+              className={`px-2 py-1 sm:py-0.5 rounded text-xs font-semibold border transition-colors cursor-pointer ${
                 dateFilter === 'THIS_WEEK'
                   ? 'bg-[#301444] text-white border-[#301444]'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
               }`}
             >
-              Next 7 Days
+              Next 7D
             </button>
 
             {/* Custom Date Input */}
@@ -613,7 +613,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
 
           {/* Rows selector */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+          <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
             <span className="text-[11px] font-medium">Rows:</span>
             <select
               value={pageSize}
@@ -621,7 +621,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setPageSize(Number(e.target.value));
                 setPage(1);
               }}
-              className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+              className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -633,15 +633,15 @@ Kindly reply *CONFIRM* to acknowledge.`;
         {/* Secondary Filter Row: Status & Clinical Category */}
         <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-200 text-xs">
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-slate-500">Status:</span>
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              className="h-7 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending Approval</option>
@@ -654,15 +654,15 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
 
           {/* Service Line Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-slate-500">Category:</span>
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">Category:</span>
             <select
               value={serviceFilter}
               onChange={(e) => {
                 setServiceFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              className="h-7 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
             >
               <option value="ALL">All Clinical Categories</option>
               <option value="SPEECH_LANGUAGE">Speech-Language</option>
@@ -1319,8 +1319,8 @@ Kindly reply *CONFIRM* to acknowledge.`;
           recipientName={selectedAptForWhatsApp.patient_name}
           recipientPhone={selectedAptForWhatsApp.patient_phone || ''}
           uhid={selectedAptForWhatsApp.patient_uhid || selectedAptForWhatsApp.uhid}
-          attachedFile={`Appointment_Slot_${selectedAptForWhatsApp.appointment_date}_${selectedAptForWhatsApp.start_time.replace(/[^a-zA-Z0-9]/g, '')}.pdf`}
-          documentTitle={`Consultation Slip: ${selectedAptForWhatsApp.service_name}`}
+          attachedFile={null}
+          documentTitle={null}
           defaultMessage={getAppointmentWhatsAppMessage(selectedAptForWhatsApp)}
           onSuccess={({ phone }) => {
             if (phone && phone !== selectedAptForWhatsApp.patient_phone) {
@@ -1345,10 +1345,10 @@ Kindly reply *CONFIRM* to acknowledge.`;
           recipientName={selectedAptForMail.patient_name}
           recipientEmail={selectedAptForMail.patient_email || ''}
           uhid={selectedAptForMail.patient_uhid || selectedAptForMail.uhid}
-          attachedFile={`Appointment_Slot_${selectedAptForMail.appointment_date}.pdf`}
-          documentTitle={`Consultation Slip: ${selectedAptForMail.service_name}`}
+          attachedFile={null}
+          documentTitle={null}
           defaultSubject={`Clinical Appointment Reminder: ${selectedAptForMail.appointment_date} at ${selectedAptForMail.start_time} - Vaani Clinic`}
-          defaultMessage={`Dear ${selectedAptForMail.patient_name},\n\nThis is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.\n\nAppointment Particulars:\n- Date: ${selectedAptForMail.appointment_date}\n- Time Slot: ${selectedAptForMail.start_time}\n- Clinical Service: ${selectedAptForMail.service_name}\n- Consultant: ${selectedAptForMail.clinician || 'Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214'}\n- Clinic Address: Sadashiv Peth, Satara, Maharashtra (Opp. Civil Hospital)\n- Direct Phone: +91 98220 12345\n\nPlease arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.\n\nWarm regards,\nVaani Speech & Hearing Clinic`}
+          defaultMessage={`Dear ${selectedAptForMail.patient_name},\n\nThis is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.\n\nAppointment Particulars:\n- Date: ${selectedAptForMail.appointment_date}\n- Time Slot: ${selectedAptForMail.start_time}\n- Clinical Service: ${selectedAptForMail.service_name}\n- Consultant: ${selectedAptForMail.clinician || 'Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214'}\n- Clinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002\n- Direct Phone: +91 98220 12345\n\nPlease arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.\n\nWarm regards,\nVaani Speech & Hearing Clinic`}
           onSuccess={({ email }) => {
             if (email && email !== selectedAptForMail.patient_email) {
               setAppointments((prev) =>
