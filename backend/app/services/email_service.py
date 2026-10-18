@@ -18,21 +18,37 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.graphics.shapes import Drawing, Rect, Line, Circle, String
 
+try:
+    from app.services.settings_service import SettingsService
+except ImportError:
+    from services.settings_service import SettingsService
+
 
 class OfficialFooterBanner(Flowable):
     """Draws the authentic clinical footer banner with QR code, cursive signature, and DPDP disclaimer."""
     def __init__(
         self,
         banner_path: Optional[str],
-        examiner_name: str = "Dr. Shreeharsh Shivpuje, BASLP, MASLP",
-        rci_no: str = "A79214",
+        examiner_name: Optional[str] = None,
+        rci_no: Optional[str] = None,
         width: float = 190 * mm,
         height: float = 27 * mm,
     ):
         super().__init__()
         self.banner_path = banner_path
-        self.examiner_name = examiner_name
-        self.rci_no = rci_no
+        try:
+            settings = SettingsService.get_settings()
+            creds = settings.get("credentials", {})
+            lead_name = creds.get("leadPractitioner") or "Ms. Palak Paresh Gandhi"
+            lead_degree = creds.get("leadDegree") or "MASLP, RCI"
+            default_examiner = f"{lead_name}, {lead_degree}"
+            default_rci = creds.get("rciNumber") or "A79214"
+        except Exception:
+            default_examiner = "Ms. Palak Paresh Gandhi, MASLP"
+            default_rci = "A79214"
+
+        self.examiner_name = examiner_name if (examiner_name and "Shreeharsh" not in examiner_name) else default_examiner
+        self.rci_no = rci_no or default_rci
         self.width = width
         self.height = height
 
@@ -47,9 +63,10 @@ class OfficialFooterBanner(Flowable):
         right_margin = self.width - 6 * mm
 
         # Signature in cursive/italic
+        sig_name = self.examiner_name.split(',')[0].replace('Dr.', '').replace('Ms.', '').replace('Mr.', '').strip()
         canv.setFont('Times-BoldItalic', 11)
         canv.setFillColor(colors.HexColor('#301444'))
-        canv.drawRightString(right_margin, 24 * mm, 'Shreeharsh M. Shivpuje')
+        canv.drawRightString(right_margin, 24 * mm, sig_name)
 
         # Divider line
         canv.setStrokeColor(colors.HexColor('#581c87'))
@@ -256,7 +273,7 @@ class EmailService:
         )
 
         # Default fallback values for Audiological Evaluation
-        p_name = patient_name or rep.get("patient_name") or patient_obj.get("full_name") or "Shreeharsh Shivpuje"
+        p_name = patient_name or rep.get("patient_name") or patient_obj.get("full_name") or "Patient"
         p_uhid = uhid or rep.get("uhid") or patient_obj.get("uhid") or "VN-26-0001"
         p_age_sex = rep.get("patient_age_sex")
         if not p_age_sex and patient_obj:
@@ -311,8 +328,20 @@ class EmailService:
             or params.get("recommendations")
             or "Bilateral digital hearing aid trial (Receiver-in-Canal, RIC).\nAnnual audiometric monitoring."
         )
-        examiner_name = rep.get("examiner") or params.get("examiner") or "Ms. Palak Paresh Gandhi, MASLP"
-        rci_no = rep.get("rci_number") or params.get("rci_no") or "A79214"
+        try:
+            settings = SettingsService.get_settings()
+            creds = settings.get("credentials", {})
+            lead_name = creds.get("leadPractitioner") or "Ms. Palak Paresh Gandhi"
+            lead_degree = creds.get("leadDegree") or "MASLP, RCI"
+            default_examiner = f"{lead_name}, {lead_degree}"
+            default_rci = creds.get("rciNumber") or "A79214"
+        except Exception:
+            default_examiner = "Ms. Palak Paresh Gandhi, MASLP"
+            default_rci = "A79214"
+
+        raw_examiner = rep.get("examiner") or params.get("examiner")
+        examiner_name = raw_examiner if (raw_examiner and "Shreeharsh" not in raw_examiner) else default_examiner
+        rci_no = rep.get("rci_number") or params.get("rci_no") or default_rci
 
         # 1. Official Header Banner (vaani-header-banner.png)
         header_path = cls._find_header_image()
@@ -521,9 +550,10 @@ class EmailService:
                 canvas.drawImage(footer_path, banner_x, banner_y, width=banner_w, height=banner_h, preserveAspectRatio=False)
 
                 right_margin = banner_w - 12 * mm
+                sig_name = examiner_name.split(',')[0].replace('Dr.', '').replace('Ms.', '').replace('Mr.', '').strip()
                 canvas.setFont('Times-BoldItalic', 12)
                 canvas.setFillColor(colors.HexColor('#301444'))
-                canvas.drawRightString(right_margin, banner_y + 25 * mm, 'Shreeharsh M. Shivpuje')
+                canvas.drawRightString(right_margin, banner_y + 25 * mm, sig_name)
 
                 canvas.setStrokeColor(colors.HexColor('#581c87'))
                 canvas.setLineWidth(0.6)

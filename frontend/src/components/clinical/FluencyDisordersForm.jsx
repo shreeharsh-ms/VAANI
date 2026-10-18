@@ -108,7 +108,7 @@ export const FluencyDisordersForm = ({
         sampleRecordedDate: '17/10/2026',
         sampleRecordedReference: 'Sony Digital Voice Recorder ICD-UX570 / WAV 24-bit (REF: FLU-REC-2026-088)',
         clinicianName: 'A. Kulkarni (Clinical Intern)',
-        supervisorName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+        supervisorName: 'Ms. Palak Paresh Gandhi, MASLP',
       };
       Object.entries(sampleCase).forEach(([key, val]) => handleParamChange(key, val));
       notify?.('Loaded Moderate Stuttering Assessment Case Preset', 'success');
@@ -199,7 +199,7 @@ export const FluencyDisordersForm = ({
         sampleRecordedDate: '17/10/2026',
         sampleRecordedReference: 'Audio Ref: FLU-2026-MILD-014',
         clinicianName: 'A. Kulkarni (Clinical Intern)',
-        supervisorName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+        supervisorName: 'Ms. Palak Paresh Gandhi, MASLP',
       };
       Object.entries(mildCase).forEach(([key, val]) => handleParamChange(key, val));
       notify?.('Loaded Mild Fluency Case Preset', 'success');
@@ -1166,7 +1166,7 @@ export const FluencyDisordersForm = ({
                 value={params.supervisorName || ''}
                 onChange={(e) => handleParamChange('supervisorName', e.target.value)}
                 className="w-full px-2 py-1 text-xs border border-slate-300 rounded"
-                placeholder="Dr. Shreeharsh Shivpuje, BASLP, MASLP"
+                placeholder="Ms. Palak Paresh Gandhi, MASLP"
               />
             </div>
           </div>

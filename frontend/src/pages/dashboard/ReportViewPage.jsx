@@ -6,6 +6,7 @@ import { EmailDispatchModal, WhatsAppDispatchModal } from '../../components/comm
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { getAllClinicalReports } from '../../data/clinicalReportsData';
+import { getClinicSettings } from '../../context/ClinicSettingsContext';
 
 export const ReportViewPage = () => {
   const { id } = useParams();
@@ -137,11 +138,21 @@ export const ReportViewPage = () => {
             };
           }
 
+          const settings = getClinicSettings();
+          const leadPractitioner = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+          const leadDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+          const defaultExaminer = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
+          const defaultRci = settings?.credentials?.rciNumber || 'A79214';
+
+          const resolvedExaminer = match.examiner && !match.examiner.includes('Shreeharsh')
+            ? match.examiner
+            : defaultExaminer;
+
           setReportData({
             reportNumber: match.report_number || match.id,
             reportDate: match.date || new Date().toISOString().split('T')[0],
-            examinerName: match.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-            rciNumber: match.rci_number || 'A79214',
+            examinerName: resolvedExaminer,
+            rciNumber: match.rci_number || defaultRci,
             service: srv,
             patient: patient,
             patientDossier: dossier,
@@ -165,11 +176,17 @@ export const ReportViewPage = () => {
     // 4. Ultimate fallback: Default PTA proforma
     const srv = CLINICAL_SERVICES[0];
     const patient = SEED_PATIENTS[0];
+    const settings = getClinicSettings();
+    const fallbackLead = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+    const fallbackDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+    const fallbackExaminer = `${fallbackLead}${fallbackDegree ? `, ${fallbackDegree}` : ''}`;
+    const fallbackRci = settings?.credentials?.rciNumber || 'A79214';
+
     setReportData({
       reportNumber: id || 'REP-26-0001',
       reportDate: new Date().toISOString().split('T')[0],
-      examinerName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      rciNumber: 'A79214',
+      examinerName: fallbackExaminer,
+      rciNumber: fallbackRci,
       service: srv,
       patient: patient,
       patientDossier: PATIENT_DOSSIERS[patient.uhid] || null,

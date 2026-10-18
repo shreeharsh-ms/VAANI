@@ -78,6 +78,9 @@ export const PatientDetailPage = () => {
   const clinicSac = clinicSettings?.billing?.sacCode || '999312';
   const clinicHsn = clinicSettings?.billing?.hsnCode || '9021';
   const clinicUpiId = clinicSettings?.billing?.upiId || 'vaaniclinic@okaxis';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadDegree = clinicSettings?.credentials?.leadDegree || clinic.leadDegree || 'MASLP, RCI';
+  const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
   const clinicPayee = clinicSettings?.billing?.upiName || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
   const clinicBankName = clinicSettings?.billing?.bankName || 'HDFC Bank Ltd, Sadashiv Peth Branch, Satara';
   const clinicBankIfsc = clinicSettings?.billing?.bankIfsc || 'HDFC0000123';
@@ -239,8 +242,8 @@ export const PatientDetailPage = () => {
       `Please find attached your official diagnostic clinical report (${rep.title} - ${rep.report_number}) evaluated at Vaani Speech and Hearing Clinic, Satara.\n\n` +
       `Summary / Impression: ${rep.diagnosis || 'Clinical evaluation completed.'}\n` +
       (rep.recommendations ? `Recommendations: ${rep.recommendations}\n\n` : '\n') +
-      `This report is digitally signed and cryptographically verifiable under RCI CRR No. A79214 and the Digital Personal Data Protection (DPDP) Act 2023.\n\n` +
-      `Warm regards,\nDr. Shreeharsh Shivpuje, BASLP, MASLP\nVaani Speech and Hearing Clinic, Satara\nContact: +91 98220 11223`
+      `This report is digitally signed and cryptographically verifiable under RCI CRR No. ${clinicRci} and the Digital Personal Data Protection (DPDP) Act 2023.\n\n` +
+      `Warm regards,\n${fullLeadPractitioner}\n${clinicName}, Satara\nContact: ${clinicSettings?.contact?.primaryPhone || '+91 98220 12349'}`
     );
     setIsEmailModalOpen(true);
   };
@@ -282,11 +285,11 @@ export const PatientDetailPage = () => {
       `*Report Ref:* ${rep.report_number}\n` +
       `*Investigation:* ${rep.title}\n` +
       `*Date:* ${rep.date}\n` +
-      `*Attending Clinician:* ${rep.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP (A79214)'}\n\n` +
+      `*Attending Clinician:* ${rep.examiner && !rep.examiner.includes('Shreeharsh') ? rep.examiner : fullLeadPractitioner} (RCI ${clinicRci})\n\n` +
       `*Diagnosis / Summary:* ${rep.diagnosis || 'Clinical evaluation completed.'}\n\n` +
       (rep.recommendations ? `*Recommendations:* ${rep.recommendations}\n\n` : '') +
-      `*Clinic Address:* Sadashiv Peth, Near Powai Naka, Satara - 415002\n` +
-      `*Contact:* +91 98220 11223 / +91 2162 234567\n` +
+      `*Clinic Address:* ${clinicAddress}\n` +
+      `*Contact:* ${clinicHelpline}\n` +
       `*Secure Verification:* https://vaaniclinic.com/verify-doc/${rep.report_number}`;
 
     const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`;
@@ -306,8 +309,8 @@ export const PatientDetailPage = () => {
     const payload = {
       reportNumber: fresh.report_number || fresh.id,
       reportDate: fresh.date,
-      examinerName: fresh.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      rciNumber: fresh.rci_number || 'A79214',
+      examinerName: fresh.examiner && !fresh.examiner.includes('Shreeharsh') ? fresh.examiner : fullLeadPractitioner,
+      rciNumber: fresh.rci_number || clinicRci,
       service: srv,
       patient: patient,
       patientDossier: dossier,
@@ -1765,7 +1768,7 @@ export const PatientDetailPage = () => {
 
                               <td className="py-2 px-3 text-slate-700 whitespace-nowrap">
                                 <span className="font-medium text-slate-800 block text-xs">
-                                  {rep.examiner || 'Dr. Shreeharsh Shivpuje (A79214)'}
+                                  {rep.examiner && !rep.examiner.includes('Shreeharsh') ? rep.examiner : fullLeadPractitioner} ({clinicRci})
                                 </span>
                                 <span className="text-[10px] text-slate-400">RCI CRR Verified</span>
                               </td>
@@ -1896,7 +1899,7 @@ export const PatientDetailPage = () => {
                                     {/* Footer details inside accordion drawer */}
                                     <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span>Authenticated Clinician: <strong className="text-slate-800">{rep.examiner || 'Dr. Shreeharsh Shivpuje'}</strong></span>
+                                        <span>Authenticated Clinician: <strong className="text-slate-800">{rep.examiner && !rep.examiner.includes('Shreeharsh') ? rep.examiner : fullLeadPractitioner}</strong></span>
                                         <span>•</span>
                                         <span>Verification Link: <strong className="font-mono text-purple-950">vaaniclinic.com/verify-doc/{rep.report_number}</strong></span>
                                       </div>
@@ -2082,7 +2085,7 @@ export const PatientDetailPage = () => {
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-[11px] text-slate-500">
                     <div>
-                      Attending Clinician: <strong className="text-slate-800">{edhReport.examiner || 'Dr. Shreeharsh Shivpuje (RCI A79214)'}</strong>
+                      Attending Clinician: <strong className="text-slate-800">{edhReport.examiner && !edhReport.examiner.includes('Shreeharsh') ? edhReport.examiner : `${fullLeadPractitioner} (RCI ${clinicRci})`}</strong>
                     </div>
                     <Link
                       to={`/dashboard/reports/create?type=RP-CLN-EDH&patient=${demographics.uhid}`}

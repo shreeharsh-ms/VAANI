@@ -35,10 +35,16 @@ import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { DEFAULT_ASSESSMENTS, getAllClinicalReports } from '../../data/clinicalReportsData';
 import { useTableKeyboardNav } from '../../hooks';
 import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
+import { useClinicSettings, getClinicSettings } from '../../context/ClinicSettingsContext';
 
 export const ReportsPage = () => {
   const navigate = useNavigate();
   const { notify } = useNotification();
+  const { settings: clinicSettings } = useClinicSettings();
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadDegree = clinicSettings?.credentials?.leadDegree || 'MASLP, RCI';
+  const fullLeadPractitioner = `${leadPractitioner}, ${leadDegree}`;
+  const clinicRci = clinicSettings?.credentials?.rciNumber || 'A79214';
 
   const [activeReport, setActiveReport] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,8 +160,8 @@ export const ReportsPage = () => {
     const payload = {
       reportNumber: fresh.report_number || fresh.id,
       reportDate: fresh.date,
-      examinerName: fresh.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      rciNumber: fresh.rci_number || 'A79214',
+      examinerName: fresh.examiner && !fresh.examiner.includes('Shreeharsh') ? fresh.examiner : fullLeadPractitioner,
+      rciNumber: fresh.rci_number || clinicRci,
       service: srv,
       patient: patient,
       patientDossier: null,

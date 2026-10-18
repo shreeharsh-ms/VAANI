@@ -60,7 +60,9 @@ const CuteChatbotIcon = ({ className = "w-6 h-6 sm:w-7 sm:h-7" }) => (
 );
 
 export const ServicesPage = () => {
-  const { logoUrl, clinicName } = useClinicSettings();
+  const { logoUrl, clinicName, settings } = useClinicSettings();
+  const leadPractitioner = settings?.credentials?.leadPractitioner || 'Palak Gandhi';
+  const leadDegree = settings?.credentials?.leadDegree || 'MASLP';
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
   const displayWhiteLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -422,12 +424,12 @@ export const ServicesPage = () => {
                 <div className="flex items-center gap-3.5 my-1">
                   <img
                     src="/practitioner-headshot.png"
-                    alt="Palak Gandhi"
+                    alt={leadPractitioner}
                     className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
                   />
                   <div className="leading-tight">
-                    <div className="text-base sm:text-lg font-bold text-white drop-shadow-xs">Palak Gandhi</div>
-                    <div className="text-xs sm:text-[13px] text-white/85 font-medium">Lead Audiologist (MASLP)</div>
+                    <div className="text-base sm:text-lg font-bold text-white drop-shadow-xs">{leadPractitioner}</div>
+                    <div className="text-xs sm:text-[13px] text-white/85 font-medium">Lead Audiologist &amp; Speech Pathologist ({leadDegree})</div>
                   </div>
                 </div>
 

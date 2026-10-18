@@ -99,7 +99,7 @@ export const VoiceDisordersForm = ({
         stroboscopyOtherFindings: 'Mild posterior interarytenoid mucosal erythema consistent with laryngopharyngeal reflux (LPR)',
         entFacultyName: 'Dr. A. P. Kulkarni, MS (ENT), Consultant Laryngologist',
         clinicianName: 'A. Kulkarni (Clinical Speech Intern)',
-        supervisorName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+        supervisorName: 'Ms. Palak Paresh Gandhi, MASLP',
       };
       Object.entries(nodulesPreset).forEach(([k, v]) => handleParamChange(k, v));
       notify?.('Loaded Vocal Fold Nodules Case Preset', 'success');
@@ -160,7 +160,7 @@ export const VoiceDisordersForm = ({
         stroboscopyOtherFindings: 'Anteroposterior foreshortening of laryngeal inlet (Aryepiglottic constriction)',
         entFacultyName: 'Dr. A. P. Kulkarni, MS (ENT)',
         clinicianName: 'A. Kulkarni (Clinical Intern)',
-        supervisorName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
+        supervisorName: 'Ms. Palak Paresh Gandhi, MASLP',
       };
       Object.entries(mtdPreset).forEach(([k, v]) => handleParamChange(k, v));
       notify?.('Loaded Muscle Tension Dysphonia (MTD) Case Preset', 'success');
@@ -734,7 +734,7 @@ export const VoiceDisordersForm = ({
                 value={params.supervisorName || ''}
                 onChange={(e) => handleParamChange('supervisorName', e.target.value)}
                 className="w-full px-2 py-1 text-xs border border-slate-300 rounded font-semibold text-purple-950"
-                placeholder="Dr. Shreeharsh Shivpuje, BASLP, MASLP"
+                placeholder="Ms. Palak Paresh Gandhi, MASLP"
               />
             </div>
           </div>

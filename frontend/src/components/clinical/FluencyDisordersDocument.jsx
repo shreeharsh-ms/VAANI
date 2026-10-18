@@ -5,6 +5,7 @@ import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
 import { OfficialReportTitle } from './OfficialReportTitle';
 import { PatientDemographicsMatrix } from './PatientDemographicsMatrix';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 
 /**
  * Fluency / Stuttering Assessment (SSI-4) Official Clinical Dossier (3-Page Production Layout)
@@ -24,6 +25,15 @@ export const FluencyDisordersDocument = ({
   renderBulletPoints,
 }) => {
   const params = formData?.parameters || {};
+  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings } = useClinicSettings();
+  const currentLead = settings?.credentials?.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const currentDegree = settings?.credentials?.leadDegree || leadDegree || 'MASLP, RCI';
+  const currentRci = formData?.rciNumber || settings?.credentials?.rciNumber || contextRci || 'A79214';
+  const defaultSupervisor = `${currentLead}${currentDegree ? `, ${currentDegree}` : ''}`;
+  const supervisorName = params.supervisorName && !params.supervisorName.includes('Shreeharsh')
+    ? params.supervisorName
+    : defaultSupervisor;
+  const supervisorSig = supervisorName.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
 
   // Reusable Lavender Header Component
   const renderHeader = (pageNumber) => (
@@ -584,11 +594,11 @@ export const FluencyDisordersDocument = ({
                 <span className="font-bold text-purple-950 uppercase block text-[8px]">Clinical Supervisor &amp; Head of Department</span>
                 <div className="mt-1 flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-purple-950 block text-[9.5px]">{params.supervisorName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}</span>
-                    <span className="text-[8px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{formData?.rciNumber || 'A79214'}</strong></span>
+                    <span className="font-bold text-purple-950 block text-[9.5px]">{supervisorName}</span>
+                    <span className="text-[8px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{currentRci}</strong></span>
                   </div>
                   <div className="border-b border-purple-300 w-28 text-center pb-0.5">
-                    <span className="text-[8px] text-purple-900 font-serif italic font-bold">Shreeharsh M.S.</span>
+                    <span className="text-[8px] text-purple-900 font-serif italic font-bold">{supervisorSig}</span>
                   </div>
                 </div>
               </div>

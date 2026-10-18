@@ -5,6 +5,7 @@ import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
 import { OfficialReportTitle } from './OfficialReportTitle';
 import { PatientDemographicsMatrix } from './PatientDemographicsMatrix';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 
 /**
  * Voice Disorders Official Clinical Dossier (3-Page Production Layout)
@@ -25,6 +26,15 @@ export const VoiceDisordersDocument = ({
   renderBulletPoints,
 }) => {
   const params = formData?.parameters || {};
+  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings } = useClinicSettings();
+  const currentLead = settings?.credentials?.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const currentDegree = settings?.credentials?.leadDegree || leadDegree || 'MASLP, RCI';
+  const currentRci = formData?.rciNumber || settings?.credentials?.rciNumber || contextRci || 'A79214';
+  const defaultSupervisor = `${currentLead}${currentDegree ? `, ${currentDegree}` : ''}`;
+  const supervisorName = params.supervisorName && !params.supervisorName.includes('Shreeharsh')
+    ? params.supervisorName
+    : defaultSupervisor;
+  const supervisorSig = supervisorName.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
 
   // Reusable Lavender Header Component
   const renderHeader = (pageNumber) => (
@@ -470,11 +480,11 @@ export const VoiceDisordersDocument = ({
               <span className="font-bold text-purple-950 uppercase block text-[7.5px]">Clinical Supervisor &amp; Head of Department</span>
               <div className="mt-0.5 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-purple-950 block">{params.supervisorName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}</span>
-                  <span className="text-[7.5px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{formData?.rciNumber || 'A79214'}</strong></span>
+                  <span className="font-bold text-purple-950 block">{supervisorName}</span>
+                  <span className="text-[7.5px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{currentRci}</strong></span>
                 </div>
                 <div className="border-b border-purple-300 w-24 text-center pb-0.5">
-                  <span className="text-[7.5px] text-purple-900 font-serif italic font-bold">Shreeharsh M.S.</span>
+                  <span className="text-[7.5px] text-purple-900 font-serif italic font-bold">{supervisorSig}</span>
                 </div>
               </div>
             </div>
@@ -689,11 +699,11 @@ export const VoiceDisordersDocument = ({
               <span className="font-bold text-purple-950 uppercase block text-[7.5px]">Head Audiologist &amp; Speech-Language Pathologist</span>
               <div className="mt-0.5 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-purple-950 block">{params.supervisorName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP'}</span>
-                  <span className="text-[7.5px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{formData?.rciNumber || 'A79214'}</strong></span>
+                  <span className="font-bold text-purple-950 block">{supervisorName}</span>
+                  <span className="text-[7.5px] text-slate-600 block">RCI CRR No: <strong className="font-mono text-purple-950">{currentRci}</strong></span>
                 </div>
                 <div className="border-b border-purple-300 w-24 text-center pb-0.5">
-                  <span className="text-[7.5px] text-purple-900 font-serif italic font-bold">Shreeharsh M.S.</span>
+                  <span className="text-[7.5px] text-purple-900 font-serif italic font-bold">{supervisorSig}</span>
                 </div>
               </div>
             </div>

@@ -781,7 +781,7 @@ export const AboutPage = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-xl sm:text-2xl lg:text-[26px] font-bold text-white tracking-tight">
-                Schedule a Clinical Assessment with Ms. Palak Gandhi
+                Schedule a Clinical Assessment with {settings?.credentials?.leadPractitioner || 'Ms. Palak Gandhi'}
               </h3>
               <p className="text-xs sm:text-sm text-purple-200/90 max-w-xl font-normal">
                 Dedicated soundproof testing, compassionate speech sessions, and transparent clinical guidance in Satara.

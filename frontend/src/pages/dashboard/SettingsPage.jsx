@@ -1633,19 +1633,66 @@ export const SettingsPage = () => {
                 <tbody className="divide-y divide-slate-100 font-normal">
                   {/* Gate 1: RCI CRR */}
                   <tr className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">01</td>
-                    <td className="py-1.5 px-3">
+                    <td className="py-2 px-2.5 text-center font-mono text-slate-400">01</td>
+                    <td className="py-2 px-3">
                       <span className="font-bold text-slate-800 block">RCI Statutory Registration</span>
-                      <span className="text-[10px] font-mono text-purple-700 font-medium">CRR No. {settings.credentials.rciNumber}</span>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-mono text-purple-700 font-bold">CRR No.</span>
+                        <input
+                          type="text"
+                          value={settings.credentials.rciNumber || ''}
+                          onChange={(e) => handleChange('credentials', 'rciNumber', e.target.value)}
+                          placeholder="A79214"
+                          className="w-24 px-2 py-0.5 text-[11px] font-mono font-bold text-purple-900 bg-white border border-purple-300 rounded focus:ring-1 focus:ring-purple-500 focus:outline-none"
+                          title="RCI CRR Number"
+                        />
+                      </div>
                     </td>
-                    <td className="py-1.5 px-3 text-slate-600">
-                      Rehabilitation Council of India Act 1992 mandatory practitioner registry.
+                    <td className="py-2 px-3 text-slate-600">
+                      <p className="text-[11px] leading-tight mb-1.5">
+                        Rehabilitation Council of India Act 1992 mandatory practitioner registry.
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                        <span>Valid Until:</span>
+                        <input
+                          type="text"
+                          value={settings.credentials.rciValidUntil || ''}
+                          onChange={(e) => handleChange('credentials', 'rciValidUntil', e.target.value)}
+                          placeholder="2031-10-15"
+                          className="w-28 px-1.5 py-0.5 text-[10px] font-mono text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                        />
+                      </div>
                     </td>
-                    <td className="py-1.5 px-3 font-semibold text-slate-900">
-                      Ms. Palak Paresh Gandhi • Valid until {settings.credentials.rciValidUntil}
+                    <td className="py-2 px-3">
+                      <div className="space-y-1.5 min-w-[240px]">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                            Practitioner Full Name
+                          </label>
+                          <input
+                            type="text"
+                            value={settings.credentials.leadPractitioner || ''}
+                            onChange={(e) => handleChange('credentials', 'leadPractitioner', e.target.value)}
+                            placeholder="Ms. Palak Paresh Gandhi"
+                            className="w-full px-2 py-1 text-xs font-bold text-purple-950 bg-white border border-slate-300 rounded focus:border-purple-600 focus:ring-1 focus:ring-purple-100 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                            Degree &amp; Qualifications
+                          </label>
+                          <input
+                            type="text"
+                            value={settings.credentials.leadDegree || ''}
+                            onChange={(e) => handleChange('credentials', 'leadDegree', e.target.value)}
+                            placeholder="MASLP, RCI"
+                            className="w-full px-2 py-1 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:ring-1 focus:ring-purple-100 focus:outline-none"
+                          />
+                        </div>
+                      </div>
                     </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <td className="py-2 px-2.5 text-center align-middle">
+                      <span className="px-2 py-1 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-block shadow-2xs">
                         ✓ RCI Verified Active
                       </span>
                     </td>
@@ -1653,20 +1700,27 @@ export const SettingsPage = () => {
 
                   {/* Gate 2: "Dr." Prefix Gate */}
                   <tr className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">02</td>
-                    <td className="py-1.5 px-3">
+                    <td className="py-2 px-2.5 text-center font-mono text-slate-400">02</td>
+                    <td className="py-2 px-3">
                       <span className="font-bold text-slate-800 block">&quot;Dr.&quot; Prefix Title Gate</span>
                       <span className="text-[10px] font-mono text-purple-700 font-medium">BR-041 Title Protection</span>
                     </td>
-                    <td className="py-1.5 px-3 text-slate-600">
-                      Truth-in-advertising compliance. Controls public display of clinical doctor prefix.
+                    <td className="py-2 px-3 text-slate-600 text-[11px] leading-tight">
+                      Truth-in-advertising compliance. Controls public display of clinical doctor prefix across site &amp; reports.
                     </td>
-                    <td className="py-1.5 px-3">
-                      <span className="font-mono font-bold text-xs text-[#301444]">
-                        {settings.credentials.titlePermitted ? 'Dr. Palak Paresh Gandhi' : 'Ms. Palak Paresh Gandhi (Audiologist)'}
-                      </span>
+                    <td className="py-2 px-3">
+                      <div className="bg-purple-50/60 p-2 rounded-lg border border-purple-200/80">
+                        <span className="font-mono font-bold text-xs text-[#301444] block">
+                          {settings.credentials.titlePermitted
+                            ? `Dr. ${settings.credentials.leadPractitioner?.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '') || 'Palak Paresh Gandhi'}`
+                            : `${settings.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi'} (Audiologist)`}
+                        </span>
+                        <span className="text-[10px] text-purple-800/80 font-medium">
+                          {settings.credentials.leadDegree || 'MASLP, RCI'} • RCI CRR: {settings.credentials.rciNumber || 'A79214'}
+                        </span>
+                      </div>
                     </td>
-                    <td className="py-1.5 px-2.5 text-center">
+                    <td className="py-2 px-2.5 text-center align-middle">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -1689,13 +1743,20 @@ export const SettingsPage = () => {
                       <span className="font-bold text-slate-800 block">CBT Practice Module Gate</span>
                       <span className="text-[10px] font-mono text-purple-700 font-medium">BR-042 Clinical Gate</span>
                     </td>
-                    <td className="py-1.5 px-3 text-slate-600 truncate max-w-xs">
-                      {settings.credentials.cbtDegree}
+                    <td className="py-2 px-3 text-slate-600">
+                      <input
+                        type="text"
+                        value={settings.credentials.cbtDegree || ''}
+                        onChange={(e) => handleChange('credentials', 'cbtDegree', e.target.value)}
+                        placeholder="Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)"
+                        className="w-full px-2 py-1 text-xs text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                        title="CBT Degree / Training"
+                      />
                     </td>
-                    <td className="py-1.5 px-3 font-semibold text-slate-900">
+                    <td className="py-2 px-3 font-semibold text-slate-900">
                       Cognitive Behavioural Therapy Unlocked
                     </td>
-                    <td className="py-1.5 px-2.5 text-center">
+                    <td className="py-2 px-2.5 text-center">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"

@@ -1,15 +1,11 @@
 import React from 'react';
 import { QrCode, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 
 /**
  * OfficialReportFooter
  * Reusable decorative clinical footer component for VAANI clinical reports.
- * Features:
- * - Ornamental divider flourish
- * - Soft lavender gradient container matching the clinic letterhead
- * - DPDP Act 2023 Cryptographic QR Code Verification seal
- * - Dr. Shreeharsh Shivpuje Authorized Digital Signature block
- * - Official RCI CRR No. A79214 credentialing
+ * Dynamically binds lead practitioner credentials from clinic settings database.
  */
 export const OfficialReportFooter = ({
   formData,
@@ -20,10 +16,32 @@ export const OfficialReportFooter = ({
   useImage = true,
   className = '',
 }) => {
-  const rciNumber = formData?.rciNumber || 'A79214';
+  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings } = useClinicSettings();
+
+  const creds = settings?.credentials || {};
+  const currentLeadPractitioner = creds.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const currentLeadDegree = creds.leadDegree || leadDegree || 'MASLP, RCI';
+  const currentRciNumber = creds.rciNumber || contextRci || 'A79214';
+
+  const rciNumber = formData?.rciNumber || currentRciNumber;
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
-  const examinerName = formData?.examinerName || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP';
+
+  // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
+  let examinerRaw = formData?.examinerName;
+  if (!examinerRaw || examinerRaw.includes('Shreeharsh')) {
+    examinerRaw = currentLeadPractitioner;
+  }
+
+  // Ensure degrees are included cleanly
+  const examinerName = examinerRaw.includes('MASLP') || examinerRaw.includes('BASLP')
+    ? examinerRaw
+    : currentLeadDegree
+      ? `${examinerRaw}, ${currentLeadDegree}`
+      : examinerRaw;
+
+  // Cursive signature display (e.g. "Palak Paresh Gandhi")
+  const signatureName = examinerRaw.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
 
   const isLastPage = !totalPages || totalPages <= 1 || (pageNumber && pageNumber === totalPages);
 
@@ -85,7 +103,7 @@ export const OfficialReportFooter = ({
           <div className="absolute right-[5%] top-[10%] bottom-[10%] flex flex-col justify-center text-right">
             <div className="inline-block border-b border-purple-900/60 pb-0.5 mb-0.5 text-right">
               <span className="font-serif italic font-bold text-purple-950 text-[11px] sm:text-xs print:text-[11px] block leading-none">
-                {isCBT ? 'Palak Paresh Gandhi' : 'Shreeharsh M. Shivpuje'}
+                {signatureName}
               </span>
               <span className="text-[6.5px] print:text-[6px] text-purple-800 uppercase tracking-widest font-bold flex items-center justify-end gap-1 mt-0.5">
                 <CheckCircle2 className="w-2 h-2 text-emerald-600 inline" />
@@ -93,7 +111,7 @@ export const OfficialReportFooter = ({
               </span>
             </div>
             <p className="font-black text-slate-950 text-[9px] print:text-[8px] leading-tight">
-              {isCBT ? 'Ms. Palak Paresh Gandhi' : examinerName}
+              {examinerName}
             </p>
             <p className="text-[7.5px] print:text-[7px] font-semibold text-slate-800">
               RCI CRR No: <span className="font-mono font-bold text-purple-950 bg-white/80 px-1 py-0.2 rounded border border-purple-200">{rciNumber}</span>
@@ -201,7 +219,7 @@ export const OfficialReportFooter = ({
         <div className="text-right space-y-0.5">
           <div className="inline-block border-b border-purple-900 pb-0.5 mb-0.5 px-2.5 text-center">
             <span className="font-serif italic font-bold text-purple-950 text-xs sm:text-sm block tracking-wide leading-none">
-              Shreeharsh M. Shivpuje
+              {signatureName}
             </span>
             <span className="text-[7px] text-purple-800 uppercase tracking-widest font-bold flex items-center justify-center gap-1 mt-0.5">
               <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 inline" />

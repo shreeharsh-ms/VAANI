@@ -32,7 +32,7 @@ import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
 import { FluencyDisordersForm } from '../../components/clinical/FluencyDisordersForm';
 import { VoiceDisordersForm } from '../../components/clinical/VoiceDisordersForm';
-
+import { useClinicSettings, getClinicSettings } from '../../context/ClinicSettingsContext';
 
 export const ReportCreatePage = () => {
   const navigate = useNavigate();
@@ -253,14 +253,23 @@ export const ReportCreatePage = () => {
   // Form Parameters state for the active report
   const [formData, setFormData] = useState(() => {
     const s = CLINICAL_SERVICES.find((srv) => srv.code === initialTypeCode) || CLINICAL_SERVICES[0];
+    const initSettings = getClinicSettings();
+    const initLead = initSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+    const initDegree = initSettings?.credentials?.leadDegree || 'MASLP, RCI';
+    const initExaminer = `${initLead}${initDegree ? `, ${initDegree}` : ''}`;
+    const initRci = initSettings?.credentials?.rciNumber || 'A79214';
+
     if (existingReport) {
       const defParams = s.defaultParameters || {};
       const repParams = existingReport.parameters || {};
+      const repExaminer = existingReport.examiner && !existingReport.examiner.includes('Shreeharsh')
+        ? existingReport.examiner
+        : initExaminer;
       return {
         reportNumber: existingReport.report_number || existingReport.id,
         reportDate: existingReport.date || new Date().toISOString().split('T')[0],
-        examinerName: existingReport.examiner || 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-        rciNumber: existingReport.rci_number || 'A79214',
+        examinerName: repExaminer,
+        rciNumber: existingReport.rci_number || initRci,
         parameters: {
           ...defParams,
           ...repParams,
@@ -276,8 +285,8 @@ export const ReportCreatePage = () => {
     return {
       reportNumber: `REP-26-${Math.floor(1000 + Math.random() * 9000)}`,
       reportDate: new Date().toISOString().split('T')[0],
-      examinerName: 'Dr. Shreeharsh Shivpuje, BASLP, MASLP',
-      rciNumber: 'A79214',
+      examinerName: initExaminer,
+      rciNumber: initRci,
       parameters: { ...(s.defaultParameters || {}) },
     };
   });

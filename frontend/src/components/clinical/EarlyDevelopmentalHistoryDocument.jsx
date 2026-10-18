@@ -5,6 +5,7 @@ import { OfficialReportFooter } from './OfficialReportFooter';
 import { ClinicalReportBackground } from './ClinicalReportBackground';
 import { OfficialReportTitle } from './OfficialReportTitle';
 import { PatientDemographicsMatrix } from './PatientDemographicsMatrix';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 
 /**
  * Early Developmental History (EDH) Official Clinical Dossier (3-Page Production Layout)
@@ -24,6 +25,14 @@ export const EarlyDevelopmentalHistoryDocument = ({
   renderBulletPoints,
 }) => {
   const params = formData?.parameters || {};
+  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings } = useClinicSettings();
+  const currentLead = settings?.credentials?.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const currentDegree = settings?.credentials?.leadDegree || leadDegree || 'MASLP, RCI';
+  const currentRci = formData?.rciNumber || settings?.credentials?.rciNumber || contextRci || 'A79214';
+  const defaultSupervisor = `${currentLead}${currentDegree ? `, ${currentDegree}` : ''}`;
+  const supervisorName = params.supervisorName && !params.supervisorName.includes('Shreeharsh')
+    ? params.supervisorName
+    : defaultSupervisor;
 
   // Reusable Lavender Header Component
   const renderHeader = (pageNumber) => (
@@ -613,8 +622,8 @@ export const EarlyDevelopmentalHistoryDocument = ({
             <div>
               <span className="font-bold text-purple-950 block mb-1">Clinical Supervisor / Consultant:</span>
               <div className="border-t border-purple-200 pt-1">
-                <p className="font-bold text-purple-950">Dr. Shreeharsh Shivpuje, BASLP, MASLP</p>
-                <p className="text-[7.5px] text-slate-600 font-semibold">RCI CRR No: <span className="font-mono text-purple-950">A79214</span> • Consultant SLP &amp; Audiologist</p>
+                <p className="font-bold text-purple-950">{supervisorName}</p>
+                <p className="text-[7.5px] text-slate-600 font-semibold">RCI CRR No: <span className="font-mono text-purple-950">{currentRci}</span> • Consultant SLP &amp; Audiologist</p>
               </div>
             </div>
           </div>
