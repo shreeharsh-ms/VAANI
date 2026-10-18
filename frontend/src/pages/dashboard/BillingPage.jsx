@@ -38,6 +38,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
 import Modal from '../../components/common/Modal';
+import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { getServiceRates } from '../../data/serviceRatesData';
 import { printClinicalInvoice, numberToWordsINR } from '../../utils/invoicePrint';
@@ -320,10 +321,8 @@ export const BillingPage = () => {
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
   const [isMailModalOpen, setIsMailModalOpen] = useState(false);
   const [selectedInvoiceForMail, setSelectedInvoiceForMail] = useState(null);
-  const [mailRecipient, setMailRecipient] = useState('');
-  const [mailSubject, setMailSubject] = useState('');
-  const [mailNote, setMailNote] = useState('');
-  const [isSendingMail, setIsSendingMail] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedInvoiceForWhatsApp, setSelectedInvoiceForWhatsApp] = useState(null);
   const invoiceFormRef = useRef(null);
 
   // New Invoice Form State
@@ -1314,72 +1313,34 @@ export const BillingPage = () => {
     setInvoiceToDelete(null);
   };
 
-  // 5. Share on WhatsApp
-  const handleSendWhatsAppInvoice = (inv) => {
-    const rawPhone = inv.phone || '';
-    const cleanPhone = rawPhone.replace(/\D/g, '');
-    const phoneWithCountry = cleanPhone.startsWith('91') ? cleanPhone : cleanPhone ? `91${cleanPhone}` : '';
+  // 5. Share on WhatsApp (Opens Reusable Preview Modal)
+  const handleOpenWhatsAppModal = (inv) => {
+    setSelectedInvoiceForWhatsApp(inv);
+    setIsWhatsAppModalOpen(true);
+  };
 
-    const text = `*VAANI SPEECH & HEARING CLINIC*\n*Official Tax Invoice & Clinical Receipt*\n\n` +
+  const getInvoiceWhatsAppMessage = (inv) => {
+    if (!inv) return '';
+    return `*VAANI SPEECH & HEARING CLINIC*\n*Official Tax Invoice & Clinical Receipt*\n\n` +
       `*Patient Name:* ${inv.patientName}\n` +
       `*UHID:* ${inv.uhid || 'Outpatient'}\n` +
       `*Invoice No:* ${inv.invoiceNo}\n` +
       `*Date:* ${inv.date}\n` +
       `*Clinical Service:* ${inv.service}\n` +
       `*Tax Regime:* ${inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% GST (Healthcare Exempt, SAC 999312)' : '18% GST (Taxable Goods, HSN 9021)'}\n` +
-      `*Total Amount:* ₹${inv.totalAmount.toLocaleString('en-IN')}\n` +
+      `*Total Amount:* ₹${Number(inv.totalAmount || 0).toLocaleString('en-IN')}\n` +
       `*Payment Status:* ${inv.status} (${inv.paymentMode})\n` +
-      (inv.status === 'PAID' ? `*Payment Receipt:* ${inv.receiptNo}\n` : `*Payment VPA / UPI:* vaaniclinic@okaxis\n`) +
+      (inv.status === 'PAID' ? `*Payment Receipt:* ${inv.receiptNo || 'Verified'}\n` : `*Payment VPA / UPI:* vaaniclinic@okaxis\n`) +
       `\n*Clinic Address:* Sadashiv Peth, Near Powai Naka, Satara - 415002\n` +
       `*Helpline / WhatsApp:* +91 98220 12345\n` +
       `*Clinical Consultant:* Dr. Palak Paresh Gandhi, MASLP (RCI CRR No. A79214)\n\n` +
       `Thank you for entrusting VAANI Speech & Hearing Clinic for your healthcare.`;
-
-    const url = phoneWithCountry
-      ? `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
-
-    window.open(url, '_blank');
-    notify.success(`WhatsApp invoice drafted for ${inv.patientName}`);
   };
 
-  // 6. Mail Invoice
+  // 6. Mail Invoice (Opens Reusable Email Modal)
   const handleOpenMailModal = (inv) => {
     setSelectedInvoiceForMail(inv);
-    setMailRecipient(inv.email || `${inv.patientName.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`);
-    setMailSubject(`Tax Invoice & Clinical Receipt ${inv.invoiceNo} — VAANI Speech & Hearing Clinic`);
-    setMailNote(`Dear ${inv.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${inv.invoiceNo} for ${inv.service} performed on ${inv.date}.\n\nTotal Paid/Due: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`);
     setIsMailModalOpen(true);
-  };
-
-  const handleSendEmailInvoice = (e) => {
-    e.preventDefault();
-    if (!selectedInvoiceForMail) return;
-    setIsSendingMail(true);
-
-    setTimeout(() => {
-      // Record into SMTP audit logs
-      try {
-        const existingLogs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const ts = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        const newLog = {
-          id: `mail_inv_${Date.now()}`,
-          timestamp: ts,
-          recipient: mailRecipient,
-          subject: mailSubject,
-          host: 'smtp.gmail.com:587',
-          status: 'SENT',
-          details: `Invoice ${selectedInvoiceForMail.invoiceNo} dispatched successfully to ${mailRecipient}`,
-        };
-        localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([newLog, ...existingLogs]));
-      } catch (err) {}
-
-      setIsSendingMail(false);
-      setIsMailModalOpen(false);
-      notify.success(`Tax Invoice ${selectedInvoiceForMail.invoiceNo} successfully dispatched to ${mailRecipient}!`);
-    }, 500);
   };
 
   // Totals calculations
@@ -1724,7 +1685,7 @@ export const BillingPage = () => {
                           {/* 4. Share on WhatsApp */}
                           <button
                             type="button"
-                            onClick={() => handleSendWhatsAppInvoice(inv)}
+                            onClick={() => handleOpenWhatsAppModal(inv)}
                             {...getButtonProps(idx, 3)}
                             className={`p-1 rounded text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer ${getButtonProps(idx, 3).className}`}
                             title="Share Invoice on WhatsApp"
@@ -2306,7 +2267,7 @@ export const BillingPage = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleSendWhatsAppInvoice(selectedInvoiceForView)}
+                  onClick={() => handleOpenWhatsAppModal(selectedInvoiceForView)}
                   className="h-7.5 px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 >
                   <WhatsAppIcon className="w-3.5 h-3.5" />
@@ -2884,78 +2845,59 @@ export const BillingPage = () => {
         )}
       </Modal>
 
-      {/* ── MODAL: EMAIL INVOICE ── */}
-      <Modal
-        isOpen={isMailModalOpen}
-        onClose={() => setIsMailModalOpen(false)}
-        title={selectedInvoiceForMail ? `Email Tax Invoice: ${selectedInvoiceForMail.invoiceNo}` : 'Email Invoice'}
-        size="md"
-      >
-        {selectedInvoiceForMail && (
-          <form onSubmit={handleSendEmailInvoice} className="space-y-3 font-sans text-xs">
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Recipient Patient Email *</label>
-              <input
-                type="email"
-                required
-                value={mailRecipient}
-                onChange={(e) => setMailRecipient(e.target.value)}
-                placeholder="patient@example.com"
-                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              />
-            </div>
+      {/* ── REUSABLE WHATSAPP DISPATCH MODAL ── */}
+      {selectedInvoiceForWhatsApp && (
+        <WhatsAppDispatchModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => {
+            setIsWhatsAppModalOpen(false);
+            setSelectedInvoiceForWhatsApp(null);
+          }}
+          recipientName={selectedInvoiceForWhatsApp.patientName}
+          recipientPhone={selectedInvoiceForWhatsApp.phone || ''}
+          uhid={selectedInvoiceForWhatsApp.uhid}
+          attachedFile={`${selectedInvoiceForWhatsApp.invoiceNo}.pdf`}
+          documentTitle={`Official Tax Invoice ${selectedInvoiceForWhatsApp.invoiceNo}`}
+          defaultMessage={getInvoiceWhatsAppMessage(selectedInvoiceForWhatsApp)}
+          onSuccess={({ phone }) => {
+            if (phone && phone !== selectedInvoiceForWhatsApp.phone) {
+              setInvoices((prev) =>
+                prev.map((i) =>
+                  i.id === selectedInvoiceForWhatsApp.id ? { ...i, phone } : i
+                )
+              );
+            }
+          }}
+        />
+      )}
 
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Email Subject Line *</label>
-              <input
-                type="text"
-                required
-                value={mailSubject}
-                onChange={(e) => setMailSubject(e.target.value)}
-                className="h-8 w-full px-2 text-xs font-medium bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              />
-            </div>
+      {/* ── REUSABLE EMAIL DISPATCH MODAL ── */}
+      {selectedInvoiceForMail && (
+        <EmailDispatchModal
+          isOpen={isMailModalOpen}
+          onClose={() => {
+            setIsMailModalOpen(false);
+            setSelectedInvoiceForMail(null);
+          }}
+          recipientName={selectedInvoiceForMail.patientName}
+          recipientEmail={selectedInvoiceForMail.email || ''}
+          uhid={selectedInvoiceForMail.uhid}
+          attachedFile={`${selectedInvoiceForMail.invoiceNo}.pdf`}
+          documentTitle={`Official Tax Invoice ${selectedInvoiceForMail.invoiceNo}`}
+          defaultSubject={`Tax Invoice & Clinical Receipt ${selectedInvoiceForMail.invoiceNo} — VAANI Speech & Hearing Clinic`}
+          defaultMessage={`Dear ${selectedInvoiceForMail.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${selectedInvoiceForMail.invoiceNo} for ${selectedInvoiceForMail.service} performed on ${selectedInvoiceForMail.date}.\n\nTotal Paid/Due: ₹${Number(selectedInvoiceForMail.totalAmount || 0).toLocaleString('en-IN')} (${selectedInvoiceForMail.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`}
+          onSuccess={({ email }) => {
+            if (email && email !== selectedInvoiceForMail.email) {
+              setInvoices((prev) =>
+                prev.map((i) =>
+                  i.id === selectedInvoiceForMail.id ? { ...i, email } : i
+                )
+              );
+            }
+          }}
+        />
+      )}
 
-            <div>
-              <label className="font-semibold text-slate-700 block mb-0.5">Email Message &amp; Clinical Summary</label>
-              <textarea
-                rows={5}
-                value={mailNote}
-                onChange={(e) => setMailNote(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none resize-none leading-relaxed font-sans"
-              />
-            </div>
-
-            <div className="p-2.5 rounded bg-purple-50/60 border border-purple-100 flex items-center justify-between text-xs">
-              <div>
-                <span className="font-bold text-[#301444] block">Attached: {selectedInvoiceForMail.invoiceNo}.pdf</span>
-                <span className="text-[10px] text-slate-500">Total: ₹{selectedInvoiceForMail.totalAmount?.toLocaleString('en-IN')} ({selectedInvoiceForMail.status})</span>
-              </div>
-              <span className="text-[10px] font-mono text-purple-700 bg-white px-2 py-0.5 rounded border border-purple-200 font-bold">
-                SMTP Ready
-              </span>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsMailModalOpen(false)}
-                className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSendingMail}
-                className="px-4 py-1.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {isSendingMail ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                <span>{isSendingMail ? 'Dispatching...' : 'Dispatch Invoice Email'}</span>
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
 
       {/* ── MODAL: DELETE INVOICE CONFIRMATION ── */}
       <Modal

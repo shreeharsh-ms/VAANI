@@ -6,3 +6,4 @@ export { Badge } from './Badge';
 export { Modal } from './Modal';
 export { Loader } from './Loader';
 export { Alert } from './Alert';
+export { WhatsAppDispatchModal, EmailDispatchModal, getClinicSmtpStatus, updatePatientContactProfile } from './CommunicationModal';

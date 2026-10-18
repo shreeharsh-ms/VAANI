@@ -30,6 +30,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import Modal from '../../components/common/Modal';
+import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
 import AppointmentForm from '../../components/forms/AppointmentForm';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
@@ -287,51 +288,35 @@ Kindly reply *CONFIRM* to acknowledge.`;
     loadAppointments();
   };
 
-  // WhatsApp Reminder
+  // Communication preview modal state
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedAptForWhatsApp, setSelectedAptForWhatsApp] = useState(null);
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [selectedAptForMail, setSelectedAptForMail] = useState(null);
+
+  // WhatsApp Reminder (Opens Reusable Preview Modal)
   const handleSendWhatsAppReminder = (apt) => {
-    const phone = (apt.patient_phone || '').replace(/[^0-9]/g, '');
-    const msg = `Namaste *${apt.patient_name}*,
-This is a gentle clinical reminder for your upcoming appointment at *Vaani Speech & Hearing Clinic*.
-
-🗓 *Date:* ${apt.appointment_date}
-⏰ *Time Slot:* ${apt.start_time}
-🩺 *Service:* ${apt.service_name}
-👩‍⚕️ *Clinician:* Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)
-📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)
-📞 *Helpdesk:* +91 98220 12345
-
-Please arrive 10 minutes prior to your scheduled slot. Kindly reply *CONFIRM* to acknowledge.`;
-
-    navigator.clipboard?.writeText(msg).catch(() => {});
-    if (phone) {
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-    notify.success(`WhatsApp reminder opened & copied to clipboard for ${apt.patient_name}!`);
+    setSelectedAptForWhatsApp(apt);
+    setIsWhatsAppModalOpen(true);
   };
 
-  // Email Reminder
+  // Email Reminder (Opens Reusable Preview Modal)
   const handleSendEmailReminder = (apt) => {
-    const email = apt.patient_email || '';
-    const subject = `Clinical Appointment Reminder: ${apt.appointment_date} at ${apt.start_time} - Vaani Clinic`;
-    const body = `Dear ${apt.patient_name},
+    setSelectedAptForMail(apt);
+    setIsMailModalOpen(true);
+  };
 
-This is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.
-
-Appointment Particulars:
-- Date: ${apt.appointment_date}
-- Time Slot: ${apt.start_time}
-- Clinical Service: ${apt.service_name}
-- Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214
-- Clinic Address: Sadashiv Peth, Satara, Maharashtra (Opp. Civil Hospital)
-- Direct Phone: +91 98220 12345
-
-Please arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.
-
-Warm regards,
-Vaani Speech & Hearing Clinic`;
-
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    notify.success(`Email reminder client opened for ${apt.patient_name}!`);
+  const getAppointmentWhatsAppMessage = (apt) => {
+    if (!apt) return '';
+    return `Namaste *${apt.patient_name}*,\n` +
+      `This is a gentle clinical reminder for your upcoming appointment at *Vaani Speech & Hearing Clinic*.\n\n` +
+      `🗓 *Date:* ${apt.appointment_date}\n` +
+      `⏰ *Time Slot:* ${apt.start_time}\n` +
+      `🩺 *Service:* ${apt.service_name}\n` +
+      `👩‍⚕️ *Clinician:* ${apt.clinician || 'Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)'}\n` +
+      `📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)\n` +
+      `📞 *Helpdesk:* +91 98220 12345\n\n` +
+      `Please arrive 10 minutes prior to your scheduled slot. Kindly reply *CONFIRM* to acknowledge.`;
   };
 
   // Filter Logic (Search, Status, Service, Date)
@@ -1322,6 +1307,59 @@ Vaani Speech & Hearing Clinic`;
           </form>
         )}
       </Modal>
+
+      {/* ── REUSABLE WHATSAPP DISPATCH MODAL ── */}
+      {selectedAptForWhatsApp && (
+        <WhatsAppDispatchModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => {
+            setIsWhatsAppModalOpen(false);
+            setSelectedAptForWhatsApp(null);
+          }}
+          recipientName={selectedAptForWhatsApp.patient_name}
+          recipientPhone={selectedAptForWhatsApp.patient_phone || ''}
+          uhid={selectedAptForWhatsApp.patient_uhid || selectedAptForWhatsApp.uhid}
+          attachedFile={`Appointment_Slot_${selectedAptForWhatsApp.appointment_date}_${selectedAptForWhatsApp.start_time.replace(/[^a-zA-Z0-9]/g, '')}.pdf`}
+          documentTitle={`Consultation Slip: ${selectedAptForWhatsApp.service_name}`}
+          defaultMessage={getAppointmentWhatsAppMessage(selectedAptForWhatsApp)}
+          onSuccess={({ phone }) => {
+            if (phone && phone !== selectedAptForWhatsApp.patient_phone) {
+              setAppointments((prev) =>
+                prev.map((a) =>
+                  a.id === selectedAptForWhatsApp.id ? { ...a, patient_phone: phone } : a
+                )
+              );
+            }
+          }}
+        />
+      )}
+
+      {/* ── REUSABLE EMAIL DISPATCH MODAL ── */}
+      {selectedAptForMail && (
+        <EmailDispatchModal
+          isOpen={isMailModalOpen}
+          onClose={() => {
+            setIsMailModalOpen(false);
+            setSelectedAptForMail(null);
+          }}
+          recipientName={selectedAptForMail.patient_name}
+          recipientEmail={selectedAptForMail.patient_email || ''}
+          uhid={selectedAptForMail.patient_uhid || selectedAptForMail.uhid}
+          attachedFile={`Appointment_Slot_${selectedAptForMail.appointment_date}.pdf`}
+          documentTitle={`Consultation Slip: ${selectedAptForMail.service_name}`}
+          defaultSubject={`Clinical Appointment Reminder: ${selectedAptForMail.appointment_date} at ${selectedAptForMail.start_time} - Vaani Clinic`}
+          defaultMessage={`Dear ${selectedAptForMail.patient_name},\n\nThis is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.\n\nAppointment Particulars:\n- Date: ${selectedAptForMail.appointment_date}\n- Time Slot: ${selectedAptForMail.start_time}\n- Clinical Service: ${selectedAptForMail.service_name}\n- Consultant: ${selectedAptForMail.clinician || 'Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214'}\n- Clinic Address: Sadashiv Peth, Satara, Maharashtra (Opp. Civil Hospital)\n- Direct Phone: +91 98220 12345\n\nPlease arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.\n\nWarm regards,\nVaani Speech & Hearing Clinic`}
+          onSuccess={({ email }) => {
+            if (email && email !== selectedAptForMail.patient_email) {
+              setAppointments((prev) =>
+                prev.map((a) =>
+                  a.id === selectedAptForMail.id ? { ...a, patient_email: email } : a
+                )
+              );
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

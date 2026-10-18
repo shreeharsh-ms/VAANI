@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
+import { WhatsAppDispatchModal } from '../../components/common';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { useTableKeyboardNav } from '../../hooks';
 
@@ -226,13 +227,26 @@ export const RecallsPage = () => {
     tableId: 'recalls-table',
   });
 
-  // Action: Trigger WhatsApp message
-  const handleSendWhatsApp = (recall) => {
-    const text = encodeURIComponent(
-      `Hello ${recall.patientName}, this is a reminder from Vaani Speech & Hearing Clinic (Satara) regarding your scheduled follow-up: "${recall.reason}". Please call us at +91 98220 12345 to reserve your appointment time.`
-    );
-    window.open(`https://wa.me/${recall.phone.replace(/[^0-9]/g, '')}?text=${text}`, '_blank');
-    notify.success(`WhatsApp reminder drafted for ${recall.patientName}`);
+  // WhatsApp preview modal state
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedRecallForWhatsApp, setSelectedRecallForWhatsApp] = useState(null);
+
+  // Action: Open WhatsApp Preview Modal
+  const handleOpenWhatsAppModal = (recall) => {
+    setSelectedRecallForWhatsApp(recall);
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const getRecallWhatsAppMessage = (recall) => {
+    if (!recall) return '';
+    return `Hello *${recall.patientName}*,\n\n` +
+      `This is a clinical follow-up reminder from *Vaani Speech & Hearing Rehabilitation Clinic* (Satara).\n\n` +
+      `🩺 *Follow-up Objective:* ${recall.reason}\n` +
+      `🗓 *Due Date:* ${recall.dueDate}\n` +
+      `👩‍⚕️ *Attending Clinician:* ${recall.assignedClinician || 'Dr. Palak Paresh Gandhi (MASLP)'}\n` +
+      `📍 *Location:* Sadashiv Peth, Satara\n` +
+      `📞 *Appointment Desk:* +91 98220 12345\n\n` +
+      `Please contact us to confirm your preferred consultation timing.`;
   };
 
   // Action: Mark Contacted
@@ -480,7 +494,7 @@ export const RecallsPage = () => {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleSendWhatsApp(rec)}
+                            onClick={() => handleOpenWhatsAppModal(rec)}
                             {...getButtonProps(idx, 0)}
                             className={`h-6 px-2 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${getButtonProps(idx, 0).className}`}
                             title="Send pre-drafted WhatsApp reminder"
@@ -671,6 +685,32 @@ export const RecallsPage = () => {
           </div>
         </form>
       </Modal>
+
+      {/* ── REUSABLE WHATSAPP DISPATCH MODAL ── */}
+      {selectedRecallForWhatsApp && (
+        <WhatsAppDispatchModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => {
+            setIsWhatsAppModalOpen(false);
+            setSelectedRecallForWhatsApp(null);
+          }}
+          recipientName={selectedRecallForWhatsApp.patientName}
+          recipientPhone={selectedRecallForWhatsApp.phone || ''}
+          uhid={selectedRecallForWhatsApp.uhid}
+          attachedFile={`Recall_Schedule_${selectedRecallForWhatsApp.category?.replace(/\s+/g, '_')}.pdf`}
+          documentTitle={`Clinical Recall: ${selectedRecallForWhatsApp.reason}`}
+          defaultMessage={getRecallWhatsAppMessage(selectedRecallForWhatsApp)}
+          onSuccess={({ phone }) => {
+            if (phone && phone !== selectedRecallForWhatsApp.phone) {
+              setRecalls((prev) =>
+                prev.map((r) =>
+                  r.id === selectedRecallForWhatsApp.id ? { ...r, phone } : r
+                )
+              );
+            }
+          }}
+        />
+      )}
 
     </div>
   );
