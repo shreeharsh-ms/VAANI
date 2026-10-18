@@ -514,18 +514,18 @@ export const BlogEditorPage = () => {
       {/* ── STICKY CONTROL HEADER (Full Width, Luxury & Responsive) ── */}
       <div className="sticky top-2 z-30 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <Link
             to="/dashboard/blogs"
-            className="p-2 rounded-lg border border-slate-200 hover:bg-purple-50 text-slate-600 hover:text-[#301444] transition-colors"
+            className="p-2 rounded-lg border border-slate-200 hover:bg-purple-50 text-slate-600 hover:text-[#301444] transition-colors flex-shrink-0 mt-0.5 sm:mt-0"
             title="Back to All Articles"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold text-[#301444] leading-tight truncate max-w-md sm:max-w-xl">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h1 className="text-sm sm:text-lg font-bold text-[#301444] leading-tight truncate">
                 {isEditing ? `Edit: ${formData.title || 'Untitled Article'}` : 'Author New Clinical Article'}
               </h1>
               <button
@@ -536,7 +536,7 @@ export const BlogEditorPage = () => {
                     status: prev.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
                   }))
                 }
-                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-all flex items-center gap-1 ${
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer transition-all flex items-center gap-1 flex-shrink-0 ${
                   formData.status === 'PUBLISHED'
                     ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                     : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
@@ -547,20 +547,20 @@ export const BlogEditorPage = () => {
                 <span>{formData.status}</span>
               </button>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5">
               Full-Page Clinical Authoring Studio • Evidence-Based Publishing (Satara)
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
           {formData.slug && (
             <Link
               to={`/blogs/${formData.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-purple-50 text-slate-700 hover:text-[#301444] text-xs font-bold transition-all flex items-center gap-1.5"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200 bg-white hover:bg-purple-50 text-slate-700 hover:text-[#301444] text-xs font-bold transition-all flex items-center gap-1.5"
               title="Preview on Public Website"
             >
               <Eye className="w-3.5 h-3.5" />
@@ -570,7 +570,7 @@ export const BlogEditorPage = () => {
 
           <Link
             to="/dashboard/blogs"
-            className="px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
+            className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-bold text-slate-700 transition-colors"
           >
             Cancel
           </Link>
@@ -579,7 +579,7 @@ export const BlogEditorPage = () => {
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="px-5 py-2 rounded-lg bg-[#301444] hover:bg-[#461963] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-[#301444] hover:bg-[#461963] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap"
           >
             <Save className="w-4 h-4 text-purple-200" />
             <span>{saving ? 'Saving...' : isEditing ? 'Update & Save' : 'Publish Article'}</span>
@@ -599,8 +599,8 @@ export const BlogEditorPage = () => {
       {/* ── FULL-WIDTH EXPANSIVE STUDIO CARD (No Artificial max-w-5xl, Balanced Across Viewport) ── */}
       <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         
-        {/* Full-Width Grid Navigation Tabs Bar */}
-        <div className="p-2 bg-slate-100/70 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {/* Navigation Tabs Bar: Horizontal scroll on mobile to prevent text truncation, Grid on larger screens */}
+        <div className="p-2 bg-slate-100/70 border-b border-slate-200 flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-2 overflow-x-auto no-scrollbar scroll-smooth">
           {[
             { id: 'essentials', label: '1. Essentials & SEO', sub: 'Title, Slug & Tags', icon: FileText },
             { id: 'media', label: '2. Media & Uploads', sub: 'Photos & YouTube Video', icon: ImageIcon },
@@ -614,7 +614,7 @@ export const BlogEditorPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-3 rounded-xl text-left transition-all cursor-pointer border ${
+                className={`py-2 px-3 rounded-xl text-left transition-all cursor-pointer border flex-shrink-0 sm:flex-shrink min-w-[170px] sm:min-w-0 ${
                   isActive
                     ? 'bg-white border-purple-200 shadow-sm text-[#301444] ring-1 ring-[#301444]/10'
                     : 'bg-transparent border-transparent text-slate-600 hover:bg-white/60 hover:text-slate-900'
@@ -629,8 +629,8 @@ export const BlogEditorPage = () => {
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold block truncate">{tab.label}</span>
-                    <span className="text-[10px] text-slate-400 block truncate">{tab.sub}</span>
+                    <span className="text-xs font-bold block whitespace-nowrap">{tab.label}</span>
+                    <span className="text-[10px] text-slate-400 block whitespace-nowrap">{tab.sub}</span>
                   </div>
                 </div>
               </button>
