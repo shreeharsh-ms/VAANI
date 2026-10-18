@@ -42,6 +42,7 @@ import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { getServiceRates } from '../../data/serviceRatesData';
 import { printClinicalInvoice, numberToWordsINR } from '../../utils/invoicePrint';
 import { SEED_PATIENTS } from '../../data/patientClinicalProfiles';
+import { useTableKeyboardNav } from '../../hooks';
 
 const WhatsAppIcon = ({ className = "w-3.5 h-3.5" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -1036,6 +1037,14 @@ export const BillingPage = () => {
     return sortedInvoices.slice(start, start + pageSize);
   }, [sortedInvoices, page, pageSize]);
 
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginatedInvoices,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    tableId: 'billing-table',
+  });
+
   // Export to CSV
   const handleExportCSV = () => {
     const headers = ['Invoice No', 'Date', 'UHID', 'Patient Name', 'Phone', 'Service', 'Tax Type', 'Base Amount', 'GST Amount', 'Total Amount', 'Payment Mode', 'Status', 'Receipt No'];
@@ -1569,7 +1578,7 @@ export const BillingPage = () => {
       {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+          <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
             <thead>
               <tr className="bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
                 <th
@@ -1632,124 +1641,134 @@ export const BillingPage = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedInvoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-1.5 px-3 font-mono font-bold text-slate-900">
-                      {inv.invoiceNo}
-                    </td>
-                    <td className="py-1.5 px-2.5 font-mono text-slate-600">
-                      {inv.date}
-                    </td>
-                    <td className="py-1.5 px-2.5 font-mono text-purple-900 font-semibold">
-                      {inv.uhid}
-                    </td>
-                    <td className="py-1.5 px-3 font-semibold text-slate-800">
-                      {inv.patientName}
-                    </td>
-                    <td className="py-1.5 px-3 text-slate-700 truncate max-w-xs">
-                      {inv.service}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        inv.taxType === 'HEALTHCARE_EXEMPT'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
-                        {inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt (Hosp)' : '18% GST (Goods)'}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
-                      ₹{inv.totalAmount.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className="text-[10px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-700">
-                        {inv.paymentMode}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-2 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        inv.status === 'PAID'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-rose-50 text-rose-700 border-rose-200'
-                      }`}>
-                        {inv.status}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {/* 1. See / Open */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenInvoice(inv)}
-                          className="p-1 rounded text-[#301444] hover:bg-purple-100 transition-colors cursor-pointer"
-                          title="See / Open Tax Invoice & Receipt"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                paginatedInvoices.map((inv, idx) => {
+                  const rowProps = getRowProps(idx);
+                  return (
+                    <tr key={inv.id} {...rowProps}>
+                      <td className="py-1.5 px-3 font-mono font-bold text-slate-900">
+                        {inv.invoiceNo}
+                      </td>
+                      <td className="py-1.5 px-2.5 font-mono text-slate-600">
+                        {inv.date}
+                      </td>
+                      <td className="py-1.5 px-2.5 font-mono text-purple-900 font-semibold">
+                        {inv.uhid}
+                      </td>
+                      <td className="py-1.5 px-3 font-semibold text-slate-800">
+                        {inv.patientName}
+                      </td>
+                      <td className="py-1.5 px-3 text-slate-700 truncate max-w-xs">
+                        {inv.service}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          inv.taxType === 'HEALTHCARE_EXEMPT'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
+                          {inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt (Hosp)' : '18% GST (Goods)'}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
+                        ₹{inv.totalAmount.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span className="text-[10px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-700">
+                          {inv.paymentMode}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-2 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          inv.status === 'PAID'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* 1. See / Open */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenInvoice(inv)}
+                            {...getButtonProps(idx, 0)}
+                            className={`p-1 rounded text-[#301444] hover:bg-purple-100 transition-colors cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            title="See / Open Tax Invoice & Receipt"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* 2. Download / Print */}
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadInvoice(inv)}
-                          className="p-1 rounded text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                          title="Download / Print Invoice"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
+                          {/* 2. Download / Print */}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadInvoice(inv)}
+                            {...getButtonProps(idx, 1)}
+                            className={`p-1 rounded text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            title="Download / Print Invoice"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* 3. Edit */}
-                        <button
-                          type="button"
-                          onClick={() => handleStartEditInvoice(inv)}
-                          className="p-1 rounded text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
-                          title="Edit Invoice Details"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
+                          {/* 3. Edit */}
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditInvoice(inv)}
+                            {...getButtonProps(idx, 2)}
+                            className={`p-1 rounded text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer ${getButtonProps(idx, 2).className}`}
+                            title="Edit Invoice Details"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* 4. Share on WhatsApp */}
-                        <button
-                          type="button"
-                          onClick={() => handleSendWhatsAppInvoice(inv)}
-                          className="p-1 rounded text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
-                          title="Share Invoice on WhatsApp"
-                        >
-                          <WhatsAppIcon className="w-3.5 h-3.5" />
-                        </button>
+                          {/* 4. Share on WhatsApp */}
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsAppInvoice(inv)}
+                            {...getButtonProps(idx, 3)}
+                            className={`p-1 rounded text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer ${getButtonProps(idx, 3).className}`}
+                            title="Share Invoice on WhatsApp"
+                          >
+                            <WhatsAppIcon className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* 5. Mail Invoice */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenMailModal(inv)}
-                          className="p-1 rounded text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
-                          title="Email Invoice to Patient"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
+                          {/* 5. Mail Invoice */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMailModal(inv)}
+                            {...getButtonProps(idx, 4)}
+                            className={`p-1 rounded text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer ${getButtonProps(idx, 4).className}`}
+                            title="Email Invoice to Patient"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* UPI QR */}
-                        <button
-                          type="button"
-                          onClick={() => openUpiForInvoice(inv)}
-                          className="p-1 rounded text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
-                          title="Generate Dynamic UPI QR"
-                        >
-                          <QrCode className="w-3.5 h-3.5" />
-                        </button>
+                          {/* UPI QR */}
+                          <button
+                            type="button"
+                            onClick={() => openUpiForInvoice(inv)}
+                            {...getButtonProps(idx, 5)}
+                            className={`p-1 rounded text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer ${getButtonProps(idx, 5).className}`}
+                            title="Generate Dynamic UPI QR"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
 
-                        {/* 6. Delete */}
-                        <button
-                          type="button"
-                          onClick={() => handlePromptDelete(inv)}
-                          className="p-1 rounded text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer"
-                          title="Delete Invoice"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {/* 6. Delete */}
+                          <button
+                            type="button"
+                            onClick={() => handlePromptDelete(inv)}
+                            {...getButtonProps(idx, 6)}
+                            className={`p-1 rounded text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer ${getButtonProps(idx, 6).className}`}
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -1766,10 +1785,12 @@ export const BillingPage = () => {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Previous Page (Ctrl+Q / ⌘Q)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <ChevronLeft className="w-3 h-3" />
               <span>Prev</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -1791,9 +1812,11 @@ export const BillingPage = () => {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Next Page (Ctrl+E / ⌘E)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <span>Next</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>

@@ -22,6 +22,8 @@ import {
   Mail,
   AlertTriangle,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/common/Card';
@@ -31,6 +33,7 @@ import { clinicService } from '../../services/clinicService';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { DEFAULT_ASSESSMENTS, getAllClinicalReports } from '../../data/clinicalReportsData';
+import { useTableKeyboardNav } from '../../hooks';
 
 export const ReportsPage = () => {
   const navigate = useNavigate();
@@ -102,6 +105,29 @@ export const ReportsPage = () => {
       return matchesSearch && matchesDiscipline;
     });
   }, [allReports, searchTerm, selectedDiscipline]);
+
+  // Pagination for Clinical Reports
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const totalEntries = filteredReports.length;
+  const totalPages = Math.ceil(totalEntries / pageSize) || 1;
+  const paginatedReports = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredReports.slice(start, start + pageSize);
+  }, [filteredReports, page, pageSize]);
+
+  // Reset page when filter or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedDiscipline]);
+
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginatedReports,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    tableId: 'reports-table',
+  });
 
   const disciplines = ['ALL', 'Audiology', 'Speech Therapy', 'Fluency', 'Voice', 'Psychology', 'Rehabilitation'];
 
@@ -341,7 +367,7 @@ export const ReportsPage = () => {
 
         {/* Compact Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse" {...tableContainerProps}>
             <thead className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
               <tr>
                 <th className="px-3.5 py-2.5">Doc ID &amp; Date</th>
@@ -354,97 +380,164 @@ export const ReportsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredReports.map((rep) => (
-                <tr key={rep.id || rep.report_number} className="hover:bg-purple-50/30 transition-colors">
-                  <td className="px-3.5 py-2.5 whitespace-nowrap">
-                    <span className="font-mono font-bold text-slate-900 block">{rep.report_number}</span>
-                    <span className="text-[10px] text-slate-400">{rep.date}</span>
-                  </td>
-                  <td className="px-3.5 py-2.5 whitespace-nowrap">
-                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                      <span className="truncate max-w-xs">{rep.title}</span>
-                    </div>
-                    <span className="text-[10px] text-purple-800 font-semibold">{rep.service_code}</span>
-                  </td>
-                  <td className="px-3.5 py-2.5 whitespace-nowrap">
-                    <span className="font-bold text-slate-900 block">{rep.patient_name}</span>
-                    <span className="text-[10px] font-mono font-semibold text-purple-700">{rep.uhid}</span>
-                  </td>
-                  <td className="px-3.5 py-2.5 whitespace-nowrap">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                      {rep.discipline}
-                    </span>
-                  </td>
-                  <td className="px-3.5 py-2.5 text-slate-600 max-w-xs truncate" title={rep.diagnosis}>
-                    {rep.diagnosis}
-                  </td>
-                  <td className="px-3.5 py-2.5 whitespace-nowrap">
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {rep.status || 'FINAL'}
-                    </span>
-                  </td>
-                  <td className="px-3.5 py-2.5 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleInspectInNewTab(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
-                        title="View Official Report in New Tab"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditModal(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
-                        title="Edit / Update Clinical Report"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleInspectInNewTab(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors cursor-pointer"
-                        title="Print Official Report"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleShareWhatsApp(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
-                        title="Send Report Summary via WhatsApp"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleShareEmail(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
-                        title="Send Report via Email"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handlePromptDelete(rep)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
-                        title="Delete Clinical Report"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+              {paginatedReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3.5 py-8 text-center text-slate-500 font-medium">
+                    No clinical reports found matching criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedReports.map((rep, idx) => {
+                  const rowProps = getRowProps(idx);
+                  return (
+                    <tr key={rep.id || rep.report_number} {...rowProps}>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className="font-mono font-bold text-slate-900 block">{rep.report_number}</span>
+                        <span className="text-[10px] text-slate-400">{rep.date}</span>
+                      </td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                          <span className="truncate max-w-xs">{rep.title}</span>
+                        </div>
+                        <span className="text-[10px] text-purple-800 font-semibold">{rep.service_code}</span>
+                      </td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className="font-bold text-slate-900 block">{rep.patient_name}</span>
+                        <span className="text-[10px] font-mono font-semibold text-purple-700">{rep.uhid}</span>
+                      </td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          {rep.discipline}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-slate-600 max-w-xs truncate" title={rep.diagnosis}>
+                        {rep.diagnosis}
+                      </td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {rep.status || 'FINAL'}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleInspectInNewTab(rep)}
+                            {...getButtonProps(idx, 0)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            title="View Official Report in New Tab"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(rep)}
+                            {...getButtonProps(idx, 1)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            title="Edit / Update Clinical Report"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleInspectInNewTab(rep)}
+                            {...getButtonProps(idx, 2)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer ${getButtonProps(idx, 2).className}`}
+                            title="Print Official Report"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleShareWhatsApp(rep)}
+                            {...getButtonProps(idx, 3)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 cursor-pointer ${getButtonProps(idx, 3).className}`}
+                            title="Send Report Summary via WhatsApp"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleShareEmail(rep)}
+                            {...getButtonProps(idx, 4)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 cursor-pointer ${getButtonProps(idx, 4).className}`}
+                            title="Send Report via Email"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handlePromptDelete(rep)}
+                            {...getButtonProps(idx, 5)}
+                            className={`w-7 h-7 flex items-center justify-center rounded text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 cursor-pointer ${getButtonProps(idx, 5).className}`}
+                            title="Delete Clinical Report"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── PAGINATION FOOTER ── */}
+        <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
+          <div className="font-medium">
+            Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
+            <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of{' '}
+            <span className="font-bold text-slate-900">{totalEntries}</span> diagnostic reports
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              title="Previous Page (Ctrl+Q / ⌘Q)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+            >
+              <ChevronLeft className="w-3 h-3" />
+              <span>Prev</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <button
+                key={pageNum}
+                type="button"
+                onClick={() => setPage(pageNum)}
+                className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                  page === pageNum
+                    ? 'bg-[#301444] text-white shadow-2xs'
+                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              title="Next Page (Ctrl+E / ⌘E)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+            >
+              <span>Next</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
 

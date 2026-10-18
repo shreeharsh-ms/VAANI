@@ -21,6 +21,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
+import { useTableKeyboardNav } from '../../hooks';
 
 // ── INITIAL RECALL DATA SEED (SRS SECTION 4.10) ──
 const INITIAL_RECALLS = [
@@ -216,6 +217,15 @@ export const RecallsPage = () => {
     return sortedRecalls.slice(start, start + pageSize);
   }, [sortedRecalls, page, pageSize]);
 
+  // Keyboard table navigation for Recalls directory
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginatedRecalls,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    tableId: 'recalls-table',
+  });
+
   // Action: Trigger WhatsApp message
   const handleSendWhatsApp = (recall) => {
     const text = encodeURIComponent(
@@ -389,7 +399,7 @@ export const RecallsPage = () => {
       {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+          <table {...tableContainerProps} className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
                 <th
@@ -433,60 +443,65 @@ export const RecallsPage = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedRecalls.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="py-1.5 px-3 font-mono font-bold text-slate-900">
-                      {rec.dueDate}
-                    </td>
-                    <td className="py-1.5 px-2.5 font-mono font-semibold text-purple-900">
-                      {rec.uhid}
-                    </td>
-                    <td className="py-1.5 px-3">
-                      <span className="font-semibold text-slate-800 block">{rec.patientName}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{rec.phone}</span>
-                    </td>
-                    <td className="py-1.5 px-2.5">
-                      <span className="text-[11px] font-semibold text-slate-700">{rec.category}</span>
-                    </td>
-                    <td className="py-1.5 px-3 text-slate-700">
-                      {rec.reason}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        rec.status === 'DUE'
-                          ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
-                          : rec.status === 'PENDING'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : rec.status === 'CONTACTED'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        {rec.status === 'DUE' ? 'Urgent Due' : rec.status === 'PENDING' ? 'Pending' : rec.status === 'CONTACTED' ? 'Contacted' : 'Booked'}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleSendWhatsApp(rec)}
-                          className="h-6 px-2 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                          title="Send pre-drafted WhatsApp reminder"
-                        >
-                          <MessageSquare className="w-3 h-3 text-emerald-600" />
-                          <span>WhatsApp</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMarkContacted(rec.id)}
-                          className="h-6 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[10px] font-semibold cursor-pointer transition-colors"
-                          title="Mark patient as contacted"
-                        >
-                          <span>Done</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                paginatedRecalls.map((rec, idx) => {
+                  const rowProps = getRowProps(idx);
+                  return (
+                    <tr key={rec.id} {...rowProps}>
+                      <td className="py-1.5 px-3 font-mono font-bold text-slate-900">
+                        {rec.dueDate}
+                      </td>
+                      <td className="py-1.5 px-2.5 font-mono font-semibold text-purple-900">
+                        {rec.uhid}
+                      </td>
+                      <td className="py-1.5 px-3">
+                        <span className="font-semibold text-slate-800 block">{rec.patientName}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{rec.phone}</span>
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <span className="text-[11px] font-semibold text-slate-700">{rec.category}</span>
+                      </td>
+                      <td className="py-1.5 px-3 text-slate-700">
+                        {rec.reason}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          rec.status === 'DUE'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
+                            : rec.status === 'PENDING'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : rec.status === 'CONTACTED'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          {rec.status === 'DUE' ? 'Urgent Due' : rec.status === 'PENDING' ? 'Pending' : rec.status === 'CONTACTED' ? 'Contacted' : 'Booked'}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleSendWhatsApp(rec)}
+                            {...getButtonProps(idx, 0)}
+                            className={`h-6 px-2 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${getButtonProps(idx, 0).className}`}
+                            title="Send pre-drafted WhatsApp reminder"
+                          >
+                            <MessageSquare className="w-3 h-3 text-emerald-600" />
+                            <span>WhatsApp</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkContacted(rec.id)}
+                            {...getButtonProps(idx, 1)}
+                            className={`h-6 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[10px] font-semibold cursor-pointer transition-colors ${getButtonProps(idx, 1).className}`}
+                            title="Mark patient as contacted"
+                          >
+                            <span>Done</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -503,10 +518,12 @@ export const RecallsPage = () => {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Previous Page (Ctrl+Q / ⌘Q)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <ChevronLeft className="w-3 h-3" />
               <span>Prev</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -528,9 +545,11 @@ export const RecallsPage = () => {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Next Page (Ctrl+E / ⌘E)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <span>Next</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>

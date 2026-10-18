@@ -25,6 +25,7 @@ import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import { isKey, isAlt } from '../../utils/keyboard';
+import { useTableKeyboardNav } from '../../hooks';
 
 // Seed Fallback Patients if none in local database
 const SEED_PATIENTS = [
@@ -282,6 +283,14 @@ export const PatientsPage = () => {
     return sorted.slice(start, start + pageSize);
   }, [sorted, page, pageSize]);
 
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginated,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    tableId: 'patients-table',
+  });
+
   // Export to CSV
   const handleExportCSV = () => {
     const headers = ['UHID', 'Patient Full Name', 'Gender', 'DOB', 'Phone', 'Guardian Name', 'Guardian Phone', 'Service Line', 'Clinical Diagnosis', 'City', 'Intake Date'];
@@ -428,7 +437,7 @@ export const PatientsPage = () => {
       {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+          <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
             <thead>
               <tr className="bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
                 <th
@@ -474,79 +483,90 @@ export const PatientsPage = () => {
                   </td>
                 </tr>
               ) : (
-                paginated.map((p) => (
-                  <tr
-                    key={p.id}
-                    onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
-                    className="hover:bg-purple-50/50 cursor-pointer transition-colors group select-none"
-                    title="Click row to open complete Clinical Dossier page"
-                  >
-                    <td className="py-1.5 px-3 font-mono font-bold text-purple-950 group-hover:text-purple-700">
-                      <div className="flex items-center gap-1.5">
-                        <span className="hover:underline">{p.uhid}</span>
-                      </div>
-                    </td>
-                    <td className="py-1.5 px-3">
-                      <span className="font-bold text-slate-800 group-hover:text-purple-900 block">{p.full_name}</span>
-                      <span className="text-[10px] text-slate-400 truncate block">{p.city}</span>
-                    </td>
-                    <td className="py-1.5 px-2.5 text-slate-600 font-mono">
-                      {p.gender ? p.gender.substring(0, 1) : '-'} • {p.date_of_birth ? `${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()}y` : '-'}
-                    </td>
-                    <td className="py-1.5 px-3 font-mono text-slate-700 font-medium">
-                      {p.phone}
-                    </td>
-                    <td className="py-1.5 px-3 text-slate-700">
-                      <span className="font-semibold block truncate">{p.guardian_name || 'Self'}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">{p.guardian_phone || p.phone}</span>
-                    </td>
-                    <td className="py-1.5 px-3 text-slate-700 truncate max-w-xs">
-                      {p.diagnosis || 'Clinical evaluation in progress'}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                        p.service_line === 'SPEECH_LANGUAGE'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : p.service_line === 'AUDIOLOGY'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : p.service_line === 'VOICE'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        {p.service_line === 'SPEECH_LANGUAGE' ? 'Speech' : p.service_line === 'AUDIOLOGY' ? 'Audiology' : p.service_line === 'VOICE' ? 'Voice' : 'CBT'}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-2.5 font-mono text-slate-500 text-xs">
-                      {p.created_at ? p.created_at.substring(0, 10) : '-'}
-                    </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/dashboard/patients/${p.uhid || p.id}`);
-                          }}
-                          className="p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors"
-                          title="Open Clinical Dossier & EMR Record Page"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(p.id);
-                          }}
-                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete patient record"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                paginated.map((p, idx) => {
+                  const rowProps = getRowProps(idx);
+                  return (
+                    <tr
+                      key={p.id}
+                      {...rowProps}
+                      className={`${rowProps.className} cursor-pointer group select-none`}
+                      title="Navigate via Arrow Keys, Enter to open Dossier"
+                    >
+                      <td
+                        onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
+                        className="py-1.5 px-3 font-mono font-bold text-purple-950 group-hover:text-purple-700"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="hover:underline">{p.uhid}</span>
+                        </div>
+                      </td>
+                      <td
+                        onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
+                        className="py-1.5 px-3"
+                      >
+                        <span className="font-bold text-slate-800 group-hover:text-purple-900 block">{p.full_name}</span>
+                        <span className="text-[10px] text-slate-400 truncate block">{p.city}</span>
+                      </td>
+                      <td className="py-1.5 px-2.5 text-slate-600 font-mono">
+                        {p.gender ? p.gender.substring(0, 1) : '-'} • {p.date_of_birth ? `${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()}y` : '-'}
+                      </td>
+                      <td className="py-1.5 px-3 font-mono text-slate-700 font-medium">
+                        {p.phone}
+                      </td>
+                      <td className="py-1.5 px-3 text-slate-700">
+                        <span className="font-semibold block truncate">{p.guardian_name || 'Self'}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{p.guardian_phone || p.phone}</span>
+                      </td>
+                      <td className="py-1.5 px-3 text-slate-700 truncate max-w-xs">
+                        {p.diagnosis || 'Clinical evaluation in progress'}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                          p.service_line === 'SPEECH_LANGUAGE'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : p.service_line === 'AUDIOLOGY'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : p.service_line === 'VOICE'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          {p.service_line === 'SPEECH_LANGUAGE' ? 'Speech' : p.service_line === 'AUDIOLOGY' ? 'Audiology' : p.service_line === 'VOICE' ? 'Voice' : 'CBT'}
+                        </span>
+                      </td>
+                      <td className="py-1.5 px-2.5 font-mono text-slate-500 text-xs">
+                        {p.created_at ? p.created_at.substring(0, 10) : '-'}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/patients/${p.uhid || p.id}`);
+                            }}
+                            {...getButtonProps(idx, 0)}
+                            className={`p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            title="Open Clinical Dossier & EMR Record Page"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(p.id);
+                            }}
+                            {...getButtonProps(idx, 1)}
+                            className={`p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            title="Delete patient record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -563,10 +583,12 @@ export const PatientsPage = () => {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Previous Page (Ctrl+Q / ⌘Q)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <ChevronLeft className="w-3 h-3" />
               <span>Prev</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -588,9 +610,11 @@ export const PatientsPage = () => {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Next Page (Ctrl+E / ⌘E)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <span>Next</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>

@@ -1018,11 +1018,6 @@ export const SettingsPage = () => {
 
   // Wipe All Transactional Data (Leaving Users & Firm Details Intact)
   const handleWipeAllClinicalData = () => {
-    if (wipeConfirmText.trim().toUpperCase() !== 'DELETE') {
-      notify.error('Please type DELETE to confirm clinical data purge.');
-      return;
-    }
-
     setIsWiping(true);
 
     try {
@@ -3802,89 +3797,53 @@ export const SettingsPage = () => {
             setWipeConfirmText('');
           }
         }}
-        title="Confirm Clinical Transactional Data Purge"
+        title="Reset Clinical Records"
         size="md"
       >
-        <div className="space-y-3 font-sans text-xs">
-          
-          {/* Red Alert Banner */}
-          <div className="p-2.5 rounded bg-rose-50 border border-rose-200 flex items-start gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+        <div className="space-y-4 font-sans text-xs">
+          {/* Friendly Alert */}
+          <div className="p-3 rounded-lg bg-amber-50/80 border border-amber-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-bold text-rose-900">
-                Warning: This action will permanently wipe all clinical transactional records.
+              <p className="font-bold text-slate-900 text-sm">
+                Clear all patient and clinical data?
               </p>
-              <p className="text-rose-800 leading-normal">
-                This will delete {storageMetrics.totalTransactionalRecords} items including all registered patients, appointment bookings, invoices, clinical diagnostic reports, early developmental histories, and therapy SOAP notes.
+              <p className="text-xs text-slate-600 leading-relaxed">
+                This will reset patient registrations, appointments, invoices, and diagnostic test reports to give your clinic a clean slate.
               </p>
             </div>
           </div>
 
-          {/* Breakdown: Preserved vs Deleted */}
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="p-2 rounded bg-emerald-50 border border-emerald-200">
-              <p className="font-bold text-emerald-900 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Will Remain Preserved:
-              </p>
-              <ul className="space-y-0.5 text-emerald-800">
-                <li>• Clinician User Accounts &amp; Login</li>
-                <li>• Clinic Legal Name &amp; Trade Name</li>
-                <li>• Brand Logo &amp; Letterhead Title</li>
-                <li>• Address, Phone &amp; Contact Info</li>
-                <li>• Bank Account, IFSC &amp; UPI ID</li>
-                <li>• GSTIN &amp; HSN/SAC Codes</li>
-                <li>• Master Service Tariff Schedule</li>
-              </ul>
-            </div>
-
-            <div className="p-2 rounded bg-rose-50 border border-rose-200">
-              <p className="font-bold text-rose-900 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                Will Be Deleted:
-              </p>
-              <ul className="space-y-0.5 text-rose-800">
-                <li>• All Registered Patients ({storageMetrics.patientCount})</li>
-                <li>• All OPD Appointments ({storageMetrics.aptCount})</li>
-                <li>• All GST Invoices &amp; Billing ({storageMetrics.invCount})</li>
-                <li>• All Diagnostic Reports ({storageMetrics.reportCount})</li>
-                <li>• All Developmental Histories ({storageMetrics.edhCount})</li>
-                <li>• All Therapy Plans &amp; SOAP Notes</li>
-                <li>• Inventory Stock &amp; Recall Slips</li>
-              </ul>
-            </div>
+          {/* Reassurance Card */}
+          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+            <p className="font-semibold text-slate-800">What stays safe:</p>
+            <ul className="space-y-1 text-[11px]">
+              <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Doctor profiles &amp; staff login credentials</span>
+              </li>
+              <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Clinic address, logo, letterhead &amp; tariff schedule</span>
+              </li>
+            </ul>
           </div>
 
           {/* Automatic Backup Checkbox */}
-          <label className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+          <label className="flex items-center gap-2 p-2.5 rounded-lg bg-purple-50/50 border border-purple-200 cursor-pointer hover:bg-purple-50 transition-colors">
             <input
               type="checkbox"
               checked={autoBackupBeforeWipe}
               onChange={(e) => setAutoBackupBeforeWipe(e.target.checked)}
-              className="w-4 h-4 text-purple-700 rounded border-slate-300 focus:ring-purple-600"
+              className="w-4 h-4 text-purple-700 rounded border-slate-300 focus:ring-purple-600 cursor-pointer"
             />
-            <span className="font-semibold text-slate-800">
-              Download timestamped JSON backup archive before wiping (Highly Recommended)
+            <span className="font-medium text-purple-950 text-xs">
+              Automatically save a backup copy (.JSON) before resetting
             </span>
           </label>
 
-          {/* Confirmation Input */}
-          <div className="space-y-1 pt-1">
-            <label className="font-bold text-slate-800 block">
-              To proceed, please type <span className="font-mono text-rose-700 uppercase font-black">DELETE</span> in the box below:
-            </label>
-            <input
-              type="text"
-              value={wipeConfirmText}
-              onChange={(e) => setWipeConfirmText(e.target.value)}
-              placeholder="Type DELETE to confirm"
-              className="h-8 w-full px-2.5 text-xs font-mono font-bold bg-white border border-slate-300 rounded focus:border-rose-600 focus:outline-none focus:ring-1 focus:ring-rose-600 placeholder-slate-400"
-              autoFocus
-            />
-          </div>
-
           {/* Modal Actions */}
-          <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+          <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={() => {
@@ -3892,25 +3851,25 @@ export const SettingsPage = () => {
                 setWipeConfirmText('');
               }}
               disabled={isWiping}
-              className="px-3 py-1.5 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleWipeAllClinicalData}
-              disabled={wipeConfirmText.trim().toUpperCase() !== 'DELETE' || isWiping}
-              className="px-4 py-1.5 rounded text-xs font-black text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+              disabled={isWiping}
+              className="px-4 py-1.5 rounded-md text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
             >
               {isWiping ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Purging Clinical Data...</span>
+                  <span>Resetting Clinical Records...</span>
                 </>
               ) : (
                 <>
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Confirm Complete Data Wipe</span>
+                  <span>Reset All Clinical Records</span>
                 </>
               )}
             </button>

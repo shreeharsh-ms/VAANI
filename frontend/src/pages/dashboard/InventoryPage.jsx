@@ -32,6 +32,7 @@ import {
 import { useNotification } from '../../context/NotificationContext';
 import Modal from '../../components/common/Modal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
+import { useTableKeyboardNav } from '../../hooks';
 
 export const InventoryPage = () => {
   const { notify } = useNotification();
@@ -261,6 +262,15 @@ export const InventoryPage = () => {
     const start = (page - 1) * pageSize;
     return sortedDevices.slice(start, start + pageSize);
   }, [sortedDevices, page, pageSize]);
+
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginatedDevices,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    isEnabled: activeTab === 'DEVICES',
+    tableId: 'inventory-devices-table',
+  });
 
   // Export CSV
   const handleExportCSV = () => {
@@ -757,7 +767,7 @@ export const InventoryPage = () => {
           {/* Table */}
           <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
+              <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
                 <thead>
                   <tr className="bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
                     <th onClick={() => handleSort('serialNo')} className="py-2 px-3 w-36 cursor-pointer hover:bg-slate-200/80">
@@ -797,110 +807,119 @@ export const InventoryPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    paginatedDevices.map((dev) => (
-                      <tr key={dev.id} className="hover:bg-purple-50/30 transition-colors">
-                        <td className="py-2 px-3 font-mono font-bold text-slate-900">
-                          {dev.serialNo}
-                        </td>
-                        <td className="py-2 px-2.5 font-bold text-purple-900">
-                          {dev.brand}
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="font-semibold text-slate-800">{dev.model}</span>
-                          <span className="text-[10px] text-slate-400 block">{dev.category} • {dev.batteryType}</span>
-                        </td>
-                        <td className="py-2 px-2.5 text-center font-mono text-[11px] text-slate-600">
-                          <span className="font-bold">{dev.hsnCode || '90214090'}</span>
-                          <span className="text-[10px] text-purple-800 block">({dev.gstPercent ?? 18}%)</span>
-                        </td>
-                        <td className="py-2 px-2.5 text-center">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                              dev.stockStatus === 'IN_STOCK'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : dev.stockStatus === 'ON_TRIAL'
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                                : dev.stockStatus === 'DISPENSED'
-                                ? 'bg-purple-50 text-purple-800 border-purple-200'
-                                : 'bg-rose-50 text-rose-700 border-rose-200'
-                            }`}
-                          >
-                            {dev.stockStatus === 'IN_STOCK'
-                              ? 'In Stock'
-                              : dev.stockStatus === 'ON_TRIAL'
-                              ? 'On Trial'
-                              : dev.stockStatus === 'DISPENSED'
-                              ? 'Sold / Dispensed'
-                              : 'Returned / RMA'}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-slate-700">
-                          {dev.patientName && dev.patientName !== '-' ? (
-                            <div>
-                              <span className="font-semibold text-slate-800 block truncate">{dev.patientName}</span>
-                              <span className="text-[10px] font-mono text-purple-700">{dev.patientUhid} ({dev.ear})</span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 italic">Available in Clinic</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
-                          ₹{dev.mrp.toLocaleString('en-IN')}
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                            {dev.stockStatus === 'IN_STOCK' && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenDispenseModal(dev)}
-                                  className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900 hover:bg-purple-200 cursor-pointer"
-                                  title="Mark as Sold & Dispense to Patient"
-                                >
-                                  Sell / Dispense
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenReturnModal(dev)}
-                                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 cursor-pointer"
-                                  title="Return to Manufacturer / RMA"
-                                >
-                                  Return
-                                </button>
-                              </>
-                            )}
-                            {dev.stockStatus === 'DISPENSED' && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenRestockModal(dev)}
-                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 cursor-pointer"
-                                title="Patient Return to Stock"
-                              >
-                                Re-inward / Restock
-                              </button>
-                            )}
-                            {dev.stockStatus === 'RETURNED' && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenRestockModal(dev)}
-                                className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer"
-                                title="Re-inward after vendor repair"
-                              >
-                                Re-inward Stock
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteDevice(dev.id)}
-                              className="text-slate-400 hover:text-rose-600 p-1 rounded cursor-pointer"
-                              title="Delete record"
+                    paginatedDevices.map((dev, idx) => {
+                      const rowProps = getRowProps(idx);
+                      let btnIdx = 0;
+                      return (
+                        <tr key={dev.id} {...rowProps}>
+                          <td className="py-2 px-3 font-mono font-bold text-slate-900">
+                            {dev.serialNo}
+                          </td>
+                          <td className="py-2 px-2.5 font-bold text-purple-900">
+                            {dev.brand}
+                          </td>
+                          <td className="py-2 px-3">
+                            <span className="font-semibold text-slate-800">{dev.model}</span>
+                            <span className="text-[10px] text-slate-400 block">{dev.category} • {dev.batteryType}</span>
+                          </td>
+                          <td className="py-2 px-2.5 text-center font-mono text-[11px] text-slate-600">
+                            <span className="font-bold">{dev.hsnCode || '90214090'}</span>
+                            <span className="text-[10px] text-purple-800 block">({dev.gstPercent ?? 18}%)</span>
+                          </td>
+                          <td className="py-2 px-2.5 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                dev.stockStatus === 'IN_STOCK'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : dev.stockStatus === 'ON_TRIAL'
+                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  : dev.stockStatus === 'DISPENSED'
+                                  ? 'bg-purple-50 text-purple-800 border-purple-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}
                             >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                              {dev.stockStatus === 'IN_STOCK'
+                                ? 'In Stock'
+                                : dev.stockStatus === 'ON_TRIAL'
+                                ? 'On Trial'
+                                : dev.stockStatus === 'DISPENSED'
+                                ? 'Sold / Dispensed'
+                                : 'Returned / RMA'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-slate-700">
+                            {dev.patientName && dev.patientName !== '-' ? (
+                              <div>
+                                <span className="font-semibold text-slate-800 block truncate">{dev.patientName}</span>
+                                <span className="text-[10px] font-mono text-purple-700">{dev.patientUhid} ({dev.ear})</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic">Available in Clinic</span>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                            ₹{dev.mrp.toLocaleString('en-IN')}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                              {dev.stockStatus === 'IN_STOCK' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenDispenseModal(dev)}
+                                    {...getButtonProps(idx, btnIdx++)}
+                                    className={`px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900 hover:bg-purple-200 cursor-pointer ${getButtonProps(idx, btnIdx - 1).className}`}
+                                    title="Mark as Sold & Dispense to Patient"
+                                  >
+                                    Sell / Dispense
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenReturnModal(dev)}
+                                    {...getButtonProps(idx, btnIdx++)}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 cursor-pointer ${getButtonProps(idx, btnIdx - 1).className}`}
+                                    title="Return to Manufacturer / RMA"
+                                  >
+                                    Return
+                                  </button>
+                                </>
+                              )}
+                              {dev.stockStatus === 'DISPENSED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenRestockModal(dev)}
+                                  {...getButtonProps(idx, btnIdx++)}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 cursor-pointer ${getButtonProps(idx, btnIdx - 1).className}`}
+                                  title="Patient Return to Stock"
+                                >
+                                  Re-inward / Restock
+                                </button>
+                              )}
+                              {dev.stockStatus === 'RETURNED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenRestockModal(dev)}
+                                  {...getButtonProps(idx, btnIdx++)}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer ${getButtonProps(idx, btnIdx - 1).className}`}
+                                  title="Re-inward after vendor repair"
+                                >
+                                  Re-inward Stock
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteDevice(dev.id)}
+                                {...getButtonProps(idx, btnIdx++)}
+                                className={`text-slate-400 hover:text-rose-600 p-1 rounded cursor-pointer ${getButtonProps(idx, btnIdx - 1).className}`}
+                                title="Delete record"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -917,10 +936,12 @@ export const InventoryPage = () => {
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+                  title="Previous Page (Ctrl+Q / ⌘Q)"
+                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
                 >
                   <ChevronLeft className="w-3 h-3" />
                   <span>Prev</span>
+                  <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -942,9 +963,11 @@ export const InventoryPage = () => {
                   type="button"
                   disabled={page >= totalPages}
                   onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+                  title="Next Page (Ctrl+E / ⌘E)"
+                  className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
                 >
                   <span>Next</span>
+                  <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>

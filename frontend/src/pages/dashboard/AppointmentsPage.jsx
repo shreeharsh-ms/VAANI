@@ -36,6 +36,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { formatTime, formatCurrency, normalizeSlotTime, normalizeDate, getAppointmentSlotsCovered, CLINICAL_TIME_SLOTS } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { getAllAppointments, SEED_APPOINTMENTS } from '../../data/appointmentsData';
+import { useTableKeyboardNav } from '../../hooks';
 
 const ALL_SLOTS = CLINICAL_TIME_SLOTS;
 
@@ -391,6 +392,14 @@ Vaani Speech & Hearing Clinic`;
     return sorted.slice(start, start + pageSize);
   }, [sorted, page, pageSize]);
 
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: paginated,
+    page,
+    totalPages,
+    onPageChange: setPage,
+    tableId: 'appointments-table',
+  });
+
   // Export to CSV
   const handleExportCSV = () => {
     const headers = [
@@ -716,7 +725,7 @@ Vaani Speech & Hearing Clinic`;
       {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left border-collapse">
+          <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
             <thead>
               <tr className="bg-slate-100/90 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider select-none">
                 <th
@@ -747,14 +756,14 @@ Vaani Speech & Hearing Clinic`;
                 </th>
                 <th className="py-2 px-3">Service Description</th>
                 <th className="py-2 px-2.5 w-24 text-center">Category</th>
-                <th className="py-2 px-2.5 w-28 text-center">Status</th>
+                <th className="py-2 px-2.5 w-24 text-center">Status</th>
                 <th
-                  onClick={() => handleSort('fee_paise')}
-                  className="py-2 px-3 w-20 text-right cursor-pointer hover:bg-slate-200/80 transition-colors"
+                  onClick={() => handleSort('fee')}
+                  className="py-2 px-3 w-24 text-right cursor-pointer hover:bg-slate-200/80 transition-colors"
                 >
                   <div className="flex items-center justify-end gap-1">
                     <span>Fee (₹)</span>
-                    {sortField === 'fee_paise' ? (
+                    {sortField === 'fee' ? (
                       sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />
                     ) : (
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
@@ -773,182 +782,192 @@ Vaani Speech & Hearing Clinic`;
                   </td>
                 </tr>
               ) : (
-                paginated.map((apt) => (
-                  <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
-                    {/* Date & Slot */}
-                    <td className="py-1.5 px-3">
-                      <span className="font-mono font-bold text-slate-900 block">{apt.appointment_date}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {apt.start_time} {apt.end_time ? `- ${apt.end_time}` : ''}
-                      </span>
-                    </td>
+                paginated.map((apt, idx) => {
+                  const rowProps = getRowProps(idx);
+                  return (
+                    <tr key={apt.id} {...rowProps}>
+                      {/* Date & Slot */}
+                      <td className="py-1.5 px-3">
+                        <span className="font-mono font-bold text-slate-900 block">{apt.appointment_date}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {apt.start_time} {apt.end_time ? `- ${apt.end_time}` : ''}
+                        </span>
+                      </td>
 
-                    {/* Patient Name & UHID */}
-                    <td className="py-1.5 px-3">
-                      <span className="font-bold text-slate-800 block truncate">{apt.patient_name}</span>
-                      <span className="text-[10px] text-purple-900 font-mono font-semibold">
-                        {apt.patient_uhid || 'VN-26-0001'} • {apt.patient_phone}
-                      </span>
-                    </td>
+                      {/* Patient Name & UHID */}
+                      <td className="py-1.5 px-3">
+                        <span className="font-bold text-slate-800 block truncate">{apt.patient_name}</span>
+                        <span className="text-[10px] text-purple-900 font-mono font-semibold">
+                          {apt.patient_uhid || 'VN-26-0001'} • {apt.patient_phone}
+                        </span>
+                      </td>
 
-                    {/* Service Description */}
-                    <td className="py-1.5 px-3 text-slate-700">
-                      <div className="truncate max-w-xs font-medium">{apt.service_name}</div>
-                      {apt.notes && (
-                        <div className="text-[10px] text-slate-400 italic truncate max-w-xs">
-                          {apt.notes}
-                        </div>
-                      )}
-                    </td>
+                      {/* Service Description */}
+                      <td className="py-1.5 px-3 text-slate-700">
+                        <div className="truncate max-w-xs font-medium">{apt.service_name}</div>
+                        {apt.notes && (
+                          <div className="text-[10px] text-slate-400 italic truncate max-w-xs">
+                            {apt.notes}
+                          </div>
+                        )}
+                      </td>
 
-                    {/* Category */}
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                          apt.service_line === 'SPEECH_LANGUAGE'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                      {/* Category */}
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                            apt.service_line === 'SPEECH_LANGUAGE'
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : apt.service_line === 'AUDIOLOGY'
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : apt.service_line === 'VOICE'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          }`}
+                        >
+                          {apt.service_line === 'SPEECH_LANGUAGE'
+                            ? 'Speech'
                             : apt.service_line === 'AUDIOLOGY'
-                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            ? 'Audiology'
                             : apt.service_line === 'VOICE'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        }`}
-                      >
-                        {apt.service_line === 'SPEECH_LANGUAGE'
-                          ? 'Speech'
-                          : apt.service_line === 'AUDIOLOGY'
-                          ? 'Audiology'
-                          : apt.service_line === 'VOICE'
-                          ? 'Voice'
-                          : 'CBT'}
-                      </span>
-                    </td>
+                            ? 'Voice'
+                            : 'CBT'}
+                        </span>
+                      </td>
 
-                    {/* Status Badge */}
-                    <td className="py-1.5 px-2.5 text-center">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 ${
-                          apt.status === 'PENDING'
-                            ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
-                            : apt.status === 'CONFIRMED'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      {/* Status Badge */}
+                      <td className="py-1.5 px-2.5 text-center">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 ${
+                            apt.status === 'PENDING'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                              : apt.status === 'CONFIRMED'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : apt.status === 'CHECKED_IN'
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : apt.status === 'COMPLETED'
+                              ? 'bg-slate-100 text-slate-700 border-slate-200'
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}
+                        >
+                          {apt.status === 'PENDING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                          {apt.status === 'PENDING'
+                            ? 'Pending'
                             : apt.status === 'CHECKED_IN'
-                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                            : apt.status === 'COMPLETED'
-                            ? 'bg-slate-100 text-slate-700 border-slate-200'
-                            : 'bg-rose-50 text-rose-700 border-rose-200'
-                        }`}
-                      >
-                        {apt.status === 'PENDING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
-                        {apt.status === 'PENDING'
-                          ? 'Pending'
-                          : apt.status === 'CHECKED_IN'
-                          ? 'In Queue'
-                          : apt.status === 'CONFIRMED'
-                          ? 'Confirmed'
-                          : apt.status}
-                      </span>
-                    </td>
+                            ? 'In Queue'
+                            : apt.status === 'CONFIRMED'
+                            ? 'Confirmed'
+                            : apt.status}
+                        </span>
+                      </td>
 
-                    {/* Fee */}
-                    <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
-                      ₹{(((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0)).toLocaleString('en-IN')}
-                    </td>
+                      {/* Fee */}
+                      <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
+                        ₹{(((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0)).toLocaleString('en-IN')}
+                      </td>
 
-                    {/* Approval & Lifecycle Status Dropdown */}
-                    <td className="py-1.5 px-3 text-center">
-                      {apt.status === 'PENDING' ? (
+                      {/* Approval & Lifecycle Status Dropdown */}
+                      <td className="py-1.5 px-3 text-center">
+                        {apt.status === 'PENDING' ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleApprove(apt.id)}
+                              {...getButtonProps(idx, 0)}
+                              className={`h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs flex items-center gap-0.5 cursor-pointer ${getButtonProps(idx, 0).className}`}
+                              title="Approve booking and lock slot"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeny(apt.id)}
+                              {...getButtonProps(idx, 1)}
+                              className={`h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer ${getButtonProps(idx, 1).className}`}
+                              title="Deny request and release slot"
+                            >
+                              <X className="w-3 h-3" />
+                              <span>Deny</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            value={apt.status}
+                            onChange={(e) => handleStatusUpdate(apt.id, e.target.value)}
+                            className="h-6 px-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                          >
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="CHECKED_IN">Check In (Token)</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="NO_SHOW">No Show</option>
+                            <option value="CANCELLED">Cancelled</option>
+                          </select>
+                        )}
+                      </td>
+
+                      {/* Actions & Reminders Column */}
+                      <td className="py-1.5 px-3 text-center">
                         <div className="flex items-center justify-center gap-1">
+                          {/* WhatsApp Reminder */}
                           <button
                             type="button"
-                            onClick={() => handleApprove(apt.id)}
-                            className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs flex items-center gap-0.5 cursor-pointer"
-                            title="Approve booking and lock slot"
+                            onClick={() => handleSendWhatsAppReminder(apt)}
+                            {...getButtonProps(idx, 0)}
+                            className={`w-6 h-6 rounded flex items-center justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            title="Send WhatsApp appointment reminder to patient"
                           >
-                            <Check className="w-3 h-3" />
-                            <span>Approve</span>
+                            <MessageSquare className="w-3 h-3" />
                           </button>
+
+                          {/* Email Reminder */}
                           <button
                             type="button"
-                            onClick={() => handleDeny(apt.id)}
-                            className="h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold flex items-center gap-0.5 cursor-pointer"
-                            title="Deny request and release slot"
+                            onClick={() => handleSendEmailReminder(apt)}
+                            {...getButtonProps(idx, 1)}
+                            className={`w-6 h-6 rounded flex items-center justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            title="Send Email appointment reminder"
                           >
-                            <X className="w-3 h-3" />
-                            <span>Deny</span>
+                            <Mail className="w-3 h-3" />
+                          </button>
+
+                          {/* Reschedule Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenReschedule(apt)}
+                            {...getButtonProps(idx, 2)}
+                            className={`w-6 h-6 rounded flex items-center justify-center bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 cursor-pointer ${getButtonProps(idx, 2).className}`}
+                            title="Reschedule appointment to another date/slot"
+                          >
+                            <CalendarIcon className="w-3 h-3" />
+                          </button>
+
+                          {/* Edit Details */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(apt)}
+                            {...getButtonProps(idx, 3)}
+                            className={`w-6 h-6 rounded flex items-center justify-center bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-300 cursor-pointer ${getButtonProps(idx, 3).className}`}
+                            title="Edit patient details or consultation fee"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(apt.id, apt.patient_name)}
+                            {...getButtonProps(idx, 4)}
+                            className={`w-6 h-6 rounded flex items-center justify-center bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer ${getButtonProps(idx, 4).className}`}
+                            title="Delete appointment"
+                          >
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
-                      ) : (
-                        <select
-                          value={apt.status}
-                          onChange={(e) => handleStatusUpdate(apt.id, e.target.value)}
-                          className="h-6 px-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                        >
-                          <option value="CONFIRMED">Confirmed</option>
-                          <option value="CHECKED_IN">Check In (Token)</option>
-                          <option value="COMPLETED">Completed</option>
-                          <option value="NO_SHOW">No Show</option>
-                          <option value="CANCELLED">Cancelled</option>
-                        </select>
-                      )}
-                    </td>
-
-                    {/* Actions & Reminders Column */}
-                    <td className="py-1.5 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {/* WhatsApp Reminder */}
-                        <button
-                          type="button"
-                          onClick={() => handleSendWhatsAppReminder(apt)}
-                          className="w-6 h-6 rounded flex items-center justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
-                          title="Send WhatsApp appointment reminder to patient"
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                        </button>
-
-                        {/* Email Reminder */}
-                        <button
-                          type="button"
-                          onClick={() => handleSendEmailReminder(apt)}
-                          className="w-6 h-6 rounded flex items-center justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors cursor-pointer"
-                          title="Send Email appointment reminder"
-                        >
-                          <Mail className="w-3 h-3" />
-                        </button>
-
-                        {/* Reschedule Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenReschedule(apt)}
-                          className="w-6 h-6 rounded flex items-center justify-center bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors cursor-pointer"
-                          title="Reschedule appointment to another date/slot"
-                        >
-                          <CalendarIcon className="w-3 h-3" />
-                        </button>
-
-                        {/* Edit Details */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(apt)}
-                          className="w-6 h-6 rounded flex items-center justify-center bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
-                          title="Edit patient details or consultation fee"
-                        >
-                          <Edit className="w-3 h-3" />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(apt.id, apt.patient_name)}
-                          className="w-6 h-6 rounded flex items-center justify-center bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
-                          title="Delete appointment"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -967,10 +986,12 @@ Vaani Speech & Hearing Clinic`;
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Previous Page (Ctrl+Q / ⌘Q)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <ChevronLeft className="w-3 h-3" />
               <span>Prev</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -992,9 +1013,11 @@ Vaani Speech & Hearing Clinic`;
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-0.5 text-xs font-semibold"
+              title="Next Page (Ctrl+E / ⌘E)"
+              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
             >
               <span>Next</span>
+              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>

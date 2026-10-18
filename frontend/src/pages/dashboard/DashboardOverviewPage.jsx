@@ -32,6 +32,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { formatCurrency } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
+import { useTableKeyboardNav } from '../../hooks';
 
 const DEFAULT_TODAY_APPOINTMENTS = [
   {
@@ -197,6 +198,14 @@ export const DashboardOverviewPage = () => {
       return 0;
     }
   }, [todayAppointments]);
+
+  // Keyboard table navigation for Today's Consultation Queue
+  const { getRowProps, getButtonProps, tableContainerProps } = useTableKeyboardNav({
+    items: todayAppointments,
+    page: 1,
+    totalPages: 1,
+    tableId: 'overview-queue-table',
+  });
 
   // Universal keyboard shortcut listener
   useEffect(() => {
@@ -462,7 +471,7 @@ export const DashboardOverviewPage = () => {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
+              <table {...tableContainerProps} className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                     <th className="py-2 px-2.5 w-12 text-center text-slate-400">Token</th>
@@ -483,80 +492,88 @@ export const DashboardOverviewPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    todayAppointments.map((apt) => (
-                      <tr key={apt.id} className="hover:bg-purple-50/30 transition-colors">
-                        <td className="py-2 px-2.5 text-center font-mono font-bold text-purple-900 bg-purple-50/40">
-                          {apt.token}
-                        </td>
-                        <td className="py-2 px-2.5 font-mono font-semibold text-slate-700">
-                          {apt.time}
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="font-bold text-slate-800 block truncate">{apt.patientName}</span>
-                          <span className="text-[10px] font-mono text-purple-900 font-semibold">{apt.uhid}</span>
-                        </td>
-                        <td className="py-2 px-3 text-slate-700 truncate max-w-xs">
-                          {apt.service}
-                        </td>
-                        <td className="py-2 px-2.5 text-center">
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
-                            apt.status === 'PENDING'
-                              ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
-                              : apt.status === 'IN_SESSION'
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
-                              : apt.status === 'CHECKED_IN'
-                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                              : 'bg-slate-100 text-slate-700 border-slate-200'
-                          }`}>
-                            {apt.status === 'PENDING' ? 'Pending Approval' : apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          {apt.status === 'PENDING' ? (
-                            <div className="flex items-center justify-center gap-1">
+                    todayAppointments.map((apt, idx) => {
+                      const rowProps = getRowProps(idx);
+                      return (
+                        <tr key={apt.id} {...rowProps}>
+                          <td className="py-2 px-2.5 text-center font-mono font-bold text-purple-900 bg-purple-50/40">
+                            {apt.token}
+                          </td>
+                          <td className="py-2 px-2.5 font-mono font-semibold text-slate-700">
+                            {apt.time}
+                          </td>
+                          <td className="py-2 px-3">
+                            <span className="font-bold text-slate-800 block truncate">{apt.patientName}</span>
+                            <span className="text-[10px] font-mono text-purple-900 font-semibold">{apt.uhid}</span>
+                          </td>
+                          <td className="py-2 px-3 text-slate-700 truncate max-w-xs">
+                            {apt.service}
+                          </td>
+                          <td className="py-2 px-2.5 text-center">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                              apt.status === 'PENDING'
+                                ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                                : apt.status === 'IN_SESSION'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 animate-pulse'
+                                : apt.status === 'CHECKED_IN'
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                              {apt.status === 'PENDING' ? 'Pending Approval' : apt.status === 'IN_SESSION' ? 'In Session' : apt.status === 'CHECKED_IN' ? 'In Waiting Room' : 'Scheduled'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            {apt.status === 'PENDING' ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveAppointment(apt.id)}
+                                  {...getButtonProps(idx, 0)}
+                                  className={`h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs cursor-pointer ${getButtonProps(idx, 0).className}`}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDenyAppointment(apt.id)}
+                                  {...getButtonProps(idx, 1)}
+                                  className={`h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold cursor-pointer ${getButtonProps(idx, 1).className}`}
+                                >
+                                  Deny
+                                </button>
+                              </div>
+                            ) : apt.status === 'CHECKED_IN' ? (
                               <button
                                 type="button"
-                                onClick={() => handleApproveAppointment(apt.id)}
-                                className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs cursor-pointer"
+                                onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}
+                                {...getButtonProps(idx, 0)}
+                                className={`h-6 px-2.5 rounded bg-[#301444] text-white hover:bg-[#200b30] text-[10px] font-bold shadow-2xs cursor-pointer ${getButtonProps(idx, 0).className}`}
                               >
-                                Approve
+                                Call Patient In
                               </button>
+                            ) : apt.status === 'IN_SESSION' ? (
                               <button
                                 type="button"
-                                onClick={() => handleDenyAppointment(apt.id)}
-                                className="h-6 px-1.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold cursor-pointer"
+                                onClick={() => handleUpdateStatus(apt.id, 'COMPLETED')}
+                                {...getButtonProps(idx, 0)}
+                                className={`h-6 px-2.5 rounded bg-emerald-700 text-white hover:bg-emerald-800 text-[10px] font-bold shadow-2xs cursor-pointer ${getButtonProps(idx, 0).className}`}
                               >
-                                Deny
+                                Complete Visit
                               </button>
-                            </div>
-                          ) : apt.status === 'CHECKED_IN' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateStatus(apt.id, 'IN_SESSION')}
-                              className="h-6 px-2.5 rounded bg-[#301444] text-white hover:bg-[#200b30] text-[10px] font-bold shadow-2xs cursor-pointer"
-                            >
-                              Call Patient In
-                            </button>
-                          ) : apt.status === 'IN_SESSION' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateStatus(apt.id, 'COMPLETED')}
-                              className="h-6 px-2.5 rounded bg-emerald-700 text-white hover:bg-emerald-800 text-[10px] font-bold shadow-2xs cursor-pointer"
-                            >
-                              Complete Visit
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateStatus(apt.id, 'CHECKED_IN')}
-                              className="h-6 px-2 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-[10px] font-semibold border border-slate-300 cursor-pointer"
-                            >
-                              Mark Arrived
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStatus(apt.id, 'CHECKED_IN')}
+                                {...getButtonProps(idx, 0)}
+                                className={`h-6 px-2 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 text-[10px] font-semibold border border-slate-300 cursor-pointer ${getButtonProps(idx, 0).className}`}
+                              >
+                                Mark Arrived
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

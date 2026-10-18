@@ -4,3 +4,4 @@ export { useNotification } from './useNotification';
 export { useFetch } from './useFetch';
 export { useLocalStorage } from './useLocalStorage';
 export { useDebounce } from './useDebounce';
+export { useTableKeyboardNav } from './useTableKeyboardNav';
