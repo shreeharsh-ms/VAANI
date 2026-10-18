@@ -230,14 +230,14 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
           onClick={() => {
             setCustomerType('EXISTING');
           }}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             customerType === 'EXISTING'
-              ? 'bg-purple-900 text-white shadow-2xs'
+              ? 'bg-[#301444] text-white shadow-2xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>Existing Registered Patient</span>
+          <UserCheck className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">Existing Patient</span>
         </button>
 
         <button
@@ -246,14 +246,14 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
             setCustomerType('NEW');
             setSelectedPatient(null);
           }}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
             customerType === 'NEW'
-              ? 'bg-purple-900 text-white shadow-2xs'
+              ? 'bg-[#301444] text-white shadow-2xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <UserPlus className="w-3.5 h-3.5" />
-          <span>New Customer / Walk-in</span>
+          <UserPlus className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">New Walk-in</span>
         </button>
       </div>
 
@@ -446,7 +446,7 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
               </span>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 sm:max-h-40 overflow-y-auto pr-0.5">
             {CLINICAL_TIME_SLOTS.map((slot) => {
               const norm = normalizeSlotTime(slot);
               const isBooked = bookedSlots.includes(norm);
@@ -491,7 +491,7 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
             value={formData.reason}
             onChange={handleChange}
             rows={2}
-            placeholder="Brief description of speech/hearing concern or referring ENT doctor"
+            placeholder="Brief description of speech/hearing concern or referring doctor"
             className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-md focus:border-purple-600 focus:outline-hidden"
           />
         </div>
@@ -499,7 +499,7 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
 
       {/* Action Footer */}
       <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+        <div className="text-[11px] text-slate-500 hidden sm:flex items-center gap-1.5 flex-wrap">
           <span>Submit:</span>
           <span className="font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 text-[10px]">
             Ctrl+↵
@@ -515,9 +515,9 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
             <button
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-md border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-lg sm:rounded-md border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer text-center"
             >
-              Cancel <span className="opacity-60 text-[10px] font-mono">[Esc]</span>
+              Cancel
             </button>
           )}
 
@@ -525,14 +525,12 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
             type="submit"
             variant="primary"
             size="md"
-            className="flex-1 sm:flex-none justify-center bg-[#301444] hover:bg-[#200b30] text-white font-semibold px-4 py-2 text-xs rounded-lg shadow-xs"
+            className="flex-1 sm:flex-none justify-center bg-[#301444] hover:bg-[#200b30] text-white font-bold px-4 py-2 text-xs rounded-lg shadow-xs whitespace-nowrap"
             isLoading={loading}
           >
-            <span>Confirm &amp; Book Appointment</span>
-            <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
+            <span>Confirm Appointment</span>
+            <span className="ml-1.5 hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/20 text-white border border-white/25">
               <span>Ctrl+↵</span>
-              <span className="opacity-60">/</span>
-              <span>⌘↵</span>
             </span>
           </Button>
         </div>

@@ -1538,8 +1538,148 @@ export const BillingPage = () => {
         </div>
       </div>
 
-      {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+      {/* ── MOBILE TOUCH-OPTIMIZED CARD VIEW (Visible on mobile/tablet < md:) ── */}
+      <div className="md:hidden space-y-2.5">
+        {paginatedInvoices.length === 0 ? (
+          <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
+            No matching billing invoices found.
+          </div>
+        ) : (
+          paginatedInvoices.map((inv) => (
+            <div
+              key={inv.id}
+              className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+            >
+              {/* Header: Invoice #, Date, Status */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+                    {inv.invoiceNo}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {inv.date}
+                  </span>
+                </div>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
+                    inv.status === 'PAID'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}
+                >
+                  {inv.status}
+                </span>
+              </div>
+
+              {/* Patient & UHID */}
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-bold text-sm text-slate-900">{inv.patientName}</div>
+                  <span className="text-[11px] font-mono font-bold text-purple-800">{inv.uhid}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-mono font-black text-slate-900 block">
+                    ₹{inv.totalAmount.toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-[10px] font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 inline-block">
+                    {inv.paymentMode}
+                  </span>
+                </div>
+              </div>
+
+              {/* Service & Tax regime */}
+              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs flex items-center justify-between gap-2">
+                <div className="truncate flex-1">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Service</span>
+                  <span className="font-medium text-slate-800 truncate block">{inv.service}</span>
+                </div>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold border flex-shrink-0 whitespace-nowrap ${
+                    inv.taxType === 'HEALTHCARE_EXEMPT'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  {inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt' : '18% GST'}
+                </span>
+              </div>
+
+              {/* Direct Touch Action Buttons */}
+              <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleOpenInvoice(inv)}
+                  className="flex-1 inline-flex items-center justify-center gap-1 h-7.5 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5 text-purple-200" />
+                  <span>View</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDownloadInvoice(inv)}
+                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors"
+                  title="Download / Print"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">PDF</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenWhatsAppModal(inv)}
+                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                  title="Share WhatsApp"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenMailModal(inv)}
+                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
+                  title="Email Invoice"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Email</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openUpiForInvoice(inv)}
+                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
+                  title="Dynamic UPI QR"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">UPI</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStartEditInvoice(inv)}
+                  className="p-1.5 rounded text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
+                  title="Edit Invoice"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePromptDelete(inv)}
+                  className="p-1.5 rounded text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors"
+                  title="Delete Invoice"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── DESKTOP EXCEL-STYLE COMPACT DATA GRID TABLE (Visible on md: and above) ── */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
             <thead>
@@ -1608,13 +1748,13 @@ export const BillingPage = () => {
                   const rowProps = getRowProps(idx);
                   return (
                     <tr key={inv.id} {...rowProps}>
-                      <td className="py-1.5 px-3 font-mono font-bold text-slate-900">
+                      <td className="py-1.5 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">
                         {inv.invoiceNo}
                       </td>
-                      <td className="py-1.5 px-2.5 font-mono text-slate-600">
+                      <td className="py-1.5 px-2.5 font-mono text-slate-600 whitespace-nowrap">
                         {inv.date}
                       </td>
-                      <td className="py-1.5 px-2.5 font-mono text-purple-900 font-semibold">
+                      <td className="py-1.5 px-2.5 font-mono text-purple-900 font-semibold whitespace-nowrap">
                         {inv.uhid}
                       </td>
                       <td className="py-1.5 px-3 font-semibold text-slate-800">
@@ -1624,7 +1764,7 @@ export const BillingPage = () => {
                         {inv.service}
                       </td>
                       <td className="py-1.5 px-2.5 text-center">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
                           inv.taxType === 'HEALTHCARE_EXEMPT'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -1632,16 +1772,16 @@ export const BillingPage = () => {
                           {inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt (Hosp)' : '18% GST (Goods)'}
                         </span>
                       </td>
-                      <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900">
+                      <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                         ₹{inv.totalAmount.toLocaleString('en-IN')}
                       </td>
                       <td className="py-1.5 px-2.5 text-center">
-                        <span className="text-[10px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-700">
+                        <span className="text-[10px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-700 whitespace-nowrap">
                           {inv.paymentMode}
                         </span>
                       </td>
                       <td className="py-1.5 px-2 text-center">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
                           inv.status === 'PAID'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -1736,53 +1876,53 @@ export const BillingPage = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* ── COMPACT SPREADSHEET PAGINATION FOOTER ── */}
-        <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
-          <div className="font-medium">
-            Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of <span className="font-bold text-slate-900">{totalEntries}</span> invoice records
-          </div>
+      {/* ── COMPACT SPREADSHEET PAGINATION FOOTER ── */}
+      <div className="px-3 py-2 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 shadow-2xs">
+        <div className="font-medium">
+          Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of <span className="font-bold text-slate-900">{totalEntries}</span> invoice records
+        </div>
 
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+            title="Previous Page (Ctrl+Q / ⌘Q)"
+            className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+          >
+            <ChevronLeft className="w-3 h-3" />
+            <span>Prev</span>
+            <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
             <button
+              key={pageNum}
               type="button"
-              disabled={page <= 1}
-              onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-              title="Previous Page (Ctrl+Q / ⌘Q)"
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              onClick={() => setPage(pageNum)}
+              className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                page === pageNum
+                  ? 'bg-[#301444] text-white shadow-2xs'
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+              }`}
             >
-              <ChevronLeft className="w-3 h-3" />
-              <span>Prev</span>
-              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+              {pageNum}
             </button>
+          ))}
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                type="button"
-                onClick={() => setPage(pageNum)}
-                className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                  page === pageNum
-                    ? 'bg-[#301444] text-white shadow-2xs'
-                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-              title="Next Page (Ctrl+E / ⌘E)"
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
-            >
-              <span>Next</span>
-              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+            title="Next Page (Ctrl+E / ⌘E)"
+            className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+          >
+            <span>Next</span>
+            <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
+            <ChevronRight className="w-3 h-3" />
+          </button>
         </div>
       </div>
 

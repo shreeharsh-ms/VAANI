@@ -631,17 +631,17 @@ Kindly reply *CONFIRM* to acknowledge.`;
         </div>
 
         {/* Secondary Filter Row: Status & Clinical Category */}
-        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-200 text-xs">
+        <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 pt-1 border-t border-slate-200 text-xs w-full">
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
-            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">Status:</span>
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap w-16 sm:w-auto flex-shrink-0">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-7 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
+              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial w-full sm:w-auto"
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending Approval</option>
@@ -654,19 +654,19 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
 
           {/* Service Line Filter */}
-          <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
-            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">Category:</span>
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap w-16 sm:w-auto flex-shrink-0">Category:</span>
             <select
               value={serviceFilter}
               onChange={(e) => {
                 setServiceFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-7 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
+              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial w-full sm:w-auto"
             >
               <option value="ALL">All Clinical Categories</option>
-              <option value="SPEECH_LANGUAGE">Speech-Language</option>
-              <option value="AUDIOLOGY">Audiology</option>
+              <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
+              <option value="AUDIOLOGY">Audiology Diagnostics</option>
               <option value="VOICE">Voice Therapy</option>
               <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
             </select>
@@ -680,9 +680,9 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setStatusFilter('PENDING');
                 setPage(1);
               }}
-              className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer flex items-center gap-1"
+              className="px-2 py-1 sm:py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer flex items-center justify-center gap-1 w-full sm:w-auto"
             >
-              <AlertCircle className="w-3 h-3 text-amber-700" />
+              <AlertCircle className="w-3 h-3 text-amber-700 flex-shrink-0" />
               <span>Show {pendingCount} Pending Approvals</span>
             </button>
           )}
@@ -699,7 +699,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 setCustomDate('');
                 setPage(1);
               }}
-              className="ml-auto text-xs text-purple-700 hover:text-purple-900 font-semibold underline cursor-pointer"
+              className="sm:ml-auto text-xs text-purple-700 hover:text-purple-900 font-semibold underline cursor-pointer text-center sm:text-right py-1"
             >
               Reset Filters
             </button>
@@ -707,8 +707,186 @@ Kindly reply *CONFIRM* to acknowledge.`;
         </div>
       </div>
 
-      {/* ── EXCEL-STYLE COMPACT DATA GRID TABLE ── */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+      {/* ── MOBILE APPOINTMENT CARDS (Visible on screen < md) ── */}
+      <div className="md:hidden space-y-2.5">
+        {paginated.length === 0 ? (
+          <div className="p-6 text-center text-slate-500 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <CalendarCheck className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
+            <p className="text-xs font-bold text-slate-700">No matching appointments found</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Try clearing filters or search term.</p>
+          </div>
+        ) : (
+          paginated.map((apt) => (
+            <div
+              key={apt.id}
+              className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs space-y-2.5"
+            >
+              {/* Top Row: Date/Time Badge & Status */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#301444] bg-purple-50 px-2 py-1 rounded-md border border-purple-200">
+                  <Clock className="w-3.5 h-3.5 text-purple-700 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{apt.appointment_date}</span>
+                  <span className="text-purple-400">•</span>
+                  <span className="whitespace-nowrap text-purple-900">{apt.start_time}</span>
+                </div>
+
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 whitespace-nowrap ${
+                    apt.status === 'PENDING'
+                      ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
+                      : apt.status === 'CONFIRMED'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : apt.status === 'CHECKED_IN'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : apt.status === 'COMPLETED'
+                      ? 'bg-slate-100 text-slate-700 border-slate-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}
+                >
+                  {apt.status === 'PENDING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                  {apt.status === 'PENDING'
+                    ? 'Pending Approval'
+                    : apt.status === 'CHECKED_IN'
+                    ? 'In Queue (Waiting)'
+                    : apt.status === 'CONFIRMED'
+                    ? 'Confirmed'
+                    : apt.status}
+                </span>
+              </div>
+
+              {/* Patient Name, UHID & Phone */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-slate-900 truncate">{apt.patient_name}</h4>
+                  <div className="flex items-center gap-2 mt-1 text-xs">
+                    <span className="font-mono font-bold text-[10px] text-purple-900 bg-purple-100/80 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap">
+                      {apt.patient_uhid || 'VN-26-0001'}
+                    </span>
+                    <a
+                      href={`tel:${apt.patient_phone}`}
+                      className="inline-flex items-center gap-1 text-slate-600 hover:text-purple-700 font-mono text-[11px] font-medium"
+                    >
+                      <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                      <span>{apt.patient_phone}</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="text-right flex-shrink-0">
+                  <span className="text-xs font-mono font-bold text-slate-900">
+                    ₹{(((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0)).toLocaleString('en-IN')}
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-medium">Fee</span>
+                </div>
+              </div>
+
+              {/* Service Line & Notes */}
+              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs flex items-center justify-between gap-2">
+                <div className="truncate flex-1">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Clinical Service</span>
+                  <span className="font-semibold text-slate-800 truncate block">{apt.service_name}</span>
+                </div>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex-shrink-0 whitespace-nowrap ${
+                    apt.service_line === 'SPEECH_LANGUAGE'
+                      ? 'bg-purple-50 text-purple-700 border-purple-200'
+                      : apt.service_line === 'AUDIOLOGY'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : apt.service_line === 'VOICE'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}
+                >
+                  {apt.service_line === 'SPEECH_LANGUAGE'
+                    ? 'Speech'
+                    : apt.service_line === 'AUDIOLOGY'
+                    ? 'Audiology'
+                    : apt.service_line === 'VOICE'
+                    ? 'Voice'
+                    : 'CBT'}
+                </span>
+              </div>
+
+              {/* Direct Actions Row */}
+              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                {apt.status === 'PENDING' && (
+                  <button
+                    type="button"
+                    onClick={() => handleApprove(apt.id)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve</span>
+                  </button>
+                )}
+
+                {apt.status === 'CONFIRMED' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCheckIn(apt.id)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-colors"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Check In</span>
+                  </button>
+                )}
+
+                {apt.status === 'CHECKED_IN' && (
+                  <button
+                    type="button"
+                    onClick={() => handleComplete(apt.id)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Complete</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenWhatsAppReminder(apt)}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors"
+                  title="Send WhatsApp Reminder"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenEmailReminder(apt)}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors"
+                  title="Send Email Reminder"
+                >
+                  <Mail className="w-3.5 h-3.5 text-purple-600" />
+                  <span className="hidden sm:inline">Email</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleEditClick(apt)}
+                  className="p-1.5 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-50 border border-slate-200 transition-colors ml-auto"
+                  title="Edit Appointment"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(apt.id, apt.patient_name)}
+                  className="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
+                  title="Delete Appointment"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── DESKTOP EXCEL-STYLE COMPACT DATA GRID TABLE (Visible on md: and above) ── */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse" {...tableContainerProps}>
             <thead>
@@ -773,8 +951,8 @@ Kindly reply *CONFIRM* to acknowledge.`;
                     <tr key={apt.id} {...rowProps}>
                       {/* Date & Slot */}
                       <td className="py-1.5 px-3">
-                        <span className="font-mono font-bold text-slate-900 block">{apt.appointment_date}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">
+                        <span className="font-mono font-bold text-slate-900 block whitespace-nowrap">{apt.appointment_date}</span>
+                        <span className="text-[10px] text-slate-500 font-mono whitespace-nowrap">
                           {apt.start_time} {apt.end_time ? `- ${apt.end_time}` : ''}
                         </span>
                       </td>
@@ -782,7 +960,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
                       {/* Patient Name & UHID */}
                       <td className="py-1.5 px-3">
                         <span className="font-bold text-slate-800 block truncate">{apt.patient_name}</span>
-                        <span className="text-[10px] text-purple-900 font-mono font-semibold">
+                        <span className="text-[10px] text-purple-900 font-mono font-semibold whitespace-nowrap">
                           {apt.patient_uhid || 'VN-26-0001'} • {apt.patient_phone}
                         </span>
                       </td>
@@ -957,55 +1135,55 @@ Kindly reply *CONFIRM* to acknowledge.`;
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* ── PAGINATION FOOTER ── */}
-        <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
-          <div className="font-medium">
-            Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
-            <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of{' '}
-            <span className="font-bold text-slate-900">{totalEntries}</span> appointment entries
-          </div>
+      {/* ── PAGINATION FOOTER ── */}
+      <div className="px-3 py-2 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 shadow-2xs">
+        <div className="font-medium">
+          Showing <span className="font-bold text-slate-900">{totalEntries === 0 ? 0 : (page - 1) * pageSize + 1}</span> to{' '}
+          <span className="font-bold text-slate-900">{Math.min(page * pageSize, totalEntries)}</span> of{' '}
+          <span className="font-bold text-slate-900">{totalEntries}</span> appointment entries
+        </div>
 
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            title="Previous Page (Ctrl+Q / ⌘Q)"
+            className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+          >
+            <ChevronLeft className="w-3 h-3" />
+            <span>Prev</span>
+            <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
             <button
+              key={pageNum}
               type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              title="Previous Page (Ctrl+Q / ⌘Q)"
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              onClick={() => setPage(pageNum)}
+              className={`w-6 h-6 rounded text-xs font-bold transition-all ${
+                page === pageNum
+                  ? 'bg-[#301444] text-white shadow-2xs'
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
+              }`}
             >
-              <ChevronLeft className="w-3 h-3" />
-              <span>Prev</span>
-              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+Q</kbd>
+              {pageNum}
             </button>
+          ))}
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                type="button"
-                onClick={() => setPage(pageNum)}
-                className={`w-6 h-6 rounded text-xs font-bold transition-all ${
-                  page === pageNum
-                    ? 'bg-[#301444] text-white shadow-2xs'
-                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              title="Next Page (Ctrl+E / ⌘E)"
-              className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
-            >
-              <span>Next</span>
-              <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            title="Next Page (Ctrl+E / ⌘E)"
+            className="h-6 px-2 rounded border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-xs font-semibold cursor-pointer"
+          >
+            <span>Next</span>
+            <kbd className="hidden sm:inline-block px-1 py-0.2 bg-slate-100 border border-slate-200 rounded font-mono text-[9px] text-slate-400">Ctrl+E</kbd>
+            <ChevronRight className="w-3 h-3" />
+          </button>
         </div>
       </div>
 

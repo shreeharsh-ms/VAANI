@@ -383,8 +383,115 @@ export const ReportsPage = () => {
           </div>
         </div>
 
-        {/* Compact Table */}
-        <div className="overflow-x-auto">
+        {/* ── MOBILE REPORT CARDS (Visible on mobile/tablet < md:) ── */}
+        <div className="md:hidden p-2.5 space-y-2.5 bg-slate-50/50">
+          {paginatedReports.length === 0 ? (
+            <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
+              No clinical reports found matching criteria.
+            </div>
+          ) : (
+            paginatedReports.map((rep) => (
+              <div
+                key={rep.id || rep.report_number}
+                className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+              >
+                {/* Header: Report # & Status */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+                      {rep.report_number}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {rep.date}
+                    </span>
+                  </div>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                    {rep.status || 'FINAL'}
+                  </span>
+                </div>
+
+                {/* Report Title */}
+                <div>
+                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                    <span className="truncate">{rep.title}</span>
+                  </div>
+                  <div className="text-[10px] text-purple-800 font-semibold mt-0.5">
+                    {rep.service_code} • {rep.discipline}
+                  </div>
+                </div>
+
+                {/* Patient & UHID */}
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
+                  <span className="font-bold text-slate-800 truncate">{rep.patient_name}</span>
+                  <span className="text-[11px] font-mono font-bold text-purple-700 whitespace-nowrap">{rep.uhid}</span>
+                </div>
+
+                {/* Clinical Impression Box */}
+                {rep.diagnosis && (
+                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Clinical Impression</span>
+                    <span className="font-medium text-slate-700 line-clamp-2">{rep.diagnosis}</span>
+                  </div>
+                )}
+
+                {/* Action Buttons Row */}
+                <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleInspectInNewTab(rep)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7.5 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-purple-200" />
+                    <span>View</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(rep)}
+                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
+                    title="Edit Report"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleShareWhatsApp(rep)}
+                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                    title="Send via WhatsApp"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleShareEmail(rep)}
+                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+                    title="Send via Email"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Email</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePromptDelete(rep)}
+                    className="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
+                    title="Delete Report"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* ── DESKTOP EXCEL-STYLE COMPACT DATA GRID TABLE (Visible on md: and above) ── */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse" {...tableContainerProps}>
             <thead className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
               <tr>
