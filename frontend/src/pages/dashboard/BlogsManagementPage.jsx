@@ -20,7 +20,6 @@ import {
   Layers,
   Award,
 } from 'lucide-react';
-import BlogEditorModal from '../../components/dashboard/BlogEditorModal';
 import { useNotifications } from '../../context/NotificationContext';
 
 export const BlogsManagementPage = () => {
@@ -30,8 +29,6 @@ export const BlogsManagementPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [editingArticle, setEditingArticle] = useState(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   // Fetch all articles from Admin endpoint
   const fetchArticles = async () => {
@@ -90,18 +87,6 @@ export const BlogsManagementPage = () => {
     };
   }, [articles]);
 
-  // Handle open editor for new article
-  const handleCreateNew = () => {
-    setEditingArticle(null);
-    setIsEditorOpen(true);
-  };
-
-  // Handle open editor for existing article
-  const handleEdit = (art) => {
-    setEditingArticle(art);
-    setIsEditorOpen(true);
-  };
-
   // Handle article deletion
   const handleDelete = async (id, title) => {
     if (!window.confirm(`Are you sure you want to delete article "${title}"?`)) {
@@ -145,11 +130,6 @@ export const BlogsManagementPage = () => {
     }
   };
 
-  // Callback when article is saved successfully
-  const handleSaveSuccess = (savedArticle) => {
-    notify.success(`Article "${savedArticle.title}" saved successfully!`);
-    fetchArticles();
-  };
 
   return (
     <div className="space-y-4 font-sans text-slate-800">
@@ -185,13 +165,13 @@ export const BlogsManagementPage = () => {
             <span className="hidden sm:inline">Refresh</span>
           </button>
           
-          <button
-            onClick={handleCreateNew}
+          <Link
+            to="/dashboard/blogs/create"
             className="px-4 py-2 bg-[#301444] hover:bg-[#461963] text-white rounded-lg text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-purple-200" />
             <span>Write New Article</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -404,14 +384,13 @@ export const BlogsManagementPage = () => {
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Link>
 
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(art)}
+                        <Link
+                          to={`/dashboard/blogs/edit/${art.id}`}
                           className="p-1.5 text-purple-700 hover:text-purple-950 hover:bg-purple-100 rounded transition-colors cursor-pointer"
-                          title="Edit Article"
+                          title="Edit Article in Dedicated Studio"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
 
                         <button
                           type="button"
@@ -431,15 +410,6 @@ export const BlogsManagementPage = () => {
           </table>
         </div>
       </div>
-
-      {/* ── ARTICLE EDITOR MODAL ── */}
-      <BlogEditorModal
-        isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        article={editingArticle}
-        onSaveSuccess={handleSaveSuccess}
-      />
-
     </div>
   );
 };
