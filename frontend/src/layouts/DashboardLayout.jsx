@@ -25,6 +25,14 @@ export const DashboardLayout = () => {
         return;
       }
 
+      // Check for Settings shortcut: Ctrl+S / Cmd+S / Alt+S
+      if ((e.ctrlKey || e.metaKey || e.altKey) && isKey(e, 's')) {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(ROUTES.DASHBOARD.SETTINGS);
+        return;
+      }
+
       // Check numeric shortcuts 1..9
       const num = getShortcutNumber(e);
       if (!num || num < 1 || num > 9) return;
@@ -38,7 +46,7 @@ export const DashboardLayout = () => {
         6: ROUTES.DASHBOARD.BILLING,
         7: ROUTES.DASHBOARD.INVENTORY,
         8: ROUTES.DASHBOARD.RECALLS,
-        9: ROUTES.DASHBOARD.SETTINGS,
+        9: ROUTES.DASHBOARD.BLOGS,
       };
 
       const targetPath = navMap[num];

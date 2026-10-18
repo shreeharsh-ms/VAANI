@@ -16,6 +16,7 @@ import {
   X,
   Search,
   Command,
+  BookOpen,
 } from 'lucide-react';
 import { ROUTES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
@@ -56,7 +57,8 @@ export const Sidebar = () => {
     { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, num: 6, shortcut: '6 or Ctrl+6 / Alt+6' },
     { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, num: 7, shortcut: '7 or Ctrl+7 / Alt+7' },
     { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, num: 8, shortcut: '8 or Ctrl+8 / Alt+8' },
-    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, num: 9, shortcut: '9 or Ctrl+9 / Alt+9' },
+    { label: 'Blog CMS', path: ROUTES.DASHBOARD.BLOGS, icon: BookOpen, num: 9, shortcut: '9 or Ctrl+9 / Alt+9' },
+    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, shortcut: 'Settings' },
   ];
 
   const handleLogout = async () => {

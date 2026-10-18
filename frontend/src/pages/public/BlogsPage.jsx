@@ -30,10 +30,22 @@ const CATEGORIES = [
 ];
 
 export const BlogsPage = () => {
+  const [articlesList, setArticlesList] = useState(ARTICLES);
   const [selectedCategory, setSelectedCategory] = useState('All Topics');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredPosts = ARTICLES.filter((post) => {
+  useEffect(() => {
+    fetch('/api/v1/blogs')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          setArticlesList(res.data);
+        }
+      })
+      .catch((err) => console.info('Using local clinical articles cache:', err));
+  }, []);
+
+  const filteredPosts = articlesList.filter((post) => {
     const matchesCat =
       selectedCategory === 'All Topics' || post.category === selectedCategory;
     const matchesSearch =
@@ -43,7 +55,7 @@ export const BlogsPage = () => {
     return matchesCat && matchesSearch;
   });
 
-  const featuredArticle = ARTICLES[0]; // Landmark featured article
+  const featuredArticle = articlesList.find((a) => a.isFeatured) || articlesList[0];
   const isDefaultView = selectedCategory === 'All Topics' && searchQuery.trim() === '';
 
   return (

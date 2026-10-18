@@ -26,6 +26,7 @@ import ReportViewPage from '../pages/dashboard/ReportViewPage';
 import BillingPage from '../pages/dashboard/BillingPage';
 import InventoryPage from '../pages/dashboard/InventoryPage';
 import RecallsPage from '../pages/dashboard/RecallsPage';
+import BlogsManagementPage from '../pages/dashboard/BlogsManagementPage';
 import SettingsPage from '../pages/dashboard/SettingsPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
@@ -89,6 +90,7 @@ export const AppRoutes = () => {
         <Route path="billing" element={<BillingPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="recalls" element={<RecallsPage />} />
+        <Route path="blogs" element={<BlogsManagementPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 

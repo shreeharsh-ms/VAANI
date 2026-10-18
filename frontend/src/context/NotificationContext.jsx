@@ -42,4 +42,6 @@ export const useNotification = () => {
   return context;
 };
 
+export const useNotifications = useNotification;
+
 export default NotificationContext;

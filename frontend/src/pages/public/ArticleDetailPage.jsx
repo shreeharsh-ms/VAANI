@@ -28,10 +28,33 @@ import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSett
 export const ArticleDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const article = getArticleBySlug(slug);
+  const fallbackArticle = React.useMemo(() => getArticleBySlug(slug), [slug]);
+  const [article, setArticle] = useState(fallbackArticle);
+  const [allArticles, setAllArticles] = useState(ARTICLES);
   const { rciNumber, leadPractitioner, leadDegree, workingHours, settings } = useClinicSettings();
   const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12349';
   const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Satara, Maharashtra 415002';
+
+  // Fetch article from database API
+  useEffect(() => {
+    fetch(`/api/v1/blogs/${encodeURIComponent(slug)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res?.data) {
+          setArticle(res.data);
+        }
+      })
+      .catch((err) => console.info('Using local article cache:', err));
+
+    fetch('/api/v1/blogs')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          setAllArticles(res.data);
+        }
+      })
+      .catch(() => {});
+  }, [slug]);
 
   // Scroll to top when article loads
   useEffect(() => {
@@ -59,7 +82,7 @@ export const ArticleDetailPage = () => {
   }
 
   // Related articles (excluding current)
-  const relatedArticles = ARTICLES.filter((a) => a.id !== article.id).slice(0, 3);
+  const relatedArticles = allArticles.filter((a) => a.id !== article.id && a.slug !== article.slug).slice(0, 3);
 
   const handleShare = () => {
     if (navigator.share) {

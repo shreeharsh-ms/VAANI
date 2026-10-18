@@ -36,6 +36,7 @@ export const ROUTES = {
     BILLING: '/dashboard/billing',
     INVENTORY: '/dashboard/inventory',
     RECALLS: '/dashboard/recalls',
+    BLOGS: '/dashboard/blogs',
     SETTINGS: '/dashboard/settings',
   },
 };
