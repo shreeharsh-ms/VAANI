@@ -20,6 +20,7 @@ import {
 import { Modal } from './Modal';
 import { useNotification } from '../../context/NotificationContext';
 import { patientService } from '../../services/patientService';
+import { communicationService } from '../../services/communicationService';
 
 /**
  * Helper to inspect clinic SMTP configuration status from settings
@@ -215,7 +216,7 @@ export const WhatsAppDispatchModal = ({
       title="Dispatch WhatsApp Notification & Document"
       size="md"
     >
-      <form onSubmit={handleSend} className="space-y-4 font-sans text-xs">
+      <form onSubmit={handleSend} className="space-y-3.5 font-sans text-xs max-h-[calc(85vh-90px)] overflow-y-auto px-1 pr-2">
         {/* Missing Phone Warning Banner */}
         {isPhoneMissing && (
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-300 flex items-start gap-2.5">
@@ -431,7 +432,7 @@ export const EmailDispatchModal = ({
     onClose();
   };
 
-  const handleSendViaSmtp = (e) => {
+  const handleSendViaSmtp = async (e) => {
     e?.preventDefault();
 
     if (!email || !email.includes('@')) {
@@ -439,34 +440,27 @@ export const EmailDispatchModal = ({
       return;
     }
 
-    if (!smtpStatus.isConfigured) {
-      // Prompt user or fallback to client
-      handleSendViaClient();
+    const clinicSmtp = smtpStatus.smtp;
+    if (!smtpStatus.isConfigured || !clinicSmtp?.password) {
+      notify.error(
+        'SMTP Gateway is not fully configured or missing password. Please configure SMTP in Settings > Email & SMTP Gateway.'
+      );
       return;
     }
 
     setIsSending(true);
 
-    setTimeout(() => {
-      // Record into local SMTP audit dispatch trail
-      try {
-        const existingLogs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const ts = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(
-          now.getHours()
-        )}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        const newLog = {
-          id: `mail_${Date.now()}`,
-          timestamp: ts,
-          recipient: email.trim(),
-          subject: subject.trim(),
-          host: `${smtpStatus.smtp?.host || 'smtp.gmail.com'}:${smtpStatus.smtp?.port || 587}`,
-          status: 'SENT',
-          details: `Document "${documentTitle}" successfully dispatched to ${email.trim()}`,
-        };
-        localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify([newLog, ...existingLogs]));
-      } catch (err) {}
+    try {
+      const response = await communicationService.sendEmail({
+        toEmail: email.trim(),
+        subject: subject.trim(),
+        body: message,
+        documentTitle,
+        attachedFile: typeof attachedFile === 'string' ? attachedFile : attachedFile?.name,
+        patientName: recipientName,
+        uhid,
+        smtpConfig: clinicSmtp,
+      });
 
       // Update in patient profile if checked
       let profileUpdated = false;
@@ -479,8 +473,7 @@ export const EmailDispatchModal = ({
         });
       }
 
-      setIsSending(false);
-      notify.success(`Email dispatched successfully to ${email.trim()} via clinic SMTP gateway!`);
+      notify.success(response?.message || `Email with PDF document successfully dispatched to ${email.trim()}!`);
 
       if (onSuccess) {
         onSuccess({
@@ -493,7 +486,11 @@ export const EmailDispatchModal = ({
       }
 
       onClose();
-    }, 600);
+    } catch (err) {
+      notify.error(err.message || 'Failed to dispatch email via clinic SMTP gateway.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -503,7 +500,7 @@ export const EmailDispatchModal = ({
       title="Dispatch Official Clinical Email & Attachment"
       size="md"
     >
-      <form onSubmit={handleSendViaSmtp} className="space-y-4 font-sans text-xs">
+      <form onSubmit={handleSendViaSmtp} className="space-y-3.5 font-sans text-xs max-h-[calc(85vh-90px)] overflow-y-auto px-1 pr-2">
         {/* SMTP Gateway Status Warning / Banner */}
         {!smtpStatus.isConfigured ? (
           <div className="p-3 rounded-lg bg-rose-50 border border-rose-300 space-y-2">

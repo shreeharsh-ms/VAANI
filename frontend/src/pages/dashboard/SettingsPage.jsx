@@ -43,6 +43,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/common/Modal';
 import { getServiceRates, saveServiceRates, resetServiceRates } from '../../data/serviceRatesData';
+import { communicationService } from '../../services/communicationService';
 
 // ── INITIAL VERIFIED CLINIC SETTINGS BASELINE ──
 const DEFAULT_SETTINGS = {
@@ -700,16 +701,24 @@ export const SettingsPage = () => {
       return;
     }
 
+    const effectivePassword = smtpForm.password || settings.smtp?.password || '';
+
     const updatedSettings = {
       ...settings,
       smtp: {
         ...smtpForm,
-        hasPasswordStored: Boolean(smtpForm.password || smtpForm.hasPasswordStored),
+        password: effectivePassword,
+        hasPasswordStored: Boolean(effectivePassword),
       },
     };
 
     setSettings(updatedSettings);
     localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
+    setSmtpForm((prev) => ({
+      ...prev,
+      password: effectivePassword,
+      hasPasswordStored: Boolean(effectivePassword),
+    }));
 
     // Tamper-evident Audit Entry
     const newAudit = {
@@ -742,34 +751,37 @@ export const SettingsPage = () => {
     notify.success(`Applied ${provider.name} recommended settings`);
   };
 
-  const handleSendDiagnosticTest = () => {
+  const handleSendDiagnosticTest = async () => {
     if (!testEmail || !testEmail.includes('@')) {
       notify.error('Please provide a valid recipient test email address.');
       return;
     }
 
-    setSendingTest(true);
-    setTimeout(() => {
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      const ts = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-      
-      const newLog = {
-        id: `mail_log_${Date.now()}`,
-        timestamp: ts,
-        recipient: testEmail,
-        subject: 'Vaani Clinic ERP - SMTP Diagnostic Verification Test Dispatch',
-        host: `${smtpForm.host}:${smtpForm.port}`,
-        status: 'SENT',
-        details: `Dispatched successfully (250 2.0.0 OK Handshake verified via ${smtpForm.encryption})`,
-      };
+    const effectivePassword = smtpForm.password || settings.smtp?.password || '';
+    if (!effectivePassword) {
+      notify.error('SMTP App Password is required. Please type your password and save before running the diagnostic test.');
+      return;
+    }
 
-      const updated = [newLog, ...mailLogs];
-      setMailLogs(updated);
-      localStorage.setItem('vaani_clinic_mail_logs_v1', JSON.stringify(updated));
+    const testConfig = {
+      ...smtpForm,
+      password: effectivePassword,
+    };
+
+    setSendingTest(true);
+    try {
+      const result = await communicationService.testSmtp(testConfig, testEmail);
+      notify.success(result?.message || `Verification test email dispatched successfully to ${testEmail}!`);
+      // Update UI logs from updated localStorage
+      const updatedLogs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
+      setMailLogs(updatedLogs);
+    } catch (err) {
+      notify.error(err.message || 'SMTP diagnostic test failed.');
+      const updatedLogs = JSON.parse(localStorage.getItem('vaani_clinic_mail_logs_v1') || '[]');
+      setMailLogs(updatedLogs);
+    } finally {
       setSendingTest(false);
-      notify.success(`Verification test email dispatched successfully to ${testEmail}!`);
-    }, 600);
+    }
   };
 
   const handleRefreshMailLogs = () => {
