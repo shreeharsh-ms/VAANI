@@ -137,6 +137,14 @@ class EmailService:
             os.path.join(os.path.dirname(__file__), "../../../frontend/public/vaani-footer-banner.png"),
             os.path.abspath("public/vaani-footer-banner.png"),
         ]
+    @staticmethod
+    def _find_bg_image() -> Optional[str]:
+        """Locate the soft lavender background image (faint-lavender-bg.jpg) on disk."""
+        candidates = [
+            os.path.abspath("frontend/public/faint-lavender-bg.jpg"),
+            os.path.join(os.path.dirname(__file__), "../../../frontend/public/faint-lavender-bg.jpg"),
+            os.path.abspath("public/faint-lavender-bg.jpg"),
+        ]
         for p in candidates:
             if os.path.exists(p):
                 return p
@@ -223,8 +231,8 @@ class EmailService:
             pagesize=A4,
             leftMargin=10 * mm,
             rightMargin=10 * mm,
-            topMargin=6 * mm,
-            bottomMargin=6 * mm,
+            topMargin=5 * mm,
+            bottomMargin=44 * mm,
         )
         story = []
         styles = getSampleStyleSheet()
@@ -487,20 +495,63 @@ class EmailService:
             ])
         )
         story.append(findings_table)
-        story.append(Spacer(1, 3 * mm))
 
-        # 7. Official Decorative Footer Banner (QR Code + Digital Authentication + DPDP Disclaimer)
+        # 7. Pin Official Decorative Footer Banner to bottom of canvas (QR Code + Digital Authentication + DPDP Disclaimer)
+        bg_path = cls._find_bg_image()
         footer_path = cls._find_footer_image()
-        footer_flowable = OfficialFooterBanner(
-            banner_path=footer_path,
-            examiner_name=examiner_name,
-            rci_no=rci_no,
-            width=190 * mm,
-            height=26 * mm,
-        )
-        story.append(footer_flowable)
 
-        doc.build(story)
+        def draw_page_decorations(canvas, d):
+            canvas.saveState()
+            # 1. Soft faint lavender background watercolor across full page
+            if bg_path and os.path.exists(bg_path):
+                canvas.saveState()
+                try:
+                    canvas.setFillAlpha(0.28)
+                except Exception:
+                    pass
+                canvas.drawImage(bg_path, 0, 0, width=210 * mm, height=297 * mm, preserveAspectRatio=False)
+                canvas.restoreState()
+
+            # 2. Pinned bottom footer banner (touching bottom edge-to-edge)
+            if footer_path and os.path.exists(footer_path):
+                banner_w = 210 * mm
+                banner_h = 36 * mm
+                banner_x = 0
+                banner_y = 3.5 * mm
+                canvas.drawImage(footer_path, banner_x, banner_y, width=banner_w, height=banner_h, preserveAspectRatio=False)
+
+                right_margin = banner_w - 12 * mm
+                canvas.setFont('Times-BoldItalic', 12)
+                canvas.setFillColor(colors.HexColor('#301444'))
+                canvas.drawRightString(right_margin, banner_y + 25 * mm, 'Shreeharsh M. Shivpuje')
+
+                canvas.setStrokeColor(colors.HexColor('#581c87'))
+                canvas.setLineWidth(0.6)
+                canvas.line(right_margin - 52 * mm, banner_y + 23.5 * mm, right_margin, banner_y + 23.5 * mm)
+
+                canvas.setFont('Helvetica-Bold', 6)
+                canvas.setFillColor(colors.HexColor('#059669'))
+                canvas.drawRightString(right_margin, banner_y + 20 * mm, '✓  DIGITALLY AUTHENTICATED')
+
+                canvas.setFont('Helvetica-Bold', 8)
+                canvas.setFillColor(colors.HexColor('#0f172a'))
+                canvas.drawRightString(right_margin, banner_y + 15.5 * mm, examiner_name)
+
+                canvas.setFont('Helvetica-Bold', 7)
+                canvas.setFillColor(colors.HexColor('#334155'))
+                canvas.drawRightString(right_margin, banner_y + 11.5 * mm, f'RCI CRR No: {rci_no}')
+
+                canvas.setFont('Helvetica', 6.5)
+                canvas.setFillColor(colors.HexColor('#64748b'))
+                canvas.drawRightString(right_margin, banner_y + 8 * mm, 'Consultant Audiologist & Speech-Language Pathologist')
+
+                canvas.setFont('Helvetica', 6)
+                canvas.setFillColor(colors.HexColor('#64748b'))
+                canvas.drawCentredString(105 * mm, 1.2 * mm, 'Strictly Confidential Medical Record under DPDP Act 2023 • Valid without physical ink signature')
+
+            canvas.restoreState()
+
+        doc.build(story, onFirstPage=draw_page_decorations, onLaterPages=draw_page_decorations)
         return buf.getvalue()
 
     @classmethod
