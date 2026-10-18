@@ -65,36 +65,38 @@ export const MobileCurvedNavBar = () => {
       className="lg:hidden fixed bottom-2 left-2 right-2 max-w-md mx-auto z-40 print:hidden pointer-events-none"
     >
       {/* Floating White Navigation Container */}
-      <div className="relative w-full bg-white rounded-[26px] sm:rounded-[30px] shadow-[0_10px_35px_rgba(48,20,68,0.18)] border border-purple-100/90 pointer-events-auto px-1 pt-1.5 pb-1 transition-all">
+      <div className="relative w-full bg-white rounded-[26px] sm:rounded-[30px] shadow-[0_10px_35px_rgba(48,20,68,0.18)] border border-slate-200/90 pointer-events-auto px-1 pt-1.5 pb-1 transition-all">
         
-        {/* ── SMOOTH CURVED SCALLOP / DOME & ELEVATED FLOATING CIRCLE ── */}
+        {/* ── SMOOTH CURVED CROPPED SCALLOP & NESTLED CIRCLE ── */}
         {activeIndex >= 0 && (
           <div
-            className="absolute -top-[18px] pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col items-center"
+            className="absolute top-0 pointer-events-none transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col items-center"
             style={{
               left: `${activeIndex * 20}%`,
               width: '20%',
             }}
           >
-            {/* Seamless White Arch connecting to top border */}
-            <div className="absolute top-0 w-[74px] h-[20px] filter drop-shadow-[0_-3px_5px_rgba(48,20,68,0.06)]">
-              <svg viewBox="0 0 74 20" fill="none" className="w-full h-full block">
+            {/* Seamless White Arch / Cropped-out Mound connecting with the navbar and crisp outline */}
+            <div className="absolute -top-[16px] left-1/2 -translate-x-1/2 w-[76px] h-[18px] filter drop-shadow-[0_-4px_8px_rgba(48,20,68,0.12)]">
+              <svg viewBox="0 0 76 18" fill="none" className="w-full h-full block">
+                {/* Solid white fill that covers the top border line underneath */}
                 <path
-                  d="M 0 20 C 15 20 18 2 37 2 C 56 2 59 20 74 20 Z"
+                  d="M 0 18 C 16 18 18 1.5 38 1.5 C 58 1.5 60 18 76 18 Z"
                   fill="#FFFFFF"
                 />
+                {/* Crisp curved outline matching the navbar border */}
                 <path
-                  d="M 0 20 C 15 20 18 2 37 2 C 56 2 59 20 74 20"
-                  stroke="rgba(241, 245, 249, 0.9)"
-                  strokeWidth="1"
+                  d="M 0 18 C 16 18 18 1.5 38 1.5 C 58 1.5 60 18 76 18"
+                  stroke="#cbd5e1"
+                  strokeWidth="1.5"
                   fill="none"
                 />
               </svg>
             </div>
 
-            {/* Elevated Floating Circle with Purple Stroke */}
-            <div className="relative -top-[16px] w-12 h-12 rounded-full bg-white border-[2.5px] border-[#301444] shadow-[0_6px_16px_rgba(48,20,68,0.20)] flex items-center justify-center transition-transform duration-200 active:scale-95">
-              <div className="w-8.5 h-8.5 rounded-full bg-purple-50/80 flex items-center justify-center">
+            {/* Nestled Floating Circle (Lowered down to nest right inside the cropped notch) */}
+            <div className="absolute -top-[14px] left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white border-2 border-[#301444] shadow-[0_4px_14px_rgba(48,20,68,0.22)] flex items-center justify-center transition-transform duration-200 active:scale-95">
+              <div className="w-8.5 h-8.5 rounded-full bg-purple-100/70 flex items-center justify-center">
                 {ActiveIcon && <ActiveIcon className="w-5 h-5 text-[#301444] stroke-[2.2px]" />}
               </div>
             </div>
