@@ -373,6 +373,7 @@ export const EmailDispatchModal = ({
   documentTitle = 'Clinical Document',
   defaultSubject = '',
   defaultMessage = '',
+  reportData = null,
   onSuccess,
 }) => {
   const navigate = useNavigate();
@@ -460,6 +461,7 @@ export const EmailDispatchModal = ({
         patientName: recipientName,
         uhid,
         smtpConfig: clinicSmtp,
+        reportData: reportData || (attachedFile && typeof attachedFile === 'object' ? attachedFile.reportData : null),
       });
 
       // Update in patient profile if checked

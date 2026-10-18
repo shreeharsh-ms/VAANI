@@ -53,6 +53,7 @@ def send_email():
         attached_file_name=data.get("attachedFile"),
         patient_name=data.get("patientName"),
         uhid=data.get("uhid"),
+        report_data=data.get("reportData"),
     )
     if res.get("success"):
         return api_response(data=res, message=res.get("message", "Email sent successfully"))

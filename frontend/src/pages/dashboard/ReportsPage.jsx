@@ -767,6 +767,7 @@ export const ReportsPage = () => {
           uhid={selectedReportForMail.uhid}
           attachedFile={`${selectedReportForMail.report_number || selectedReportForMail.id}.pdf`}
           documentTitle={`Clinical Report: ${selectedReportForMail.title}`}
+          reportData={selectedReportForMail}
           defaultSubject={`Clinical Report ${selectedReportForMail.report_number || selectedReportForMail.id} — ${selectedReportForMail.patient_name} [Vaani Clinic]`}
           defaultMessage={`Dear ${selectedReportForMail.patient_name || 'Patient'},\n\nPlease find attached the official summary of your clinical assessment recorded at Vaani Speech & Hearing Rehabilitation Clinic (Satara):\n\n• Report ID: ${selectedReportForMail.report_number || selectedReportForMail.id}\n• Assessment: ${selectedReportForMail.title}\n• Examination Date: ${selectedReportForMail.date}\n• Clinical Findings: ${selectedReportForMail.diagnosis || 'Clinical evaluation verified'}\n• Attending Clinician: ${selectedReportForMail.examiner || 'Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)'}\n\nThis record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\nWarm regards,\nVaani Speech & Hearing Clinic\nPhone: +91 98220 11223 | Satara, Maharashtra`}
           onSuccess={({ email }) => {

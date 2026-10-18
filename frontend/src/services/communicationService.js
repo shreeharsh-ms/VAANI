@@ -138,6 +138,7 @@ class CommunicationService {
     patientName,
     uhid,
     smtpConfig = null,
+    reportData = null,
   }) {
     const config = smtpConfig || this.getStoredSmtpConfig();
 
@@ -164,6 +165,7 @@ class CommunicationService {
       attachedFile,
       patientName,
       uhid,
+      reportData,
     };
 
     let response;

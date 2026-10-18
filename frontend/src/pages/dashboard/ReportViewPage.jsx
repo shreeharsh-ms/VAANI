@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Printer, ArrowLeft, X, ShieldCheck, QrCode } from 'lucide-react';
+import { Printer, ArrowLeft, X, ShieldCheck, QrCode, Mail, MessageSquare } from 'lucide-react';
 import OfficialClinicalDocument from '../../components/clinical/OfficialClinicalDocument';
+import { EmailDispatchModal, WhatsAppDispatchModal } from '../../components/common/CommunicationModal';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { getAllClinicalReports } from '../../data/clinicalReportsData';
@@ -10,6 +11,8 @@ export const ReportViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [reportData, setReportData] = useState(null);
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   const loadReport = () => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -262,6 +265,26 @@ export const ReportViewPage = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setIsWhatsAppModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded shadow-xs transition-colors cursor-pointer"
+            title="Dispatch WhatsApp Notification"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+            <span>WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsMailModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded shadow-xs transition-colors cursor-pointer"
+            title="Dispatch Email with Official Clinical PDF Attachment"
+          >
+            <Mail className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Email Report</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-xs transition-colors cursor-pointer"
           >
@@ -294,6 +317,53 @@ export const ReportViewPage = () => {
           />
         </div>
       </main>
+
+      {/* Communication Modals */}
+      {reportData && (
+        <>
+          <WhatsAppDispatchModal
+            isOpen={isWhatsAppModalOpen}
+            onClose={() => setIsWhatsAppModalOpen(false)}
+            recipientName={reportData.patient?.full_name || 'Patient'}
+            recipientPhone={reportData.patient?.phone || ''}
+            uhid={reportData.patient?.uhid}
+            patientId={reportData.patient?.id}
+            attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
+            documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
+            defaultMessage={`*Vaani Speech & Hearing Rehabilitation Clinic*\n\nDear *${reportData.patient?.full_name || 'Patient'}*,\nYour official clinical record *${reportData.reportNumber}* (${reportData.service?.title || 'Audiological Evaluation'}) has been verified and registered.\n\nExaminer: Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)\nClinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002\nHelpline: +91 98220 11223`}
+            onSuccess={({ phone }) => {
+              if (phone) {
+                setReportData((prev) => ({
+                  ...prev,
+                  patient: { ...prev.patient, phone },
+                }));
+              }
+            }}
+          />
+
+          <EmailDispatchModal
+            isOpen={isMailModalOpen}
+            onClose={() => setIsMailModalOpen(false)}
+            recipientName={reportData.patient?.full_name || 'Patient'}
+            recipientEmail={reportData.patient?.email || ''}
+            uhid={reportData.patient?.uhid}
+            patientId={reportData.patient?.id}
+            attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
+            documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
+            reportData={reportData}
+            defaultSubject={`Clinical Report ${reportData.reportNumber} — ${reportData.patient?.full_name} [Vaani Clinic]`}
+            defaultMessage={`Dear ${reportData.patient?.full_name || 'Patient'},\n\nPlease find attached the official summary of your clinical assessment recorded at Vaani Speech & Hearing Rehabilitation Clinic (Satara):\n\n• Report ID: ${reportData.reportNumber}\n• Assessment: ${reportData.service?.title || 'Audiological Evaluation (PTA)'}\n• Examination Date: ${reportData.date || new Date().toLocaleDateString('en-IN')}\n• Attending Clinician: Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)\n\nThis record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\nWarm regards,\nVaani Speech & Hearing Clinic\nPhone: +91 98220 11223 | Satara, Maharashtra`}
+            onSuccess={({ email }) => {
+              if (email) {
+                setReportData((prev) => ({
+                  ...prev,
+                  patient: { ...prev.patient, email },
+                }));
+              }
+            }}
+          />
+        </>
+      )}
 
     </div>
   );

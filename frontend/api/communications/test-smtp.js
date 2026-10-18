@@ -4,9 +4,9 @@ import path from 'path';
 
 function findHeaderImagePath() {
   const candidates = [
-    path.resolve(process.cwd(), 'frontend/public/vaani-official-header.png'),
-    path.resolve(process.cwd(), 'public/vaani-official-header.png'),
     path.resolve(process.cwd(), 'frontend/public/vaani-header-banner.png'),
+    path.resolve(process.cwd(), 'public/vaani-header-banner.png'),
+    path.resolve(process.cwd(), 'frontend/public/vaani-official-header.png'),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;
