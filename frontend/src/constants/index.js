@@ -28,7 +28,8 @@ export const ROUTES = {
   CONTACT: '/contact',
   LOGIN: '/login',
   DASHBOARD: {
-    OVERVIEW: '/dashboard',
+    HOME: '/dashboard',
+    OVERVIEW: '/dashboard/overview',
     APPOINTMENTS: '/dashboard/appointments',
     PATIENTS: '/dashboard/patients',
     REPORTS: '/dashboard/reports',

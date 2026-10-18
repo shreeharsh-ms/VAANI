@@ -1,9 +1,27 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Toast from '../components/feedback/Toast';
+import { ROUTES } from '../constants';
 
 export const DashboardLayout = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+
+  // Global Ctrl + B (or ⌘B) shortcut listener: Redirect to Home from ANY page of admin panel
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        navigate(ROUTES.DASHBOARD.HOME);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [navigate]);
+
   return (
     <div className="relative min-h-screen w-full bg-[#301444] print:bg-white p-2 sm:p-3 lg:p-4 print:p-0 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
       
@@ -29,26 +47,28 @@ export const DashboardLayout = () => {
           <Sidebar />
         </div>
 
-        {/* ── MAIN CONTENT OUTLET (High density, no wasted padding) ── */}
-        <main className="relative z-10 flex-1 w-full p-2.5 sm:p-3.5 lg:p-4 print:p-0">
-          <div className="w-full mx-auto space-y-3 print:space-y-0">
+        {/* ── MAIN CONTENT OUTLET ── */}
+        <main className={`relative z-10 flex-1 w-full ${isHome ? 'p-0 flex flex-col justify-center' : 'p-2.5 sm:p-3.5 lg:p-4'} print:p-0`}>
+          <div className={`w-full mx-auto ${isHome ? '' : 'space-y-3'} print:space-y-0`}>
             <Outlet />
           </div>
         </main>
 
-        {/* ── CLINICAL INSTITUTIONAL FOOTER ── */}
-        <footer className="relative z-10 w-full py-4.5 text-center bg-white/60 backdrop-blur-xs border-t border-purple-100/80 px-4 sm:px-8 print:hidden">
-          <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-xs text-purple-900/70 font-medium">
-              © {new Date().getFullYear()} Vaani Speech &amp; Hearing Clinic • Clinical Practice Suite (Satara)
-            </p>
-            <div className="flex items-center gap-3 text-xs text-purple-800/60 font-medium">
-              <span>RCI Reg. Practice</span>
-              <span>•</span>
-              <span>Authorized Clinical Access</span>
+        {/* ── CLINICAL INSTITUTIONAL FOOTER (Hidden on clean Admin Home Screen) ── */}
+        {!isHome && (
+          <footer className="relative z-10 w-full py-4.5 text-center bg-white/60 backdrop-blur-xs border-t border-purple-100/80 px-4 sm:px-8 print:hidden">
+            <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p className="text-xs text-purple-900/70 font-medium">
+                © {new Date().getFullYear()} Vaani Speech &amp; Hearing Clinic • Clinical Practice Suite (Satara)
+              </p>
+              <div className="flex items-center gap-3 text-xs text-purple-800/60 font-medium">
+                <span>RCI Reg. Practice</span>
+                <span>•</span>
+                <span>Authorized Clinical Access</span>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )}
 
       </div>
 

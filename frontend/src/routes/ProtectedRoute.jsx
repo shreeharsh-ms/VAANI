@@ -17,7 +17,7 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role) && user?.role !== 'OWNER') {
-    return <Navigate to={ROUTES.DASHBOARD.OVERVIEW} replace />;
+    return <Navigate to={ROUTES.DASHBOARD.HOME} replace />;
   }
 
   return children;

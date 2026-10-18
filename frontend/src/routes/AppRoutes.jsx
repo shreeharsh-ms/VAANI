@@ -15,6 +15,7 @@ import ContactPage from '../pages/public/ContactPage';
 import BlogsPage from '../pages/public/BlogsPage';
 import ArticleDetailPage from '../pages/public/ArticleDetailPage';
 import LoginPage from '../pages/auth/LoginPage';
+import AdminHomePage from '../pages/dashboard/AdminHomePage';
 import DashboardOverviewPage from '../pages/dashboard/DashboardOverviewPage';
 import PatientsPage from '../pages/dashboard/PatientsPage';
 import PatientDetailPage from '../pages/dashboard/PatientDetailPage';
@@ -74,7 +75,8 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardOverviewPage />} />
+        <Route index element={<AdminHomePage />} />
+        <Route path="overview" element={<DashboardOverviewPage />} />
         <Route path="appointments" element={<AppointmentsPage />} />
         <Route path="patients" element={<PatientsPage />} />
         <Route path="patients/:id" element={<PatientDetailPage />} />

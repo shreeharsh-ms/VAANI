@@ -8,7 +8,7 @@ export const LoginPage = () => {
   const location = useLocation();
 
   const handleSuccess = () => {
-    const origin = location.state?.from?.pathname || ROUTES.DASHBOARD.OVERVIEW;
+    const origin = location.state?.from?.pathname || ROUTES.DASHBOARD.HOME;
     navigate(origin, { replace: true });
   };
 

@@ -260,7 +260,7 @@ export const Navbar = () => {
                 {isAuthenticated ? (
                   <div className="flex items-center gap-2">
                     <Link
-                      to={ROUTES.DASHBOARD.OVERVIEW}
+                      to={ROUTES.DASHBOARD.HOME}
                       className="inline-flex items-center gap-2 px-4 xl:px-4.5 py-2 xl:py-2.5 rounded-full text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-purple-700 to-[#301444] hover:from-purple-800 hover:to-[#200b30] shadow-md shadow-purple-900/25 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Calendar className="w-4 h-4 text-purple-200" />
@@ -405,7 +405,7 @@ export const Navbar = () => {
               {isAuthenticated ? (
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-white/70 border border-purple-100 text-xs">
                   <Link
-                    to={ROUTES.DASHBOARD.OVERVIEW}
+                    to={ROUTES.DASHBOARD.HOME}
                     onClick={() => setMobileMenuOpen(false)}
                     className="font-bold text-[#301444] hover:underline flex items-center gap-1.5"
                   >

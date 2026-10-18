@@ -14,9 +14,72 @@ from typing import Dict, Any, Optional
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, HRFlowable, Flowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.graphics.shapes import Drawing, Rect, Line, Circle, String
+
+
+class OfficialFooterBanner(Flowable):
+    """Draws the authentic clinical footer banner with QR code, cursive signature, and DPDP disclaimer."""
+    def __init__(
+        self,
+        banner_path: Optional[str],
+        examiner_name: str = "Dr. Shreeharsh Shivpuje, BASLP, MASLP",
+        rci_no: str = "A79214",
+        width: float = 190 * mm,
+        height: float = 27 * mm,
+    ):
+        super().__init__()
+        self.banner_path = banner_path
+        self.examiner_name = examiner_name
+        self.rci_no = rci_no
+        self.width = width
+        self.height = height
+
+    def wrap(self, availWidth, availHeight):
+        return self.width, self.height + 4 * mm
+
+    def draw(self):
+        canv = self.canv
+        if self.banner_path and os.path.exists(self.banner_path):
+            canv.drawImage(self.banner_path, 0, 4 * mm, width=self.width, height=self.height, preserveAspectRatio=True)
+
+        right_margin = self.width - 6 * mm
+
+        # Signature in cursive/italic
+        canv.setFont('Times-BoldItalic', 11)
+        canv.setFillColor(colors.HexColor('#301444'))
+        canv.drawRightString(right_margin, 24 * mm, 'Shreeharsh M. Shivpuje')
+
+        # Divider line
+        canv.setStrokeColor(colors.HexColor('#581c87'))
+        canv.setLineWidth(0.6)
+        canv.line(right_margin - 48 * mm, 22.5 * mm, right_margin, 22.5 * mm)
+
+        # Digitally Authenticated badge
+        canv.setFont('Helvetica-Bold', 5.5)
+        canv.setFillColor(colors.HexColor('#059669'))
+        canv.drawRightString(right_margin, 19.5 * mm, '✓  DIGITALLY AUTHENTICATED')
+
+        # Examiner name
+        canv.setFont('Helvetica-Bold', 7.5)
+        canv.setFillColor(colors.HexColor('#0f172a'))
+        canv.drawRightString(right_margin, 15.5 * mm, self.examiner_name)
+
+        # RCI CRR No
+        canv.setFont('Helvetica-Bold', 6.5)
+        canv.setFillColor(colors.HexColor('#334155'))
+        canv.drawRightString(right_margin, 12 * mm, f'RCI CRR No: {self.rci_no}')
+
+        # Designation
+        canv.setFont('Helvetica', 6)
+        canv.setFillColor(colors.HexColor('#64748b'))
+        canv.drawRightString(right_margin, 8.5 * mm, 'Consultant Audiologist & Speech-Language Pathologist')
+
+        # Legal disclaimer below banner
+        canv.setFont('Helvetica', 5.5)
+        canv.setFillColor(colors.HexColor('#64748b'))
+        canv.drawCentredString(self.width / 2.0, 1 * mm, 'Strictly Confidential Medical Record under DPDP Act 2023 • Valid without physical ink signature')
 
 
 class EmailService:
@@ -60,6 +123,19 @@ class EmailService:
             os.path.join(os.path.dirname(__file__), "../../../frontend/public/vaani-header-banner.png"),
             os.path.abspath("frontend/public/vaani-official-header.png"),
             os.path.abspath("frontend/public/vaani-logo.png"),
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                return p
+        return None
+
+    @staticmethod
+    def _find_footer_image() -> Optional[str]:
+        """Locate the exact official report footer image (vaani-footer-banner.png) on disk."""
+        candidates = [
+            os.path.abspath("frontend/public/vaani-footer-banner.png"),
+            os.path.join(os.path.dirname(__file__), "../../../frontend/public/vaani-footer-banner.png"),
+            os.path.abspath("public/vaani-footer-banner.png"),
         ]
         for p in candidates:
             if os.path.exists(p):
@@ -411,34 +487,18 @@ class EmailService:
             ])
         )
         story.append(findings_table)
-        story.append(Spacer(1, 4 * mm))
+        story.append(Spacer(1, 3 * mm))
 
-        # 7. Signature & Credentials Block
-        sig_text = ParagraphStyle('Sig', fontName='Helvetica', fontSize=7, leading=9, textColor=colors.HexColor('#475569'))
-        sig_table = Table(
-            [
-                [
-                    Paragraph(
-                        '<b>Digitally Verified Clinical Document</b><br/>'
-                        '<font size="6" color="#64748b">QR Verified • RCI Standards • DPDP Act 2023 Compliant Practice</font>',
-                        sig_text,
-                    ),
-                    Paragraph(
-                        f"<b>{examiner_name}</b><br/>"
-                        f'<font size="6.5" color="#475569">Chief Audiologist &amp; Speech-Language Pathologist<br/>RCI CRR No. {rci_no}</font>',
-                        sig_text,
-                    ),
-                ]
-            ],
-            colWidths=['58%', '42%'],
+        # 7. Official Decorative Footer Banner (QR Code + Digital Authentication + DPDP Disclaimer)
+        footer_path = cls._find_footer_image()
+        footer_flowable = OfficialFooterBanner(
+            banner_path=footer_path,
+            examiner_name=examiner_name,
+            rci_no=rci_no,
+            width=190 * mm,
+            height=26 * mm,
         )
-        sig_table.setStyle(
-            TableStyle([
-                ('LINEABOVE', (0, 0), (-1, -1), 0.6, colors.HexColor('#d8b4fe')),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ])
-        )
-        story.append(sig_table)
+        story.append(footer_flowable)
 
         doc.build(story)
         return buf.getvalue()

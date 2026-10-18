@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import {
+  Home,
   LayoutDashboard,
   Users,
   CalendarCheck,
@@ -34,6 +35,12 @@ export const Sidebar = () => {
   // Global Keyboard Shortcuts Listener (supports macOS Option ⌥ and Windows Alt combinations)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ctrl + B or Cmd + B -> Admin Home Screen
+      if (isCmdOrCtrl(e) && isKey(e, 'b')) {
+        e.preventDefault();
+        navigate(ROUTES.DASHBOARD.HOME);
+      }
+
       // Ctrl + K or Cmd + K -> Open Global Search
       if (isCmdOrCtrl(e) && isKey(e, 'k')) {
         e.preventDefault();
@@ -88,6 +95,7 @@ export const Sidebar = () => {
 
   // Primary ERP Navigation Items matching the SRS
   const menuItems = [
+    { label: 'Home', path: ROUTES.DASHBOARD.HOME, icon: Home, shortcut: 'Ctrl+B / ⌘B' },
     { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, shortcut: 'Alt+1 / ⌥1' },
     { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, shortcut: 'Alt+2 / ⌥2' },
     { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, shortcut: 'Alt+3 / ⌥3' },
@@ -109,7 +117,7 @@ export const Sidebar = () => {
         
         {/* Top-Left: Logo inside Dark Tab with Inverted Fillets (Santo Home Page Style) */}
         <div className="relative bg-[#301444] text-white px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-br-[18px] sm:rounded-br-[28px] flex items-center self-start flex-shrink-0">
-          <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
+          <Link to={ROUTES.DASHBOARD.HOME} className="flex items-center group py-0.5" title="Admin Home (Ctrl + B)">
             <img
               src={displayLogo}
               alt={clinicName}
@@ -144,7 +152,7 @@ export const Sidebar = () => {
             <NavLink
               key={item.label}
               to={item.path}
-              end={item.path === ROUTES.DASHBOARD.OVERVIEW}
+              end={item.path === ROUTES.DASHBOARD.HOME || item.path === ROUTES.DASHBOARD.OVERVIEW}
               title={`${item.label} (${item.shortcut})`}
               className={({ isActive }) =>
                 `px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-100 flex items-center gap-1 cursor-pointer ${
@@ -245,7 +253,7 @@ export const Sidebar = () => {
                 <NavLink
                   key={item.label}
                   to={item.path}
-                  end={item.path === ROUTES.DASHBOARD.OVERVIEW}
+                  end={item.path === ROUTES.DASHBOARD.HOME || item.path === ROUTES.DASHBOARD.OVERVIEW}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-xs shadow-2xs transition-all ${
