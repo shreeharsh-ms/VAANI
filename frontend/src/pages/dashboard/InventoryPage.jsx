@@ -573,46 +573,55 @@ export const InventoryPage = () => {
       {/* ── TOP ACTION BAR (COMPACT EXCEL DENSITY) ── */}
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200 self-start sm:self-auto">
             <Box className="w-3.5 h-3.5 text-purple-700" />
             <span>Clinic Inventory &amp; Stock Movement</span>
           </div>
 
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2 flex-wrap text-xs">
-            <span className="font-semibold text-slate-500">In Stock:</span>
-            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
-              {inStockCount} Units
-            </span>
+          {/* Responsive Stat Chips */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto text-xs">
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">In Stock:</span>
+              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                {inStockCount} Units
+              </span>
+            </div>
 
-            <span className="font-semibold text-slate-500">Sold:</span>
-            <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono">
-              {dispensedCount} Units
-            </span>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Sold:</span>
+              <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono">
+                {dispensedCount} Units
+              </span>
+            </div>
 
-            <span className="font-semibold text-slate-500">On Trial:</span>
-            <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono">
-              {onTrialCount} Units
-            </span>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">On Trial:</span>
+              <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono">
+                {onTrialCount} Units
+              </span>
+            </div>
 
-            <span className="font-semibold text-slate-500">Returned:</span>
-            <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono">
-              {returnedCount} Units
-            </span>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Returned:</span>
+              <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono">
+                {returnedCount} Units
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Right: Actions with Shortcut Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap sm:flex-nowrap">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
             title="Export serial inventory to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3 h-3 text-slate-500" />
+            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
             <span>Export CSV</span>
             <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
           </button>
@@ -620,17 +629,17 @@ export const InventoryPage = () => {
           <button
             type="button"
             onClick={() => setIsConsumableModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
             title="Add consumable battery or accessory stock"
           >
-            <Plus className="w-3 h-3 text-purple-800" />
+            <Plus className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-purple-800" />
             <span>+ Add Consumable</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Register new hearing aid product in stock (Alt + N / ⌥N)"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -640,12 +649,12 @@ export const InventoryPage = () => {
         </div>
       </div>
 
-      {/* ── SECTION NAVIGATION TABS ── */}
-      <div className="flex items-center gap-2 border-b border-slate-200 text-xs font-bold">
+      {/* ── SECTION NAVIGATION TABS (Smooth horizontal scroll on mobile) ── */}
+      <div className="flex items-center gap-2 border-b border-slate-200 text-xs font-bold overflow-x-auto scrollbar-none whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => setActiveTab('DEVICES')}
-          className={`pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 ${
+          className={`flex-shrink-0 pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
             activeTab === 'DEVICES'
               ? 'border-[#301444] text-[#301444]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -658,7 +667,7 @@ export const InventoryPage = () => {
         <button
           type="button"
           onClick={() => setActiveTab('CONSUMABLES')}
-          className={`pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 ${
+          className={`flex-shrink-0 pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
             activeTab === 'CONSUMABLES'
               ? 'border-[#301444] text-[#301444]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -671,7 +680,7 @@ export const InventoryPage = () => {
         <button
           type="button"
           onClick={() => setActiveTab('MOVEMENTS')}
-          className={`pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 ${
+          className={`flex-shrink-0 pb-2 px-3 flex items-center gap-1.5 transition-all cursor-pointer border-b-2 whitespace-nowrap ${
             activeTab === 'MOVEMENTS'
               ? 'border-[#301444] text-[#301444]'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -686,19 +695,19 @@ export const InventoryPage = () => {
       {activeTab === 'DEVICES' && (
         <div className="space-y-2.5">
           {/* Filter & Search Bar */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[280px]">
-              <div className="relative flex items-center flex-1 max-w-sm">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 w-full sm:w-auto">
+              <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search by serial #, brand, model, UHID, or patient..."
+                  placeholder="Search serial #, brand, model, patient..."
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
                     setPage(1);
                   }}
-                  className="h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none text-slate-800 placeholder-slate-400 font-medium"
+                  className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none text-slate-800 placeholder-slate-400 font-medium"
                 />
                 {search && (
                   <button
@@ -711,43 +720,45 @@ export const InventoryPage = () => {
                 )}
               </div>
 
-              {/* Brand Filter */}
-              <select
-                value={brandFilter}
-                onChange={(e) => {
-                  setBrandFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              >
-                <option value="ALL">All Manufacturers</option>
-                <option value="Phonak">Phonak</option>
-                <option value="Oticon">Oticon</option>
-                <option value="Signia">Signia</option>
-                <option value="Widex">Widex</option>
-                <option value="Other">Other Brands</option>
-              </select>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {/* Brand Filter */}
+                <select
+                  value={brandFilter}
+                  onChange={(e) => {
+                    setBrandFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+                >
+                  <option value="ALL">All Manufacturers</option>
+                  <option value="Phonak">Phonak</option>
+                  <option value="Oticon">Oticon</option>
+                  <option value="Signia">Signia</option>
+                  <option value="Widex">Widex</option>
+                  <option value="Other">Other Brands</option>
+                </select>
 
-              {/* Stock Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="IN_STOCK">In Stock (Available)</option>
-                <option value="DISPENSED">Sold / Dispensed</option>
-                <option value="ON_TRIAL">On Patient Trial</option>
-                <option value="RETURNED">Returned / Vendor Return</option>
-                <option value="IN_SERVICE">In Service / RMA</option>
-              </select>
+                {/* Stock Status Filter */}
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="IN_STOCK">In Stock (Available)</option>
+                  <option value="DISPENSED">Sold / Dispensed</option>
+                  <option value="ON_TRIAL">On Patient Trial</option>
+                  <option value="RETURNED">Returned / Vendor Return</option>
+                  <option value="IN_SERVICE">In Service / RMA</option>
+                </select>
+              </div>
             </div>
 
             {/* Rows selector */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
               <span className="text-[11px] font-medium">Rows:</span>
               <select
                 value={pageSize}
@@ -755,7 +766,7 @@ export const InventoryPage = () => {
                   setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
-                className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+                className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -798,12 +809,14 @@ export const InventoryPage = () => {
                 <tbody className="divide-y divide-slate-100 font-normal">
                   {paginatedDevices.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-slate-500 font-medium">
-                        <Box className="w-6 h-6 mx-auto mb-1 text-slate-300" />
-                        <p className="font-semibold text-slate-700">No hearing aid devices in clinic inventory.</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Click &quot;Add Product&quot; to register new devices with HSN code, GST %, and serial tracking.
-                        </p>
+                      <td colSpan={8} className="p-0">
+                        <div className="sticky left-0 w-full min-w-full flex flex-col items-center justify-center py-8 px-4 text-center text-slate-500 font-medium">
+                          <Box className="w-6 h-6 mb-1 text-slate-300" />
+                          <p className="font-semibold text-slate-700 text-xs">No hearing aid devices in clinic inventory.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                            Click &quot;Add Product&quot; to register new devices with HSN code, GST %, and serial tracking.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -1015,12 +1028,14 @@ export const InventoryPage = () => {
                 <tbody className="divide-y divide-slate-100 font-normal">
                   {consumables.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-500">
-                        <Box className="w-6 h-6 mx-auto mb-1 text-slate-300" />
-                        <p className="font-semibold text-slate-700">No consumable inventory recorded yet.</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Click &quot;+ Add Consumable Item&quot; to record batteries, wax guards, or impression materials.
-                        </p>
+                      <td colSpan={7} className="p-0">
+                        <div className="sticky left-0 w-full min-w-full flex flex-col items-center justify-center py-8 px-4 text-center text-slate-500 font-medium">
+                          <Box className="w-6 h-6 mb-1 text-slate-300" />
+                          <p className="font-semibold text-slate-700 text-xs">No consumable inventory recorded yet.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                            Click &quot;+ Add Consumable Item&quot; to record batteries, wax guards, or impression materials.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -1132,12 +1147,14 @@ export const InventoryPage = () => {
                 <tbody className="divide-y divide-slate-100 font-normal">
                   {stockMovements.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">
-                        <History className="w-6 h-6 mx-auto mb-1 text-slate-300" />
-                        <p className="font-semibold text-slate-700">No stock movement logs recorded yet.</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Movements will automatically record whenever devices are added, sold, restocked, or returned.
-                        </p>
+                      <td colSpan={6} className="p-0">
+                        <div className="sticky left-0 w-full min-w-full flex flex-col items-center justify-center py-8 px-4 text-center text-slate-500 font-medium">
+                          <History className="w-6 h-6 mb-1 text-slate-300" />
+                          <p className="font-semibold text-slate-700 text-xs">No stock movement logs recorded yet.</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                            Movements will automatically record whenever devices are added, sold, restocked, or returned.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (

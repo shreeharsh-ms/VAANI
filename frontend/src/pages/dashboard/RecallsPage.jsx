@@ -297,33 +297,38 @@ export const RecallsPage = () => {
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200 self-start sm:self-auto">
             <RotateCcw className="w-3.5 h-3.5 text-purple-700" />
             <span>Follow-up &amp; Recall Management Engine</span>
           </div>
 
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Active Tasks:</span>
-            <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
-              {recalls.length} Total
-            </span>
+          {/* Responsive Stat Chips */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto text-xs">
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Active Tasks:</span>
+              <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
+                {recalls.length} Total
+              </span>
+            </div>
 
-            <span className="text-xs font-semibold text-slate-500">Due Today / Urgent:</span>
-            <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono">
-              {recalls.filter(r => r.status === 'DUE').length} Due
-            </span>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
+              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Due Today / Urgent:</span>
+              <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono">
+                {recalls.filter(r => r.status === 'DUE').length} Due
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
             title="Schedule clinical recall task (Alt + N)"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -334,20 +339,20 @@ export const RecallsPage = () => {
       </div>
 
       {/* ── FILTER & SEARCH BAR ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[280px]">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 w-full sm:w-auto">
           {/* Search */}
-          <div className="relative flex items-center flex-1 max-w-sm">
+          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by UHID, patient name, phone, or reason..."
+              placeholder="Search UHID, patient name, phone, reason..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
+              className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
             />
             {search && (
               <button
@@ -360,40 +365,42 @@ export const RecallsPage = () => {
             )}
           </div>
 
-          {/* Category Filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setPage(1);
-            }}
-            className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-          >
-            <option value="ALL">All Categories</option>
-            <option value="Speech Therapy">Speech Therapy</option>
-            <option value="Hearing Aid">Hearing Aid</option>
-            <option value="Audiology">Audiology</option>
-          </select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="Speech Therapy">Speech Therapy</option>
+              <option value="Hearing Aid">Hearing Aid</option>
+              <option value="Audiology">Audiology</option>
+            </select>
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="DUE">Urgent Due</option>
-            <option value="PENDING">Upcoming Pending</option>
-            <option value="CONTACTED">Patient Contacted</option>
-            <option value="SCHEDULED">Appointment Booked</option>
-          </select>
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="DUE">Urgent Due</option>
+              <option value="PENDING">Upcoming Pending</option>
+              <option value="CONTACTED">Patient Contacted</option>
+              <option value="SCHEDULED">Appointment Booked</option>
+            </select>
+          </div>
         </div>
 
         {/* Rows selector */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
           <span className="text-[11px] font-medium">Rows:</span>
           <select
             value={pageSize}
@@ -401,7 +408,7 @@ export const RecallsPage = () => {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+            className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -452,8 +459,10 @@ export const RecallsPage = () => {
             <tbody className="divide-y divide-slate-100 font-normal">
               {paginatedRecalls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 font-medium">
-                    No matching clinical recall tasks found.
+                  <td colSpan={7} className="p-0">
+                    <div className="sticky left-0 w-full min-w-full flex flex-col items-center justify-center py-8 px-4 text-center text-slate-500 font-medium text-xs">
+                      No matching clinical recall tasks found.
+                    </div>
                   </td>
                 </tr>
               ) : (

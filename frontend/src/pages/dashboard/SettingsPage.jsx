@@ -1198,16 +1198,16 @@ export const SettingsPage = () => {
         </div>
 
         {/* Right: Search + Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
           {/* Quick Filter Search */}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full sm:w-auto">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
               placeholder="Search setting rule..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 w-36 sm:w-48 pl-7 pr-2 text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-purple-600 transition-all text-slate-800 placeholder-slate-400 font-medium"
+              className="h-8 sm:h-7 w-full sm:w-44 pl-7 pr-6 text-xs bg-slate-50 border border-slate-300 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-purple-600 transition-all text-slate-800 placeholder-slate-400 font-medium"
             />
             {searchQuery && (
               <button
@@ -1220,56 +1220,55 @@ export const SettingsPage = () => {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportBackup}
-            className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all cursor-pointer shadow-2xs"
-            title="Download full clinic data backup (.JSON)"
-          >
-            <Download className="w-3 h-3 text-purple-700" />
-            <span className="hidden sm:inline">Backup (.JSON)</span>
-            <span className="sm:hidden">Backup</span>
-          </button>
+          <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+              title="Download full clinic data backup (.JSON)"
+            >
+              <Download className="w-3 h-3 text-purple-700" />
+              <span>Backup</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('data_lifecycle');
-              setIsWipeModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer shadow-2xs"
-            title="Wipe transactional data while preserving user accounts & firm details"
-          >
-            <Trash2 className="w-3 h-3 text-rose-600" />
-            <span className="hidden sm:inline">Wipe Data</span>
-            <span className="sm:hidden">Wipe</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('data_lifecycle');
+                setIsWipeModalOpen(true);
+              }}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+              title="Wipe transactional data while preserving user accounts & firm details"
+            >
+              <Trash2 className="w-3 h-3 text-rose-600" />
+              <span>Wipe</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleResetDefaults}
-            className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer"
-            title="Reset to clinic defaults"
-          >
-            <RotateCcw className="w-3 h-3 text-slate-500" />
-            <span className="hidden sm:inline">Reset Baseline</span>
-            <span className="sm:hidden">Reset</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleResetDefaults}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer whitespace-nowrap"
+              title="Reset to clinic defaults"
+            >
+              <RotateCcw className="w-3 h-3 text-slate-500" />
+              <span>Reset</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center gap-1.5 h-7 px-3.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer disabled:opacity-50"
-          >
-            {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+            >
+              {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── EXCEL-STYLE COMPACT TAB STRIP (SHEET TABS) ── */}
-      <div className="bg-slate-100/90 border border-slate-200 rounded-lg p-1 flex items-center gap-1 overflow-x-auto scrollbar-none">
+      {/* ── EXCEL-STYLE COMPACT TAB STRIP (SHEET TABS - Smooth horizontal scroll on mobile) ── */}
+      <div className="bg-slate-100/90 border border-slate-200 rounded-lg p-1 flex items-center gap-1 overflow-x-auto scrollbar-none whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1277,14 +1276,14 @@ export const SettingsPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold whitespace-nowrap transition-all duration-100 cursor-pointer ${
+              className={`flex-shrink-0 flex items-center gap-1.5 h-7 px-2.5 rounded text-xs font-semibold whitespace-nowrap transition-all duration-100 cursor-pointer ${
                 isActive
                   ? 'bg-[#301444] text-white shadow-2xs'
                   : 'text-slate-700 hover:bg-white hover:text-[#301444]'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="whitespace-nowrap">{tab.label}</span>
               <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${
                 isActive ? 'bg-purple-900/60 text-purple-200' : 'bg-slate-200/80 text-slate-600'
               }`}>
