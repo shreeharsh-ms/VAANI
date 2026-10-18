@@ -23,7 +23,7 @@ export const OfficialReportFooter = ({
   const currentLeadDegree = creds.leadDegree || leadDegree || 'MASLP, RCI';
   const currentRciNumber = creds.rciNumber || contextRci || 'A79214';
 
-  const rciNumber = formData?.rciNumber || currentRciNumber;
+  const rciNumber = currentRciNumber || formData?.rciNumber || 'A79214';
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
 

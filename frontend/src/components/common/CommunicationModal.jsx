@@ -31,6 +31,7 @@ export const getClinicSmtpStatus = () => {
     if (!raw) {
       return {
         isConfigured: false,
+        hasPassword: false,
         reason: 'Clinic settings have not been customized yet.',
         smtp: null,
       };
@@ -40,36 +41,33 @@ export const getClinicSmtpStatus = () => {
     if (!smtp) {
       return {
         isConfigured: false,
+        hasPassword: false,
         reason: 'SMTP configuration block is missing.',
         smtp: null,
       };
     }
     const hasHost = Boolean(smtp.host && smtp.host.trim());
     const hasSender = Boolean(smtp.senderEmail && smtp.senderEmail.trim());
-    const hasAuth = Boolean(smtp.password || smtp.hasPasswordStored);
+    const hasPassword = Boolean(smtp.password && smtp.password.trim());
 
     if (!hasHost || !hasSender) {
       return {
         isConfigured: false,
+        hasPassword: false,
         reason: 'SMTP Host or Sender Email is empty.',
-        smtp,
-      };
-    }
-    if (!hasAuth) {
-      return {
-        isConfigured: false,
-        reason: 'SMTP authentication password or app password is not configured.',
         smtp,
       };
     }
     return {
       isConfigured: true,
-      reason: 'SMTP gateway active and ready for dispatch.',
+      hasPassword,
+      reason: hasPassword ? 'SMTP gateway active and ready for dispatch.' : 'App Password not configured.',
       smtp,
     };
   } catch (e) {
     return {
       isConfigured: false,
+      hasPassword: false,
       reason: 'Failed to inspect SMTP settings.',
       smtp: null,
     };
@@ -383,6 +381,7 @@ export const EmailDispatchModal = ({
   const [message, setMessage] = useState('');
   const [updateProfile, setUpdateProfile] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [smtpPasswordInput, setSmtpPasswordInput] = useState('');
 
   const smtpStatus = useMemo(() => getClinicSmtpStatus(), [isOpen]);
 
@@ -441,12 +440,38 @@ export const EmailDispatchModal = ({
       return;
     }
 
-    const clinicSmtp = smtpStatus.smtp;
-    if (!smtpStatus.isConfigured || !clinicSmtp?.password) {
-      notify.error(
-        'SMTP Gateway is not fully configured or missing password. Please configure SMTP in Settings > Email & SMTP Gateway.'
-      );
+    const effectivePassword = (smtpPasswordInput || smtpStatus.smtp?.password || '').trim();
+
+    if (!effectivePassword) {
+      notify.info('No SMTP App Password provided. Opening default system email client...');
+      handleSendViaClient();
       return;
+    }
+
+    const clinicSmtp = {
+      ...smtpStatus.smtp,
+      password: effectivePassword,
+    };
+
+    if (smtpPasswordInput.trim()) {
+      try {
+        const raw = localStorage.getItem('vaani_clinic_settings_v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          parsed.smtp = {
+            ...parsed.smtp,
+            password: effectivePassword,
+            hasPasswordStored: true,
+          };
+          localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(parsed));
+          window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: parsed }));
+          fetch('/api/v1/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parsed),
+          }).catch(() => {});
+        }
+      } catch {}
     }
 
     setIsSending(true);
@@ -538,13 +563,42 @@ export const EmailDispatchModal = ({
               </button>
             </div>
           </div>
+        ) : !smtpStatus.hasPassword && !smtpPasswordInput ? (
+          <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                SMTP Host: <strong>{smtpStatus.smtp?.host}</strong> ({smtpStatus.smtp?.senderEmail})
+              </span>
+              <span className="text-[10px] bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded font-bold">App Password Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="password"
+                value={smtpPasswordInput}
+                onChange={(e) => setSmtpPasswordInput(e.target.value)}
+                placeholder="Enter 16-character Gmail App Password to send directly..."
+                className="flex-1 h-7 text-xs px-2.5 bg-white border border-amber-300 rounded font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-600"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/dashboard/settings?tab=smtp');
+                }}
+                className="text-[10px] text-purple-700 hover:text-purple-900 font-bold underline whitespace-nowrap cursor-pointer"
+              >
+                Settings →
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="px-3 py-1.5 rounded-lg bg-purple-50/70 border border-purple-200 flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-1.5 text-purple-950 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Active SMTP Host: <strong>{smtpStatus.smtp?.host}</strong> ({smtpStatus.smtp?.senderEmail})</span>
             </div>
-            <span className="text-[10px] font-bold text-purple-700">TLS/SSL Secured</span>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Ready to Send</span>
           </div>
         )}
 
@@ -671,34 +725,34 @@ export const EmailDispatchModal = ({
             Cancel
           </button>
 
-          {!smtpStatus.isConfigured ? (
-            <button
-              type="button"
-              onClick={handleSendViaClient}
-              className="px-4 py-1.5 rounded text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Send via System Mail Client</span>
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={isSending}
-              className="px-4 py-1.5 rounded text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {isSending ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Sending via SMTP...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send via Clinic SMTP</span>
-                </>
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleSendViaClient}
+            disabled={isSending}
+            className="px-3.5 py-1.5 rounded text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Open default email application (Apple Mail, Outlook, Gmail web)"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Send via Mail App</span>
+          </button>
+
+          <button
+            type="submit"
+            disabled={isSending}
+            className="px-4 py-1.5 rounded text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            {isSending ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Sending via SMTP...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" />
+                <span>Send via Clinic SMTP</span>
+              </>
+            )}
+          </button>
         </div>
       </form>
     </Modal>

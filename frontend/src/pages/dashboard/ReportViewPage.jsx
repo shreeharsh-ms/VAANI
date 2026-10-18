@@ -152,7 +152,7 @@ export const ReportViewPage = () => {
             reportNumber: match.report_number || match.id,
             reportDate: match.date || new Date().toISOString().split('T')[0],
             examinerName: resolvedExaminer,
-            rciNumber: match.rci_number || defaultRci,
+            rciNumber: defaultRci,
             service: srv,
             patient: patient,
             patientDossier: dossier,

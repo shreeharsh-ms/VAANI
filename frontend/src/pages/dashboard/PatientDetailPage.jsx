@@ -52,6 +52,7 @@ import {
   getPatientClinicalDossier,
 } from '../../data/patientClinicalProfiles';
 import { getReportsForPatient, getAllClinicalReports } from '../../data/clinicalReportsData';
+import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { patientService } from '../../services/patientService';
@@ -310,7 +311,7 @@ export const PatientDetailPage = () => {
       reportNumber: fresh.report_number || fresh.id,
       reportDate: fresh.date,
       examinerName: fresh.examiner && !fresh.examiner.includes('Shreeharsh') ? fresh.examiner : fullLeadPractitioner,
-      rciNumber: fresh.rci_number || clinicRci,
+      rciNumber: clinicRci,
       service: srv,
       patient: patient,
       patientDossier: dossier,
@@ -1040,7 +1041,7 @@ export const PatientDetailPage = () => {
     setSelectedInvoiceForMail(inv);
     setMailRecipient(inv.email || demographics.email || `${inv.patientName.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`);
     setMailSubject(`Tax Invoice & Clinical Receipt ${inv.invoiceNo} — VAANI Speech & Hearing Clinic`);
-    setMailNote(`Dear ${inv.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${inv.invoiceNo} for ${inv.service}.\n\nTotal: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`);
+    setMailNote(`Dear ${inv.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${inv.invoiceNo} for ${inv.service}.\n\nTotal: ₹${inv.totalAmount.toLocaleString('en-IN')} (${inv.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. ${clinicRci}`);
     setIsMailModalOpen(true);
   };
 
@@ -1159,7 +1160,7 @@ export const PatientDetailPage = () => {
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>RCI CRR No. A79214 Certified</span>
+            <span>RCI CRR No. {clinicRci} Certified</span>
           </div>
 
           <button
@@ -1882,7 +1883,7 @@ export const PatientDetailPage = () => {
                                           Provisional Clinical Diagnosis / Findings
                                         </span>
                                         <p className="text-slate-800 whitespace-pre-line leading-relaxed font-medium">
-                                          {rep.diagnosis || 'Clinical evaluation completed and authenticated under RCI CRR No. A79214.'}
+                                          {rep.diagnosis || `Clinical evaluation completed and authenticated under RCI CRR No. ${clinicRci}.`}
                                         </p>
                                       </div>
 
@@ -2891,7 +2892,7 @@ export const PatientDetailPage = () => {
       <div className="sticky bottom-0 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-lg p-2.5 flex items-center justify-between text-xs text-slate-500 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span className="font-medium text-[11px]">RCI CRR A79214 • Vaani Speech &amp; Hearing Rehabilitation Center</span>
+          <span className="font-medium text-[11px]">RCI CRR {clinicRci} • Vaani Speech &amp; Hearing Rehabilitation Center</span>
         </div>
         <button
           type="button"
@@ -4167,7 +4168,7 @@ export const PatientDetailPage = () => {
               <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <span>
-                  The official PDF report is digitally signed with clinician registration (RCI CRR A79214) and cryptographically linked to the clinic&apos;s master ledger under the DPDP Act 2023.
+                  The official PDF report is digitally signed with clinician registration (RCI CRR {clinicRci}) and cryptographically linked to the clinic&apos;s master ledger under the DPDP Act 2023.
                 </span>
               </div>
 

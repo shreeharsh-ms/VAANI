@@ -173,9 +173,9 @@ const DEFAULT_SETTINGS = {
     port: 587,
     encryption: 'STARTTLS',
     senderName: 'Vaani Speech & Hearing Clinic',
-    senderEmail: 'info.shreeharshshivpuje@gmail.com',
+    senderEmail: 'info@vaaniclinic.com',
     password: '',
-    hasPasswordStored: true,
+    hasPasswordStored: false,
     enableAutoDispatch: true,
   },
 };
@@ -210,7 +210,7 @@ const DEFAULT_MAIL_LOGS = [
   {
     id: 'mail_log_1',
     timestamp: '20/09/2026, 21:31:40',
-    recipient: 'info.shreeharshshivpuje@gmail.com',
+    recipient: 'info@vaaniclinic.com',
     subject: 'Vaani Clinic ERP - Security 2FA Verification Code [283079]',
     host: 'smtp.gmail.com:587',
     status: 'SENT',
@@ -219,7 +219,7 @@ const DEFAULT_MAIL_LOGS = [
   {
     id: 'mail_log_2',
     timestamp: '20/09/2026, 15:42:59',
-    recipient: 'info.shreeharshshivpuje@gmail.com',
+    recipient: 'info@vaaniclinic.com',
     subject: 'Delivery Memo Invoice #1 - Vaani Speech & Hearing',
     host: 'smtp.gmail.com:587',
     status: 'SENT',
@@ -318,7 +318,7 @@ const DEFAULT_MAIL_LOGS = [
   {
     id: 'mail_log_13',
     timestamp: '10/09/2026, 09:30:00',
-    recipient: 'info.shreeharshshivpuje@gmail.com',
+    recipient: 'info@vaaniclinic.com',
     subject: 'SMTP Connection Diagnostic Test Dispatch',
     host: 'smtp.gmail.com:587',
     status: 'SENT',
@@ -752,6 +752,15 @@ export const SettingsPage = () => {
 
     setSettings(updatedSettings);
     localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
+    window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
+
+    // Persist to SQLite Database via Backend API
+    fetch('/api/v1/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedSettings),
+    }).catch((err) => console.warn('Database save error:', err));
+
     setSmtpForm((prev) => ({
       ...prev,
       password: effectivePassword,
@@ -2786,7 +2795,7 @@ export const SettingsPage = () => {
                     required
                     value={smtpForm.senderEmail}
                     onChange={(e) => handleSmtpChange('senderEmail', e.target.value)}
-                    placeholder="info.shreeharshshivpuje@gmail.com"
+                    placeholder="info@vaaniclinic.com"
                     className="w-full h-8 text-xs px-2.5 bg-white border border-slate-300 rounded font-mono text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-600 focus:border-purple-600 transition-all"
                   />
                 </div>

@@ -130,9 +130,9 @@ export const DEFAULT_CLINIC_SETTINGS = {
     port: 587,
     encryption: 'STARTTLS',
     senderName: 'Vaani Speech & Hearing Clinic',
-    senderEmail: 'info.shreeharshshivpuje@gmail.com',
+    senderEmail: 'info@vaaniclinic.com',
     password: '',
-    hasPasswordStored: true,
+    hasPasswordStored: false,
     enableAutoDispatch: true,
   },
 };

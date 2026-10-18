@@ -4,6 +4,7 @@
  * Document Reference: VAANI-DOC-SPEC-2026-001
  * Clinical Governance: RCI CRR No. A79214
  */
+import { getClinicSettings } from '../context/ClinicSettingsContext';
 
 export const DEFAULT_ASSESSMENTS = [
   {
@@ -140,6 +141,18 @@ export const DEFAULT_ASSESSMENTS = [
  * Get all clinical reports combined from localStorage and default seed assessments
  */
 export const getAllClinicalReports = () => {
+  const settings = getClinicSettings();
+  const currentRci = settings?.credentials?.rciNumber || 'A79214';
+  const leadPractitioner = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+  const defaultExaminer = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
+
+  const syncReport = (r) => ({
+    ...r,
+    rci_number: currentRci,
+    examiner: r.examiner && !r.examiner.includes('Shreeharsh') ? r.examiner : defaultExaminer,
+  });
+
   try {
     const stored = localStorage.getItem('vaani_clinical_reports_v1');
     if (stored) {
@@ -148,13 +161,13 @@ export const getAllClinicalReports = () => {
         const defaultFiltered = DEFAULT_ASSESSMENTS.filter(
           (def) => !parsed.some((p) => p.report_number === def.report_number)
         );
-        return [...parsed, ...defaultFiltered];
+        return [...parsed, ...defaultFiltered].map(syncReport);
       }
     }
   } catch (e) {
     console.warn('Error reading vaani_clinical_reports_v1', e);
   }
-  return DEFAULT_ASSESSMENTS;
+  return DEFAULT_ASSESSMENTS.map(syncReport);
 };
 
 /**
