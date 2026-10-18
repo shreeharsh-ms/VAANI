@@ -23,11 +23,15 @@ import {
 } from 'lucide-react';
 import { ARTICLES, getArticleBySlug } from '../../data/articles';
 import { ROUTES, APP_CONFIG } from '../../constants';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 export const ArticleDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const article = getArticleBySlug(slug);
+  const { rciNumber, leadPractitioner, leadDegree, workingHours, settings } = useClinicSettings();
+  const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12349';
+  const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Satara, Maharashtra 415002';
 
   // Scroll to top when article loads
   useEffect(() => {
@@ -377,31 +381,31 @@ export const ArticleDetailPage = () => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="text-sm font-bold text-[#16382b]">
-                      {article.author}
+                      {leadPractitioner || article.author}
                     </h3>
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   </div>
                   <p className="text-[11px] font-semibold text-purple-900 leading-tight">
-                    {article.authorCredentials}
+                    {leadDegree ? `${leadDegree}, RCI Registered Audiologist & Speech-Language Pathologist` : article.authorCredentials}
                   </p>
                   <span className="inline-block mt-1 text-[10px] uppercase tracking-wider font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    RCI CRR No. A93452
+                    RCI CRR No. {rciNumber || 'A79214'}
                   </span>
                 </div>
               </div>
 
               <p className="text-xs text-[#4a5550] leading-relaxed pt-2 border-t border-gray-100">
-                Lead Practitioner at VAANI Speech and Hearing Clinic. Over 15 years of specialized experience evaluating pediatric developmental delays, adult neurogenic voice disorders, and clinical audiometry in Satara.
+                Lead Audiologist &amp; Speech-Language Pathologist at VAANI Speech and Hearing Clinic. Specialized in pediatric language delays, diagnostic audiometry, digital hearing aid fitting, and cognitive speech therapy in Satara.
               </p>
 
               <div className="pt-2 border-t border-gray-100 space-y-2 text-xs text-[#55615d]">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-purple-900 flex-shrink-0" />
-                  <span>Sadashiv Peth, Satara, Maharashtra</span>
+                  <span>{clinicAddress}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-purple-900 flex-shrink-0" />
-                  <span>Mon – Sat: 09:30 AM – 06:30 PM</span>
+                  <span>{workingHours || 'Mon – Sat: 09:30 AM – 07:30 PM'}</span>
                 </div>
               </div>
 
@@ -427,11 +431,11 @@ export const ArticleDetailPage = () => {
               </p>
               <div className="pt-1 flex flex-col gap-2">
                 <a
-                  href="tel:+919876543210"
+                  href={`tel:${clinicPhone.replace(/\s+/g, '')}`}
                   className="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-white text-[#301444] text-xs font-bold hover:bg-purple-50 transition-all shadow-sm"
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>+91 98765 43210</span>
+                  <span>{clinicPhone}</span>
                 </a>
                 <Link
                   to={ROUTES.CONTACT}
