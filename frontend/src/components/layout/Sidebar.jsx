@@ -164,27 +164,14 @@ export const Sidebar = () => {
               end={item.path === ROUTES.DASHBOARD.HOME || item.path === ROUTES.DASHBOARD.OVERVIEW}
               title={`${item.label} (${item.shortcut})`}
               className={({ isActive }) =>
-                `group px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-100 flex items-center gap-1.5 cursor-pointer ${
+                `px-2.5 xl:px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-100 flex items-center gap-1 cursor-pointer ${
                   isActive
                     ? 'bg-[#301444] text-white shadow-xs'
                     : 'bg-white hover:bg-purple-50 text-slate-800 border border-slate-200 shadow-2xs'
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  <span>{item.label}</span>
-                  <span
-                    className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded transition-colors ${
-                      isActive
-                        ? 'bg-white/20 text-white border border-white/30'
-                        : 'bg-purple-50 text-purple-900 border border-purple-200/90 group-hover:bg-purple-100'
-                    }`}
-                  >
-                    <span className="hidden xl:inline">Ctrl+</span>{item.num}
-                  </span>
-                </>
-              )}
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -289,9 +276,6 @@ export const Sidebar = () => {
                     <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-900 border border-purple-200">
-                    Ctrl+{item.num}
-                  </span>
                 </NavLink>
               ))}
 
