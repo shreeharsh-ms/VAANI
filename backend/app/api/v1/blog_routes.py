@@ -1,9 +1,58 @@
-"""Clinic Blog & Educational Articles API endpoints."""
-from flask import Blueprint, request
+import os
+import uuid
+from werkzeug.utils import secure_filename
+from flask import Blueprint, request, send_from_directory, current_app
 from ...services.blog_service import BlogService
 from ...utils.response import api_response, error_response
 
 blog_bp = Blueprint("blogs", __name__)
+
+# Local disk storage for blog images (no MongoDB)
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "instance", "uploads", "blogs")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "svg", "gif"}
+
+
+def _allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@blog_bp.route("/upload-image", methods=["POST"])
+def upload_blog_image():
+    """Upload an image file directly to local storage on the server."""
+    try:
+        if "file" not in request.files:
+            return error_response("No file attached in form data", 400)
+        file = request.files["file"]
+        if file.filename == "":
+            return error_response("No file selected", 400)
+        if not _allowed_file(file.filename):
+            return error_response(f"Unsupported format. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", 400)
+
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        ext = file.filename.rsplit(".", 1)[1].lower()
+        base_name = secure_filename(file.filename.rsplit(".", 1)[0])[:30] or "blog_img"
+        filename = f"{base_name}_{uuid.uuid4().hex[:8]}.{ext}"
+        save_path = os.path.join(UPLOAD_DIR, filename)
+        file.save(save_path)
+
+        # Public relative URL
+        media_url = f"/api/v1/blogs/media/{filename}"
+        return api_response(
+            data={"url": media_url, "filename": filename, "size": os.path.getsize(save_path)},
+            message="Image uploaded successfully to server storage",
+            status_code=201,
+        )
+    except Exception as e:
+        return error_response(f"Image upload failed: {str(e)}", 500)
+
+
+@blog_bp.route("/media/<path:filename>", methods=["GET"])
+def serve_blog_media(filename):
+    """Serve uploaded blog media directly from local disk storage."""
+    try:
+        return send_from_directory(UPLOAD_DIR, filename)
+    except Exception as e:
+        return error_response(f"Media file not found: {str(e)}", 404)
 
 
 @blog_bp.route("", methods=["GET"])
