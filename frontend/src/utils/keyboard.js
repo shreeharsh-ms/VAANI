@@ -1,6 +1,6 @@
 /**
  * Universal keyboard matching helper supporting macOS Option (⌥) dead keys,
- * Windows Alt combinations, and physical e.code events.
+ * Windows Alt combinations, physical e.code events, and browser shortcut overrides.
  */
 
 export const isKey = (e, targetKey) => {
@@ -34,29 +34,80 @@ export const isKey = (e, targetKey) => {
   if (target === 'k') {
     return e.code === 'KeyK' || e.key === 'k' || e.key === 'K';
   }
+  if (target === 'b') {
+    return e.code === 'KeyB' || e.key === 'b' || e.key === 'B' || e.key === '∫';
+  }
   if (target === 'i') {
     return e.code === 'KeyI' || e.key === 'i' || e.key === 'I' || e.key === 'ˆ';
   }
 
   // Digits 1 to 9 (handling standard number row, numpad, and Mac Option symbols)
   if (/^[1-9]$/.test(target)) {
-    return (
-      e.code === `Digit${target}` ||
-      e.code === `Numpad${target}` ||
-      e.key === target ||
-      (target === '1' && e.key === '¡') ||
-      (target === '2' && e.key === '™') ||
-      (target === '3' && e.key === '£') ||
-      (target === '4' && e.key === '¢') ||
-      (target === '5' && e.key === '∞') ||
-      (target === '6' && e.key === '§')
-    );
+    const num = parseInt(target, 10);
+    return getShortcutNumber(e) === num;
   }
 
   return e.code?.toLowerCase() === `key${target}` || e.key?.toLowerCase() === target;
 };
 
+/**
+ * Robustly extracts a numeric digit 1-9 from any keyboard event.
+ * Handles:
+ * - e.code: 'Digit1'..'Digit9', 'Numpad1'..'Numpad9'
+ * - e.key: '1'..'9'
+ * - macOS Option dead keys: '¡', '™', '£', '¢', '∞', '§', '¶', '•', 'ª'
+ */
+export const getShortcutNumber = (e) => {
+  if (!e) return null;
+
+  // 1. Check physical key code (independent of modifier changes to e.key)
+  if (e.code) {
+    const digitMatch = e.code.match(/^Digit([1-9])$/);
+    if (digitMatch) return parseInt(digitMatch[1], 10);
+    const numpadMatch = e.code.match(/^Numpad([1-9])$/);
+    if (numpadMatch) return parseInt(numpadMatch[1], 10);
+  }
+
+  // 2. Check e.key
+  if (e.key && /^[1-9]$/.test(e.key)) {
+    return parseInt(e.key, 10);
+  }
+
+  // 3. Check macOS Option/Alt characters generated when pressing Option + 1..9
+  const macOptionMap = {
+    '¡': 1,
+    '™': 2,
+    '£': 3,
+    '¢': 4,
+    '∞': 5,
+    '§': 6,
+    '¶': 7,
+    '•': 8,
+    'ª': 9,
+  };
+  if (e.key && macOptionMap[e.key]) {
+    return macOptionMap[e.key];
+  }
+
+  return null;
+};
+
 export const isAlt = (e) => Boolean(e.altKey);
 export const isCmdOrCtrl = (e) => Boolean(e.ctrlKey || e.metaKey);
 
-export default { isKey, isAlt, isCmdOrCtrl };
+/**
+ * Returns true if the user is currently typing in an input, textarea, select, or contentEditable element.
+ */
+export const isUserTyping = (e) => {
+  if (!e || !e.target) return false;
+  const target = e.target;
+  const tag = target.tagName?.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+  if (target.isContentEditable) return true;
+  if (typeof target.closest === 'function') {
+    return Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+  }
+  return false;
+};
+
+export default { isKey, isAlt, isCmdOrCtrl, getShortcutNumber, isUserTyping };

@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Toast from '../components/feedback/Toast';
 import { ROUTES } from '../constants';
+import { getShortcutNumber, isUserTyping, isKey } from '../utils/keyboard';
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -10,60 +11,64 @@ export const DashboardLayout = () => {
 
   const isHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
 
-  // Global Ctrl + 1..9, Ctrl + B (or ⌘ equivalents) shortcut listener: Redirect from ANY page of admin panel
+  // Global Fast Navigation: Ctrl+1..9, Cmd+1..9, Alt+1..9, Ctrl+B, and direct 1..9
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
-      // Don't intercept if user is typing text in an input or textarea
-      const tag = e.target?.tagName?.toLowerCase();
-      const isInput = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
+      // Never intercept when user is typing in inputs, textareas, or contenteditables
+      if (isUserTyping(e)) return;
 
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        if (e.key.toLowerCase() === 'b' && !isInput) {
-          e.preventDefault();
-          navigate(ROUTES.DASHBOARD.HOME);
-          return;
-        }
-
-        const navMap = {
-          '1': ROUTES.DASHBOARD.HOME,
-          '2': ROUTES.DASHBOARD.OVERVIEW,
-          '3': ROUTES.DASHBOARD.APPOINTMENTS,
-          '4': ROUTES.DASHBOARD.PATIENTS,
-          '5': ROUTES.DASHBOARD.REPORTS,
-          '6': ROUTES.DASHBOARD.BILLING,
-          '7': ROUTES.DASHBOARD.INVENTORY,
-          '8': ROUTES.DASHBOARD.RECALLS,
-          '9': ROUTES.DASHBOARD.SETTINGS,
-        };
-
-        if (navMap[e.key] && !isInput) {
-          e.preventDefault();
-          navigate(navMap[e.key]);
-          return;
-        }
+      // Check for Home shortcut: Ctrl+B / Cmd+B / Alt+B
+      if ((e.ctrlKey || e.metaKey || e.altKey) && isKey(e, 'b')) {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(ROUTES.DASHBOARD.HOME);
+        return;
       }
 
-      if (e.altKey && !e.ctrlKey && !e.metaKey && !isInput) {
-        const altNavMap = {
-          '1': ROUTES.DASHBOARD.HOME,
-          '2': ROUTES.DASHBOARD.OVERVIEW,
-          '3': ROUTES.DASHBOARD.APPOINTMENTS,
-          '4': ROUTES.DASHBOARD.PATIENTS,
-          '5': ROUTES.DASHBOARD.REPORTS,
-          '6': ROUTES.DASHBOARD.BILLING,
-          '7': ROUTES.DASHBOARD.INVENTORY,
-          '8': ROUTES.DASHBOARD.RECALLS,
-          '9': ROUTES.DASHBOARD.SETTINGS,
-        };
-        if (altNavMap[e.key]) {
-          e.preventDefault();
-          navigate(altNavMap[e.key]);
-          return;
-        }
+      // Check numeric shortcuts 1..9
+      const num = getShortcutNumber(e);
+      if (!num || num < 1 || num > 9) return;
+
+      const navMap = {
+        1: ROUTES.DASHBOARD.HOME,
+        2: ROUTES.DASHBOARD.OVERVIEW,
+        3: ROUTES.DASHBOARD.APPOINTMENTS,
+        4: ROUTES.DASHBOARD.PATIENTS,
+        5: ROUTES.DASHBOARD.REPORTS,
+        6: ROUTES.DASHBOARD.BILLING,
+        7: ROUTES.DASHBOARD.INVENTORY,
+        8: ROUTES.DASHBOARD.RECALLS,
+        9: ROUTES.DASHBOARD.SETTINGS,
+      };
+
+      const targetPath = navMap[num];
+      if (!targetPath) return;
+
+      const hasModifier = e.ctrlKey || e.metaKey || e.altKey;
+
+      // 1. If any modifier is held (Ctrl+1, Cmd+1, Alt+1 / Option+1):
+      if (hasModifier) {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(targetPath);
+        return;
+      }
+
+      // 2. If NO modifier is held (user directly presses key 1, 2, 3..9):
+      // Only navigate if no modal dialog or full-screen overlay is currently active
+      const isModalOpen = Boolean(
+        document.querySelector('[role="dialog"], .fixed.inset-0.z-50, .fixed.inset-0.bg-black\\/50')
+      );
+      if (!isModalOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(targetPath);
       }
     };
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+
+    // Use capture phase ({ capture: true }) to intercept keys before child components stop propagation
+    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
   }, [navigate]);
 
   return (

@@ -32,87 +32,31 @@ export const Sidebar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Global Keyboard Shortcuts Listener (supports macOS Command ⌘ and Windows Ctrl combinations)
+  // Spotlight Search Shortcut Listener (Ctrl + K / Cmd + K)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't intercept if user is typing text in an input, textarea, or contentEditable
-      const tag = e.target?.tagName?.toLowerCase();
-      const isInput = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
-      if (isInput) return;
-
-      // Ctrl + 1..9 or Cmd + 1..9 -> Fast Directory Navigation
-      if (isCmdOrCtrl(e) && !e.shiftKey) {
-        const keyMap = {
-          '1': ROUTES.DASHBOARD.HOME,
-          '2': ROUTES.DASHBOARD.OVERVIEW,
-          '3': ROUTES.DASHBOARD.APPOINTMENTS,
-          '4': ROUTES.DASHBOARD.PATIENTS,
-          '5': ROUTES.DASHBOARD.REPORTS,
-          '6': ROUTES.DASHBOARD.BILLING,
-          '7': ROUTES.DASHBOARD.INVENTORY,
-          '8': ROUTES.DASHBOARD.RECALLS,
-          '9': ROUTES.DASHBOARD.SETTINGS,
-        };
-
-        if (keyMap[e.key]) {
-          e.preventDefault();
-          navigate(keyMap[e.key]);
-          return;
-        }
-
-        // Ctrl + B or Cmd + B -> Admin Home Screen
-        if (isKey(e, 'b')) {
-          e.preventDefault();
-          navigate(ROUTES.DASHBOARD.HOME);
-          return;
-        }
-
-        // Ctrl + K or Cmd + K -> Open Global Search
-        if (isKey(e, 'k')) {
-          e.preventDefault();
-          setIsSearchOpen((prev) => !prev);
-          return;
-        }
-      }
-
-      // Alt + 1..9 -> Fast Directory Navigation (Fallback)
-      if (isAlt(e)) {
-        const altMap = {
-          '1': ROUTES.DASHBOARD.HOME,
-          '2': ROUTES.DASHBOARD.OVERVIEW,
-          '3': ROUTES.DASHBOARD.APPOINTMENTS,
-          '4': ROUTES.DASHBOARD.PATIENTS,
-          '5': ROUTES.DASHBOARD.REPORTS,
-          '6': ROUTES.DASHBOARD.BILLING,
-          '7': ROUTES.DASHBOARD.INVENTORY,
-          '8': ROUTES.DASHBOARD.RECALLS,
-          '9': ROUTES.DASHBOARD.SETTINGS,
-          'r': ROUTES.DASHBOARD.RECALLS,
-          's': ROUTES.DASHBOARD.SETTINGS,
-        };
-        if (altMap[e.key.toLowerCase()]) {
-          e.preventDefault();
-          navigate(altMap[e.key.toLowerCase()]);
-          return;
-        }
+      if (isCmdOrCtrl(e) && isKey(e, 'k')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsSearchOpen((prev) => !prev);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, []);
 
-  // Primary ERP Navigation Items matching the SRS with numbered Ctrl shortcuts
+  // Primary ERP Navigation Items matching the SRS with numbered shortcuts
   const menuItems = [
-    { label: 'Home', path: ROUTES.DASHBOARD.HOME, icon: Home, num: 1, shortcut: 'Ctrl+1 / ⌘1' },
-    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, num: 2, shortcut: 'Ctrl+2 / ⌘2' },
-    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, num: 3, shortcut: 'Ctrl+3 / ⌘3' },
-    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, num: 4, shortcut: 'Ctrl+4 / ⌘4' },
-    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, num: 5, shortcut: 'Ctrl+5 / ⌘5' },
-    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, num: 6, shortcut: 'Ctrl+6 / ⌘6' },
-    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, num: 7, shortcut: 'Ctrl+7 / ⌘7' },
-    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, num: 8, shortcut: 'Ctrl+8 / ⌘8' },
-    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, num: 9, shortcut: 'Ctrl+9 / ⌘9' },
+    { label: 'Home', path: ROUTES.DASHBOARD.HOME, icon: Home, num: 1, shortcut: '1 or Ctrl+1 / Alt+1' },
+    { label: 'Overview', path: ROUTES.DASHBOARD.OVERVIEW, icon: LayoutDashboard, num: 2, shortcut: '2 or Ctrl+2 / Alt+2' },
+    { label: 'Appointments', path: ROUTES.DASHBOARD.APPOINTMENTS, icon: CalendarCheck, num: 3, shortcut: '3 or Ctrl+3 / Alt+3' },
+    { label: 'Patients', path: ROUTES.DASHBOARD.PATIENTS, icon: Users, num: 4, shortcut: '4 or Ctrl+4 / Alt+4' },
+    { label: 'Clinical Records', path: ROUTES.DASHBOARD.REPORTS, icon: FileText, num: 5, shortcut: '5 or Ctrl+5 / Alt+5' },
+    { label: 'Billing', path: ROUTES.DASHBOARD.BILLING, icon: IndianRupee, num: 6, shortcut: '6 or Ctrl+6 / Alt+6' },
+    { label: 'Inventory', path: ROUTES.DASHBOARD.INVENTORY, icon: Box, num: 7, shortcut: '7 or Ctrl+7 / Alt+7' },
+    { label: 'Recalls', path: ROUTES.DASHBOARD.RECALLS, icon: RotateCcw, num: 8, shortcut: '8 or Ctrl+8 / Alt+8' },
+    { label: 'Settings', path: ROUTES.DASHBOARD.SETTINGS, icon: Settings, num: 9, shortcut: '9 or Ctrl+9 / Alt+9' },
   ];
 
   const handleLogout = async () => {
