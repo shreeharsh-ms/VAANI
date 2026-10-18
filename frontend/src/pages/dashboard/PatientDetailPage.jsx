@@ -1570,7 +1570,37 @@ export const PatientDetailPage = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Consents Card Feed (md:hidden) */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {consents?.map((c) => (
+                <div key={c.id} className="p-3 hover:bg-purple-50/20 transition-colors space-y-1.5">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <span className="font-bold text-slate-900 text-xs">{c.category || c.type}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider shrink-0 ${
+                      c.status === 'GRANTED'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}>
+                      {c.status}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-tight">{c.legalBasis}</p>
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 pt-1 border-t border-slate-100">
+                    <span>Grantor: <strong className="text-slate-800">{c.grantor}</strong></span>
+                    <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-mono font-semibold text-[10px]">
+                      {c.method}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-0.5">
+                    <span>{c.timestamp}</span>
+                    <span className="truncate max-w-[150px]" title={c.hash}>Hash: {c.hash ? c.hash.slice(0, 12) + '…' : '—'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Format (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
@@ -2096,7 +2126,7 @@ export const PatientDetailPage = () => {
                   <div className="flex items-center gap-2">
                     <History className="w-4 h-4 text-purple-900" />
                     <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
-                      3.1 Early Developmental History (EDH) Assessment Record (RP-CLN-EDH)
+                      Early Developmental History (EDH) Record
                     </span>
                     <span className="font-mono text-[10px] text-purple-900 bg-purple-100 px-2 py-0.5 rounded font-extrabold border border-purple-300">
                       {edhReport.report_number || 'RP-CLN-EDH'}
@@ -2253,7 +2283,7 @@ export const PatientDetailPage = () => {
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Dispense / Link Device</span>
+                  <span>Dispense / Link Device</span>
                 </button>
               </div>
             </div>
@@ -2357,7 +2387,7 @@ export const PatientDetailPage = () => {
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-purple-900" />
                   <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
-                    5.1 Active Clinical Rehabilitation Plans &amp; SMART Objectives
+                    Active Clinical Rehabilitation Plans &amp; SMART Objectives
                   </span>
                   <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {therapyPlans.length} {therapyPlans.length === 1 ? 'Active Plan' : 'Active Plans'}
@@ -2371,7 +2401,7 @@ export const PatientDetailPage = () => {
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5 text-purple-700" />
-                    <span>+ Add SOAP Note</span>
+                    <span>Add SOAP Note</span>
                   </button>
 
                   <button
@@ -2380,7 +2410,7 @@ export const PatientDetailPage = () => {
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ Create Rehabilitation Plan &amp; Goals</span>
+                    <span>Create Rehabilitation Plan</span>
                   </button>
                 </div>
               </div>
@@ -2591,38 +2621,40 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'billing' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Billed</span>
-                <span className="font-mono text-lg font-bold text-slate-900">{formatCurrency(financial?.totalBilled || 0)}</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="bg-white border border-slate-200 rounded-lg p-2 sm:p-3 text-center shadow-2xs">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Total Billed</span>
+                <span className="font-mono text-xs sm:text-lg font-bold text-slate-900 block truncate">{formatCurrency(financial?.totalBilled || 0)}</span>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-2xs">
-                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Total Paid</span>
-                <span className="font-mono text-lg font-bold text-emerald-700">{formatCurrency(financial?.totalPaid || 0)}</span>
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-2 sm:p-3 text-center shadow-2xs">
+                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-wider block truncate">Total Paid</span>
+                <span className="font-mono text-xs sm:text-lg font-bold text-emerald-700 block truncate">{formatCurrency(financial?.totalPaid || 0)}</span>
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-3 text-center shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Balance Due</span>
-                <span className="font-mono text-lg font-bold text-slate-900">{formatCurrency(financial?.balance || 0)}</span>
+              <div className="bg-white border border-slate-200 rounded-lg p-2 sm:p-3 text-center shadow-2xs">
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Balance Due</span>
+                <span className="font-mono text-xs sm:text-lg font-bold text-slate-900 block truncate">{formatCurrency(financial?.balance || 0)}</span>
               </div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
               {/* Header Strip */}
-              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2.5">
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="w-4 h-4 text-purple-900" />
-                  <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
-                    Statutory GST Tax Invoices &amp; Official Receipts
+              <div className="px-3 sm:px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-6 h-6 rounded-md bg-purple-900 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <IndianRupee className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="font-bold text-xs sm:text-sm text-purple-950">
+                    Invoices &amp; Official Receipts
                   </span>
-                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
                     {patientInvoices.length} {patientInvoices.length === 1 ? 'Invoice' : 'Invoices'}
                   </span>
-                  <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold border border-emerald-200">
+                  <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold border border-emerald-200 whitespace-nowrap shrink-0">
                     Healthcare 0% Exempt (SAC 9993)
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     type="button"
                     onClick={() => {
@@ -2641,7 +2673,7 @@ export const PatientDetailPage = () => {
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ New Invoice</span>
+                    <span>New Invoice</span>
                   </Link>
                 </div>
               </div>
@@ -2715,8 +2747,124 @@ export const PatientDetailPage = () => {
                 </div>
               </div>
 
-              {/* Invoices Table */}
-              <div className="overflow-x-auto">
+              {/* Mobile Card Feed (md:hidden) */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {paginatedPatientInvoices.length > 0 ? (
+                  paginatedPatientInvoices.map((inv) => (
+                    <div key={inv.invoiceNo || inv.id} className="p-3 hover:bg-purple-50/20 transition-colors space-y-2">
+                      <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                        <span className="font-mono text-xs font-bold text-purple-950 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                          {inv.invoiceNo}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {inv.date}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ml-auto ${
+                          inv.status === 'PAID'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}>
+                          {inv.status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-slate-900 text-xs leading-snug">
+                            {inv.service}
+                          </h4>
+                          <span className="block text-[10px] text-slate-400 mt-0.5 font-sans">
+                            SAC: 9993 • Outpatient Healthcare Assessment
+                          </span>
+                          <span className="block text-[10px] text-slate-500 font-mono mt-0.5">
+                            Ref: {inv.receiptNo || inv.refNo || 'NPCI-UPI'}
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-mono text-sm sm:text-base font-bold text-slate-900 block">
+                            ₹{Number(inv.totalAmount || inv.amount || 0).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Mobile Touch-Friendly Action Buttons */}
+                      <div className="grid grid-cols-4 gap-1.5 pt-1.5 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPatientInvoice(inv)}
+                          className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          title="View Voucher"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadPatientInvoice(inv)}
+                          className="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          title="Print / Download Official Tax Invoice"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>PDF</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsAppPatientInvoice(inv)}
+                          className="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                          title="Send WhatsApp"
+                        >
+                          <WhatsAppIcon className="w-3.5 h-3.5" />
+                          <span>Share</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditPatientInvoice(inv)}
+                          className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          title="Edit Invoice"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                      </div>
+
+                      {/* Secondary row for Mail and Delete */}
+                      <div className="flex items-center justify-end gap-3 text-[11px] text-slate-500 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenMailPatientInvoice(inv)}
+                          className="inline-flex items-center gap-1 text-purple-700 hover:underline cursor-pointer font-medium"
+                        >
+                          <Mail className="w-3 h-3" />
+                          <span>Email Invoice</span>
+                        </button>
+                        <span>•</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInvoiceToDelete(inv);
+                            setIsDeleteInvoiceModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-rose-600 hover:underline cursor-pointer font-medium"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-slate-400">
+                    <p className="font-semibold text-slate-700 text-xs">No matching invoices found for the selected date range.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Adjust your date filter or create a new invoice.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Spreadsheet Table Format (hidden md:block) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-slate-100/90 text-[10px] font-bold text-slate-700 uppercase border-b border-slate-200">
                     <tr>
