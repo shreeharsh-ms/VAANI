@@ -28,33 +28,27 @@ import { communicationService } from '../../services/communicationService';
 export const getClinicSmtpStatus = () => {
   try {
     const raw = localStorage.getItem('vaani_clinic_settings_v1');
-    if (!raw) {
-      return {
-        isConfigured: false,
-        hasPassword: false,
-        reason: 'Clinic settings have not been customized yet.',
-        smtp: null,
-      };
-    }
-    const parsed = JSON.parse(raw);
-    const smtp = parsed?.smtp;
-    if (!smtp) {
-      return {
-        isConfigured: false,
-        hasPassword: false,
-        reason: 'SMTP configuration block is missing.',
-        smtp: null,
-      };
-    }
+    const parsed = raw ? JSON.parse(raw) : null;
+    const smtp = parsed?.smtp || {
+      host: 'smtp.gmail.com',
+      port: 587,
+      senderEmail: 'info@vaaniclinic.com',
+      hasPasswordStored: true,
+    };
+
     const hasHost = Boolean(smtp.host && smtp.host.trim());
-    const hasSender = Boolean(smtp.senderEmail && smtp.senderEmail.trim());
-    const hasPassword = Boolean(smtp.password && smtp.password.trim());
+    const hasSender = Boolean(
+      (smtp.senderEmail && smtp.senderEmail.trim()) || (smtp.username && smtp.username.trim())
+    );
+    const hasPassword = Boolean(
+      (smtp.password && smtp.password.trim()) || smtp.hasPasswordStored
+    );
 
     if (!hasHost || !hasSender) {
       return {
         isConfigured: false,
         hasPassword: false,
-        reason: 'SMTP Host or Sender Email is empty.',
+        reason: 'SMTP Host or Sender Email is empty. Configure in Settings > Email & SMTP.',
         smtp,
       };
     }
@@ -382,6 +376,7 @@ export const EmailDispatchModal = ({
   const [updateProfile, setUpdateProfile] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [smtpPasswordInput, setSmtpPasswordInput] = useState('');
+  const [sendError, setSendError] = useState(null);
 
   const smtpStatus = useMemo(() => getClinicSmtpStatus(), [isOpen]);
 
@@ -396,6 +391,7 @@ export const EmailDispatchModal = ({
       setMessage(defaultMessage || '');
       setUpdateProfile(isEmailMissing || Boolean(uhid));
       setIsSending(false);
+      setSendError(null);
     }
   }, [isOpen, recipientEmail, defaultSubject, defaultMessage, isEmailMissing, recipientName, uhid]);
 
@@ -434,6 +430,7 @@ export const EmailDispatchModal = ({
 
   const handleSendViaSmtp = async (e) => {
     e?.preventDefault();
+    setSendError(null);
 
     if (!email || !email.includes('@')) {
       notify.error('Please enter a valid email address.');
@@ -442,7 +439,7 @@ export const EmailDispatchModal = ({
 
     const effectivePassword = (smtpPasswordInput || smtpStatus.smtp?.password || '').trim();
 
-    if (!effectivePassword) {
+    if (!effectivePassword && !smtpStatus.smtp?.hasPasswordStored) {
       notify.info('No SMTP App Password provided. Opening default system email client...');
       handleSendViaClient();
       return;
@@ -450,7 +447,7 @@ export const EmailDispatchModal = ({
 
     const clinicSmtp = {
       ...smtpStatus.smtp,
-      password: effectivePassword,
+      password: effectivePassword || undefined,
     };
 
     if (smtpPasswordInput.trim()) {
@@ -514,7 +511,9 @@ export const EmailDispatchModal = ({
 
       onClose();
     } catch (err) {
-      notify.error(err.message || 'Failed to dispatch email via clinic SMTP gateway.');
+      const errorMsg = err.message || 'Failed to dispatch email via clinic SMTP gateway.';
+      setSendError(errorMsg);
+      notify.error(errorMsg);
     } finally {
       setIsSending(false);
     }
@@ -528,6 +527,67 @@ export const EmailDispatchModal = ({
       size="md"
     >
       <form onSubmit={handleSendViaSmtp} className="space-y-3.5 font-sans text-xs max-h-[calc(85vh-90px)] overflow-y-auto px-1 pr-2">
+        {/* Send Error Guidance Banner */}
+        {sendError && (
+          <div className="p-3 rounded-lg bg-rose-50 border-2 border-rose-300 space-y-2.5">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold text-rose-950 text-xs">Email Delivery Failed</p>
+                <p className="text-[11px] text-rose-900 leading-snug">{sendError}</p>
+              </div>
+            </div>
+
+            {(sendError.toLowerCase().includes('google') ||
+              sendError.toLowerCase().includes('app password') ||
+              sendError.toLowerCase().includes('closed') ||
+              sendError.toLowerCase().includes('535') ||
+              sendError.toLowerCase().includes('authentication')) && (
+              <div className="p-2.5 bg-white rounded border border-rose-200 text-[11px] text-slate-700 space-y-1">
+                <p className="font-bold text-rose-950">How to fix Gmail SMTP authentication:</p>
+                <ol className="list-decimal pl-4 space-y-0.5 text-[10.5px] text-slate-600">
+                  <li>Google requires a 16-character <strong>App Password</strong> (not your standard Gmail login password).</li>
+                  <li>
+                    Open{' '}
+                    <a
+                      href="https://myaccount.google.com/apppasswords"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-purple-700 underline inline-flex items-center gap-0.5"
+                    >
+                      myaccount.google.com/apppasswords
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </li>
+                  <li>Generate an App Password named <em>&quot;Vaani Clinic&quot;</em> and enter the 16-character code in Settings &gt; Email &amp; SMTP.</li>
+                </ol>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-1 border-t border-rose-200">
+              <button
+                type="button"
+                onClick={handleSendViaClient}
+                className="px-3 py-1.5 rounded bg-purple-700 hover:bg-purple-800 text-white font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                title="Send using Apple Mail, Microsoft Outlook, or default webmail"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open in System Mail App (Mailto) Now</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/dashboard/settings?tab=smtp');
+                }}
+                className="px-2.5 py-1.5 rounded bg-white hover:bg-rose-100/50 text-rose-900 border border-rose-300 font-semibold text-[11px] cursor-pointer transition-colors"
+              >
+                Settings &gt; SMTP →
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* SMTP Gateway Status Warning / Banner */}
         {!smtpStatus.isConfigured ? (
           <div className="p-3 rounded-lg bg-rose-50 border border-rose-300 space-y-2">

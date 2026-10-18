@@ -19,9 +19,15 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.graphics.shapes import Drawing, Rect, Line, Circle, String
 
 try:
-    from app.services.settings_service import SettingsService
+    from .settings_service import SettingsService
 except ImportError:
-    from services.settings_service import SettingsService
+    try:
+        from app.services.settings_service import SettingsService
+    except ImportError:
+        try:
+            from backend.app.services.settings_service import SettingsService
+        except ImportError:
+            from services.settings_service import SettingsService
 
 
 class OfficialFooterBanner(Flowable):
@@ -119,17 +125,41 @@ class EmailService:
         if not password:
             raise ValueError("SMTP password / app password is required.")
 
-        if "SSL" in encryption or port == 465:
-            server = smtplib.SMTP_SSL(host, port, timeout=timeout)
-            server.ehlo()
-        else:
-            server = smtplib.SMTP(host, port, timeout=timeout)
-            server.ehlo()
-            if "TLS" in encryption or port == 587:
-                server.starttls()
+        try:
+            if "SSL" in encryption or port == 465:
+                server = smtplib.SMTP_SSL(host, port, timeout=timeout)
                 server.ehlo()
+            else:
+                server = smtplib.SMTP(host, port, timeout=timeout)
+                server.ehlo()
+                if "TLS" in encryption or port == 587:
+                    server.starttls()
+                    server.ehlo()
+        except Exception as e:
+            raise ValueError(f"Unable to connect to SMTP server '{host}:{port}': {str(e)}") from e
 
-        server.login(username, password)
+        try:
+            server.login(username, password)
+        except smtplib.SMTPServerDisconnected as e:
+            if "gmail" in host.lower() or "google" in host.lower():
+                raise ValueError(
+                    "Google SMTP connection dropped. Gmail requires a dedicated 16-character 'Google App Password' "
+                    "(e.g. 'abcd efgh ijkl mnop') with 2-Step Verification enabled, not your standard login password. "
+                    "Generate an App Password at: https://myaccount.google.com/apppasswords and save it in Settings > Email & SMTP."
+                ) from e
+            raise ValueError(f"SMTP Server unexpectedly closed connection during authentication: {str(e)}") from e
+        except smtplib.SMTPAuthenticationError as e:
+            if "gmail" in host.lower() or "google" in host.lower():
+                raise ValueError(
+                    "Google SMTP Authentication Failed (535): Invalid password or username. "
+                    "Gmail requires a 16-character Google App Password (with 2-Step Verification enabled). "
+                    "Generate one at: https://myaccount.google.com/apppasswords"
+                ) from e
+            err_msg = e.smtp_error.decode('utf-8', errors='ignore') if hasattr(e, 'smtp_error') and isinstance(e.smtp_error, bytes) else str(e)
+            raise ValueError(f"SMTP Authentication Failed: {err_msg}") from e
+        except Exception as e:
+            raise ValueError(f"SMTP Authentication Error: {str(e)}") from e
+
         return server, username
 
     @staticmethod

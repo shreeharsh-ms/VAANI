@@ -173,8 +173,21 @@ class CommunicationService {
       // 1. Primary: Flask Backend (/api/v1/communications/send-email)
       response = await apiClient.post('/communications/send-email', payload);
     } catch (backendErr) {
-      // 2. Secondary fallback: Vercel serverless function
-      console.warn('Primary backend email dispatch failed, attempting serverless fallback:', backendErr);
+      // If backend responded with 4xx client/validation/auth error, throw directly
+      if (backendErr.status && backendErr.status >= 400 && backendErr.status < 500) {
+        const errorDetail = backendErr.message || 'SMTP dispatch rejected by server.';
+        this.logDispatch({
+          recipient: toEmail,
+          subject,
+          host: `${config.host}:${config.port || 587}`,
+          status: 'FAILED',
+          details: errorDetail,
+        });
+        throw new Error(errorDetail);
+      }
+
+      // 2. Secondary fallback: Vercel serverless function (only when backend is completely offline/unreachable)
+      console.warn('Primary backend unreachable, attempting serverless fallback:', backendErr);
       try {
         const res = await fetch('/api/communications/send-email', {
           method: 'POST',

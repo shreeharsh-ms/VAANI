@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Key,
   QrCode,
   Smartphone,
   Mail,
@@ -390,7 +391,15 @@ export const SettingsPage = () => {
             contact: { ...prev.contact, ...(res.data.contact || {}) },
             hours: { ...prev.hours, ...(res.data.hours || {}) },
             social: { ...prev.social, ...(res.data.social || {}) },
+            smtp: { ...prev.smtp, ...(res.data.smtp || {}) },
           }));
+          if (res.data.smtp) {
+            setSmtpForm((prev) => ({
+              ...prev,
+              ...res.data.smtp,
+              hasPasswordStored: Boolean(res.data.smtp.password || res.data.smtp.hasPasswordStored),
+            }));
+          }
         }
       })
       .catch((err) => console.warn('Backend settings fetch deferred:', err));
@@ -2826,6 +2835,36 @@ export const SettingsPage = () => {
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span>A password is currently stored securely in database.</span>
                     </p>
+                  )}
+
+                  {/* Gmail App Password Setup Instructions */}
+                  {(smtpForm.host?.toLowerCase().includes('gmail') || smtpForm.host?.toLowerCase().includes('google') || !smtpForm.host) && (
+                    <div className="mt-2.5 p-3 bg-purple-50/80 border border-purple-200 rounded text-[11px] text-purple-950 space-y-1.5">
+                      <p className="font-bold flex items-center gap-1.5 text-purple-900">
+                        <Key className="w-3.5 h-3.5 text-purple-700" />
+                        <span>Google Workspace / Gmail App Password Required</span>
+                      </p>
+                      <p className="text-purple-800 leading-snug">
+                        Google prohibits regular Gmail account passwords for automated SMTP delivery. You must create a 16-character <strong>Google App Password</strong>:
+                      </p>
+                      <ol className="list-decimal pl-4 space-y-1 text-slate-700">
+                        <li>Turn <strong>ON</strong> 2-Step Verification in your Google Account Security settings.</li>
+                        <li>
+                          Visit{' '}
+                          <a
+                            href="https://myaccount.google.com/apppasswords"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-purple-700 underline hover:text-purple-900 inline-flex items-center gap-0.5"
+                          >
+                            myaccount.google.com/apppasswords
+                            <ExternalLink className="w-2.5 h-2.5 inline" />
+                          </a>
+                        </li>
+                        <li>Type app name <em>&quot;Vaani Clinic ERP&quot;</em> and click <strong>Create</strong>.</li>
+                        <li>Copy the generated 16-character code (e.g. <code>abcd efgh ijkl mnop</code>) and paste it into the password field above.</li>
+                      </ol>
+                    </div>
                   )}
                 </div>
 
