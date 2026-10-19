@@ -1475,9 +1475,6 @@ export const PatientDetailPage = () => {
                       <span>1.3 Referral Partner &amp; ABHA Health Account</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                        DPDP Compliant
-                      </span>
                       <button
                         type="button"
                         onClick={() => handleOpenEditPatient('referral')}

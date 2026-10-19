@@ -17,9 +17,12 @@ import {
   ShieldCheck,
   FileText,
   User,
+  MessageSquare,
+  Mail,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import Modal from '../../components/common/Modal';
+import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
 import PatientForm from '../../components/forms/PatientForm';
 import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
@@ -184,6 +187,57 @@ export const PatientsPage = () => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Communication Modals State (WhatsApp & Email)
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedPatientForWhatsApp, setSelectedPatientForWhatsApp] = useState(null);
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [selectedPatientForMail, setSelectedPatientForMail] = useState(null);
+
+  const handleOpenWhatsApp = (patient) => {
+    setSelectedPatientForWhatsApp(patient);
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const handleOpenMail = (patient) => {
+    setSelectedPatientForMail(patient);
+    setIsMailModalOpen(true);
+  };
+
+  const handleWhatsAppSuccess = ({ phone }) => {
+    if (selectedPatientForWhatsApp && phone && phone !== selectedPatientForWhatsApp.phone) {
+      const updated = patients.map((p) =>
+        p.id === selectedPatientForWhatsApp.id ? { ...p, phone } : p
+      );
+      setPatients(updated);
+      localStorage.setItem('vaani_patients_v1', JSON.stringify(updated));
+    }
+  };
+
+  const handleMailSuccess = ({ email }) => {
+    if (selectedPatientForMail && email && email !== selectedPatientForMail.email) {
+      const updated = patients.map((p) =>
+        p.id === selectedPatientForMail.id ? { ...p, email } : p
+      );
+      setPatients(updated);
+      localStorage.setItem('vaani_patients_v1', JSON.stringify(updated));
+    }
+  };
+
+  const getPatientWhatsAppMessage = (patient) => {
+    if (!patient) return '';
+    return `Dear ${patient.full_name},\nGreetings from VAANI Speech & Hearing Clinic. We are reaching out regarding your patient record (UHID: ${patient.uhid}). Please let us know if you need any assistance, appointment scheduling, or diagnostic reports.\n\nWarm regards,\nVAANI Clinic Team\n+91 94220 11223`;
+  };
+
+  const getPatientEmailSubject = (patient) => {
+    if (!patient) return 'VAANI Clinic - Patient Communication';
+    return `VAANI Speech & Hearing Clinic - Patient Communication (${patient.uhid || ''})`;
+  };
+
+  const getPatientEmailBody = (patient) => {
+    if (!patient) return '';
+    return `Dear ${patient.full_name},\n\nGreetings from VAANI Speech & Hearing Clinic.\n\nWe are reaching out to you regarding your clinical profile under UHID: ${patient.uhid}.\n\nIf you have any questions regarding your consultations, diagnostic records, or wish to schedule an appointment, please feel free to reach out to us.\n\nWarm regards,\nVAANI Speech & Hearing Clinic\nPhone: +91 94220 11223\nEmail: contact@vaaniclinic.com`;
+  };
 
   // Quick Action triggers from Bottom Bar (URL param or CustomEvent)
   useEffect(() => {
@@ -563,13 +617,31 @@ export const PatientsPage = () => {
                 </a>
               </div>
 
-              {/* Bottom Row: Diagnosis + View Dossier Button + Delete */}
+              {/* Bottom Row: Diagnosis + Action Buttons (WhatsApp, Mail, Dossier, Trash) */}
               <div className="pt-1 border-t border-slate-100 flex items-center justify-between gap-1.5">
                 <span className="text-[10px] text-slate-600 truncate flex-1 font-medium bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
                   {p.diagnosis || 'Clinical evaluation in progress'}
                 </span>
 
                 <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenWhatsApp(p)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Send WhatsApp message"
+                  >
+                    <MessageSquare className="w-3 h-3 text-emerald-600" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenMail(p)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Send Email"
+                  >
+                    <Mail className="w-3 h-3 text-purple-700" />
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
@@ -632,7 +704,7 @@ export const PatientsPage = () => {
                     {sortField === 'created_at' ? (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-purple-700" /> : <ArrowDown className="w-3 h-3 text-purple-700" />) : <ArrowUpDown className="w-3 h-3 text-slate-400" />}
                   </div>
                 </th>
-                <th className="py-2 px-2.5 w-16 text-center">Action</th>
+                <th className="py-2 px-2.5 w-28 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-normal">
@@ -702,10 +774,34 @@ export const PatientsPage = () => {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/dashboard/patients/${p.uhid || p.id}`);
+                              handleOpenWhatsApp(p);
                             }}
                             {...getButtonProps(idx, 0)}
-                            className={`p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            className={`p-1 rounded text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer ${getButtonProps(idx, 0).className}`}
+                            title="Send WhatsApp Message"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenMail(p);
+                            }}
+                            {...getButtonProps(idx, 1)}
+                            className={`p-1 rounded text-purple-700 hover:text-purple-900 hover:bg-purple-50 transition-colors cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            title="Send Email"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/patients/${p.uhid || p.id}`);
+                            }}
+                            {...getButtonProps(idx, 2)}
+                            className={`p-1 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer ${getButtonProps(idx, 2).className}`}
                             title="Open Clinical Dossier & EMR Record Page"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -716,8 +812,8 @@ export const PatientsPage = () => {
                               e.stopPropagation();
                               handleDelete(p.id);
                             }}
-                            {...getButtonProps(idx, 1)}
-                            className={`p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer ${getButtonProps(idx, 1).className}`}
+                            {...getButtonProps(idx, 3)}
+                            className={`p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer ${getButtonProps(idx, 3).className}`}
                             title="Delete patient record"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -799,6 +895,41 @@ export const PatientsPage = () => {
           onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      {/* ── REUSABLE WHATSAPP DISPATCH MODAL ── */}
+      {selectedPatientForWhatsApp && (
+        <WhatsAppDispatchModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => {
+            setIsWhatsAppModalOpen(false);
+            setSelectedPatientForWhatsApp(null);
+          }}
+          recipientName={selectedPatientForWhatsApp.full_name}
+          recipientPhone={selectedPatientForWhatsApp.phone || selectedPatientForWhatsApp.guardian_phone || ''}
+          uhid={selectedPatientForWhatsApp.uhid}
+          patientId={selectedPatientForWhatsApp.id}
+          defaultMessage={getPatientWhatsAppMessage(selectedPatientForWhatsApp)}
+          onSuccess={handleWhatsAppSuccess}
+        />
+      )}
+
+      {/* ── REUSABLE EMAIL DISPATCH MODAL ── */}
+      {selectedPatientForMail && (
+        <EmailDispatchModal
+          isOpen={isMailModalOpen}
+          onClose={() => {
+            setIsMailModalOpen(false);
+            setSelectedPatientForMail(null);
+          }}
+          recipientName={selectedPatientForMail.full_name}
+          recipientEmail={selectedPatientForMail.email || selectedPatientForMail.guardian_email || ''}
+          uhid={selectedPatientForMail.uhid}
+          patientId={selectedPatientForMail.id}
+          defaultSubject={getPatientEmailSubject(selectedPatientForMail)}
+          defaultMessage={getPatientEmailBody(selectedPatientForMail)}
+          onSuccess={handleMailSuccess}
+        />
+      )}
 
     </div>
   );

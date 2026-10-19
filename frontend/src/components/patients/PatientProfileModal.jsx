@@ -307,7 +307,6 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
                 <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                   <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
                     <span>1.3 Referral Partner &amp; ABHA Health Account</span>
-                    <span className="text-[10px] text-slate-500 font-medium">DPDP Compliant</span>
                   </div>
                   <div className="p-3 space-y-2.5">
                     <div className="p-2 rounded bg-slate-50 border border-slate-200 space-y-1">
