@@ -724,36 +724,36 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleSaveReport}
-            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Save report to clinical records (Ctrl/Cmd + S)"
           >
-            <Save className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{existingReport ? 'Update' : 'Save'}</span>
+            <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+            <span className="hidden sm:inline truncate">{existingReport ? 'Update' : 'Save'}</span>
             <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-purple-800/80 text-[9px] rounded font-mono">⌘S</kbd>
           </button>
 
           <button
             type="button"
             onClick={handleOpenPreviewInNewTab}
-            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Open official report preview in new tab"
           >
-            <Eye className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-            <span className="truncate">Preview</span>
+            <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-purple-700 shrink-0" />
+            <span className="hidden sm:inline truncate">Preview</span>
           </button>
 
           <button
             type="button"
             onClick={triggerPrint}
-            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Print Official Document (Ctrl/Cmd + P)"
           >
-            <Printer className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Print PDF</span>
+            <Printer className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+            <span className="hidden sm:inline truncate">Print PDF</span>
             <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
           </button>
         </div>
@@ -2246,38 +2246,41 @@ export const ReportCreatePage = () => {
         </div>
 
         {/* Action Button Bar */}
-        <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+        <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Digital stamp linked to RCI CRR No. {formData.rciNumber}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center">
             <button
               type="button"
               onClick={handleSaveReport}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+              title={existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>{existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}</span>
+              <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+              <span className="hidden sm:inline">{existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleOpenPreviewInNewTab}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-800 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+              title="Preview in New Tab"
             >
-              <Eye className="w-3.5 h-3.5 text-purple-700" />
-              <span>Preview in New Tab</span>
+              <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-purple-700 shrink-0" />
+              <span className="hidden sm:inline">Preview in New Tab</span>
             </button>
 
             <button
               type="button"
               onClick={triggerPrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+              title="Print Official PDF"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Official PDF</span>
+              <Printer className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+              <span className="hidden sm:inline">Print Official PDF</span>
             </button>
           </div>
         </div>
