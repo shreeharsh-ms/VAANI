@@ -20,6 +20,8 @@ import {
   Activity,
   X,
   ListPlus,
+  ListFilter,
+  Plus,
   Edit3,
   Search,
   ChevronDown,
@@ -331,6 +333,36 @@ export const ReportCreatePage = () => {
     };
   });
 
+  // Prefilled sample data toggle state (Default ON; doctor can turn OFF to clear all report fields)
+  const [usePrefilledData, setUsePrefilledData] = useState(true);
+
+  const handleTogglePrefilledData = () => {
+    if (usePrefilledData) {
+      // Turn OFF: Erase all prefilled report data
+      setFormData((prev) => ({
+        ...prev,
+        parameters: {
+          rightEarAC: {},
+          rightEarBC: {},
+          leftEarAC: {},
+          leftEarBC: {},
+          provisionalDiagnosis: '',
+          recommendations: '',
+        },
+      }));
+      setUsePrefilledData(false);
+      notify.info('Prefilled data erased. Report inputs are now blank.');
+    } else {
+      // Turn ON: Restore prefilled sample data from active template
+      setFormData((prev) => ({
+        ...prev,
+        parameters: { ...(activeService?.defaultParameters || {}) },
+      }));
+      setUsePrefilledData(true);
+      notify.success('Prefilled sample data restored from template.');
+    }
+  };
+
   // Track previous service code to only reset parameters when user explicitly switches service template
   const previousServiceCodeRef = useRef(initialTypeCode);
 
@@ -372,11 +404,20 @@ export const ReportCreatePage = () => {
       if (s) {
         setFormData((prev) => ({
           ...prev,
-          parameters: { ...s.defaultParameters },
+          parameters: usePrefilledData
+            ? { ...s.defaultParameters }
+            : {
+                rightEarAC: {},
+                rightEarBC: {},
+                leftEarAC: {},
+                leftEarBC: {},
+                provisionalDiagnosis: '',
+                recommendations: '',
+              },
         }));
       }
     }
-  }, [selectedServiceCode]);
+  }, [selectedServiceCode, usePrefilledData]);
 
   // Keyboard shortcut handler (Cmd/Ctrl + S to save, Cmd/Ctrl + P to preview/print)
   useEffect(() => {
@@ -557,12 +598,13 @@ export const ReportCreatePage = () => {
   // Bullet point helpers for Clinical Impression & Recommendations
   const addBulletPoint = (fieldName) => {
     const currentVal = formData.parameters[fieldName] || '';
-    const trimmed = currentVal.trim();
     let newVal = '';
-    if (!trimmed) {
+    if (!currentVal.trim()) {
       newVal = '• ';
+    } else if (currentVal.endsWith('\n')) {
+      newVal = currentVal + '• ';
     } else {
-      newVal = trimmed + '\n• ';
+      newVal = currentVal + '\n• ';
     }
     handleParamChange(fieldName, newVal);
   };
@@ -873,14 +915,29 @@ export const ReportCreatePage = () => {
 
       {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR ── */}
       <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-2xs space-y-2.5 ${mobileViewMode === 'steps' && mobileStep !== 1 ? 'hidden' : 'block'}`}>
-        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 flex-wrap gap-2">
           <span className="text-[11px] sm:text-xs font-bold text-slate-800 tracking-wide flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             1. Select Clinical Service Template
           </span>
-          <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-            {CLINICAL_SERVICES.length} Templates
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleTogglePrefilledData}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-bold border transition-all cursor-pointer shadow-2xs touch-manipulation active:scale-95 ${
+                usePrefilledData
+                  ? 'bg-purple-100 text-purple-900 border-purple-300 hover:bg-purple-200'
+                  : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+              }`}
+              title={usePrefilledData ? 'Click to erase prefilled sample data and create report from scratch' : 'Click to load prefilled sample data from template'}
+            >
+              <span className={`w-2 h-2 rounded-full ${usePrefilledData ? 'bg-purple-700' : 'bg-slate-400'}`} />
+              <span>{usePrefilledData ? 'Prefilled Data: ON' : 'Prefilled Data: OFF (Blank)'}</span>
+            </button>
+            <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+              {CLINICAL_SERVICES.length} Templates
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
@@ -912,25 +969,29 @@ export const ReportCreatePage = () => {
         </div>
 
         {/* Report Reference, Date & Clinician */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100">
           <div>
             <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Report Reference &amp; Date
+              Report Reference #
             </label>
-            <div className="grid grid-cols-2 gap-1.5">
-              <input
-                type="text"
-                value={formData.reportNumber}
-                onChange={(e) => setFormData((prev) => ({ ...prev, reportNumber: e.target.value }))}
-                className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded-md px-3 py-2"
-              />
-              <input
-                type="date"
-                value={formData.reportDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, reportDate: e.target.value }))}
-                className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-md px-3 py-2"
-              />
-            </div>
+            <input
+              type="text"
+              value={formData.reportNumber}
+              onChange={(e) => setFormData((prev) => ({ ...prev, reportNumber: e.target.value }))}
+              className="w-full h-9 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded-md px-3 focus:border-purple-600 focus:outline-hidden box-border"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+              Date of Examination
+            </label>
+            <input
+              type="date"
+              value={formData.reportDate}
+              onChange={(e) => setFormData((prev) => ({ ...prev, reportDate: e.target.value }))}
+              className="w-full h-9 text-xs font-mono font-semibold text-slate-900 bg-white border border-slate-300 rounded-md px-3 focus:border-purple-600 focus:outline-hidden box-border"
+            />
           </div>
 
           <div>
@@ -941,7 +1002,7 @@ export const ReportCreatePage = () => {
               type="text"
               value={`${formData.examinerName} • CRR: ${formData.rciNumber}`}
               readOnly
-              className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-semibold text-purple-900 bg-purple-50/50 border border-purple-200 rounded-md px-3 py-2"
+              className="w-full h-9 text-xs font-semibold text-purple-900 bg-purple-50/50 border border-purple-200 rounded-md px-3 truncate box-border"
             />
           </div>
         </div>
@@ -2596,23 +2657,26 @@ export const ReportCreatePage = () => {
               <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
                 Clinical Impression &amp; Diagnosis *
               </label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => addBulletPoint('provisionalDiagnosis')}
-                  className="px-2 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Add new bullet point"
+                  className="h-6 px-1.5 sm:px-2 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                  title="Add new bullet point (+ Bullet)"
+                  aria-label="Add Bullet"
                 >
-                  <ListPlus className="w-3 h-3" />
-                  + Bullet
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Bullet</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => formatAsBullets('provisionalDiagnosis')}
-                  className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded transition-colors cursor-pointer"
+                  className="h-6 px-1.5 sm:px-2 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded flex items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 touch-manipulation"
                   title="Format existing lines into clean bullet points"
+                  aria-label="Format List"
                 >
-                  • Format List
+                  <ListFilter className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span className="hidden sm:inline">Format</span>
                 </button>
               </div>
             </div>
@@ -2634,23 +2698,26 @@ export const ReportCreatePage = () => {
               <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
                 Clinical Recommendations &amp; Follow-up Protocol *
               </label>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => addBulletPoint('recommendations')}
-                  className="px-2 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Add new bullet point"
+                  className="h-6 px-1.5 sm:px-2 text-[10px] font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded flex items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                  title="Add new bullet point (+ Bullet)"
+                  aria-label="Add Bullet"
                 >
-                  <ListPlus className="w-3 h-3" />
-                  + Bullet
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Bullet</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => formatAsBullets('recommendations')}
-                  className="px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded transition-colors cursor-pointer"
+                  className="h-6 px-1.5 sm:px-2 text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded flex items-center justify-center gap-1 transition-colors cursor-pointer active:scale-95 touch-manipulation"
                   title="Format existing lines into clean bullet points"
+                  aria-label="Format List"
                 >
-                  • Format List
+                  <ListFilter className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span className="hidden sm:inline">Format</span>
                 </button>
               </div>
             </div>

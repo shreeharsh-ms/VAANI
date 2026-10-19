@@ -1679,5 +1679,26 @@ export const getPatientClinicalDossier = (patient) => {
     }
   }
 
+  // Communication & Linguistic Profile Overrides
+  if (customMeta?.preferredChannel) {
+    dossier.demographics.preferredChannel = customMeta.preferredChannel;
+  } else if (patient.preferred_channel) {
+    dossier.demographics.preferredChannel = patient.preferred_channel;
+  }
+
+  if (customMeta?.bestCallingTime) {
+    dossier.demographics.bestCallingTime = customMeta.bestCallingTime;
+  } else if (patient.best_calling_time) {
+    dossier.demographics.bestCallingTime = patient.best_calling_time;
+  }
+
+  const activeHomeLang = customMeta?.homeLanguage || patient.home_language;
+  if (activeHomeLang) {
+    dossier.demographics.homeLanguages = [activeHomeLang];
+    dossier.demographics.preferredLanguages = activeHomeLang === 'Marathi'
+      ? ['Marathi', 'English', 'Hindi']
+      : [activeHomeLang, 'English'];
+  }
+
   return dossier;
 };

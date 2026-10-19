@@ -662,6 +662,9 @@ export const PatientDetailPage = () => {
       address: demographics.addressLine1 || patient.address || '',
       service_line: patient.service_line || 'SPEECH_LANGUAGE',
       primary_concern: demographics.primaryConcern || patient.diagnosis || '',
+      preferred_channel: patient.preferred_channel || demographics.preferredChannel || 'WHATSAPP',
+      best_calling_time: patient.best_calling_time || demographics.bestCallingTime || '17:00 - 19:30 IST',
+      home_language: patient.home_language || demographics.homeLanguages?.[0] || 'Marathi',
       guardians: existingGuardians,
       family_group_id: demographics.familyGroupId || patient.family_group_id || '',
       referral: existingReferral,
@@ -716,6 +719,9 @@ export const PatientDetailPage = () => {
       phone: editPatientForm.phone,
       alt_phone: editPatientForm.alt_phone,
       email: editPatientForm.email,
+      preferred_channel: editPatientForm.preferred_channel || 'WHATSAPP',
+      best_calling_time: editPatientForm.best_calling_time || '17:00 - 19:30 IST',
+      home_language: editPatientForm.home_language || 'Marathi',
       guardian_name: primaryGuardian ? primaryGuardian.name : '',
       guardian_phone: primaryGuardian ? primaryGuardian.phone : '',
       guardians: editPatientForm.guardians,
@@ -733,6 +739,9 @@ export const PatientDetailPage = () => {
 
     // Save custom metadata under uhid
     const metaPayload = {
+      preferredChannel: editPatientForm.preferred_channel,
+      bestCallingTime: editPatientForm.best_calling_time,
+      homeLanguage: editPatientForm.home_language,
       guardians: editPatientForm.guardians,
       familyGroupId: editPatientForm.family_group_id,
       referral: editPatientForm.referral,
@@ -3293,6 +3302,48 @@ export const PatientDetailPage = () => {
                     onChange={(e) => setEditPatientForm({ ...editPatientForm, address: e.target.value })}
                     className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Preferred Communication</label>
+                  <select
+                    value={editPatientForm.preferred_channel || 'WHATSAPP'}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, preferred_channel: e.target.value })}
+                    className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
+                  >
+                    <option value="WHATSAPP">WhatsApp (Preferred)</option>
+                    <option value="CALL">Direct Phone Call</option>
+                    <option value="SMS">SMS Text</option>
+                    <option value="EMAIL">Email</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Preferred Calling Hours</label>
+                  <input
+                    type="text"
+                    value={editPatientForm.best_calling_time || ''}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, best_calling_time: e.target.value })}
+                    placeholder="e.g. 17:00 - 19:30 IST"
+                    className="w-full h-8 px-2.5 text-xs bg-white border border-slate-300 rounded focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Home / Primary Language</label>
+                  <select
+                    value={editPatientForm.home_language || 'Marathi'}
+                    onChange={(e) => setEditPatientForm({ ...editPatientForm, home_language: e.target.value })}
+                    className="w-full h-8 px-2 text-xs bg-white border border-slate-300 rounded focus:outline-hidden font-medium"
+                  >
+                    <option value="Marathi">Marathi</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="English">English</option>
+                    <option value="Kannada">Kannada</option>
+                    <option value="Gujarati">Gujarati</option>
+                  </select>
                 </div>
               </div>
 

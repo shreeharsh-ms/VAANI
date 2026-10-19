@@ -45,6 +45,9 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
     service_line: 'SPEECH_LANGUAGE',
     primary_concern: '',
     medical_history: '',
+    preferred_channel: 'WHATSAPP',
+    best_calling_time: '17:00 - 19:30 IST',
+    home_language: 'Marathi',
   });
 
   const [loading, setLoading] = useState(false);
@@ -176,6 +179,9 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
       city: apt.city || prev.city || 'Satara',
       guardian_name: apt.guardian_name || prev.guardian_name || '',
       primary_concern: apt.primary_concern || apt.service_name || apt.service || prev.primary_concern || '',
+      preferred_channel: apt.preferred_channel || prev.preferred_channel || 'WHATSAPP',
+      best_calling_time: apt.best_calling_time || prev.best_calling_time || '17:00 - 19:30 IST',
+      home_language: apt.home_language || prev.home_language || 'Marathi',
     }));
 
     setSelectedAppointment(apt);
@@ -521,6 +527,41 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
           onChange={handleChange}
           placeholder="Satara"
           startIcon={MapPin}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Select
+          label="Preferred Communication"
+          name="preferred_channel"
+          value={formData.preferred_channel}
+          onChange={handleChange}
+          options={[
+            { value: 'WHATSAPP', label: 'WhatsApp (Preferred)' },
+            { value: 'CALL', label: 'Direct Phone Call' },
+            { value: 'SMS', label: 'SMS Text' },
+            { value: 'EMAIL', label: 'Email' },
+          ]}
+        />
+        <Input
+          label="Preferred Calling Hours"
+          name="best_calling_time"
+          value={formData.best_calling_time}
+          onChange={handleChange}
+          placeholder="e.g. 17:00 - 19:30 IST"
+        />
+        <Select
+          label="Home / Primary Language"
+          name="home_language"
+          value={formData.home_language}
+          onChange={handleChange}
+          options={[
+            { value: 'Marathi', label: 'Marathi' },
+            { value: 'Hindi', label: 'Hindi' },
+            { value: 'English', label: 'English' },
+            { value: 'Kannada', label: 'Kannada' },
+            { value: 'Gujarati', label: 'Gujarati' },
+          ]}
         />
       </div>
 

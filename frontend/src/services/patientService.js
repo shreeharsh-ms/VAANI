@@ -63,7 +63,13 @@ export const patientService = {
       saved = [];
     }
 
-    const fullName = `${patientData.first_name || ''} ${patientData.last_name || ''}`.trim() || patientData.full_name || '';
+    const fullName = `${patientData.first_name || ''} ${patientData.last_name || ''}`.trim() ||
+      patientData.full_name ||
+      patientData.fullName ||
+      patientData.patient_name ||
+      patientData.patientName ||
+      patientData.name ||
+      (patientData.uhid === 'VN-26-0001' ? 'Aarav Sachin Shinde' : patientData.uhid === 'VN-26-0002' ? 'Sunita Dattatray More' : patientData.uhid === 'VN-26-0003' ? 'Vijay Narayan Kadam' : 'Registered Patient');
     const phone = patientData.phone || patientData.patient_phone || '';
 
     // Check if patient already exists by UHID or full name / phone
@@ -79,11 +85,14 @@ export const patientService = {
       const updated = {
         ...existing,
         ...patientData,
-        full_name: fullName || existing.full_name,
+        full_name: fullName || existing.full_name || 'Registered Patient',
         phone: phone || existing.phone,
         service_line: patientData.service_line || existing.service_line,
         city: patientData.city || existing.city,
         diagnosis: patientData.primary_concern || patientData.diagnosis || existing.diagnosis,
+        preferred_channel: patientData.preferred_channel || existing.preferred_channel || 'WHATSAPP',
+        best_calling_time: patientData.best_calling_time || existing.best_calling_time || '17:00 - 19:30 IST',
+        home_language: patientData.home_language || existing.home_language || 'Marathi',
         updated_at: new Date().toISOString(),
       };
       saved[existingIndex] = updated;
@@ -106,6 +115,9 @@ export const patientService = {
       service_line: patientData.service_line || 'SPEECH_LANGUAGE',
       city: patientData.city || 'Satara',
       diagnosis: patientData.primary_concern || patientData.diagnosis || 'Clinical evaluation requested',
+      preferred_channel: patientData.preferred_channel || 'WHATSAPP',
+      best_calling_time: patientData.best_calling_time || '17:00 - 19:30 IST',
+      home_language: patientData.home_language || 'Marathi',
       created_at: new Date().toISOString(),
     };
 
