@@ -1989,13 +1989,11 @@ export const PatientDetailPage = () => {
                                         <span className="font-bold text-xs text-purple-950 uppercase tracking-wide">
                                           Clinical Impression &amp; Evaluation Findings:
                                         </span>
-                                        <span className="font-mono text-[10px] text-purple-800 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
+                                        <span className="font-mono text-[10px] font-bold text-purple-900 bg-purple-100/80 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap">
                                           {rep.report_number}
                                         </span>
                                       </div>
-                                      <span className="text-[10px] font-mono text-slate-500">
-                                        DPDP Compliant Cryptographic Record
-                                      </span>
+
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">

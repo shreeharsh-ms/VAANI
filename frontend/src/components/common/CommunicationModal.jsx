@@ -205,7 +205,7 @@ export const WhatsAppDispatchModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Dispatch WhatsApp Notification & Document"
+      title="Send WhatsApp Message"
       size="md"
     >
       <form onSubmit={handleSend} className="space-y-3.5 font-sans text-xs max-h-[calc(85vh-90px)] overflow-y-auto px-1 pr-2">
@@ -226,17 +226,17 @@ export const WhatsAppDispatchModal = ({
 
         {/* Recipient Details & Phone Editor */}
         <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-purple-700" />
-              <span className="font-bold text-slate-800 text-xs">{recipientName}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <User className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+              <span className="font-bold text-slate-800 text-xs truncate">{recipientName}</span>
               {uhid && (
-                <span className="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
+                <span className="font-mono text-[10px] font-bold text-purple-900 bg-purple-100/90 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap shrink-0">
                   {uhid}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+            <span className="hidden sm:inline-flex text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 items-center gap-1 shrink-0">
               <MessageSquare className="w-3 h-3 text-emerald-600" />
               <span>WhatsApp Direct</span>
             </span>
@@ -523,7 +523,7 @@ export const EmailDispatchModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Dispatch Official Clinical Email & Attachment"
+      title="Send Email & Attachment"
       size="md"
     >
       <form onSubmit={handleSendViaSmtp} className="space-y-3.5 font-sans text-xs max-h-[calc(85vh-90px)] overflow-y-auto px-1 pr-2">
@@ -653,12 +653,12 @@ export const EmailDispatchModal = ({
             </div>
           </div>
         ) : (
-          <div className="px-3 py-1.5 rounded-lg bg-purple-50/70 border border-purple-200 flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1.5 text-purple-950 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Active SMTP Host: <strong>{smtpStatus.smtp?.host}</strong> ({smtpStatus.smtp?.senderEmail})</span>
+          <div className="px-3 py-1.5 rounded-lg bg-purple-50/70 border border-purple-200 flex items-center justify-between text-[11px] gap-2">
+            <div className="flex items-center gap-1.5 text-purple-950 font-medium truncate min-w-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="truncate">SMTP: <strong>{smtpStatus.smtp?.host}</strong> ({smtpStatus.smtp?.senderEmail})</span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Ready to Send</span>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0 whitespace-nowrap">Ready to Send</span>
           </div>
         )}
 
@@ -679,19 +679,19 @@ export const EmailDispatchModal = ({
 
         {/* Recipient Details & Email Input */}
         <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-purple-700" />
-              <span className="font-bold text-slate-800 text-xs">{recipientName}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <User className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+              <span className="font-bold text-slate-800 text-xs truncate">{recipientName}</span>
               {uhid && (
-                <span className="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
+                <span className="font-mono text-[10px] font-bold text-purple-900 bg-purple-100/90 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap shrink-0">
                   {uhid}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 flex items-center gap-1">
+            <span className="hidden sm:inline-flex text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 items-center gap-1 shrink-0">
               <Mail className="w-3 h-3 text-purple-600" />
-              <span>Official Clinic Dispatch</span>
+              <span>Email</span>
             </span>
           </div>
 
