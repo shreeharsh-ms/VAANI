@@ -334,9 +334,9 @@ export const DualAudiogramSection = ({
   className = '',
 }) => {
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-2 border border-purple-200/90 rounded-lg p-1.5 bg-white/85 backdrop-blur-2xs shadow-2xs ${className}`}>
+    <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 border border-purple-200/90 rounded-lg p-2 bg-white/95 backdrop-blur-2xs shadow-2xs mx-auto ${className}`}>
       {/* Right Ear Audiogram */}
-      <div className="flex-1 min-w-[200px] max-w-[255px]">
+      <div className="flex-1 w-full max-w-[270px] sm:max-w-[250px] flex flex-col items-center justify-center mx-auto">
         <SingleAudiogramGraph
           ear="right"
           acData={rightAC}
@@ -347,7 +347,7 @@ export const DualAudiogramSection = ({
       </div>
 
       {/* Left Ear Audiogram */}
-      <div className="flex-1 min-w-[200px] max-w-[255px]">
+      <div className="flex-1 w-full max-w-[270px] sm:max-w-[250px] flex flex-col items-center justify-center mx-auto">
         <SingleAudiogramGraph
           ear="left"
           acData={leftAC}
@@ -358,7 +358,7 @@ export const DualAudiogramSection = ({
       </div>
 
       {/* Legend Matrix */}
-      <div className="shrink-0 flex items-center justify-center">
+      <div className="w-full sm:w-auto shrink-0 flex items-center justify-center mx-auto">
         <AudiogramLegendTable />
       </div>
     </div>

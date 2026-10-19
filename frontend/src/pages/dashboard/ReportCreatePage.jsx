@@ -184,6 +184,41 @@ export const ReportCreatePage = () => {
     return CLINICAL_SERVICES.find((s) => s.code === selectedServiceCode) || CLINICAL_SERVICES[0];
   }, [selectedServiceCode]);
 
+  // Audiogram is only present for Pure-Tone and Comprehensive Audiological assessment
+  const hasAudiogram = ['RP-CLN-AUD', 'RP-CLN-AAE'].includes(activeService?.code);
+
+  // Dynamic Report Phases (5 for Audiology, 4 for other clinical modules)
+  const reportPhases = useMemo(() => {
+    if (hasAudiogram) {
+      return [
+        { step: 1, full: '1. Service' },
+        { step: 2, full: '2. Patient' },
+        { step: 3, full: '3. Values' },
+        { step: 4, full: '4. Graphs' },
+        { step: 5, full: '5. Sign-off' },
+      ];
+    }
+    return [
+      { step: 1, full: '1. Service' },
+      { step: 2, full: '2. Patient' },
+      { step: 3, full: '3. Values' },
+      { step: 4, full: '4. Sign-off' },
+    ];
+  }, [hasAudiogram]);
+
+  // Keep mobileStep valid when switching between 5-step and 4-step reports
+  useEffect(() => {
+    const maxStep = hasAudiogram ? 5 : 4;
+    if (mobileStep > maxStep) {
+      setMobileStep(maxStep);
+    }
+  }, [hasAudiogram, mobileStep]);
+
+  // Quick Guided Reading Pad state for Android / mobile rapid threshold entry
+  const PTA_FREQUENCIES = ['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'];
+  const [activeReadingEar, setActiveReadingEar] = useState('rightEarAC');
+  const [activeReadingFreqIndex, setActiveReadingFreqIndex] = useState(4); // default 1000 Hz
+
   // Active Patient details + Dossier
   const selectedPatient = useMemo(() => {
     return allPatients.find((p) => p.id === selectedPatientId || p.uhid === selectedPatientId) || allPatients[0];
@@ -765,14 +800,14 @@ export const ReportCreatePage = () => {
         <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <span className="text-[10px] sm:text-[11px] font-black text-purple-700 uppercase tracking-wide bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 shrink-0">
-              Phase {mobileStep}/5
+              Phase {mobileStep}/{reportPhases.length}
             </span>
             <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
               {mobileStep === 1 && '1. Service & Reference'}
               {mobileStep === 2 && '2. Patient Context'}
               {mobileStep === 3 && `3. Test Values (${activeService.shortName})`}
-              {mobileStep === 4 && '4. Audiogram Graphs'}
-              {mobileStep === 5 && '5. Impression & Sign-Off'}
+              {hasAudiogram && mobileStep === 4 && '4. Audiogram Graphs'}
+              {mobileStep === (hasAudiogram ? 5 : 4) && `${hasAudiogram ? '5' : '4'}. Impression & Sign-Off`}
             </span>
           </div>
 
@@ -802,15 +837,9 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* 5 Step Pills / Buttons */}
-        <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
-          {[
-            { step: 1, full: '1. Service' },
-            { step: 2, full: '2. Patient' },
-            { step: 3, full: '3. Values' },
-            { step: 4, full: '4. Graphs' },
-            { step: 5, full: '5. Sign-off' },
-          ].map((s) => {
+        {/* Step Pills / Buttons: 5 cols for Audiology, 4 cols for other modules */}
+        <div className={`grid gap-1 sm:gap-1.5 ${hasAudiogram ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          {reportPhases.map((s) => {
             const isActive = mobileStep === s.step;
             const isCompleted = mobileStep > s.step;
             return (
@@ -893,13 +922,13 @@ export const ReportCreatePage = () => {
                 type="text"
                 value={formData.reportNumber}
                 onChange={(e) => setFormData((prev) => ({ ...prev, reportNumber: e.target.value }))}
-                className="w-full text-xs font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+                className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded-md px-3 py-2"
               />
               <input
                 type="date"
                 value={formData.reportDate}
                 onChange={(e) => setFormData((prev) => ({ ...prev, reportDate: e.target.value }))}
-                className="w-full text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+                className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-semibold text-slate-900 bg-white border border-slate-300 rounded-md px-3 py-2"
               />
             </div>
           </div>
@@ -912,7 +941,7 @@ export const ReportCreatePage = () => {
               type="text"
               value={`${formData.examinerName} • CRR: ${formData.rciNumber}`}
               readOnly
-              className="w-full text-xs font-semibold text-purple-900 bg-purple-50/40 border border-purple-200 rounded px-2.5 py-1.5"
+              className="w-full h-10 sm:h-8.5 text-sm sm:text-xs font-semibold text-purple-900 bg-purple-50/50 border border-purple-200 rounded-md px-3 py-2"
             />
           </div>
         </div>
@@ -996,7 +1025,7 @@ export const ReportCreatePage = () => {
                   }
                 }}
                 placeholder="Type name, UHID, or phone to search..."
-                className="w-full text-xs font-bold text-slate-900 bg-purple-50/70 border border-purple-300 rounded pl-8 pr-14 py-1.5 focus:outline-none focus:ring-1 focus:ring-purple-700"
+                className="w-full h-10 sm:h-9 text-sm sm:text-xs font-bold text-slate-900 bg-purple-50/50 border border-purple-300 rounded-md pl-8.5 pr-14 py-2 focus:outline-none focus:ring-2 focus:ring-purple-700"
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                 {patientSearchTerm && (
@@ -1272,6 +1301,143 @@ export const ReportCreatePage = () => {
             </div>
 
 
+            {/* Quick Guided Reading Pad (Mobile / Android Simple Reading Workflow) */}
+            <div className="bg-gradient-to-r from-purple-50/90 via-white to-purple-50/70 border-2 border-purple-300 rounded-xl p-2.5 sm:p-3 shadow-xs space-y-2.5">
+              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                <span className="text-[11px] font-black text-purple-950 uppercase tracking-wide flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-purple-700" />
+                  Quick Guided Reading Pad
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">
+                  Tap quick dB or type &amp; press Next
+                </span>
+              </div>
+
+              {/* Ear Selector Buttons */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {[
+                  { id: 'rightEarAC', label: 'Right Ear AC ○', active: 'bg-rose-600 text-white border-rose-700', inactive: 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100' },
+                  { id: 'leftEarAC', label: 'Left Ear AC ✕', active: 'bg-blue-600 text-white border-blue-700', inactive: 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100' },
+                  { id: 'rightEarBC', label: 'Right Ear BC <', active: 'bg-rose-700 text-white border-rose-800', inactive: 'bg-rose-50/60 text-rose-900 border-rose-200 hover:bg-rose-100' },
+                  { id: 'leftEarBC', label: 'Left Ear BC >', active: 'bg-blue-700 text-white border-blue-800', inactive: 'bg-blue-50/60 text-blue-900 border-blue-200 hover:bg-blue-100' },
+                ].map((ear) => (
+                  <button
+                    key={ear.id}
+                    type="button"
+                    onClick={() => setActiveReadingEar(ear.id)}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                      activeReadingEar === ear.id ? ear.active + ' shadow-2xs' : ear.inactive
+                    }`}
+                  >
+                    {ear.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Active Frequency Navigation, Numeric Entry & Next Button */}
+              <div className="flex items-center justify-between gap-2 bg-white p-2 sm:p-2.5 rounded-lg border border-purple-200 shadow-2xs">
+                {/* Previous Frequency Button */}
+                <button
+                  type="button"
+                  disabled={activeReadingFreqIndex === 0}
+                  onClick={() => setActiveReadingFreqIndex((prev) => Math.max(0, prev - 1))}
+                  className="h-10 w-10 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center font-bold text-slate-700 disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                  title="Previous Frequency"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {/* Frequency Indicator */}
+                <div className="text-center min-w-[70px]">
+                  <span className="text-[9.5px] text-slate-400 font-bold uppercase block">Frequency</span>
+                  <span className="text-sm sm:text-base font-black text-purple-950 font-mono">
+                    {PTA_FREQUENCIES[activeReadingFreqIndex]} <span className="text-[10px] font-normal text-slate-500">Hz</span>
+                  </span>
+                </div>
+
+                {/* Big Input Box */}
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={-10}
+                    max={120}
+                    step={5}
+                    value={formData.parameters[activeReadingEar]?.[PTA_FREQUENCIES[activeReadingFreqIndex]] ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : Number(e.target.value);
+                      handleNestedParamChange(activeReadingEar, PTA_FREQUENCIES[activeReadingFreqIndex], val);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (activeReadingFreqIndex < PTA_FREQUENCIES.length - 1) {
+                          setActiveReadingFreqIndex((prev) => prev + 1);
+                        }
+                      }
+                    }}
+                    placeholder="—"
+                    className="w-20 h-10 text-center text-lg font-black font-mono border-2 border-purple-400 rounded-lg bg-purple-50/30 text-purple-950 focus:bg-white focus:ring-2 focus:ring-purple-600 focus:outline-none"
+                  />
+                  <span className="absolute right-1.5 top-2.5 text-[9px] font-bold text-slate-400 pointer-events-none">dB</span>
+                </div>
+
+                {/* Next Frequency Action Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeReadingFreqIndex < PTA_FREQUENCIES.length - 1) {
+                      setActiveReadingFreqIndex((prev) => prev + 1);
+                    } else {
+                      // Cycle to next ear when last frequency reached
+                      if (activeReadingEar === 'rightEarAC') {
+                        setActiveReadingEar('leftEarAC');
+                        setActiveReadingFreqIndex(0);
+                      } else if (activeReadingEar === 'leftEarAC') {
+                        setActiveReadingEar('rightEarBC');
+                        setActiveReadingFreqIndex(1);
+                      } else if (activeReadingEar === 'rightEarBC') {
+                        setActiveReadingEar('leftEarBC');
+                        setActiveReadingFreqIndex(1);
+                      }
+                    }
+                  }}
+                  className="h-10 px-3 sm:px-4 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer touch-manipulation shrink-0"
+                >
+                  <span className="hidden sm:inline">Next Freq</span>
+                  <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
+                </button>
+              </div>
+
+              {/* Quick Tap Standard dB Buttons */}
+              <div className="space-y-1">
+                <span className="text-[9.5px] font-bold text-slate-500 uppercase block">Tap Quick Value (sets &amp; advances):</span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {[-10, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80].map((val) => {
+                    const isSelected = formData.parameters[activeReadingEar]?.[PTA_FREQUENCIES[activeReadingFreqIndex]] === val;
+                    return (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => {
+                          handleNestedParamChange(activeReadingEar, PTA_FREQUENCIES[activeReadingFreqIndex], val);
+                          if (activeReadingFreqIndex < PTA_FREQUENCIES.length - 1) {
+                            setActiveReadingFreqIndex((prev) => prev + 1);
+                          }
+                        }}
+                        className={`h-7.5 px-2 rounded-md font-mono text-xs font-bold border transition-colors cursor-pointer touch-manipulation active:scale-95 ${
+                          isSelected
+                            ? 'bg-purple-700 text-white border-purple-800 shadow-xs'
+                            : 'bg-white hover:bg-purple-50 text-slate-800 border-slate-300'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {/* Comprehensive Octave & Inter-Octave Threshold Entry Grid */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -1313,7 +1479,7 @@ export const ReportCreatePage = () => {
                             step={5}
                             value={formData.parameters.rightEarAC?.[freq] ?? ''}
                             onChange={(e) => handleNestedParamChange('rightEarAC', freq, e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-11 text-center py-1 text-xs font-bold text-rose-800 border border-rose-300 rounded bg-white focus:ring-1 focus:ring-rose-500"
+                            className="w-14 sm:w-12 h-10 sm:h-8 text-center text-sm sm:text-xs font-black text-rose-800 border border-rose-300 rounded bg-white focus:ring-2 focus:ring-rose-500"
                           />
                         </td>
                       ))}
@@ -1343,7 +1509,7 @@ export const ReportCreatePage = () => {
                                 step={5}
                                 value={formData.parameters.rightEarBC?.[freq] ?? ''}
                                 onChange={(e) => handleNestedParamChange('rightEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}
-                                className="w-11 text-center py-1 text-xs font-semibold text-rose-700 border border-rose-200 rounded bg-white"
+                                className="w-14 sm:w-12 h-10 sm:h-8 text-center text-sm sm:text-xs font-black text-rose-700 border border-rose-200 rounded bg-white focus:ring-2 focus:ring-rose-500"
                               />
                             ) : (
                               <span className="text-slate-300 font-mono text-[11px]">—</span>
@@ -1371,7 +1537,7 @@ export const ReportCreatePage = () => {
                             step={5}
                             value={formData.parameters.leftEarAC?.[freq] ?? ''}
                             onChange={(e) => handleNestedParamChange('leftEarAC', freq, e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-11 text-center py-1 text-xs font-bold text-blue-800 border border-blue-300 rounded bg-white focus:ring-1 focus:ring-blue-500"
+                            className="w-14 sm:w-12 h-10 sm:h-8 text-center text-sm sm:text-xs font-black text-blue-800 border border-blue-300 rounded bg-white focus:ring-2 focus:ring-blue-500"
                           />
                         </td>
                       ))}
@@ -1401,7 +1567,7 @@ export const ReportCreatePage = () => {
                                 step={5}
                                 value={formData.parameters.leftEarBC?.[freq] ?? ''}
                                 onChange={(e) => handleNestedParamChange('leftEarBC', freq, e.target.value === '' ? '' : Number(e.target.value))}
-                                className="w-11 text-center py-1 text-xs font-semibold text-blue-700 border border-blue-200 rounded bg-white"
+                                className="w-14 sm:w-12 h-10 sm:h-8 text-center text-sm sm:text-xs font-black text-blue-700 border border-blue-200 rounded bg-white focus:ring-2 focus:ring-blue-500"
                               />
                             ) : (
                               <span className="text-slate-300 font-mono text-[11px]">—</span>
@@ -2300,7 +2466,7 @@ export const ReportCreatePage = () => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
-            title="Next Step: Audiogram Graphs"
+            title={hasAudiogram ? "Next Step: Audiogram Graphs" : "Next Step: Impression & Sign-Off"}
           >
             <span className="hidden sm:inline mr-1">Next</span>
             <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
@@ -2308,112 +2474,114 @@ export const ReportCreatePage = () => {
         </div>
       </div>
 
-      {/* ── STEP 4: GENERATED AUDIOGRAM GRAPHS & VISUAL CURVES (Separate Full-Screen View) ── */}
-      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-purple-700" />
-            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              4. Generated Audiogram Visualizer &amp; Plotted Curves
-            </h2>
-          </div>
-          <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-            Real-Time Plotted Curves
-          </span>
-        </div>
-
-        {/* Dual Audiogram Graph Full Width / Full Screen */}
-        <div className="border border-purple-200 rounded-lg p-2 sm:p-3 bg-white shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Plotted Curves from Entered Thresholds
-            </span>
-            <span className="text-[10px] text-slate-500 font-medium">
-              Right (Red ○ / &lt;) • Left (Blue ✕ / &gt;)
+      {/* ── STEP 4: GENERATED AUDIOGRAM GRAPHS & VISUAL CURVES (Only for Audiology) ── */}
+      {hasAudiogram && (
+        <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-purple-700" />
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                4. Generated Audiogram Visualizer &amp; Plotted Curves
+              </h2>
+            </div>
+            <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+              Real-Time Plotted Curves
             </span>
           </div>
 
-          <div className="overflow-x-auto w-full">
-            <DualAudiogramSection
-              rightAC={formData.parameters.rightEarAC}
-              rightBC={formData.parameters.rightEarBC}
-              leftAC={formData.parameters.leftEarAC}
-              leftBC={formData.parameters.leftEarBC}
-              className="shadow-xs w-full"
-            />
-          </div>
-        </div>
-
-        {/* PTA Analysis Summary Cards below graph */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <div className="bg-rose-50/60 border border-rose-200 rounded-lg p-2.5 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-rose-900 text-xs flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full border-2 border-rose-600 inline-block"></span>
-                Right Ear PTA
+          {/* Dual Audiogram Graph Full Width / Full Screen Centered */}
+          <div className="border border-purple-200 rounded-lg p-2 sm:p-3 bg-white shadow-2xs space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Plotted Curves from Entered Thresholds
               </span>
-              <span className="font-mono font-black text-rose-800 text-xs">
-                {computedPTA?.rightAvg !== undefined ? `${computedPTA.rightAvg} dB HL` : '—'}
+              <span className="text-[10px] text-slate-500 font-medium">
+                Right (Red ○ / &lt;) • Left (Blue ✕ / &gt;)
               </span>
             </div>
-            <div className="text-[11px] text-rose-700 font-medium">
-              Diagnosis: <span className="font-bold">{computedPTA?.rightDegree || 'Normal'}</span>
+
+            <div className="overflow-x-auto w-full flex items-center justify-center py-1">
+              <DualAudiogramSection
+                rightAC={formData.parameters.rightEarAC}
+                rightBC={formData.parameters.rightEarBC}
+                leftAC={formData.parameters.leftEarAC}
+                leftBC={formData.parameters.leftEarBC}
+                className="shadow-xs w-full max-w-2xl mx-auto"
+              />
             </div>
           </div>
 
-          <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2.5 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-blue-900 text-xs flex items-center gap-1">
-                <span className="w-2.5 h-2.5 text-blue-600 font-bold inline-block text-center">✕</span>
-                Left Ear PTA
-              </span>
-              <span className="font-mono font-black text-blue-800 text-xs">
-                {computedPTA?.leftAvg !== undefined ? `${computedPTA.leftAvg} dB HL` : '—'}
-              </span>
+          {/* PTA Analysis Summary Cards below graph */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="bg-rose-50/60 border border-rose-200 rounded-lg p-2.5 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-rose-900 text-xs flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full border-2 border-rose-600 inline-block"></span>
+                  Right Ear PTA
+                </span>
+                <span className="font-mono font-black text-rose-800 text-xs">
+                  {computedPTA?.rightAvg !== undefined ? `${computedPTA.rightAvg} dB HL` : '—'}
+                </span>
+              </div>
+              <div className="text-[11px] text-rose-700 font-medium">
+                Diagnosis: <span className="font-bold">{computedPTA?.rightDegree || 'Normal'}</span>
+              </div>
             </div>
-            <div className="text-[11px] text-blue-700 font-medium">
-              Diagnosis: <span className="font-bold">{computedPTA?.leftDegree || 'Normal'}</span>
+
+            <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2.5 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-blue-900 text-xs flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 text-blue-600 font-bold inline-block text-center">✕</span>
+                  Left Ear PTA
+                </span>
+                <span className="font-mono font-black text-blue-800 text-xs">
+                  {computedPTA?.leftAvg !== undefined ? `${computedPTA.leftAvg} dB HL` : '—'}
+                </span>
+              </div>
+              <div className="text-[11px] text-blue-700 font-medium">
+                Diagnosis: <span className="font-bold">{computedPTA?.leftDegree || 'Normal'}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Step 4 Navigation Footer */}
-        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setMobileStep(3);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
-            title="Previous Step"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline ml-1">Back</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMobileStep(5);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
-            title="Next Step: Impression & Sign-Off"
-          >
-            <span className="hidden sm:inline mr-1">Next</span>
-            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
-          </button>
+          {/* Step 4 Navigation Footer */}
+          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileStep(3);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
+              title="Previous Step"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-1">Back</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileStep(5);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
+              title="Next Step: Impression & Sign-Off"
+            >
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ── STEP 5: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
-      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 5 ? 'hidden' : 'block'}`}>
+      {/* ── FINAL STEP: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== (hasAudiogram ? 5 : 4) ? 'hidden' : 'block'}`}>
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-purple-700" />
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              5. Clinical Impression, Recommendations &amp; Doctor Sign-Off
+              {hasAudiogram ? '5' : '4'}. Clinical Impression, Recommendations &amp; Doctor Sign-Off
             </h2>
           </div>
           <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
@@ -2511,11 +2679,11 @@ export const ReportCreatePage = () => {
             <button
               type="button"
               onClick={() => {
-                setMobileStep(4);
+                setMobileStep(hasAudiogram ? 4 : 3);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="inline-flex items-center justify-center gap-1 h-9 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
-              title="Previous Step: Graphs"
+              title={hasAudiogram ? "Previous Step: Graphs" : "Previous Step: Test Values"}
             >
               <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline ml-1">Back</span>
