@@ -693,7 +693,7 @@ export const ReportCreatePage = () => {
   };
 
   return (
-    <div className="space-y-3.5 pb-32 sm:pb-16">
+    <div className="w-full space-y-2 pb-28 sm:pb-16 font-sans">
       
       {/* ── TOP ACTION BAR (ULTRA COMPACT SINGLE LINE ON MOBILE) ── */}
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:px-4 sm:py-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
@@ -762,13 +762,14 @@ export const ReportCreatePage = () => {
         <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide shrink-0">
-              Phase {mobileStep} of 4:
+              Phase {mobileStep} of 5:
             </span>
             <span className="text-xs font-extrabold text-purple-950 truncate">
               {mobileStep === 1 && '1. Service & Reference'}
               {mobileStep === 2 && '2. Patient Context'}
-              {mobileStep === 3 && `3. Tests (${activeService.shortName})`}
-              {mobileStep === 4 && '4. Diagnosis & Sign'}
+              {mobileStep === 3 && `3. Test Values (${activeService.shortName})`}
+              {mobileStep === 4 && '4. Generated Audiogram Graphs'}
+              {mobileStep === 5 && '5. Diagnosis & Sign'}
             </span>
           </div>
 
@@ -798,13 +799,14 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* 4 Step Pills / Buttons */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-2">
+        {/* 5 Step Pills / Buttons */}
+        <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {[
-            { step: 1, label: '1. Service', full: '1. Service & Proforma' },
-            { step: 2, label: '2. Patient', full: '2. Patient Context' },
-            { step: 3, label: '3. Tests', full: '3. Clinical Tests' },
-            { step: 4, label: '4. Diagnosis', full: '4. Diagnosis & Sign' },
+            { step: 1, label: '1. Service', full: '1. Service' },
+            { step: 2, label: '2. Patient', full: '2. Patient' },
+            { step: 3, label: '3. Values', full: '3. Values' },
+            { step: 4, label: '4. Graphs', full: '4. Graphs' },
+            { step: 5, label: '5. Sign-off', full: '5. Diagnosis' },
           ].map((s) => {
             const isActive = mobileStep === s.step;
             const isCompleted = mobileStep > s.step;
@@ -813,7 +815,7 @@ export const ReportCreatePage = () => {
                 key={s.step}
                 type="button"
                 onClick={() => setMobileStep(s.step)}
-                className={`py-1.5 px-1 sm:px-2 rounded-md text-center transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                className={`py-1.5 px-0.5 sm:px-1.5 rounded-md text-center transition-all cursor-pointer touch-manipulation active:scale-95 ${
                   isActive
                     ? 'bg-purple-900 text-white font-extrabold shadow-2xs ring-2 ring-purple-400/50'
                     : isCompleted
@@ -821,7 +823,7 @@ export const ReportCreatePage = () => {
                     : 'bg-slate-50 text-slate-600 font-medium border border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+                <div className="flex items-center justify-center gap-1 text-[10px] sm:text-xs">
                   {isCompleted ? (
                     <Check className="w-3 h-3 text-purple-700 shrink-0" />
                   ) : (
@@ -1264,27 +1266,6 @@ export const ReportCreatePage = () => {
               </div>
             </div>
 
-            {/* LIVE DUAL AUDIOGRAM FORMATION PREVIEW (Forms graph dynamically as clinician types) */}
-            <div className="border border-purple-300 rounded-lg p-3 bg-slate-50/60 shadow-2xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-700 animate-pulse"></span>
-                  Real-Time Audiogram Formation Visualizer
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  Plots Right Ear (Red ○ / &lt;) &amp; Left Ear (Blue ✕ / &gt;) side-by-side with official legend
-                </span>
-              </div>
-              <div className="overflow-x-auto">
-                <DualAudiogramSection
-                  rightAC={formData.parameters.rightEarAC}
-                  rightBC={formData.parameters.rightEarBC}
-                  leftAC={formData.parameters.leftEarAC}
-                  leftBC={formData.parameters.leftEarBC}
-                  className="shadow-inner"
-                />
-              </div>
-            </div>
 
             {/* Comprehensive Octave & Inter-Octave Threshold Entry Grid */}
             <div className="space-y-1.5">
@@ -2314,19 +2295,116 @@ export const ReportCreatePage = () => {
             }}
             className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
           >
+            <span>Next: View Graphs</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── STEP 4: GENERATED AUDIOGRAM GRAPHS & VISUAL CURVES (Separate Full-Screen View) ── */}
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-purple-700" />
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              4. Generated Audiogram Visualizer &amp; Plotted Curves
+            </h2>
+          </div>
+          <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            Real-Time Plotted Curves
+          </span>
+        </div>
+
+        {/* Dual Audiogram Graph Full Width / Full Screen */}
+        <div className="border border-purple-200 rounded-lg p-2 sm:p-3 bg-white shadow-2xs space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Plotted Curves from Entered Thresholds
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium">
+              Right (Red ○ / &lt;) • Left (Blue ✕ / &gt;)
+            </span>
+          </div>
+
+          <div className="overflow-x-auto w-full">
+            <DualAudiogramSection
+              rightAC={formData.parameters.rightEarAC}
+              rightBC={formData.parameters.rightEarBC}
+              leftAC={formData.parameters.leftEarAC}
+              leftBC={formData.parameters.leftEarBC}
+              className="shadow-xs w-full"
+            />
+          </div>
+        </div>
+
+        {/* PTA Analysis Summary Cards below graph */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div className="bg-rose-50/60 border border-rose-200 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-rose-900 text-xs flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-rose-600 inline-block"></span>
+                Right Ear PTA
+              </span>
+              <span className="font-mono font-black text-rose-800 text-xs">
+                {computedPTA?.rightAvg !== undefined ? `${computedPTA.rightAvg} dB HL` : '—'}
+              </span>
+            </div>
+            <div className="text-[11px] text-rose-700 font-medium">
+              Diagnosis: <span className="font-bold">{computedPTA?.rightDegree || 'Normal'}</span>
+            </div>
+          </div>
+
+          <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-blue-900 text-xs flex items-center gap-1">
+                <span className="w-2.5 h-2.5 text-blue-600 font-bold inline-block text-center">✕</span>
+                Left Ear PTA
+              </span>
+              <span className="font-mono font-black text-blue-800 text-xs">
+                {computedPTA?.leftAvg !== undefined ? `${computedPTA.leftAvg} dB HL` : '—'}
+              </span>
+            </div>
+            <div className="text-[11px] text-blue-700 font-medium">
+              Diagnosis: <span className="font-bold">{computedPTA?.leftDegree || 'Normal'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 4 Navigation Footer */}
+        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(3);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Back: Edit Values</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(5);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+          >
             <span>Next: Diagnosis &amp; Sign</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* ── STEP 4: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
-      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
+      {/* ── STEP 5: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 5 ? 'hidden' : 'block'}`}>
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-purple-700" />
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              4. Clinical Impression, Recommendations &amp; Doctor Sign-Off
+              5. Clinical Impression, Recommendations &amp; Doctor Sign-Off
             </h2>
           </div>
           <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
@@ -2413,7 +2491,7 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* Step 4 Navigation & Action Button Bar */}
+        {/* Step 5 Navigation & Action Button Bar */}
         <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -2424,13 +2502,13 @@ export const ReportCreatePage = () => {
             <button
               type="button"
               onClick={() => {
-                setMobileStep(3);
+                setMobileStep(4);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="inline-flex items-center gap-1 h-9 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Back: Tests</span>
+              <span>Back: Graphs</span>
             </button>
 
             <button

@@ -501,24 +501,24 @@ export const PatientsPage = () => {
       </div>
 
       {/* ── MOBILE TOUCH-OPTIMIZED CARD VIEW (Visible on mobile/tablet < md:) ── */}
-      <div className="md:hidden space-y-2.5">
+      <div className="md:hidden space-y-1.5">
         {paginated.length === 0 ? (
-          <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 text-center text-xs text-slate-500 font-medium">
             No matching patient records found in Master Patient Index.
           </div>
         ) : (
           paginated.map((p) => (
             <div
               key={p.id}
-              className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+              className="bg-white border border-slate-200/90 rounded-lg p-2.5 shadow-2xs space-y-1.5 hover:border-purple-300 transition-colors"
             >
-              {/* Header: UHID & Service Line */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+              {/* Top Row: UHID Badge & Clinical Discipline */}
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
                   {p.uhid || 'VN-26-0001'}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex-shrink-0 whitespace-nowrap ${
+                  className={`px-1.5 py-0.2 rounded text-[9.5px] font-bold border flex-shrink-0 whitespace-nowrap ${
                     p.service_line === 'SPEECH_LANGUAGE'
                       ? 'bg-purple-50 text-purple-700 border-purple-200'
                       : p.service_line === 'AUDIOLOGY'
@@ -538,62 +538,66 @@ export const PatientsPage = () => {
                 </span>
               </div>
 
-              {/* Patient Name & Demographics */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
-                  className="text-left font-bold text-sm text-slate-900 hover:text-purple-700 transition-colors block w-full truncate"
-                >
-                  {p.full_name}
-                </button>
-                <div className="text-[11px] text-slate-500 font-medium mt-0.5">
-                  {p.gender ? (p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : p.gender) : 'Patient'}
-                  {p.date_of_birth ? ` • ${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()} yrs` : ''}
-                  {p.city ? ` • ${p.city}` : ''}
+              {/* Patient Name, Demographics & Phone */}
+              <div className="flex items-start justify-between gap-1.5">
+                <div className="min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
+                    className="text-left font-bold text-xs text-slate-900 hover:text-purple-700 transition-colors block w-full truncate leading-tight"
+                  >
+                    {p.full_name}
+                  </button>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 font-medium">
+                    <span>
+                      {p.gender ? (p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : p.gender) : 'Patient'}
+                      {p.date_of_birth ? ` • ${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()} yrs` : ''}
+                      {p.city ? ` • ${p.city}` : ''}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right flex-shrink-0">
+                  <a
+                    href={`tel:${p.phone}`}
+                    className="inline-flex items-center gap-1 text-slate-700 hover:text-purple-700 font-mono text-[10px] font-semibold"
+                  >
+                    <Phone className="w-2.5 h-2.5 text-purple-600 flex-shrink-0" />
+                    <span>{p.phone}</span>
+                  </a>
                 </div>
               </div>
 
-              {/* Contact & Caregiver */}
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
-                <a
-                  href={`tel:${p.phone}`}
-                  className="inline-flex items-center gap-1 text-slate-700 hover:text-purple-700 font-mono text-xs font-semibold"
-                >
-                  <Phone className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
-                  <span>{p.phone}</span>
-                </a>
+              {/* Clinical Diagnosis Single-Line Bar */}
+              <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100 text-[11px] flex items-center justify-between gap-1.5">
+                <span className="font-medium text-slate-700 truncate block">
+                  {p.diagnosis || 'Clinical evaluation in progress'}
+                </span>
                 {p.guardian_name && p.guardian_name !== 'Self' && (
-                  <span className="text-[11px] text-slate-500 truncate max-w-[150px]" title={p.guardian_name}>
-                    {p.guardian_name}
+                  <span className="text-[10px] text-slate-400 truncate max-w-[110px] flex-shrink-0">
+                    G: {p.guardian_name}
                   </span>
                 )}
               </div>
 
-              {/* Clinical Diagnosis Box */}
-              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Primary Diagnosis</span>
-                <span className="font-medium text-slate-800 line-clamp-2">{p.diagnosis || 'Clinical evaluation in progress'}</span>
-              </div>
-
               {/* Direct Actions Row */}
-              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-2">
+              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                  className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-md text-[11px] font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
                 >
-                  <Eye className="w-3.5 h-3.5 text-purple-200" />
+                  <Eye className="w-3 h-3 text-purple-200" />
                   <span>View Dossier &amp; EMR</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleDelete(p.id)}
-                  className="p-2 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
+                  className="h-7 w-7 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-md transition-colors cursor-pointer active:scale-95 touch-manipulation flex-shrink-0"
                   title="Delete patient record"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3" />
                 </button>
               </div>
             </div>
