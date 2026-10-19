@@ -33,7 +33,6 @@ import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { DEFAULT_ASSESSMENTS } from '../../data/clinicalReportsData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
-import { DualAudiogramSection } from '../../components/clinical/AudiogramGraph';
 import { EarlyDevelopmentalHistoryForm } from '../../components/clinical/EarlyDevelopmentalHistoryForm';
 import { FluencyDisordersForm } from '../../components/clinical/FluencyDisordersForm';
 import { VoiceDisordersForm } from '../../components/clinical/VoiceDisordersForm';
@@ -186,35 +185,20 @@ export const ReportCreatePage = () => {
     return CLINICAL_SERVICES.find((s) => s.code === selectedServiceCode) || CLINICAL_SERVICES[0];
   }, [selectedServiceCode]);
 
-  // Audiogram is only present for Pure-Tone and Comprehensive Audiological assessment
-  const hasAudiogram = ['RP-CLN-AUD', 'RP-CLN-AAE'].includes(activeService?.code);
+  // Standard Report Phases (4 steps: Service, Patient, Values, Sign-off across all clinical modules)
+  const reportPhases = useMemo(() => [
+    { step: 1, full: '1. Service' },
+    { step: 2, full: '2. Patient' },
+    { step: 3, full: '3. Values' },
+    { step: 4, full: '4. Sign-off' },
+  ], []);
 
-  // Dynamic Report Phases (5 for Audiology, 4 for other clinical modules)
-  const reportPhases = useMemo(() => {
-    if (hasAudiogram) {
-      return [
-        { step: 1, full: '1. Service' },
-        { step: 2, full: '2. Patient' },
-        { step: 3, full: '3. Values' },
-        { step: 4, full: '4. Graphs' },
-        { step: 5, full: '5. Sign-off' },
-      ];
-    }
-    return [
-      { step: 1, full: '1. Service' },
-      { step: 2, full: '2. Patient' },
-      { step: 3, full: '3. Values' },
-      { step: 4, full: '4. Sign-off' },
-    ];
-  }, [hasAudiogram]);
-
-  // Keep mobileStep valid when switching between 5-step and 4-step reports
+  // Keep mobileStep valid (1 to 4)
   useEffect(() => {
-    const maxStep = hasAudiogram ? 5 : 4;
-    if (mobileStep > maxStep) {
-      setMobileStep(maxStep);
+    if (mobileStep > 4) {
+      setMobileStep(4);
     }
-  }, [hasAudiogram, mobileStep]);
+  }, [mobileStep]);
 
   // Quick Guided Reading Pad state for Android / mobile rapid threshold entry
   const PTA_FREQUENCIES = ['125', '250', '500', '750', '1000', '1500', '2000', '3000', '4000', '6000', '8000'];
@@ -848,8 +832,7 @@ export const ReportCreatePage = () => {
               {mobileStep === 1 && '1. Service & Reference'}
               {mobileStep === 2 && '2. Patient Context'}
               {mobileStep === 3 && `3. Test Values (${activeService.shortName})`}
-              {hasAudiogram && mobileStep === 4 && '4. Audiogram Graphs'}
-              {mobileStep === (hasAudiogram ? 5 : 4) && `${hasAudiogram ? '5' : '4'}. Impression & Sign-Off`}
+              {mobileStep === 4 && '4. Impression & Sign-Off'}
             </span>
           </div>
 
@@ -879,8 +862,8 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* Step Pills / Buttons: 5 cols for Audiology, 4 cols for other modules */}
-        <div className={`grid gap-1 sm:gap-1.5 ${hasAudiogram ? 'grid-cols-5' : 'grid-cols-4'}`}>
+        {/* Step Pills / Buttons: 4 cols */}
+        <div className="grid gap-1 sm:gap-1.5 grid-cols-4">
           {reportPhases.map((s) => {
             const isActive = mobileStep === s.step;
             const isCompleted = mobileStep > s.step;
@@ -2527,7 +2510,7 @@ export const ReportCreatePage = () => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
-            title={hasAudiogram ? "Next Step: Audiogram Graphs" : "Next Step: Impression & Sign-Off"}
+            title="Next Step: Impression & Sign-Off"
           >
             <span className="hidden sm:inline mr-1">Next</span>
             <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
@@ -2535,114 +2518,13 @@ export const ReportCreatePage = () => {
         </div>
       </div>
 
-      {/* ── STEP 4: GENERATED AUDIOGRAM GRAPHS & VISUAL CURVES (Only for Audiology) ── */}
-      {hasAudiogram && (
-        <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-purple-700" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-                4. Generated Audiogram Visualizer &amp; Plotted Curves
-              </h2>
-            </div>
-            <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-              Real-Time Plotted Curves
-            </span>
-          </div>
-
-          {/* Dual Audiogram Graph Full Width / Full Screen Centered */}
-          <div className="border border-purple-200 rounded-lg p-2 sm:p-3 bg-white shadow-2xs space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Plotted Curves from Entered Thresholds
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">
-                Right (Red ○ / &lt;) • Left (Blue ✕ / &gt;)
-              </span>
-            </div>
-
-            <div className="overflow-x-auto w-full flex items-center justify-center py-1">
-              <DualAudiogramSection
-                rightAC={formData.parameters.rightEarAC}
-                rightBC={formData.parameters.rightEarBC}
-                leftAC={formData.parameters.leftEarAC}
-                leftBC={formData.parameters.leftEarBC}
-                className="shadow-xs w-full max-w-2xl mx-auto"
-              />
-            </div>
-          </div>
-
-          {/* PTA Analysis Summary Cards below graph */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div className="bg-rose-50/60 border border-rose-200 rounded-lg p-2.5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-rose-900 text-xs flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-rose-600 inline-block"></span>
-                  Right Ear PTA
-                </span>
-                <span className="font-mono font-black text-rose-800 text-xs">
-                  {computedPTA?.rightAvg !== undefined ? `${computedPTA.rightAvg} dB HL` : '—'}
-                </span>
-              </div>
-              <div className="text-[11px] text-rose-700 font-medium">
-                Diagnosis: <span className="font-bold">{computedPTA?.rightDegree || 'Normal'}</span>
-              </div>
-            </div>
-
-            <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2.5 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-blue-900 text-xs flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 text-blue-600 font-bold inline-block text-center">✕</span>
-                  Left Ear PTA
-                </span>
-                <span className="font-mono font-black text-blue-800 text-xs">
-                  {computedPTA?.leftAvg !== undefined ? `${computedPTA.leftAvg} dB HL` : '—'}
-                </span>
-              </div>
-              <div className="text-[11px] text-blue-700 font-medium">
-                Diagnosis: <span className="font-bold">{computedPTA?.leftDegree || 'Normal'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4 Navigation Footer */}
-          <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setMobileStep(3);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
-              title="Previous Step"
-            >
-              <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline ml-1">Back</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileStep(5);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
-              title="Next Step: Impression & Sign-Off"
-            >
-              <span className="hidden sm:inline mr-1">Next</span>
-              <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── FINAL STEP: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
-      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== (hasAudiogram ? 5 : 4) ? 'hidden' : 'block'}`}>
+      {/* ── FINAL STEP 4: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-purple-700" />
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              {hasAudiogram ? '5' : '4'}. Clinical Impression, Recommendations &amp; Doctor Sign-Off
+              4. Clinical Impression, Recommendations &amp; Doctor Sign-Off
             </h2>
           </div>
           <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
@@ -2735,7 +2617,7 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* Step 5 Navigation & Action Button Bar */}
+        {/* Step 4 Navigation & Action Button Bar */}
         <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -2746,11 +2628,11 @@ export const ReportCreatePage = () => {
             <button
               type="button"
               onClick={() => {
-                setMobileStep(hasAudiogram ? 4 : 3);
+                setMobileStep(3);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="inline-flex items-center justify-center gap-1 h-9 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
-              title={hasAudiogram ? "Previous Step: Graphs" : "Previous Step: Test Values"}
+              title="Previous Step: Test Values"
             >
               <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline ml-1">Back</span>
