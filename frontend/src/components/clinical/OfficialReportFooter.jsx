@@ -65,57 +65,13 @@ export const OfficialReportFooter = ({
 
     const params = new URLSearchParams();
     if (email) {
-      try {
-        params.set('em', btoa(unescape(encodeURIComponent(email))));
-      } catch {
-        params.set('em', encodeURIComponent(email));
-      }
+      params.set('em', email);
     }
     if (name) {
-      try {
-        params.set('pt', btoa(unescape(encodeURIComponent(name))));
-      } catch {
-        params.set('pt', encodeURIComponent(name));
-      }
+      params.set('pt', name);
     }
     if (uhid) {
-      try {
-        params.set('uh', btoa(unescape(encodeURIComponent(uhid))));
-      } catch {
-        params.set('uh', encodeURIComponent(uhid));
-      }
-    }
-
-    // Pack complete clinical payload
-    try {
-      const patientAgeSex = patient
-        ? `${patient.date_of_birth || ''}${patient.date_of_birth && patient.gender ? ' / ' : ''}${patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : (patient.gender || '')}`
-        : (formData?.patient_age_sex || formData?.ageSex || '');
-
-      const payload = {
-        num: repNum,
-        name: name,
-        uhid: uhid,
-        ageSex: patientAgeSex,
-        date: formData?.reportDate || reportDate,
-        email: email,
-        ptaNo: formData?.parameters?.ptaNo || formData?.ptaNo || '64/2026',
-        audiometer: formData?.parameters?.audiometer || 'Proton SX5',
-        responses: formData?.parameters?.responses || 'Consistent',
-        rac: formData?.parameters?.rightEarAC || null,
-        rbc: formData?.parameters?.rightEarBC || null,
-        lac: formData?.parameters?.leftEarAC || null,
-        lbc: formData?.parameters?.leftEarBC || null,
-        summary: formData?.computed || formData?.computedPTA || formData?.parameters?.audiometricSummary || null,
-        diag: formData?.parameters?.provisionalDiagnosis || formData?.diagnosis || '',
-        rec: formData?.parameters?.recommendations || formData?.recommendations || '',
-        rci: rciNumber || 'A125560',
-        examiner: examinerName,
-      };
-
-      params.set('d', btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
-    } catch (e) {
-      console.warn('Failed to encode full report payload into QR URL:', e);
+      params.set('uh', uhid);
     }
 
     const qs = params.toString();
