@@ -23,6 +23,9 @@ import {
   Edit3,
   Search,
   ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Check,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
@@ -122,6 +125,8 @@ export const ReportCreatePage = () => {
   const [selectedServiceCode, setSelectedServiceCode] = useState(initialTypeCode);
   const [selectedPatientId, setSelectedPatientId] = useState(initialPatientId);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [mobileStep, setMobileStep] = useState(1); // 1: Service, 2: Patient, 3: Tests, 4: Diagnosis
+  const [mobileViewMode, setMobileViewMode] = useState('steps'); // 'steps' | 'all'
 
   // If editing an existing report for a patient not yet in state, synthesize the patient record
   useEffect(() => {
@@ -690,48 +695,41 @@ export const ReportCreatePage = () => {
   return (
     <div className="space-y-3.5 pb-32 sm:pb-16">
       
-      {/* ── TOP ACTION BAR ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3 sm:px-4 sm:py-2.5 shadow-2xs space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
-        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
+      {/* ── TOP ACTION BAR (ULTRA COMPACT SINGLE LINE ON MOBILE) ── */}
+      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:px-4 sm:py-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/dashboard/reports')}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer shrink-0 active:scale-95 touch-manipulation"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Back to Reports</span>
-            <span className="sm:hidden">Back</span>
+            <span className="hidden sm:inline">Back</span>
           </button>
           <div className="min-w-0">
             <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-700 shrink-0" />
               {existingReport ? (
                 <span className="flex items-center gap-1.5 truncate">
-                  <span>Edit Report:</span>
-                  <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 font-mono text-xs">{formData.reportNumber}</span>
+                  <span className="hidden sm:inline">Edit:</span>
+                  <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 font-mono text-[11px] sm:text-xs">{formData.reportNumber}</span>
                 </span>
               ) : (
                 <span className="truncate">Clinical Report Entry</span>
               )}
             </h1>
-            <p className="hidden sm:block text-[10px] text-slate-500">
-              {existingReport ? (
-                <span className="text-purple-700 font-medium">Modifying clinical findings for {selectedPatient?.full_name} ({selectedPatient?.uhid})</span>
-              ) : (
-                <span>Input patient findings • Computes diagnostic metrics • Prints official letterhead</span>
-              )}
-            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
+        {/* Action Buttons: Compact icons on mobile, full buttons on desktop */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={handleSaveReport}
-            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
-            title="Save report to clinical records (Ctrl/Cmd + S)"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+            title="Save report (Ctrl/Cmd + S)"
           >
-            <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+            <Save className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden sm:inline truncate">{existingReport ? 'Update' : 'Save'}</span>
             <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-purple-800/80 text-[9px] rounded font-mono">⌘S</kbd>
           </button>
@@ -739,32 +737,116 @@ export const ReportCreatePage = () => {
           <button
             type="button"
             onClick={handleOpenPreviewInNewTab}
-            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
-            title="Open official report preview in new tab"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+            title="Preview report in new tab"
           >
-            <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-purple-700 shrink-0" />
+            <Eye className="w-3.5 h-3.5 text-purple-700 shrink-0" />
             <span className="hidden sm:inline truncate">Preview</span>
           </button>
 
           <button
             type="button"
             onClick={triggerPrint}
-            className="inline-flex items-center justify-center gap-1.5 h-9 px-2 sm:px-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Print Official Document (Ctrl/Cmd + P)"
           >
-            <Printer className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
-            <span className="hidden sm:inline truncate">Print PDF</span>
+            <Printer className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline truncate">Print</span>
             <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
           </button>
         </div>
       </div>
 
+      {/* ── STEPPER PROGRESS BAR (Mobile & Desktop Phased Navigation) ── */}
+      <div className="bg-white border border-slate-200 rounded-lg p-2 sm:p-2.5 shadow-2xs">
+        <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide shrink-0">
+              Phase {mobileStep} of 4:
+            </span>
+            <span className="text-xs font-extrabold text-purple-950 truncate">
+              {mobileStep === 1 && '1. Service & Reference'}
+              {mobileStep === 2 && '2. Patient Context'}
+              {mobileStep === 3 && `3. Tests (${activeService.shortName})`}
+              {mobileStep === 4 && '4. Diagnosis & Sign'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 text-[10px] shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('steps')}
+              className={`px-2 py-0.5 rounded font-bold transition-all cursor-pointer ${
+                mobileViewMode === 'steps'
+                  ? 'bg-purple-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Steps
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('all')}
+              className={`px-2 py-0.5 rounded font-bold transition-all cursor-pointer ${
+                mobileViewMode === 'all'
+                  ? 'bg-purple-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              View All
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Step Pills / Buttons */}
+        <div className="grid grid-cols-4 gap-1 sm:gap-2">
+          {[
+            { step: 1, label: '1. Service', full: '1. Service & Proforma' },
+            { step: 2, label: '2. Patient', full: '2. Patient Context' },
+            { step: 3, label: '3. Tests', full: '3. Clinical Tests' },
+            { step: 4, label: '4. Diagnosis', full: '4. Diagnosis & Sign' },
+          ].map((s) => {
+            const isActive = mobileStep === s.step;
+            const isCompleted = mobileStep > s.step;
+            return (
+              <button
+                key={s.step}
+                type="button"
+                onClick={() => setMobileStep(s.step)}
+                className={`py-1.5 px-1 sm:px-2 rounded-md text-center transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                  isActive
+                    ? 'bg-purple-900 text-white font-extrabold shadow-2xs ring-2 ring-purple-400/50'
+                    : isCompleted
+                    ? 'bg-purple-50 text-purple-900 font-bold border border-purple-200 hover:bg-purple-100'
+                    : 'bg-slate-50 text-slate-600 font-medium border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+                  {isCompleted ? (
+                    <Check className="w-3 h-3 text-purple-700 shrink-0" />
+                  ) : (
+                    <span className={`w-3.5 h-3.5 rounded-full text-[9px] flex items-center justify-center font-mono ${isActive ? 'bg-purple-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      {s.step}
+                    </span>
+                  )}
+                  <span className="sm:hidden truncate">{s.label}</span>
+                  <span className="hidden sm:inline truncate">{s.full}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-2xs space-y-2.5 ${mobileViewMode === 'steps' && mobileStep !== 1 ? 'hidden' : 'block'}`}>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+          <span className="text-[11px] sm:text-xs font-bold text-slate-800 tracking-wide flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             1. Select Clinical Service Template
+          </span>
+          <span className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+            {CLINICAL_SERVICES.length} Templates
           </span>
         </div>
 
@@ -795,11 +877,64 @@ export const ReportCreatePage = () => {
             );
           })}
         </div>
+
+        {/* Report Reference, Date & Clinician */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+          <div>
+            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+              Report Reference &amp; Date
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <input
+                type="text"
+                value={formData.reportNumber}
+                onChange={(e) => setFormData((prev) => ({ ...prev, reportNumber: e.target.value }))}
+                className="w-full text-xs font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+              />
+              <input
+                type="date"
+                value={formData.reportDate}
+                onChange={(e) => setFormData((prev) => ({ ...prev, reportDate: e.target.value }))}
+                className="w-full text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+              Attending Clinician (RCI CRR)
+            </label>
+            <input
+              type="text"
+              value={`${formData.examinerName} • CRR: ${formData.rciNumber}`}
+              readOnly
+              className="w-full text-xs font-semibold text-purple-900 bg-purple-50/40 border border-purple-200 rounded px-2.5 py-1.5"
+            />
+          </div>
+        </div>
+
+        {/* Step 1 Navigation Footer */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+          <div className="text-[11px] text-slate-500 font-medium truncate">
+            Active: <span className="font-bold text-purple-900">{activeService.title}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(2);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto"
+          >
+            <span>Next: Patient Context</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* ── STEP 2: SELECT PATIENT & DEMOGRAPHICS SUMMARY ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3.5 shadow-2xs space-y-2.5 ${mobileViewMode === 'steps' && mobileStep !== 2 ? 'hidden' : 'block'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-purple-700" />
             <span className="text-xs font-bold text-slate-800 tracking-wide">
@@ -822,7 +957,7 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
           {/* Searchable Patient Combobox (Type & Search) */}
           <div ref={patientDropdownRef} className="relative">
             <div className="flex items-center justify-between mb-1">
@@ -934,46 +1069,12 @@ export const ReportCreatePage = () => {
               </div>
             )}
           </div>
-
-          {/* Doc ID & Date */}
-          <div>
-            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Report Reference &amp; Date
-            </label>
-            <div className="grid grid-cols-2 gap-1.5">
-              <input
-                type="text"
-                value={formData.reportNumber}
-                onChange={(e) => setFormData((prev) => ({ ...prev, reportNumber: e.target.value }))}
-                className="w-full text-xs font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
-              />
-              <input
-                type="date"
-                value={formData.reportDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, reportDate: e.target.value }))}
-                className="w-full text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
-              />
-            </div>
-          </div>
-
-          {/* Clinician */}
-          <div>
-            <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-              Attending Clinician (RCI CRR)
-            </label>
-            <input
-              type="text"
-              value={`${formData.examinerName} • CRR: ${formData.rciNumber}`}
-              readOnly
-              className="w-full text-xs font-semibold text-purple-900 bg-purple-50/40 border border-purple-200 rounded px-2.5 py-1.5"
-            />
-          </div>
         </div>
 
         {/* Auto-Populated Demographics Summary Card */}
         {selectedPatient && (
-          <div className="bg-purple-50/30 border border-purple-200/80 rounded-md p-3 relative">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+          <div className="bg-purple-50/30 border border-purple-200/80 rounded-md p-2.5 sm:p-3 relative">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 text-xs">
               <div>
                 <span className="text-[10px] text-slate-500 block font-bold uppercase">UHID</span>
                 <span className="font-mono font-black text-purple-800">{selectedPatient.uhid}</span>
@@ -1017,15 +1118,41 @@ export const ReportCreatePage = () => {
             </div>
           </div>
         )}
+
+        {/* Step 2 Navigation Footer */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Back: Service</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(3);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+          >
+            <span>Next: Clinical Tests</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* ── STEP 3: CLINICAL PARAMETERS ENTRY FORM ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 3 ? 'hidden' : 'block'}`}>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-purple-700" />
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              3. Clinical Parameters Entry: {activeService.title} ({activeService.code})
+              3. Clinical Parameters: {activeService.title} ({activeService.code})
             </h2>
           </div>
           <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
@@ -2166,8 +2293,49 @@ export const ReportCreatePage = () => {
           </div>
         )}
 
+        {/* Step 3 Navigation Footer */}
+        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(2);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Back: Patient</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileStep(4);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+          >
+            <span>Next: Diagnosis &amp; Sign</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── STEP 4: CLINICAL IMPRESSION, DIAGNOSIS & REVIEWS ── */}
+      <div className={`bg-white border border-slate-200 rounded-lg p-2.5 sm:p-4 shadow-2xs space-y-3 sm:space-y-4 ${mobileViewMode === 'steps' && mobileStep !== 4 ? 'hidden' : 'block'}`}>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-purple-700" />
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              4. Clinical Impression, Recommendations &amp; Doctor Sign-Off
+            </h2>
+          </div>
+          <span className="text-[10px] text-purple-800 font-semibold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+            Final Phase
+          </span>
+        </div>
+
         {/* Clinical Impression & Recommendations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 pt-1">
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">
@@ -2245,42 +2413,34 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* Action Button Bar */}
+        {/* Step 4 Navigation & Action Button Bar */}
         <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Digital stamp linked to RCI CRR No. {formData.rciNumber}</span>
+            <span className="text-[11px]">Digital stamp linked to RCI CRR No. {formData.rciNumber}</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center">
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileStep(3);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-1 h-9 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Back: Tests</span>
+            </button>
+
             <button
               type="button"
               onClick={handleSaveReport}
-              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+              className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 rounded-lg shadow-2xs transition-all cursor-pointer touch-manipulation"
               title={existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}
             >
-              <Save className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
-              <span className="hidden sm:inline">{existingReport ? 'Update Clinical Report' : 'Save Clinical Report'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleOpenPreviewInNewTab}
-              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
-              title="Preview in New Tab"
-            >
-              <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-purple-700 shrink-0" />
-              <span className="hidden sm:inline">Preview in New Tab</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={triggerPrint}
-              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3 sm:px-4 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-lg sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
-              title="Print Official PDF"
-            >
-              <Printer className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Print Official PDF</span>
+              <Save className="w-4 h-4 shrink-0" />
+              <span>{existingReport ? 'Update Report' : 'Save & Finalize'}</span>
             </button>
           </div>
         </div>

@@ -846,30 +846,30 @@ Kindly reply *CONFIRM* to acknowledge.`;
       </div>
 
       {/* ── MOBILE APPOINTMENT CARDS (Visible on screen < md) ── */}
-      <div className="md:hidden space-y-2.5">
+      <div className="md:hidden space-y-1.5">
         {paginated.length === 0 ? (
-          <div className="p-6 text-center text-slate-500 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <CalendarCheck className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
+          <div className="p-4 text-center text-slate-500 bg-white rounded-lg border border-slate-200 shadow-2xs">
+            <CalendarCheck className="w-7 h-7 text-slate-300 mx-auto mb-1" />
             <p className="text-xs font-bold text-slate-700">No matching appointments found</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Try clearing filters or search term.</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Try clearing filters or search term.</p>
           </div>
         ) : (
           paginated.map((apt) => (
             <div
               key={apt.id}
-              className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs space-y-2.5"
+              className="bg-white border border-slate-200/90 rounded-lg p-2.5 shadow-2xs space-y-1.5"
             >
               {/* Top Row: Date/Time Badge & Status */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#301444] bg-purple-50 px-2 py-1 rounded-md border border-purple-200">
-                  <Clock className="w-3.5 h-3.5 text-purple-700 flex-shrink-0" />
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-[#301444] bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                  <Clock className="w-3 h-3 text-purple-700 flex-shrink-0" />
                   <span className="whitespace-nowrap">{apt.appointment_date}</span>
                   <span className="text-purple-400">•</span>
                   <span className="whitespace-nowrap text-purple-900">{apt.start_time}</span>
                 </div>
 
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-flex items-center gap-1 whitespace-nowrap ${
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold border inline-flex items-center gap-1 whitespace-nowrap ${
                     apt.status === 'PENDING'
                       ? 'bg-amber-50 text-amber-800 border-amber-300 animate-pulse'
                       : apt.status === 'CONFIRMED'
@@ -883,9 +883,9 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 >
                   {apt.status === 'PENDING' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                   {apt.status === 'PENDING'
-                    ? 'Pending Approval'
+                    ? 'Pending'
                     : apt.status === 'CHECKED_IN'
-                    ? 'In Queue (Waiting)'
+                    ? 'In Queue'
                     : apt.status === 'CONFIRMED'
                     ? 'Confirmed'
                     : apt.status}
@@ -893,39 +893,38 @@ Kindly reply *CONFIRM* to acknowledge.`;
               </div>
 
               {/* Patient Name, UHID & Phone */}
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-1.5">
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-slate-900 truncate">{apt.patient_name}</h4>
-                  <div className="flex items-center gap-2 mt-1 text-xs">
-                    <span className="font-mono font-bold text-[10px] text-purple-900 bg-purple-100/80 px-1.5 py-0.5 rounded border border-purple-200 whitespace-nowrap">
+                  <h4 className="text-xs font-bold text-slate-900 truncate leading-tight">{apt.patient_name}</h4>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-xs">
+                    <span className="font-mono font-bold text-[9.5px] text-purple-900 bg-purple-100/80 px-1.5 py-0.2 rounded border border-purple-200 whitespace-nowrap">
                       {apt.patient_uhid || 'VN-26-0001'}
                     </span>
                     <a
                       href={`tel:${apt.patient_phone}`}
-                      className="inline-flex items-center gap-1 text-slate-600 hover:text-purple-700 font-mono text-[11px] font-medium"
+                      className="inline-flex items-center gap-1 text-slate-600 hover:text-purple-700 font-mono text-[10px] font-medium"
                     >
-                      <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                      <Phone className="w-2.5 h-2.5 text-slate-400 flex-shrink-0" />
                       <span>{apt.patient_phone}</span>
                     </a>
                   </div>
                 </div>
 
-                <div className="text-right flex-shrink-0">
+                <div className="text-right flex-shrink-0 leading-tight">
                   <span className="text-xs font-mono font-bold text-slate-900">
                     ₹{(((apt.fee_paise ? apt.fee_paise / 100 : apt.fee) || 0)).toLocaleString('en-IN')}
                   </span>
-                  <span className="block text-[10px] text-slate-400 font-medium">Fee</span>
+                  <span className="block text-[9px] text-slate-400 font-medium">Fee</span>
                 </div>
               </div>
 
               {/* Service Line & Notes */}
-              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs flex items-center justify-between gap-2">
+              <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100 text-[11px] flex items-center justify-between gap-2">
                 <div className="truncate flex-1">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Clinical Service</span>
-                  <span className="font-semibold text-slate-800 truncate block">{apt.service_name}</span>
+                  <span className="font-medium text-slate-700 truncate block">{apt.service_name}</span>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border flex-shrink-0 whitespace-nowrap ${
+                  className={`px-1.5 py-0.2 rounded text-[9px] font-bold border flex-shrink-0 whitespace-nowrap ${
                     apt.service_line === 'SPEECH_LANGUAGE'
                       ? 'bg-purple-50 text-purple-700 border-purple-200'
                       : apt.service_line === 'AUDIOLOGY'
@@ -946,25 +945,25 @@ Kindly reply *CONFIRM* to acknowledge.`;
               </div>
 
               {/* Direct Actions Row */}
-              <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1">
                 {apt.status === 'PENDING' && (
                   <>
                     <button
                       type="button"
                       onClick={() => handleApprove(apt.id)}
-                      className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                      className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2 rounded-md text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
                       title="Approve booking and lock slot"
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-3 h-3" />
                       <span>Approve</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeny(apt.id)}
-                      className="inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 border border-rose-200 transition-all cursor-pointer touch-manipulation"
+                      className="inline-flex items-center justify-center gap-1 h-7 px-2 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 border border-rose-200 transition-all cursor-pointer touch-manipulation"
                       title="Deny request and release slot"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                       <span>Deny</span>
                     </button>
                   </>
@@ -974,10 +973,10 @@ Kindly reply *CONFIRM* to acknowledge.`;
                   <button
                     type="button"
                     onClick={() => handleStatusUpdate(apt.id, 'CHECKED_IN')}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2 rounded-md text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
                     title="Check in patient for consultation token"
                   >
-                    <User className="w-3.5 h-3.5" />
+                    <User className="w-3 h-3" />
                     <span>Check In</span>
                   </button>
                 )}
@@ -986,17 +985,17 @@ Kindly reply *CONFIRM* to acknowledge.`;
                   <button
                     type="button"
                     onClick={() => handleStatusUpdate(apt.id, 'COMPLETED')}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2 rounded-md text-[11px] font-bold bg-[#301444] hover:bg-[#200b30] active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
                     title="Mark consultation completed"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-3 h-3" />
                     <span>Complete</span>
                   </button>
                 )}
 
                 {apt.status === 'COMPLETED' && (
-                  <div className="flex-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 h-8">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="flex-1 inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-md px-2 h-7">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                     <span>Completed</span>
                   </div>
                 )}
@@ -1005,52 +1004,50 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 <button
                   type="button"
                   onClick={() => handleSendWhatsAppReminder(apt)}
-                  className="inline-flex items-center justify-center gap-1 h-8 px-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 rounded-lg transition-all cursor-pointer touch-manipulation"
+                  className="h-7 w-7 inline-flex items-center justify-center text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 rounded-md transition-all cursor-pointer touch-manipulation shrink-0"
                   title="Send WhatsApp Reminder"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="hidden xs:inline sm:inline">WhatsApp</span>
+                  <MessageSquare className="w-3 h-3 text-emerald-600" />
                 </button>
 
                 {/* Email Reminder Modal */}
                 <button
                   type="button"
                   onClick={() => handleSendEmailReminder(apt)}
-                  className="inline-flex items-center justify-center gap-1 h-8 px-2.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 active:scale-95 border border-purple-200 rounded-lg transition-all cursor-pointer touch-manipulation"
+                  className="h-7 w-7 inline-flex items-center justify-center text-purple-700 bg-purple-50 hover:bg-purple-100 active:scale-95 border border-purple-200 rounded-md transition-all cursor-pointer touch-manipulation shrink-0"
                   title="Send Email Reminder"
                 >
-                  <Mail className="w-3.5 h-3.5 text-purple-600" />
-                  <span className="hidden xs:inline sm:inline">Email</span>
+                  <Mail className="w-3 h-3 text-purple-600" />
                 </button>
 
                 {/* Reschedule Button */}
                 <button
                   type="button"
                   onClick={() => handleOpenReschedule(apt)}
-                  className="p-2 rounded-lg text-purple-700 hover:bg-purple-50 active:scale-95 border border-purple-200 transition-all cursor-pointer touch-manipulation"
+                  className="h-7 w-7 inline-flex items-center justify-center text-purple-700 hover:bg-purple-50 active:scale-95 border border-purple-200 rounded-md transition-all cursor-pointer touch-manipulation shrink-0"
                   title="Reschedule Appointment"
                 >
-                  <CalendarIcon className="w-3.5 h-3.5" />
+                  <CalendarIcon className="w-3 h-3" />
                 </button>
 
                 {/* Edit Button */}
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(apt)}
-                  className="p-2 rounded-lg text-slate-500 hover:text-purple-700 hover:bg-purple-50 active:scale-95 border border-slate-200 transition-all cursor-pointer touch-manipulation ml-auto"
+                  className="h-7 w-7 inline-flex items-center justify-center text-slate-500 hover:text-purple-700 hover:bg-purple-50 active:scale-95 border border-slate-200 rounded-md transition-all cursor-pointer touch-manipulation shrink-0 ml-auto"
                   title="Edit Appointment"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3 h-3" />
                 </button>
 
                 {/* Delete Button */}
                 <button
                   type="button"
                   onClick={() => handleDelete(apt.id, apt.patient_name)}
-                  className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95 border border-slate-200 transition-all cursor-pointer touch-manipulation"
+                  className="h-7 w-7 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95 border border-slate-200 rounded-md transition-all cursor-pointer touch-manipulation shrink-0"
                   title="Delete Appointment"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3" />
                 </button>
               </div>
             </div>
