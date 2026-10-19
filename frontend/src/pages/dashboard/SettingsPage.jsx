@@ -59,9 +59,9 @@ const DEFAULT_SETTINGS = {
     stampNote: 'RCI Registered Practitioner Seal (CRR No. A79214)',
   },
   contact: {
-    primaryPhone: '+91 98220 12345',
+    primaryPhone: '+91 8857830151',
     whatsappEnabled: true,
-    consultationPhone: '+91 94230 99887',
+    consultationPhone: '+91 8857830151',
     officialEmail: 'info@vaaniclinic.com',
     websiteUrl: 'https://vaaniclinic.com',
     addressLine1: 'Shop No. 4, Ground Floor, Sadashiv Arcade',
@@ -84,7 +84,7 @@ const DEFAULT_SETTINGS = {
     rciValidUntil: '2031-10-15',
     titlePermitted: true, // Permits "Dr." prefix
     leadPractitioner: 'Ms. Palak Paresh Gandhi',
-    leadDegree: 'MASLP, RCI',
+    leadDegree: 'BASLP, RCI',
     cbtQualificationVerified: true, // BR-042
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
     clinicalEstablishmentNo: 'MH-STR-CEA-2024-0081',

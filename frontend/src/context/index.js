@@ -9,4 +9,5 @@ export {
   DEFAULT_CLINIC_SETTINGS,
   formatClinicAddress,
   formatClinicHelpline,
+  getClinicDoctorDetails,
 } from './ClinicSettingsContext';

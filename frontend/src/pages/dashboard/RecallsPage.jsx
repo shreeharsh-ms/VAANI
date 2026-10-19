@@ -23,6 +23,7 @@ import Modal from '../../components/common/Modal';
 import { WhatsAppDispatchModal } from '../../components/common';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 import { useTableKeyboardNav } from '../../hooks';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 // ── INITIAL RECALL DATA SEED (SRS SECTION 4.10) ──
 const INITIAL_RECALLS = [
@@ -114,6 +115,14 @@ const INITIAL_RECALLS = [
 
 export const RecallsPage = () => {
   const { notify } = useNotification();
+  const { settings: clinicSettings, formattedAddress, primaryPhone } = useClinicSettings();
+  const clinicAddress = formattedAddress || formatClinicAddress(clinicSettings);
+  const clinicPhone = primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
+  const clinicTitle = clinicSettings?.identity?.letterheadTitle || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Rehabilitation Clinic';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadDegree = clinicSettings?.credentials?.leadDegree || 'BASLP, RCI';
+  const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? ` (${leadDegree})` : ''}`;
+
   const [recalls, setRecalls] = useState(() => {
     try {
       const saved = localStorage.getItem('vaani_recalls_v1');
@@ -239,13 +248,17 @@ export const RecallsPage = () => {
 
   const getRecallWhatsAppMessage = (recall) => {
     if (!recall) return '';
+    const clinician = recall.assignedClinician && !recall.assignedClinician.includes('Shreeharsh')
+      ? recall.assignedClinician
+      : fullLeadPractitioner;
+
     return `Hello *${recall.patientName}*,\n\n` +
-      `This is a clinical follow-up reminder from *Vaani Speech & Hearing Rehabilitation Clinic* (Satara).\n\n` +
+      `This is a clinical follow-up reminder from *${clinicTitle}* (Satara).\n\n` +
       `🩺 *Follow-up Objective:* ${recall.reason}\n` +
       `🗓 *Due Date:* ${recall.dueDate}\n` +
-      `👩‍⚕️ *Attending Clinician:* ${recall.assignedClinician || 'Dr. Palak Paresh Gandhi (MASLP)'}\n` +
-      `📍 *Location:* Sadashiv Peth, Satara\n` +
-      `📞 *Appointment Desk:* +91 98220 12345\n\n` +
+      `👩‍⚕️ *Attending Clinician:* ${clinician}\n` +
+      `📍 *Location:* ${clinicAddress}\n` +
+      `📞 *Appointment Desk:* ${clinicPhone}\n\n` +
       `Please contact us to confirm your preferred consultation timing.`;
   };
 

@@ -39,10 +39,19 @@ import { formatTime, formatCurrency, normalizeSlotTime, normalizeDate, getAppoin
 import { isKey, isAlt } from '../../utils/keyboard';
 import { getAllAppointments, SEED_APPOINTMENTS } from '../../data/appointmentsData';
 import { useTableKeyboardNav } from '../../hooks';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 const ALL_SLOTS = CLINICAL_TIME_SLOTS;
 
 export const AppointmentsPage = () => {
+  const { settings: clinicSettings, formattedAddress, primaryPhone } = useClinicSettings();
+  const clinicAddress = formattedAddress || formatClinicAddress(clinicSettings);
+  const clinicHelpline = primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
+  const clinicTitle = clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
+  const doctorName = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const doctorDegree = clinicSettings?.credentials?.leadDegree || 'BASLP, RCI';
+  const doctorRci = clinicSettings?.credentials?.rciNumber || 'A79214';
+  const fullExaminer = `${doctorName} (${doctorDegree}, RCI CRR No. ${doctorRci})`;
   const { notify } = useNotification();
   const [searchParams, setSearchParams] = useSearchParams();
   const [appointments, setAppointments] = useState(() => getAllAppointments());
@@ -285,14 +294,14 @@ export const AppointmentsPage = () => {
     if (rescheduleData.notifyWhatsApp && reschedulingAppointment.patient_phone) {
       const phone = reschedulingAppointment.patient_phone.replace(/[^0-9]/g, '');
       const msg = `Namaste *${reschedulingAppointment.patient_name}*,
-Your appointment at *Vaani Speech & Hearing Clinic* has been successfully rescheduled.
+Your appointment at *${clinicTitle}* has been successfully rescheduled.
 
 🗓 *New Date:* ${rescheduleData.newDate}
 ⏰ *New Time Slot:* ${rescheduleData.newSlot}
 🩺 *Service:* ${reschedulingAppointment.service_name}
-👩‍⚕️ *Clinician:* Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)
-📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)
-📞 *Contact:* +91 98220 12345
+👩‍⚕️ *Clinician:* ${reschedulingAppointment.clinician || fullExaminer}
+📍 *Address:* ${clinicAddress}
+📞 *Contact:* ${clinicHelpline}
 
 Kindly reply *CONFIRM* to acknowledge.`;
 
@@ -330,13 +339,13 @@ Kindly reply *CONFIRM* to acknowledge.`;
   const getAppointmentWhatsAppMessage = (apt) => {
     if (!apt) return '';
     return `Namaste *${apt.patient_name}*,\n` +
-      `This is a gentle clinical reminder for your upcoming appointment at *Vaani Speech & Hearing Clinic*.\n\n` +
+      `This is a gentle clinical reminder for your upcoming appointment at *${clinicTitle}*.\n\n` +
       `🗓 *Date:* ${apt.appointment_date}\n` +
       `⏰ *Time Slot:* ${apt.start_time}\n` +
       `🩺 *Service:* ${apt.service_name}\n` +
-      `👩‍⚕️ *Clinician:* ${apt.clinician || 'Ms. Palak Paresh Gandhi (MASLP, RCI CRR No. A79214)'}\n` +
-      `📍 *Address:* Sadashiv Peth, Satara (Opp. Civil Hospital)\n` +
-      `📞 *Helpdesk:* +91 98220 12345\n\n` +
+      `👩‍⚕️ *Clinician:* ${apt.clinician || fullExaminer}\n` +
+      `📍 *Address:* ${clinicAddress}\n` +
+      `📞 *Helpdesk:* ${clinicHelpline}\n\n` +
       `Please arrive 10 minutes prior to your scheduled slot. Kindly reply *CONFIRM* to acknowledge.`;
   };
 
@@ -1546,8 +1555,8 @@ Kindly reply *CONFIRM* to acknowledge.`;
           uhid={selectedAptForMail.patient_uhid || selectedAptForMail.uhid}
           attachedFile={null}
           documentTitle={null}
-          defaultSubject={`Clinical Appointment Reminder: ${selectedAptForMail.appointment_date} at ${selectedAptForMail.start_time} - Vaani Clinic`}
-          defaultMessage={`Dear ${selectedAptForMail.patient_name},\n\nThis is an official reminder for your scheduled clinical consultation at Vaani Speech & Hearing Rehabilitation Clinic.\n\nAppointment Particulars:\n- Date: ${selectedAptForMail.appointment_date}\n- Time Slot: ${selectedAptForMail.start_time}\n- Clinical Service: ${selectedAptForMail.service_name}\n- Consultant: ${selectedAptForMail.clinician || 'Ms. Palak Paresh Gandhi, MASLP (Gold Medalist), RCI CRR No. A79214'}\n- Clinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002\n- Direct Phone: +91 98220 12345\n\nPlease arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.\n\nWarm regards,\nVaani Speech & Hearing Clinic`}
+          defaultSubject={`Clinical Appointment Reminder: ${selectedAptForMail.appointment_date} at ${selectedAptForMail.start_time} - ${clinicTitle}`}
+          defaultMessage={`Dear ${selectedAptForMail.patient_name},\n\nThis is an official reminder for your scheduled clinical consultation at ${clinicTitle}.\n\nAppointment Particulars:\n- Date: ${selectedAptForMail.appointment_date}\n- Time Slot: ${selectedAptForMail.start_time}\n- Clinical Service: ${selectedAptForMail.service_name}\n- Consultant: ${selectedAptForMail.clinician || fullExaminer}\n- Clinic Address: ${clinicAddress}\n- Direct Phone: ${clinicHelpline}\n\nPlease arrive 10 minutes prior to your allocated time. Kindly bring any prior medical or audiological records.\n\nWarm regards,\n${clinicTitle}`}
           onSuccess={({ email }) => {
             if (email && email !== selectedAptForMail.patient_email) {
               setAppointments((prev) =>

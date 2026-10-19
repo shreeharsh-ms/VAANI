@@ -6,11 +6,13 @@ import { EmailDispatchModal, WhatsAppDispatchModal } from '../../components/comm
 import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfiles';
 import { getAllClinicalReports } from '../../data/clinicalReportsData';
-import { getClinicSettings } from '../../context/ClinicSettingsContext';
+import { useClinicSettings, formatClinicAddress, CLINIC_SETTINGS_EVENT } from '../../context/ClinicSettingsContext';
 
 export const ReportViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const clinic = useClinicSettings();
+  const settings = clinic.settings;
   const [reportData, setReportData] = useState(null);
   const [isMailModalOpen, setIsMailModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
@@ -138,15 +140,13 @@ export const ReportViewPage = () => {
             };
           }
 
-          const settings = getClinicSettings();
-          const leadPractitioner = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-          const leadDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+          const leadPractitioner = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+          const leadDegree = settings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
           const defaultExaminer = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
-          const defaultRci = settings?.credentials?.rciNumber || 'A79214';
+          const defaultRci = settings?.credentials?.rciNumber || clinic.rciNumber || 'A79214';
 
-          const resolvedExaminer = match.examiner && !match.examiner.includes('Shreeharsh')
-            ? match.examiner
-            : defaultExaminer;
+          const isStandardExaminer = !match.examiner || match.examiner.includes('Palak Paresh Gandhi') || match.examiner.includes('Shreeharsh');
+          const resolvedExaminer = isStandardExaminer ? defaultExaminer : match.examiner;
 
           setReportData({
             reportNumber: match.report_number || match.id,
@@ -176,11 +176,10 @@ export const ReportViewPage = () => {
     // 4. Ultimate fallback: Default PTA proforma
     const srv = CLINICAL_SERVICES[0];
     const patient = SEED_PATIENTS[0];
-    const settings = getClinicSettings();
-    const fallbackLead = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-    const fallbackDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+    const fallbackLead = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+    const fallbackDegree = settings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
     const fallbackExaminer = `${fallbackLead}${fallbackDegree ? `, ${fallbackDegree}` : ''}`;
-    const fallbackRci = settings?.credentials?.rciNumber || 'A79214';
+    const fallbackRci = settings?.credentials?.rciNumber || clinic.rciNumber || 'A79214';
 
     setReportData({
       reportNumber: id || 'REP-26-0001',
@@ -204,7 +203,12 @@ export const ReportViewPage = () => {
     loadReport();
 
     const handleStorageChange = (e) => {
-      if (e.key === 'vaani_clinical_reports_v1' || e.key === 'vaani_preview_report' || !e.key) {
+      if (
+        e.key === 'vaani_clinical_reports_v1' ||
+        e.key === 'vaani_preview_report' ||
+        e.key === 'vaani_clinic_settings_v1' ||
+        !e.key
+      ) {
         loadReport();
       }
     };
@@ -214,14 +218,16 @@ export const ReportViewPage = () => {
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('vaani_reports_updated', handleCustomUpdate);
+    window.addEventListener(CLINIC_SETTINGS_EVENT, handleCustomUpdate);
     window.addEventListener('focus', loadReport);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('vaani_reports_updated', handleCustomUpdate);
+      window.removeEventListener(CLINIC_SETTINGS_EVENT, handleCustomUpdate);
       window.removeEventListener('focus', loadReport);
     };
-  }, [id]);
+  }, [id, settings]);
 
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -410,51 +416,84 @@ export const ReportViewPage = () => {
       </main>
 
       {/* Communication Modals */}
-      {reportData && (
-        <>
-          <WhatsAppDispatchModal
-            isOpen={isWhatsAppModalOpen}
-            onClose={() => setIsWhatsAppModalOpen(false)}
-            recipientName={reportData.patient?.full_name || 'Patient'}
-            recipientPhone={reportData.patient?.phone || ''}
-            uhid={reportData.patient?.uhid}
-            patientId={reportData.patient?.id}
-            attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
-            documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
-            defaultMessage={`*Vaani Speech & Hearing Rehabilitation Clinic*\n\nDear *${reportData.patient?.full_name || 'Patient'}*,\nYour official clinical record *${reportData.reportNumber}* (${reportData.service?.title || 'Audiological Evaluation'}) has been verified and registered.\n\nExaminer: Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)\nClinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002\nHelpline: +91 98220 11223`}
-            onSuccess={({ phone }) => {
-              if (phone) {
-                setReportData((prev) => ({
-                  ...prev,
-                  patient: { ...prev.patient, phone },
-                }));
-              }
-            }}
-          />
+      {reportData && (() => {
+        const clinicAddress = clinic.formattedAddress || formatClinicAddress(settings);
+        const clinicHelpline = clinic.primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
+        const clinicTitle = settings?.identity?.letterheadTitle || settings?.identity?.legalName || 'Vaani Speech & Hearing Rehabilitation Clinic';
+        const docDetails = clinic.doctorDetails || {};
+        const doctorName = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || docDetails.doctorName || 'Ms. Palak Paresh Gandhi';
+        const doctorDegree = settings?.credentials?.leadDegree || clinic.leadDegree || docDetails.degree || 'BASLP, RCI';
+        const doctorRci = settings?.credentials?.rciNumber || clinic.rciNumber || docDetails.rci || 'A79214';
 
-          <EmailDispatchModal
-            isOpen={isMailModalOpen}
-            onClose={() => setIsMailModalOpen(false)}
-            recipientName={reportData.patient?.full_name || 'Patient'}
-            recipientEmail={reportData.patient?.email || ''}
-            uhid={reportData.patient?.uhid}
-            patientId={reportData.patient?.id}
-            attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
-            documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
-            reportData={reportData}
-            defaultSubject={`Clinical Report ${reportData.reportNumber} — ${reportData.patient?.full_name} [Vaani Clinic]`}
-            defaultMessage={`Dear ${reportData.patient?.full_name || 'Patient'},\n\nPlease find attached the official summary of your clinical assessment recorded at Vaani Speech & Hearing Rehabilitation Clinic (Satara):\n\n• Report ID: ${reportData.reportNumber}\n• Assessment: ${reportData.service?.title || 'Audiological Evaluation (PTA)'}\n• Examination Date: ${reportData.date || new Date().toLocaleDateString('en-IN')}\n• Attending Clinician: Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)\n\nThis record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\nWarm regards,\nVaani Speech & Hearing Clinic\nPhone: +91 98220 11223 | Satara, Maharashtra`}
-            onSuccess={({ email }) => {
-              if (email) {
-                setReportData((prev) => ({
-                  ...prev,
-                  patient: { ...prev.patient, email },
-                }));
-              }
-            }}
-          />
-        </>
-      )}
+        const examinerText = reportData.examinerName && !reportData.examinerName.includes('Shreeharsh')
+          ? (reportData.examinerName.includes('RCI') ? reportData.examinerName : `${reportData.examinerName} (RCI No. ${doctorRci})`)
+          : `${doctorName}${doctorDegree ? `, ${doctorDegree}` : ''} (RCI No. ${doctorRci})`;
+
+        const defaultWhatsAppMsg = `*${clinicTitle}*\n\n` +
+          `Dear *${reportData.patient?.full_name || 'Patient'}*,\n` +
+          `Your official clinical record *${reportData.reportNumber}* (${reportData.service?.title || 'Audiological Evaluation'}) has been verified and registered.\n\n` +
+          `Examiner: ${examinerText}\n` +
+          `Clinic Address: ${clinicAddress}\n` +
+          `Helpline: ${clinicHelpline}`;
+
+        const defaultEmailMsg = `Dear ${reportData.patient?.full_name || 'Patient'},\n\n` +
+          `Please find attached the official summary of your clinical assessment recorded at ${clinicTitle}:\n\n` +
+          `• Report ID: ${reportData.reportNumber}\n` +
+          `• Assessment: ${reportData.service?.title || 'Audiological Evaluation (PTA)'}\n` +
+          `• Examination Date: ${reportData.reportDate || reportData.date || new Date().toLocaleDateString('en-IN')}\n` +
+          `• Attending Clinician: ${examinerText}\n` +
+          `• Clinic Address: ${clinicAddress}\n\n` +
+          `This record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\n` +
+          `Warm regards,\n` +
+          `${clinicTitle}\n` +
+          `Helpline: ${clinicHelpline} | Satara, Maharashtra`;
+
+        return (
+          <>
+            <WhatsAppDispatchModal
+              isOpen={isWhatsAppModalOpen}
+              onClose={() => setIsWhatsAppModalOpen(false)}
+              recipientName={reportData.patient?.full_name || 'Patient'}
+              recipientPhone={reportData.patient?.phone || ''}
+              uhid={reportData.patient?.uhid}
+              patientId={reportData.patient?.id}
+              attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
+              documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
+              defaultMessage={defaultWhatsAppMsg}
+              onSuccess={({ phone }) => {
+                if (phone) {
+                  setReportData((prev) => ({
+                    ...prev,
+                    patient: { ...prev.patient, phone },
+                  }));
+                }
+              }}
+            />
+
+            <EmailDispatchModal
+              isOpen={isMailModalOpen}
+              onClose={() => setIsMailModalOpen(false)}
+              recipientName={reportData.patient?.full_name || 'Patient'}
+              recipientEmail={reportData.patient?.email || ''}
+              uhid={reportData.patient?.uhid}
+              patientId={reportData.patient?.id}
+              attachedFile={`${reportData.reportNumber || 'report'}.pdf`}
+              documentTitle={`Clinical Report: ${reportData.service?.title || 'Audiological Evaluation'}`}
+              reportData={reportData}
+              defaultSubject={`Clinical Report ${reportData.reportNumber} — ${reportData.patient?.full_name} [${clinicTitle}]`}
+              defaultMessage={defaultEmailMsg}
+              onSuccess={({ email }) => {
+                if (email) {
+                  setReportData((prev) => ({
+                    ...prev,
+                    patient: { ...prev.patient, email },
+                  }));
+                }
+              }}
+            />
+          </>
+        );
+      })()}
 
     </div>
   );

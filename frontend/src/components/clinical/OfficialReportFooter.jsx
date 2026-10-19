@@ -1,6 +1,6 @@
 import React from 'react';
 import { QrCode, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { useClinicSettings } from '../../context/ClinicSettingsContext';
+import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
 /**
  * OfficialReportFooter
@@ -16,12 +16,18 @@ export const OfficialReportFooter = ({
   useImage = true,
   className = '',
 }) => {
-  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings } = useClinicSettings();
+  const { leadPractitioner, leadDegree, rciNumber: contextRci, settings, formattedAddress, primaryPhone } = useClinicSettings();
 
   const creds = settings?.credentials || {};
   const currentLeadPractitioner = creds.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
-  const currentLeadDegree = creds.leadDegree || leadDegree || 'MASLP, RCI';
+  const currentLeadDegree = creds.leadDegree || leadDegree || 'BASLP, RCI';
   const currentRciNumber = creds.rciNumber || contextRci || 'A79214';
+
+  const clinicAddress = formattedAddress || formatClinicAddress(settings);
+  const clinicPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
+  const consultPhone = settings?.contact?.consultationPhone || clinicPhone;
+  const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
+  const clinicName = settings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
 
   const rciNumber = currentRciNumber || formData?.rciNumber || 'A79214';
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
@@ -29,13 +35,15 @@ export const OfficialReportFooter = ({
 
   // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
   let examinerRaw = formData?.examinerName;
-  if (!examinerRaw || examinerRaw.includes('Shreeharsh')) {
+  if (!examinerRaw || examinerRaw.includes('Shreeharsh') || (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree))) {
     examinerRaw = currentLeadPractitioner;
   }
 
   // Ensure degrees are included cleanly
   const examinerName = examinerRaw.includes('MASLP') || examinerRaw.includes('BASLP')
-    ? examinerRaw
+    ? (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree)
+        ? `${currentLeadPractitioner}, ${currentLeadDegree}`
+        : examinerRaw)
     : currentLeadDegree
       ? `${examinerRaw}, ${currentLeadDegree}`
       : examinerRaw;
@@ -61,10 +69,10 @@ export const OfficialReportFooter = ({
           {/* Clinic Address & Contact Info */}
           <div className="text-left space-y-0.5">
             <p className="font-bold text-purple-950 text-[9px] print:text-[8.5px] leading-tight">
-              Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002
+              {clinicAddress}
             </p>
             <p className="text-[8px] print:text-[7.5px] text-slate-600 leading-tight">
-              Tel: <span className="font-bold text-purple-900">+91 2162 234567</span> • Mob: <span className="font-bold text-purple-900">+91 94220 11223</span> • Email: <span className="font-bold text-purple-900">clinic@vaaniclinic.com</span>
+              Tel: <span className="font-bold text-purple-900">{clinicPhone}</span> • Mob: <span className="font-bold text-purple-900">{consultPhone}</span> • Email: <span className="font-bold text-purple-900">{clinicEmail}</span>
             </p>
           </div>
 
@@ -156,14 +164,14 @@ export const OfficialReportFooter = ({
           <div className="text-center space-y-0.5">
             <div className="w-48 border-b-2 border-purple-900 pb-0.5 mb-1 text-center">
               <span className="font-serif italic font-bold text-purple-950 text-xs block">
-                Palak Paresh Gandhi
+                {signatureName}
               </span>
               <span className="text-[7.5px] text-purple-800 uppercase tracking-widest block font-bold">
                 Digitally Authenticated
               </span>
             </div>
-            <p className="font-bold text-slate-900 text-[10px]">CBT Lead &amp; Psychological Counselor</p>
-            <p className="text-[8.5px] text-slate-600">Vani's Speech, Hearing &amp; Counselling Clinic</p>
+            <p className="font-bold text-slate-900 text-[10px]">{examinerName}</p>
+            <p className="text-[8.5px] text-slate-600">{clinicName}</p>
           </div>
         </div>
 

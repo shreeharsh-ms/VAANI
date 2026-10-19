@@ -31,11 +31,12 @@ export const OfficialReportHeader = ({
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
   const disciplineName = discipline || service?.discipline || 'AUDIOLOGY';
   const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
-  const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12345';
-  const consultPhone = settings?.contact?.consultationPhone || '+91 94230 99887';
+  const clinicPhone = clinic.primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
+  const consultPhone = clinic.consultationPhone || settings?.contact?.consultationPhone || clinicPhone;
   const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
   const clinicLogo = clinic.logoUrl || '/vaani-logo.png';
   const clinicName = settings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC';
+  const leadPractitioner = clinic.leadPractitioner || settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
   const tagline = settings?.identity?.taglineEn || 'SPEAK • HEAR • CONNECT';
 
   const isCustomLogo = clinicLogo && clinicLogo !== '/vaani-logo.png' && clinicLogo !== '/vaani-logo-white.png';
@@ -94,7 +95,7 @@ export const OfficialReportHeader = ({
 
           <div className="text-right shrink-0 space-y-0.5">
             <h2 className="font-bold text-xs text-purple-950">
-              Ms. Palak Paresh Gandhi &amp; CBT Team
+              {leadPractitioner} &amp; Clinical Team
             </h2>
             <p className="text-[9.5px] font-semibold text-slate-700">
               RCI Registered Practitioner &amp; Psychological Counselor

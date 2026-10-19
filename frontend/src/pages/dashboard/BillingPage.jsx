@@ -264,7 +264,11 @@ export const BillingPage = () => {
   const clinicName = clinicSettings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC';
   const clinicAddress = formatClinicAddress(clinicSettings) || 'Sadashiv Peth, Near Powai Naka, Satara - 415002';
   const clinicHelpline = formatClinicHelpline(clinicSettings);
+  const clinicHelplinePhone = clinic.primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadDegree = clinicSettings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
   const clinicRci = clinicSettings?.credentials?.rciNumber || 'A79214';
+  const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''} (RCI CRR No. ${clinicRci})`;
   const clinicGstin = clinicSettings?.credentials?.gstin || '';
   const clinicSac = clinicSettings?.billing?.sacCode || '999312';
   const clinicHsn = clinicSettings?.billing?.hsnCode || '9021';
@@ -1398,10 +1402,10 @@ export const BillingPage = () => {
       `*Total Amount:* ₹${Number(inv.totalAmount || 0).toLocaleString('en-IN')}\n` +
       `*Payment Status:* ${inv.status} (${inv.paymentMode})\n` +
       (inv.status === 'PAID' ? `*Payment Receipt:* ${inv.receiptNo || 'Verified'}\n` : `*Payment VPA / UPI:* vaaniclinic@okaxis\n`) +
-      `\n*Clinic Address:* Sadashiv Peth, Near Powai Naka, Satara - 415002\n` +
-      `*Helpline / WhatsApp:* +91 98220 12345\n` +
-      `*Clinical Consultant:* Dr. Palak Paresh Gandhi, MASLP (RCI CRR No. A79214)\n\n` +
-      `Thank you for entrusting VAANI Speech & Hearing Clinic for your healthcare.`;
+      `\n*Clinic Address:* ${clinicAddress}\n` +
+      `*Helpline / WhatsApp:* ${clinicHelplinePhone}\n` +
+      `*Clinical Consultant:* ${fullLeadPractitioner}\n\n` +
+      `Thank you for entrusting ${clinicName} for your healthcare.`;
   };
 
   // 6. Mail Invoice (Opens Reusable Email Modal)
@@ -3102,8 +3106,8 @@ export const BillingPage = () => {
           uhid={selectedInvoiceForMail.uhid}
           attachedFile={`${selectedInvoiceForMail.invoiceNo}.pdf`}
           documentTitle={`Official Tax Invoice ${selectedInvoiceForMail.invoiceNo}`}
-          defaultSubject={`Tax Invoice & Clinical Receipt ${selectedInvoiceForMail.invoiceNo} — VAANI Speech & Hearing Clinic`}
-          defaultMessage={`Dear ${selectedInvoiceForMail.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${selectedInvoiceForMail.invoiceNo} for ${selectedInvoiceForMail.service} performed on ${selectedInvoiceForMail.date}.\n\nTotal Paid/Due: ₹${Number(selectedInvoiceForMail.totalAmount || 0).toLocaleString('en-IN')} (${selectedInvoiceForMail.status}).\n\nKind regards,\nVAANI Speech & Hearing Rehabilitation Center\nSadashiv Peth, Satara • RCI CRR No. A79214`}
+          defaultSubject={`Tax Invoice & Clinical Receipt ${selectedInvoiceForMail.invoiceNo} — ${clinicName}`}
+          defaultMessage={`Dear ${selectedInvoiceForMail.patientName},\n\nPlease find attached your official Clinical Tax Invoice & Receipt ${selectedInvoiceForMail.invoiceNo} for ${selectedInvoiceForMail.service} performed on ${selectedInvoiceForMail.date}.\n\nTotal Paid/Due: ₹${Number(selectedInvoiceForMail.totalAmount || 0).toLocaleString('en-IN')} (${selectedInvoiceForMail.status}).\n\nKind regards,\n${clinicName}\n${clinicAddress} • RCI CRR No. ${clinicRci}`}
           onSuccess={({ email }) => {
             if (email && email !== selectedInvoiceForMail.email) {
               setInvoices((prev) =>

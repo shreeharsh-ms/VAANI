@@ -15,9 +15,9 @@ export const DEFAULT_CLINIC_SETTINGS = {
     stampNote: 'RCI Registered Practitioner Seal (CRR No. A79214)',
   },
   contact: {
-    primaryPhone: '+91 98220 12349',
+    primaryPhone: '+91 8857830151',
     whatsappEnabled: true,
-    consultationPhone: '+91 94230 99889',
+    consultationPhone: '+91 8857830151',
     officialEmail: 'info@vaaniclinic.com',
     websiteUrl: 'https://vaaniclinic.com',
     addressLine1: 'Shop No. 4, Ground Floor, Sadashiv Arcade',
@@ -40,7 +40,7 @@ export const DEFAULT_CLINIC_SETTINGS = {
     rciValidUntil: '2031-10-15',
     titlePermitted: true,
     leadPractitioner: 'Ms. Palak Paresh Gandhi',
-    leadDegree: 'MASLP, RCI',
+    leadDegree: 'BASLP, RCI',
     cbtQualificationVerified: true,
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
     clinicalEstablishmentNo: 'MH-STR-CEA-2024-0081',
@@ -211,14 +211,46 @@ export function saveClinicSettings(newSettings) {
 export function formatClinicAddress(settings) {
   const s = settings || getClinicSettings();
   const c = s?.contact || {};
-  const parts = [
+  const rawParts = [
     c.addressLine1,
     c.addressLine2,
     c.locality,
     c.district || c.taluka,
-    c.pin ? `${c.state ? c.state + ' - ' : ''}${c.pin}` : c.state
+    c.pin ? `${c.state ? c.state + ' - ' : ''}${c.pin}` : c.state,
   ].filter(Boolean);
+
+  // Deduplicate adjacent or redundant locality strings
+  const seen = new Set();
+  const parts = [];
+  for (const part of rawParts) {
+    const trimmed = String(part).trim();
+    const lower = trimmed.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      parts.push(trimmed);
+    }
+  }
   return parts.join(', ');
+}
+
+/**
+ * Helper to resolve current verified clinician credentials from clinic settings
+ */
+export function getClinicDoctorDetails(settings) {
+  const s = settings || getClinicSettings();
+  const creds = s?.credentials || {};
+  const doctorName = creds.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const degree = creds.leadDegree || 'BASLP, RCI';
+  const rci = creds.rciNumber || 'A79214';
+  const fullExaminer = degree ? `${doctorName}, ${degree}` : doctorName;
+  const examinerWithRci = rci ? `${fullExaminer} (RCI No. ${rci})` : fullExaminer;
+  return {
+    doctorName,
+    degree,
+    rci,
+    fullExaminer,
+    examinerWithRci,
+  };
 }
 
 /**
@@ -227,10 +259,11 @@ export function formatClinicAddress(settings) {
 export function formatClinicHelpline(settings) {
   const s = settings || getClinicSettings();
   const c = s?.contact || {};
-  const phones = [c.primaryPhone, c.consultationPhone].filter(Boolean).join(' / ');
+  const phones = [c.primaryPhone, c.consultationPhone].filter(Boolean);
+  const uniquePhones = Array.from(new Set(phones)).join(' / ');
   const email = c.officialEmail || s?.notifications?.senderEmail || 'info@vaaniclinic.com';
   const web = c.websiteUrl || 'vaaniclinic.com';
-  return `Helpline: ${phones} • ${email} • ${web.replace(/^https?:\/\//, '')}`;
+  return `Helpline: ${uniquePhones || '+91 8857830151'} • ${email} • ${web.replace(/^https?:\/\//, '')}`;
 }
 
 const ClinicSettingsContext = createContext(null);
@@ -328,6 +361,10 @@ export const ClinicSettingsProvider = ({ children }) => {
   const formattedAddress = useMemo(() => formatClinicAddress(settings), [settings]);
   const helplineText = useMemo(() => formatClinicHelpline(settings), [settings]);
 
+  const doctorDetails = useMemo(() => getClinicDoctorDetails(settings), [settings]);
+  const primaryPhone = settings.contact?.primaryPhone || '+91 8857830151';
+  const consultationPhone = settings.contact?.consultationPhone || '+91 8857830151';
+
   const value = useMemo(() => ({
     settings,
     updateSettings,
@@ -336,6 +373,9 @@ export const ClinicSettingsProvider = ({ children }) => {
     refreshSettings,
     formattedAddress,
     helplineText,
+    primaryPhone,
+    consultationPhone,
+    doctorDetails,
     logoUrl: settings.identity.logoUrl || '/vaani-logo.png',
     logoWhiteUrl: settings.identity.logoWhiteUrl || '/vaani-logo-white.png',
     clinicName: settings.identity.legalName || 'Vaani Speech & Hearing Clinic',
@@ -345,7 +385,7 @@ export const ClinicSettingsProvider = ({ children }) => {
     sacCode: settings.billing.sacCode || '999312',
     hsnCode: settings.billing.hsnCode || '9021',
     leadPractitioner: settings.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
-    leadDegree: settings.credentials.leadDegree || 'MASLP, RCI',
+    leadDegree: settings.credentials.leadDegree || 'BASLP, RCI',
     workingHours: settings.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
     sundayHours: settings.hours.sundayHoursText || 'Sundays: By Prior Appointment',
     social: {
@@ -353,7 +393,7 @@ export const ClinicSettingsProvider = ({ children }) => {
       instagramHandle: settings.social?.instagramHandle || '@palakgandhi_maslp',
       youtubeUrl: settings.social?.youtubeUrl || 'https://youtube.com/@vaaniclinic',
       facebookUrl: settings.social?.facebookUrl || 'https://facebook.com/vaaniclinic',
-      whatsappPhone: settings.social?.whatsappPhone || settings.contact.primaryPhone || '+91 98220 12349',
+      whatsappPhone: settings.social?.whatsappPhone || primaryPhone,
     },
     bankDetails: {
       upiId: settings.billing.upiId || 'vaaniclinic@okaxis',
@@ -362,7 +402,7 @@ export const ClinicSettingsProvider = ({ children }) => {
       bankIfsc: settings.billing.bankIfsc || 'HDFC0000123',
       bankAccountMasked: settings.billing.bankAccountMasked || '**** **** **** 4892',
     },
-  }), [settings, updateSettings, updateLogo, resetLogo, refreshSettings, formattedAddress, helplineText]);
+  }), [settings, updateSettings, updateLogo, resetLogo, refreshSettings, formattedAddress, helplineText, primaryPhone, consultationPhone, doctorDetails]);
 
   return (
     <ClinicSettingsContext.Provider value={value}>
@@ -375,6 +415,7 @@ export const useClinicSettings = () => {
   const context = useContext(ClinicSettingsContext);
   if (!context) {
     const s = getClinicSettings();
+    const doc = getClinicDoctorDetails(s);
     return {
       settings: s,
       updateSettings: saveClinicSettings,
@@ -389,6 +430,9 @@ export const useClinicSettings = () => {
       refreshSettings: () => {},
       formattedAddress: formatClinicAddress(s),
       helplineText: formatClinicHelpline(s),
+      primaryPhone: s.contact?.primaryPhone || '+91 8857830151',
+      consultationPhone: s.contact?.consultationPhone || '+91 8857830151',
+      doctorDetails: doc,
       logoUrl: s.identity.logoUrl || '/vaani-logo.png',
       logoWhiteUrl: s.identity.logoWhiteUrl || '/vaani-logo-white.png',
       clinicName: s.identity.legalName || 'Vaani Speech & Hearing Clinic',
@@ -398,7 +442,7 @@ export const useClinicSettings = () => {
       sacCode: s.billing.sacCode || '999312',
       hsnCode: s.billing.hsnCode || '9021',
       leadPractitioner: s.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
-      leadDegree: s.credentials.leadDegree || 'MASLP, RCI',
+      leadDegree: s.credentials.leadDegree || 'BASLP, RCI',
       workingHours: s.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
       sundayHours: s.hours.sundayHoursText || 'Sundays: By Prior Appointment',
       social: {
@@ -406,7 +450,7 @@ export const useClinicSettings = () => {
         instagramHandle: s.social?.instagramHandle || '@palakgandhi_maslp',
         youtubeUrl: s.social?.youtubeUrl || 'https://youtube.com/@vaaniclinic',
         facebookUrl: s.social?.facebookUrl || 'https://facebook.com/vaaniclinic',
-        whatsappPhone: s.social?.whatsappPhone || s.contact.primaryPhone || '+91 98220 12349',
+        whatsappPhone: s.social?.whatsappPhone || s.contact.primaryPhone || '+91 8857830151',
       },
       bankDetails: {
         upiId: s.billing.upiId || 'vaaniclinic@okaxis',

@@ -35,16 +35,19 @@ import { CLINICAL_SERVICES } from '../../data/clinicalServicesData';
 import { DEFAULT_ASSESSMENTS, getAllClinicalReports } from '../../data/clinicalReportsData';
 import { useTableKeyboardNav } from '../../hooks';
 import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
-import { useClinicSettings, getClinicSettings } from '../../context/ClinicSettingsContext';
+import { useClinicSettings, formatClinicAddress, CLINIC_SETTINGS_EVENT } from '../../context/ClinicSettingsContext';
 
 export const ReportsPage = () => {
   const navigate = useNavigate();
   const { notify } = useNotification();
-  const { settings: clinicSettings } = useClinicSettings();
+  const { settings: clinicSettings, formattedAddress, primaryPhone } = useClinicSettings();
+  const clinicAddress = formattedAddress || formatClinicAddress(clinicSettings);
+  const clinicPhone = primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
+  const clinicTitle = clinicSettings?.identity?.letterheadTitle || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Rehabilitation Clinic';
   const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-  const leadDegree = clinicSettings?.credentials?.leadDegree || 'MASLP, RCI';
-  const fullLeadPractitioner = `${leadPractitioner}, ${leadDegree}`;
+  const leadDegree = clinicSettings?.credentials?.leadDegree || 'BASLP, RCI';
   const clinicRci = clinicSettings?.credentials?.rciNumber || 'A79214';
+  const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''} (RCI CRR No. ${clinicRci})`;
 
   const [activeReport, setActiveReport] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -253,14 +256,20 @@ export const ReportsPage = () => {
 
   const getReportWhatsAppMessage = (rep) => {
     if (!rep) return '';
-    return `*Vaani Speech & Hearing Rehabilitation Clinic*\n\n` +
+    const examiner = rep.examiner && !rep.examiner.includes('Shreeharsh')
+      ? (rep.examiner.includes('RCI') ? rep.examiner : `${rep.examiner} (RCI No. ${clinicRci})`)
+      : fullLeadPractitioner;
+
+    return `*${clinicTitle}*\n\n` +
       `Clinical Report: *${rep.title}*\n` +
       `Report ID: *${rep.report_number || rep.id}*\n` +
       `Patient: *${rep.patient_name}* (UHID: ${rep.uhid || 'Registered'})\n` +
       `Date: *${rep.date}*\n` +
+      `Examiner: *${examiner}*\n` +
       `Provisional Findings: ${rep.diagnosis || 'Evaluation completed'}\n` +
-      `Status: *${rep.status || 'FINAL'} - RCI CRR No. A79214*\n\n` +
-      `Your official digitally signed clinical assessment has been recorded. For queries or appointments, call +91 98220 11223.`;
+      `Status: *${rep.status || 'FINAL'} - RCI CRR No. ${clinicRci}*\n\n` +
+      `Clinic Address: ${clinicAddress}\n` +
+      `Helpline: ${clinicPhone}`;
   };
 
   return (
@@ -885,8 +894,8 @@ export const ReportsPage = () => {
           attachedFile={`${selectedReportForMail.report_number || selectedReportForMail.id}.pdf`}
           documentTitle={`Clinical Report: ${selectedReportForMail.title}`}
           reportData={selectedReportForMail}
-          defaultSubject={`Clinical Report ${selectedReportForMail.report_number || selectedReportForMail.id} — ${selectedReportForMail.patient_name} [Vaani Clinic]`}
-          defaultMessage={`Dear ${selectedReportForMail.patient_name || 'Patient'},\n\nPlease find attached the official summary of your clinical assessment recorded at Vaani Speech & Hearing Rehabilitation Clinic (Satara):\n\n• Report ID: ${selectedReportForMail.report_number || selectedReportForMail.id}\n• Assessment: ${selectedReportForMail.title}\n• Examination Date: ${selectedReportForMail.date}\n• Clinical Findings: ${selectedReportForMail.diagnosis || 'Clinical evaluation verified'}\n• Attending Clinician: ${selectedReportForMail.examiner || 'Ms. Palak Paresh Gandhi, MASLP (RCI No. A79214)'}\n\nThis record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\nWarm regards,\nVaani Speech & Hearing Clinic\nPhone: +91 98220 11223 | Satara, Maharashtra`}
+          defaultSubject={`Clinical Report ${selectedReportForMail.report_number || selectedReportForMail.id} — ${selectedReportForMail.patient_name} [${clinicTitle}]`}
+          defaultMessage={`Dear ${selectedReportForMail.patient_name || 'Patient'},\n\nPlease find attached the official summary of your clinical assessment recorded at ${clinicTitle}:\n\n• Report ID: ${selectedReportForMail.report_number || selectedReportForMail.id}\n• Assessment: ${selectedReportForMail.title}\n• Examination Date: ${selectedReportForMail.date}\n• Clinical Findings: ${selectedReportForMail.diagnosis || 'Clinical evaluation verified'}\n• Attending Clinician: ${selectedReportForMail.examiner || fullLeadPractitioner}\n• Clinic Address: ${clinicAddress}\n\nThis record is compliant with RCI Standards & the Digital Personal Data Protection (DPDP) Act 2023.\n\nWarm regards,\n${clinicTitle}\nHelpline: ${clinicPhone} | Satara, Maharashtra`}
           onSuccess={({ email }) => {
             if (email && email !== selectedReportForMail.email) {
               setAllReports((prev) =>
