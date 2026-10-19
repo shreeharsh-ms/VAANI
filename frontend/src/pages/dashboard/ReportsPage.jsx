@@ -264,15 +264,15 @@ export const ReportsPage = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-32 sm:pb-16">
       {/* ── PAGE HEADER & PRIMARY CREATE ACTION ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg p-4 shadow-2xs">
-        <div>
-          <h1 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <FileText className="w-5 h-5 text-purple-700" />
-            Clinical Assessment Reports &amp; Diagnostic Proformas
+      <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-2xs">
+        <div className="min-w-0">
+          <h1 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700 shrink-0" />
+            <span className="truncate">Clinical Assessment Reports</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="hidden sm:block text-xs text-slate-500 mt-0.5">
             Single-page RCI CRR No. A79214 proformas with tamper-evident QR verification and DPDP Act compliance.
           </p>
         </div>
@@ -280,10 +280,11 @@ export const ReportsPage = () => {
         <button
           type="button"
           onClick={() => navigate('/dashboard/reports/create')}
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-md shadow-2xs transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-md shadow-2xs transition-colors cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Create New Clinical Report</span>
+          <span className="hidden sm:inline">Create New Clinical Report</span>
+          <span className="sm:hidden">New Report</span>
           <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-800 text-[10px] rounded font-mono">
             ⌥R
           </kbd>
@@ -291,24 +292,27 @@ export const ReportsPage = () => {
       </div>
 
       {/* ── CLINICAL SERVICES & PROFORMA CATALOG (10 Services from Specification) ── */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2.5">
+      <div className="bg-white border border-slate-200 rounded-lg p-3 sm:p-3.5 shadow-2xs space-y-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple-700" />
-            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+            <h2 className="text-xs font-bold text-slate-800 tracking-wide">
               Clinical Service Suite ({CLINICAL_SERVICES.length} Master Proformas)
             </h2>
           </div>
-          <span className="text-[10px] text-slate-500">
+          <span className="hidden sm:inline text-[10px] text-slate-500">
             Click &quot;Create Report&quot; on any service to auto-fill patient parameters
+          </span>
+          <span className="sm:hidden text-[10px] font-medium text-purple-700">
+            Swipe to browse →
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 overflow-x-auto sm:overflow-visible pb-1.5 sm:pb-0 scrollbar-thin">
           {CLINICAL_SERVICES.map((srv) => (
             <div
               key={srv.code}
-              className="p-2.5 rounded border border-slate-200 bg-slate-50/60 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col justify-between"
+              className="shrink-0 w-60 sm:w-auto p-2.5 rounded border border-slate-200 bg-slate-50/60 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-1">

@@ -249,6 +249,23 @@ export const ReportViewPage = () => {
     }
   }, [reportData]);
 
+  const [fitToScreen, setFitToScreen] = useState(false);
+  const [scaleRatio, setScaleRatio] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const availableWidth = window.innerWidth - 16;
+      if (availableWidth < 794) {
+        setScaleRatio(Math.max(0.35, availableWidth / 794));
+      } else {
+        setScaleRatio(1);
+      }
+    };
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   if (!reportData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-600 text-xs">
@@ -261,59 +278,71 @@ export const ReportViewPage = () => {
     <div className="min-h-screen bg-slate-100/90 text-slate-900 font-sans print:bg-white print:p-0">
       
       {/* ── TOP FLOATING CONTROL BAR (Hidden during Print) ── */}
-      <header className="print:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-2.5 shadow-xs flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-black text-slate-900 uppercase tracking-wide">
+      <header className="print:hidden sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 p-2.5 sm:px-4 sm:py-2.5 shadow-xs space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+        {/* Top line on mobile / Left group on desktop */}
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-xs font-black text-slate-900 tracking-tight shrink-0 hidden sm:inline">
               Official Report Preview
             </span>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <span className="text-xs font-mono font-bold text-purple-900 shrink-0">
+              {reportData.reportNumber}
+            </span>
+            <span className="text-slate-300">•</span>
+            <span className="text-xs font-bold text-slate-700 truncate">
+              {reportData.patient?.full_name} <span className="text-slate-400 font-mono text-[11px]">({reportData.patient?.uhid})</span>
+            </span>
           </div>
-          <span className="text-slate-300">|</span>
-          <span className="text-xs font-mono font-bold text-purple-900">
-            {reportData.reportNumber}
-          </span>
-          <span className="text-slate-300">•</span>
-          <span className="text-xs font-bold text-slate-700">
-            {reportData.patient?.full_name} ({reportData.patient?.uhid})
-          </span>
+
+          {/* Close button on mobile right */}
+          <button
+            type="button"
+            onClick={() => window.close()}
+            className="sm:hidden p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 shrink-0 cursor-pointer"
+            title="Close this tab"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Action buttons: on mobile 3 columns (WhatsApp, Email, Print PDF) */}
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setIsWhatsAppModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded shadow-xs transition-colors cursor-pointer"
             title="Dispatch WhatsApp Notification"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-            <span>WhatsApp</span>
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">WhatsApp</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsMailModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded shadow-xs transition-colors cursor-pointer"
             title="Dispatch Email with Official Clinical PDF Attachment"
           >
-            <Mail className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Email Report</span>
+            <Mail className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Email</span>
           </button>
 
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-xs transition-colors cursor-pointer"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Official Document</span>
-            <kbd className="ml-1 px-1.5 py-0.2 bg-purple-800 text-[10px] rounded font-mono">⌘P</kbd>
+            <Printer className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Print PDF</span>
+            <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-purple-800 text-[10px] rounded font-mono">⌘P</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => window.close()}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer"
             title="Close this tab"
           >
             <X className="w-3.5 h-3.5" />
@@ -323,15 +352,47 @@ export const ReportViewPage = () => {
       </header>
 
       {/* ── A4 CLINICAL DOCUMENT PAPER CANVAS ── */}
-      <main className="py-6 px-4 print:p-0 print:m-0 flex justify-center">
-        <div className="w-full max-w-[210mm] bg-white border border-slate-300 rounded shadow-xl print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none">
-          <OfficialClinicalDocument
-            service={reportData.service}
-            patient={reportData.patient}
-            patientDossier={reportData.patientDossier}
-            formData={reportData}
-            computedPTA={reportData.computedPTA}
-          />
+      <main className="py-3 px-2 sm:py-6 sm:px-4 print:p-0 print:m-0 flex flex-col items-center">
+        {/* Mobile View Toggle Bar */}
+        <div className="sm:hidden w-full max-w-sm mb-2.5 bg-white border border-purple-200 rounded-lg p-2 flex items-center justify-between text-xs shadow-2xs">
+          <div className="flex items-center gap-1.5 text-purple-950 font-semibold text-[11px]">
+            <span>📄 Official A4 Proforma</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFitToScreen(!fitToScreen)}
+            className="px-2.5 py-1 rounded bg-purple-50 hover:bg-purple-100 border border-purple-300 text-purple-950 font-bold text-[10px] shadow-2xs cursor-pointer active:scale-95 transition-all"
+          >
+            {fitToScreen ? '🔍 100% Size (Scroll)' : '📐 Fit Screen'}
+          </button>
+        </div>
+
+        <div className="w-full overflow-x-auto pb-10 flex justify-start md:justify-center scrollbar-thin">
+          <div
+            style={
+              fitToScreen
+                ? {
+                    transform: `scale(${scaleRatio})`,
+                    transformOrigin: 'top left',
+                    width: '210mm',
+                    minWidth: '210mm',
+                    marginBottom: `-${(1 - scaleRatio) * 1120}px`,
+                  }
+                : {
+                    width: '210mm',
+                    minWidth: '210mm',
+                  }
+            }
+            className="bg-white border border-slate-300 rounded shadow-xl print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none shrink-0 transition-all duration-200"
+          >
+            <OfficialClinicalDocument
+              service={reportData.service}
+              patient={reportData.patient}
+              patientDossier={reportData.patientDossier}
+              formData={reportData}
+              computedPTA={reportData.computedPTA}
+            />
+          </div>
         </div>
       </main>
 

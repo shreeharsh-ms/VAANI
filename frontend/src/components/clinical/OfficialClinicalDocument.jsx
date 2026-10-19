@@ -395,26 +395,26 @@ export const OfficialClinicalDocument = ({
               refValue={formData?.parameters?.ptaNo || '64/2026'}
               extraRow={
                 <div className="grid grid-cols-3 divide-x divide-purple-200">
-                  <div className="p-1 px-2.5 flex items-center">
-                    <span className="font-bold w-24 shrink-0 text-purple-950">Audiometer :</span>
-                    <span className="font-bold text-slate-900">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
+                  <div className="p-1 px-2.5 flex items-center min-w-0">
+                    <span className="font-bold mr-1.5 shrink-0 whitespace-nowrap text-purple-950">Audiometer :</span>
+                    <span className="font-bold text-slate-900 truncate">{formData?.parameters?.audiometer || 'Proton SX5'}</span>
                   </div>
-                  <div className="p-1 px-2.5 flex items-center col-span-2">
-                    <span className="font-bold w-24 shrink-0 text-purple-950">Responses :</span>
-                    <div className="flex items-center gap-3 text-[9.5px]">
-                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                  <div className="p-1 px-2.5 flex items-center col-span-2 min-w-0">
+                    <span className="font-bold mr-2 shrink-0 whitespace-nowrap text-purple-950">Responses :</span>
+                    <div className="flex items-center gap-2 sm:gap-3 text-[9.5px] overflow-hidden flex-wrap">
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap ${formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? 'font-black text-purple-950' : 'text-slate-600'}`}>
                         <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                           {formData?.parameters?.responses === 'Consistent' || !formData?.parameters?.responses ? '✓' : ''}
                         </span>
                         Consistent
                       </span>
-                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap ${formData?.parameters?.responses === 'Fairly Consistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
                         <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                           {formData?.parameters?.responses === 'Fairly Consistent' ? '✓' : ''}
                         </span>
                         Fairly Consistent
                       </span>
-                      <span className={`inline-flex items-center gap-1 ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap ${formData?.parameters?.responses === 'Inconsistent' ? 'font-black text-purple-950' : 'text-slate-600'}`}>
                         <span className="w-3.5 h-3.5 border border-purple-400 bg-purple-50 rounded-xs inline-flex items-center justify-center text-[10px] font-bold text-purple-950">
                           {formData?.parameters?.responses === 'Inconsistent' ? '✓' : ''}
                         </span>
