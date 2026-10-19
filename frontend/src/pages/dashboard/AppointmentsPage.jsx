@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   CalendarCheck,
   Plus,
@@ -43,6 +44,7 @@ const ALL_SLOTS = CLINICAL_TIME_SLOTS;
 
 export const AppointmentsPage = () => {
   const { notify } = useNotification();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [appointments, setAppointments] = useState(() => getAllAppointments());
 
   // Search & Filter State
@@ -62,6 +64,25 @@ export const AppointmentsPage = () => {
 
   // Modals
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+  // Quick Action triggers from Bottom Bar (URL param or CustomEvent)
+  useEffect(() => {
+    const handleOpenEvent = () => setIsScheduleModalOpen(true);
+    window.addEventListener('vaani_open_new_appointment', handleOpenEvent);
+
+    if (searchParams.get('action') === 'new') {
+      setIsScheduleModalOpen(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('action');
+        return next;
+      }, { replace: true });
+    }
+
+    return () => {
+      window.removeEventListener('vaani_open_new_appointment', handleOpenEvent);
+    };
+  }, [searchParams, setSearchParams]);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [reschedulingAppointment, setReschedulingAppointment] = useState(null);
 

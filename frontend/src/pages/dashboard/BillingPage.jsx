@@ -36,6 +36,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useSearchParams } from 'react-router-dom';
 import { useClinicSettings, formatClinicAddress, formatClinicHelpline } from '../../context/ClinicSettingsContext';
 import Modal from '../../components/common/Modal';
 import { WhatsAppDispatchModal, EmailDispatchModal } from '../../components/common';
@@ -326,6 +327,7 @@ export const BillingPage = () => {
   const invoiceFormRef = useRef(null);
 
   // New Invoice Form State
+  const [searchParams, setSearchParams] = useSearchParams();
   const [newUhid, setNewUhid] = useState('');
   const [newPatientName, setNewPatientName] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -921,6 +923,71 @@ export const BillingPage = () => {
     ]);
     setIsInvoiceModalOpen(true);
   };
+
+  const handleOpenNewInstrumentModal = () => {
+    setSelectedPatientRecord(null);
+    setPatientSearchQuery('');
+    setIsPatientDropdownOpen(false);
+    setNewPatientName('');
+    setNewUhid('');
+    setNewPhone('');
+    setNewPaymentMode('UPI');
+    const instrumentSvc = serviceRates.find(s => s.code === 'SVC-PRD-001' || s.name.toLowerCase().includes('hearing')) || {
+      name: 'Digital Programmable RIC Hearing Instrument (Phonak Audéo Lumity L90-R)',
+      code: 'SVC-PRD-001',
+      hsnSac: '9021',
+      taxType: 'TAXABLE_GOODS',
+      baseRate: 45000,
+    };
+    setInvoiceItems([
+      {
+        id: 'item_1',
+        service: instrumentSvc.name,
+        serviceCode: instrumentSvc.code || 'SVC-PRD-001',
+        hsnSac: instrumentSvc.hsnSac || '9021',
+        taxType: 'TAXABLE_GOODS',
+        gstPercent: 18,
+        baseRate: instrumentSvc.baseRate || 45000,
+        qty: 1,
+        taxAmount: Math.round((instrumentSvc.baseRate || 45000) * 0.18),
+        totalAmount: (instrumentSvc.baseRate || 45000) + Math.round((instrumentSvc.baseRate || 45000) * 0.18),
+        serialNo: '',
+        ear: 'Right',
+        warrantyMonths: 24,
+      }
+    ]);
+    setIsInvoiceModalOpen(true);
+  };
+
+  // Quick Action triggers from Bottom Bar (URL param or CustomEvent)
+  useEffect(() => {
+    const handleInvoiceEvent = () => handleOpenNewInvoiceModal();
+    const handleInstrumentEvent = () => handleOpenNewInstrumentModal();
+    window.addEventListener('vaani_open_new_invoice', handleInvoiceEvent);
+    window.addEventListener('vaani_open_new_instrument', handleInstrumentEvent);
+
+    const action = searchParams.get('action');
+    if (action === 'new') {
+      handleOpenNewInvoiceModal();
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('action');
+        return next;
+      }, { replace: true });
+    } else if (action === 'instrument') {
+      handleOpenNewInstrumentModal();
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('action');
+        return next;
+      }, { replace: true });
+    }
+
+    return () => {
+      window.removeEventListener('vaani_open_new_invoice', handleInvoiceEvent);
+      window.removeEventListener('vaani_open_new_instrument', handleInstrumentEvent);
+    };
+  }, [searchParams, setSearchParams, serviceRates]);
 
   // Close patient dropdown when clicking outside
   useEffect(() => {

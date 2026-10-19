@@ -23,7 +23,7 @@ import Modal from '../../components/common/Modal';
 import PatientForm from '../../components/forms/PatientForm';
 import { patientService } from '../../services/patientService';
 import { useNotification } from '../../context/NotificationContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { isKey, isAlt } from '../../utils/keyboard';
 import { useTableKeyboardNav } from '../../hooks';
 
@@ -179,8 +179,29 @@ export const PatientsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Quick Action triggers from Bottom Bar (URL param or CustomEvent)
+  useEffect(() => {
+    const handleOpenEvent = () => setIsModalOpen(true);
+    window.addEventListener('vaani_open_new_patient', handleOpenEvent);
+
+    if (searchParams.get('action') === 'new') {
+      setIsModalOpen(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('action');
+        return next;
+      }, { replace: true });
+    }
+
+    return () => {
+      window.removeEventListener('vaani_open_new_patient', handleOpenEvent);
+    };
+  }, [searchParams, setSearchParams]);
 
   // Sync with patientService if available
   const fetchPatients = async () => {
