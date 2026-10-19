@@ -2468,12 +2468,12 @@ export const BillingPage = () => {
         size="2xl"
         footer={
           selectedInvoiceForView && (
-            <div className="w-full flex items-center justify-between gap-2">
+            <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleDownloadInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-purple-950 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-[#301444] hover:bg-purple-950 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download / Print</span>
@@ -2482,7 +2482,7 @@ export const BillingPage = () => {
                 <button
                   type="button"
                   onClick={() => handleOpenWhatsAppModal(selectedInvoiceForView)}
-                  className="h-7.5 px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 >
                   <WhatsAppIcon className="w-3.5 h-3.5" />
                   <span>WhatsApp</span>
@@ -2491,7 +2491,7 @@ export const BillingPage = () => {
                 <button
                   type="button"
                   onClick={() => handleOpenMailModal(selectedInvoiceForView)}
-                  className="h-7.5 px-3 rounded text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>Email</span>
@@ -2500,17 +2500,17 @@ export const BillingPage = () => {
                 <button
                   type="button"
                   onClick={() => handleStartEditInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-3 rounded text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-7.5 w-7.5 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
+                  title="Edit Invoice"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  <span>Edit</span>
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsViewInvoiceModalOpen(false)}
-                className="h-7.5 px-3.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+                className="h-7.5 px-3.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer shrink-0"
               >
                 Close
               </button>

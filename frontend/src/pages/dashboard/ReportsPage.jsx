@@ -321,20 +321,20 @@ export const ReportsPage = () => {
           </span>
         </div>
 
-        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 overflow-x-auto sm:overflow-visible pb-1.5 sm:pb-0 scrollbar-thin">
+        <div className="flex items-start sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 overflow-x-auto sm:overflow-visible pb-1.5 sm:pb-0 scrollbar-thin">
           {CLINICAL_SERVICES.map((srv) => (
             <div
               key={srv.code}
-              className="shrink-0 w-36 sm:w-auto p-2 sm:p-2.5 rounded border border-slate-200 bg-slate-50/60 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col justify-between"
+              className="shrink-0 w-36 min-w-[144px] max-w-[144px] sm:w-auto sm:min-w-0 sm:max-w-none p-2 sm:p-2.5 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col"
             >
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between mb-0.5 gap-1">
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 whitespace-nowrap shrink-0">
                     {srv.code}
                   </span>
-                  <span className="text-[9px] font-semibold text-slate-500">{srv.discipline}</span>
+                  <span className="text-[9px] font-semibold text-slate-500 truncate whitespace-nowrap">{srv.discipline}</span>
                 </div>
-                <h3 className="text-xs font-bold text-slate-900 leading-snug line-clamp-1" title={srv.title}>
+                <h3 className="text-xs font-bold text-slate-900 leading-tight truncate whitespace-nowrap overflow-hidden block" title={srv.title}>
                   {srv.shortName}
                 </h3>
                 <p className="hidden sm:block text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
@@ -342,7 +342,7 @@ export const ReportsPage = () => {
                 </p>
               </div>
 
-              <div className="pt-1.5 sm:pt-2 mt-1.5 sm:mt-2 border-t border-slate-200/80">
+              <div className="pt-1.5 mt-1.5 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => navigate(`/dashboard/reports/create?type=${srv.code}`)}
