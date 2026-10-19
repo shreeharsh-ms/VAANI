@@ -8,7 +8,7 @@ import { SEED_PATIENTS, PATIENT_DOSSIERS } from '../../data/patientClinicalProfi
 import { getAllClinicalReports } from '../../data/clinicalReportsData';
 import { useClinicSettings, formatClinicAddress, CLINIC_SETTINGS_EVENT } from '../../context/ClinicSettingsContext';
 
-export const ReportViewPage = () => {
+export const ReportViewPage = ({ isPublic = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const clinic = useClinicSettings();
@@ -16,6 +16,20 @@ export const ReportViewPage = () => {
   const [reportData, setReportData] = useState(null);
   const [isMailModalOpen, setIsMailModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+
+  const handleClose = () => {
+    try {
+      if (window.opener) {
+        window.close();
+        return;
+      }
+    } catch {}
+    if (isPublic) {
+      navigate(`/verify-report/${encodeURIComponent(reportData?.reportNumber || id || '')}`);
+    } else {
+      navigate(-1);
+    }
+  };
 
   const loadReport = () => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -318,7 +332,7 @@ export const ReportViewPage = () => {
           {/* Close button on mobile right */}
           <button
             type="button"
-            onClick={() => window.close()}
+            onClick={handleClose}
             className="sm:hidden p-1.5 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 shrink-0 cursor-pointer"
             title="Close this tab"
           >
@@ -360,12 +374,12 @@ export const ReportViewPage = () => {
 
           <button
             type="button"
-            onClick={() => window.close()}
+            onClick={handleClose}
             className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer"
-            title="Close this tab"
+            title="Close this report view"
           >
             <X className="w-3.5 h-3.5" />
-            <span>Close Tab</span>
+            <span>{isPublic ? 'Back' : 'Close'}</span>
           </button>
         </div>
       </header>

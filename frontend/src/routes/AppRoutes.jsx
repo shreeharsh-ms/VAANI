@@ -23,6 +23,7 @@ import AppointmentsPage from '../pages/dashboard/AppointmentsPage';
 import ReportsPage from '../pages/dashboard/ReportsPage';
 import ReportCreatePage from '../pages/dashboard/ReportCreatePage';
 import ReportViewPage from '../pages/dashboard/ReportViewPage';
+import ReportVerificationPage from '../pages/public/ReportVerificationPage';
 import BillingPage from '../pages/dashboard/BillingPage';
 import InventoryPage from '../pages/dashboard/InventoryPage';
 import RecallsPage from '../pages/dashboard/RecallsPage';
@@ -44,6 +45,14 @@ export const AppRoutes = () => {
         <Route path={ROUTES.BOOKING} element={<BookingPage />} />
         <Route path={ROUTES.CONTACT} element={<ContactPage />} />
       </Route>
+
+      {/* Public Clinical Report Cryptographic Verification & Dispatch Portal */}
+      <Route path="/verify-report/:reportNumber" element={<ReportVerificationPage />} />
+      <Route path="/verify/:reportNumber" element={<ReportVerificationPage />} />
+      <Route path="/verify-doc/:reportNumber" element={<ReportVerificationPage />} />
+
+      {/* Public/Direct Standalone Clinical Report View & PDF Download */}
+      <Route path="/view-report/:id" element={<ReportViewPage isPublic={true} />} />
 
       {/* Staff Authentication Routes */}
       <Route element={<AuthLayout />}>

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { QrCode, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSettingsContext';
 
@@ -32,6 +33,41 @@ export const OfficialReportFooter = ({
   const rciNumber = currentRciNumber || formData?.rciNumber || 'A79214';
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
+
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+
+  const getPublicVerifyUrl = (repNum) => {
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const base = isLocal ? 'https://frontend-alpha-topaz-35.vercel.app' : (typeof window !== 'undefined' ? window.location.origin : 'https://frontend-alpha-topaz-35.vercel.app');
+    return `${base}/verify-report/${encodeURIComponent(repNum)}`;
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const targetUrl = getPublicVerifyUrl(reportNumber);
+    QRCode.toDataURL(targetUrl, {
+      width: 320,
+      margin: 1,
+      color: {
+        dark: '#1e0b36',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url) => {
+        if (isMounted) setQrCodeDataUrl(url);
+      })
+      .catch((err) => {
+        console.warn('QR Code generation fallback:', err);
+        if (isMounted) {
+          setQrCodeDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [reportNumber]);
 
   // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
   let examinerRaw = formData?.examinerName;
@@ -106,6 +142,28 @@ export const OfficialReportFooter = ({
             className="w-full h-auto block rounded-none"
           />
 
+          {/* Real Dynamic Scannable QR Code Overlay directly placed on the banner's QR placeholder box */}
+          {qrCodeDataUrl && (
+            <a
+              href={getPublicVerifyUrl(reportNumber)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Scan with phone camera or click to verify clinical report authenticity"
+              className="absolute block bg-white p-0.5 rounded-[4px] shadow-sm hover:ring-2 hover:ring-purple-500 transition-all cursor-pointer"
+              style={{
+                left: '11.52%',
+                top: '8.17%',
+                width: '16.50%',
+                height: '83.65%',
+              }}
+            >
+              <img
+                src={qrCodeDataUrl}
+                alt={`Verify Clinical Report ${reportNumber}`}
+                className="w-full h-full object-contain block rounded-[2px]"
+              />
+            </a>
+          )}
 
           {/* Clinician Digital Authentication & Signature Block in the open right area */}
           <div className="absolute right-[5%] top-[10%] bottom-[10%] flex flex-col justify-center text-right">
@@ -195,9 +253,23 @@ export const OfficialReportFooter = ({
       <div className={`bg-gradient-to-r from-purple-100/80 via-[#faf7ff] to-purple-100/75 border border-purple-200/90 rounded-xl ${compact ? 'p-1.5 px-2' : 'p-1.5 px-2.5'} flex items-end justify-between text-xs shadow-2xs`}>
         {/* Left: Tamper-Evident DPDP QR Code Authenticity Badge */}
         <div className="flex items-center gap-2">
-          <div className={`${compact ? 'w-8 h-8' : 'w-9 h-9 sm:w-10 sm:h-10'} border border-purple-300 rounded-lg flex items-center justify-center bg-white shadow-2xs shrink-0 p-0.5`}>
-            <QrCode className="w-full h-full text-purple-950" />
-          </div>
+          <a
+            href={getPublicVerifyUrl(reportNumber)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Scan with phone camera or click to verify clinical report"
+            className={`${compact ? 'w-8 h-8' : 'w-9 h-9 sm:w-10 sm:h-10'} border border-purple-300 rounded-lg flex items-center justify-center bg-white shadow-2xs shrink-0 p-0.5 overflow-hidden hover:ring-2 hover:ring-purple-400 transition-all`}
+          >
+            {qrCodeDataUrl ? (
+              <img
+                src={qrCodeDataUrl}
+                alt={`QR Authenticity Code ${reportNumber}`}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <QrCode className="w-full h-full text-purple-950" />
+            )}
+          </a>
           <div className="space-y-0.5">
             <span className="text-[8px] font-mono font-black text-purple-950 flex items-center gap-1 uppercase tracking-wider">
               <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 inline shrink-0" />
@@ -206,10 +278,15 @@ export const OfficialReportFooter = ({
             <span className="text-[7px] text-slate-600 block">
               Scan to verify document cryptographic authenticity
             </span>
-            <span className="text-[7px] font-mono text-purple-900 font-semibold block">
-              https://vaaniclinic.com/verify-doc/{reportNumber}
+            <a
+              href={getPublicVerifyUrl(reportNumber)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[7px] font-mono text-purple-900 font-semibold block hover:underline"
+            >
+              {getPublicVerifyUrl(reportNumber)}
               {totalPages && totalPages > 1 ? ` • Pg ${pageNumber}/${totalPages}` : ''}
-            </span>
+            </a>
           </div>
         </div>
 
