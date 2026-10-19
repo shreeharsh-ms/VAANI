@@ -35,6 +35,24 @@ export const OfficialReportFooter = ({
   const reportNumber = formData?.reportNumber || 'REP-26-0001';
   const reportDate = formData?.reportDate || new Date().toISOString().split('T')[0];
 
+  // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
+  let examinerRaw = formData?.examinerName;
+  if (!examinerRaw || examinerRaw.includes('Shreeharsh') || (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree))) {
+    examinerRaw = currentLeadPractitioner;
+  }
+
+  // Ensure degrees are included cleanly
+  const examinerName = examinerRaw.includes('MASLP') || examinerRaw.includes('BASLP')
+    ? (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree)
+        ? `${currentLeadPractitioner}, ${currentLeadDegree}`
+        : examinerRaw)
+    : currentLeadDegree
+      ? `${examinerRaw}, ${currentLeadDegree}`
+      : examinerRaw;
+
+  // Cursive signature display (e.g. "Palak Paresh Gandhi")
+  const signatureName = examinerRaw.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
+
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const getPublicVerifyUrl = (repNum) => {
@@ -130,24 +148,6 @@ export const OfficialReportFooter = ({
       isMounted = false;
     };
   }, [reportNumber, formData, patient, rciNumber, examinerName]);
-
-  // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
-  let examinerRaw = formData?.examinerName;
-  if (!examinerRaw || examinerRaw.includes('Shreeharsh') || (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree))) {
-    examinerRaw = currentLeadPractitioner;
-  }
-
-  // Ensure degrees are included cleanly
-  const examinerName = examinerRaw.includes('MASLP') || examinerRaw.includes('BASLP')
-    ? (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree)
-        ? `${currentLeadPractitioner}, ${currentLeadDegree}`
-        : examinerRaw)
-    : currentLeadDegree
-      ? `${examinerRaw}, ${currentLeadDegree}`
-      : examinerRaw;
-
-  // Cursive signature display (e.g. "Palak Paresh Gandhi")
-  const signatureName = examinerRaw.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
 
   const isLastPage = !totalPages || totalPages <= 1 || (pageNumber && pageNumber === totalPages);
 
