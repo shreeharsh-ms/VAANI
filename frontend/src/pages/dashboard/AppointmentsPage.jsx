@@ -462,7 +462,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
   const checkedInCount = appointments.filter((a) => a.status === 'CHECKED_IN').length;
 
   return (
-    <div className="w-full space-y-2.5 font-sans">
+    <div className="w-full space-y-2.5 font-sans pb-28 md:pb-8">
       {/* ── TOP ACTION BAR ── */}
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         {/* Left: Title & Quick Counts */}
@@ -838,23 +838,36 @@ Kindly reply *CONFIRM* to acknowledge.`;
               </div>
 
               {/* Direct Actions Row */}
-              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+              <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
                 {apt.status === 'PENDING' && (
-                  <button
-                    type="button"
-                    onClick={() => handleApprove(apt.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Approve</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(apt.id)}
+                      className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                      title="Approve booking and lock slot"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Approve</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeny(apt.id)}
+                      className="inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 border border-rose-200 transition-all cursor-pointer touch-manipulation"
+                      title="Deny request and release slot"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Deny</span>
+                    </button>
+                  </>
                 )}
 
                 {apt.status === 'CONFIRMED' && (
                   <button
                     type="button"
-                    onClick={() => handleCheckIn(apt.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs transition-colors"
+                    onClick={() => handleStatusUpdate(apt.id, 'CHECKED_IN')}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                    title="Check in patient for consultation token"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>Check In</span>
@@ -864,47 +877,69 @@ Kindly reply *CONFIRM* to acknowledge.`;
                 {apt.status === 'CHECKED_IN' && (
                   <button
                     type="button"
-                    onClick={() => handleComplete(apt.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                    onClick={() => handleStatusUpdate(apt.id, 'COMPLETED')}
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-8 px-2.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] active:scale-95 text-white shadow-2xs transition-all cursor-pointer touch-manipulation"
+                    title="Mark consultation completed"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Complete</span>
                   </button>
                 )}
 
+                {apt.status === 'COMPLETED' && (
+                  <div className="flex-1 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 h-8">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Completed</span>
+                  </div>
+                )}
+
+                {/* WhatsApp Reminder Modal */}
                 <button
                   type="button"
-                  onClick={() => handleOpenWhatsAppReminder(apt)}
-                  className="inline-flex items-center justify-center gap-1 h-7 px-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors"
+                  onClick={() => handleSendWhatsAppReminder(apt)}
+                  className="inline-flex items-center justify-center gap-1 h-8 px-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:scale-95 border border-emerald-200 rounded-lg transition-all cursor-pointer touch-manipulation"
                   title="Send WhatsApp Reminder"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="hidden sm:inline">WhatsApp</span>
+                  <span className="hidden xs:inline sm:inline">WhatsApp</span>
                 </button>
 
+                {/* Email Reminder Modal */}
                 <button
                   type="button"
-                  onClick={() => handleOpenEmailReminder(apt)}
-                  className="inline-flex items-center justify-center gap-1 h-7 px-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors"
+                  onClick={() => handleSendEmailReminder(apt)}
+                  className="inline-flex items-center justify-center gap-1 h-8 px-2.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 active:scale-95 border border-purple-200 rounded-lg transition-all cursor-pointer touch-manipulation"
                   title="Send Email Reminder"
                 >
                   <Mail className="w-3.5 h-3.5 text-purple-600" />
-                  <span className="hidden sm:inline">Email</span>
+                  <span className="hidden xs:inline sm:inline">Email</span>
                 </button>
 
+                {/* Reschedule Button */}
                 <button
                   type="button"
-                  onClick={() => handleEditClick(apt)}
-                  className="p-1.5 rounded text-slate-500 hover:text-purple-700 hover:bg-purple-50 border border-slate-200 transition-colors ml-auto"
+                  onClick={() => handleOpenReschedule(apt)}
+                  className="p-2 rounded-lg text-purple-700 hover:bg-purple-50 active:scale-95 border border-purple-200 transition-all cursor-pointer touch-manipulation"
+                  title="Reschedule Appointment"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(apt)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-purple-700 hover:bg-purple-50 active:scale-95 border border-slate-200 transition-all cursor-pointer touch-manipulation ml-auto"
                   title="Edit Appointment"
                 >
                   <Edit className="w-3.5 h-3.5" />
                 </button>
 
+                {/* Delete Button */}
                 <button
                   type="button"
                   onClick={() => handleDelete(apt.id, apt.patient_name)}
-                  className="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
+                  className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95 border border-slate-200 transition-all cursor-pointer touch-manipulation"
                   title="Delete Appointment"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
