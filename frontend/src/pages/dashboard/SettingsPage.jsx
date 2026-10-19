@@ -2339,7 +2339,146 @@ export const SettingsPage = () => {
 
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Card Feed (md:hidden) */}
+            <div className="md:hidden divide-y divide-slate-100 p-2.5 space-y-2.5">
+              {/* Card 1: UHID Patient Number Prefix */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">UHID Patient Prefix</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Continuous</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Universal Health ID auto-sequence format (e.g. VN-YY-######)</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.billing.uhidPrefix}
+                    onChange={(e) => handleChange('billing', 'uhidPrefix', e.target.value)}
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Card 2: Tax Invoice Series Prefix */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Tax Invoice Series Prefix</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Annual (Apr 1)</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Annual sequential invoice series with fiscal rollover</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.billing.invoicePrefix}
+                    onChange={(e) => handleChange('billing', 'invoicePrefix', e.target.value)}
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Card 3: Payment Receipt Prefix */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Payment Receipt Prefix</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Annual (Apr 1)</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Payment acknowledgment sequence: REC-YYYY-#####</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.billing.receiptPrefix}
+                    onChange={(e) => handleChange('billing', 'receiptPrefix', e.target.value)}
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Card 4: Clinical Healthcare Service GST */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Clinical Healthcare Service GST</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Permanent Exempt</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Exempt under Notification No. 12/2017-Central Tax (Rate), Heading 9993</p>
+                <div className="pt-0.5">
+                  <span className="inline-block font-mono font-bold text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+                    0.00% (Statutorily Exempt)
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 5: Hearing Aid & Battery GST */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Hearing Aid &amp; Battery GST</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">HSN 9021</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Applicable tax rate on hearing appliances &amp; accessories</p>
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    type="number"
+                    value={settings.billing.productTaxPercent}
+                    onChange={(e) => handleChange('billing', 'productTaxPercent', parseFloat(e.target.value) || 0)}
+                    className="h-8 w-24 px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">%</span>
+                </div>
+              </div>
+
+              {/* Card 6: Clinic Statutory GSTIN */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Clinic Statutory GSTIN</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Tax Invoice</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Goods &amp; Services Tax Identification Number</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.credentials.gstin || ''}
+                    onChange={(e) => handleChange('credentials', 'gstin', e.target.value.toUpperCase())}
+                    placeholder="27AAAAA0000A1Z5"
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-purple-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none uppercase"
+                  />
+                </div>
+              </div>
+
+              {/* Card 7: Healthcare SAC Code */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Healthcare SAC Code</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Services</span>
+                </div>
+                <p className="text-[11px] text-slate-500">SAC code for clinical consultations &amp; speech therapy</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.billing.sacCode || '999312'}
+                    onChange={(e) => handleChange('billing', 'sacCode', e.target.value)}
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Card 8: Hearing Aids HSN Code */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2.5 space-y-1.5 pt-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-800">Hearing Aids HSN Code</span>
+                  <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">Goods</span>
+                </div>
+                <p className="text-[11px] text-slate-500">Harmonized System of Nomenclature for appliances</p>
+                <div className="pt-0.5">
+                  <input
+                    type="text"
+                    value={settings.billing.hsnCode || '9021'}
+                    onChange={(e) => handleChange('billing', 'hsnCode', e.target.value)}
+                    className="h-8 w-full px-2.5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Table View (hidden md:block) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">

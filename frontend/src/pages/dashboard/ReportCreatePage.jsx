@@ -688,72 +688,73 @@ export const ReportCreatePage = () => {
   };
 
   return (
-    <div className="space-y-3.5 pb-10">
+    <div className="space-y-3.5 pb-32 sm:pb-16">
       
       {/* ── TOP ACTION BAR ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-2xs">
-        <div className="flex items-center gap-3">
+      <div className="bg-white border border-slate-200 rounded-lg p-3 sm:px-4 sm:py-2.5 shadow-2xs space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => navigate('/dashboard/reports')}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Reports</span>
+            <span className="hidden sm:inline">Back to Reports</span>
+            <span className="sm:hidden">Back</span>
           </button>
-          <div>
-            <h1 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-              <FileText className="w-4 h-4 text-purple-700" />
+          <div className="min-w-0">
+            <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
+              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-700 shrink-0" />
               {existingReport ? (
-                <span className="flex items-center gap-2">
-                  <span>Edit Clinical Report:</span>
-                  <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 font-mono text-xs">{formData.reportNumber}</span>
+                <span className="flex items-center gap-1.5 truncate">
+                  <span>Edit Report:</span>
+                  <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 font-mono text-xs">{formData.reportNumber}</span>
                 </span>
               ) : (
-                <span>Clinical Report Intake &amp; Data Entry</span>
+                <span className="truncate">Clinical Report Entry</span>
               )}
             </h1>
-            <p className="text-[10px] text-slate-500">
+            <p className="hidden sm:block text-[10px] text-slate-500">
               {existingReport ? (
-                <span className="text-purple-700 font-medium">Modifying clinical findings for {selectedPatient?.full_name} ({selectedPatient?.uhid}) • Click Save to update registry</span>
+                <span className="text-purple-700 font-medium">Modifying clinical findings for {selectedPatient?.full_name} ({selectedPatient?.uhid})</span>
               ) : (
-                <span>Input patient findings • Computes diagnostic metrics • Prints official letterhead with clinic logo &amp; RCI CRR No. {formData.rciNumber}</span>
+                <span>Input patient findings • Computes diagnostic metrics • Prints official letterhead</span>
               )}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={handleSaveReport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded shadow-2xs transition-colors cursor-pointer"
             title="Save report to clinical records (Ctrl/Cmd + S)"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>{existingReport ? 'Update Report' : 'Save Report'}</span>
-            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-800/80 text-[9px] rounded font-mono">⌘S</kbd>
+            <Save className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{existingReport ? 'Update' : 'Save'}</span>
+            <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-purple-800/80 text-[9px] rounded font-mono">⌘S</kbd>
           </button>
 
           <button
             type="button"
             onClick={handleOpenPreviewInNewTab}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-slate-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 rounded shadow-2xs transition-colors cursor-pointer"
             title="Open official report preview in new tab"
           >
-            <Eye className="w-3.5 h-3.5 text-purple-700" />
-            <span>Preview in New Tab</span>
+            <Eye className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+            <span className="truncate">Preview</span>
           </button>
 
           <button
             type="button"
             onClick={triggerPrint}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded shadow-2xs transition-colors cursor-pointer"
             title="Print Official Document (Ctrl/Cmd + P)"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Official PDF</span>
-            <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
+            <Printer className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Print PDF</span>
+            <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
           </button>
         </div>
       </div>
@@ -761,12 +762,9 @@ export const ReportCreatePage = () => {
       {/* ── STEP 1: SERVICE / PROFORMA TEMPLATE SELECTOR ── */}
       <div className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-2xs space-y-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-bold text-slate-700 tracking-wide flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-            1. Select Clinical Service / Proforma Template ({CLINICAL_SERVICES.length} Master Options)
-          </span>
-          <span className="text-[10px] font-mono font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-            Active: {activeService.code} — {activeService.shortName}
+            1. Select Clinical Service Template
           </span>
         </div>
 
@@ -804,7 +802,7 @@ export const ReportCreatePage = () => {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-purple-700" />
-            <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+            <span className="text-xs font-bold text-slate-800 tracking-wide">
               2. Patient Selection &amp; Consultation Context
             </span>
           </div>
@@ -818,8 +816,8 @@ export const ReportCreatePage = () => {
               <Edit3 className="w-3.5 h-3.5 text-purple-700" />
               <span>Edit Patient Info</span>
             </button>
-            <span className="text-[10px] text-slate-500">
-              {allPatients.length} Registered Patients in System
+            <span className="hidden sm:inline text-[10px] text-slate-500">
+              {allPatients.length} Registered Patients
             </span>
           </div>
         </div>
