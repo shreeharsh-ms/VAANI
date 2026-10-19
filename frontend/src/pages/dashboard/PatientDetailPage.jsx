@@ -2774,71 +2774,69 @@ export const PatientDetailPage = () => {
                         </div>
                       </div>
 
-                      {/* Mobile Touch-Friendly Action Buttons */}
-                      <div className="grid grid-cols-4 gap-1.5 pt-1.5 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenPatientInvoice(inv)}
-                          className="py-1.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                          title="View Voucher"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
-                        </button>
+                      {/* Compact Action Icons Row */}
+                      <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                        <span className="text-[10px] text-slate-500 font-mono truncate flex-1">
+                          Ref: {inv.receiptNo || inv.refNo || 'NPCI-UPI'}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPatientInvoice(inv)}
+                            className="h-6 w-6 inline-flex items-center justify-center text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="View Voucher"
+                          >
+                            <Eye className="w-3 h-3 text-purple-700" />
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadPatientInvoice(inv)}
-                          className="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                          title="Print / Download Official Tax Invoice"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>PDF</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadPatientInvoice(inv)}
+                            className="h-6 w-6 inline-flex items-center justify-center text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="Print / Download Official Tax Invoice"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleWhatsAppPatientInvoice(inv)}
-                          className="py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
-                          title="Send WhatsApp"
-                        >
-                          <WhatsAppIcon className="w-3.5 h-3.5" />
-                          <span>Share</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleWhatsAppPatientInvoice(inv)}
+                            className="h-6 w-6 inline-flex items-center justify-center text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="Send WhatsApp"
+                          >
+                            <WhatsAppIcon className="w-3 h-3" />
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleStartEditPatientInvoice(inv)}
-                          className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                          title="Edit Invoice"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          <span>Edit</span>
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMailPatientInvoice(inv)}
+                            className="h-6 w-6 inline-flex items-center justify-center text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="Email Invoice"
+                          >
+                            <Mail className="w-3 h-3 text-blue-700" />
+                          </button>
 
-                      {/* Secondary row for Mail and Delete */}
-                      <div className="flex items-center justify-end gap-3 text-[11px] text-slate-500 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenMailPatientInvoice(inv)}
-                          className="inline-flex items-center gap-1 text-purple-700 hover:underline cursor-pointer font-medium"
-                        >
-                          <Mail className="w-3 h-3" />
-                          <span>Email Invoice</span>
-                        </button>
-                        <span>•</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setInvoiceToDelete(inv);
-                            setIsDeleteInvoiceModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 text-rose-600 hover:underline cursor-pointer font-medium"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Delete</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditPatientInvoice(inv)}
+                            className="h-6 w-6 inline-flex items-center justify-center text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="Edit Invoice"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInvoiceToDelete(inv);
+                              setIsDeleteInvoiceModalOpen(true);
+                            }}
+                            className="h-6 w-6 inline-flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -3874,32 +3872,35 @@ export const PatientDetailPage = () => {
         footer={
           selectedInvoiceForView && (
             <div className="w-full flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleDownloadPatientInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-[#301444] hover:bg-purple-950 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-[#301444] hover:bg-purple-950 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Download / Print Invoice"
+                  aria-label="Download or Print Invoice"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download / Print</span>
+                  <Download className="w-4 h-4" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleWhatsAppPatientInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Send via WhatsApp"
+                  aria-label="Send via WhatsApp"
                 >
-                  <WhatsAppIcon className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
+                  <WhatsAppIcon className="w-4 h-4" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleOpenMailPatientInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-purple-700 hover:bg-purple-800 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-purple-700 hover:bg-purple-800 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Send via Email"
+                  aria-label="Send via Email"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email</span>
+                  <Mail className="w-4 h-4" />
                 </button>
 
                 <button
@@ -3908,10 +3909,11 @@ export const PatientDetailPage = () => {
                     setIsViewInvoiceModalOpen(false);
                     handleStartEditPatientInvoice(selectedInvoiceForView);
                   }}
-                  className="h-7.5 w-7.5 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
                   title="Edit Invoice"
+                  aria-label="Edit Invoice"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
               </div>
 

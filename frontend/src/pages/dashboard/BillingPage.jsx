@@ -293,6 +293,7 @@ export const BillingPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [taxFilter, setTaxFilter] = useState('ALL');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Sorting State
   const [sortField, setSortField] = useState('date');
@@ -1476,273 +1477,384 @@ export const BillingPage = () => {
         </div>
       </div>
 
-      {/* ── FILTER & SEARCH BAR (EXCEL TOOLBAR DENSITY) ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 w-full sm:w-auto">
-          {/* Multi-field search */}
-          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search invoice #, UHID, patient, phone..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1"
-              >
-                ×
-              </button>
-            )}
+      {/* ── FILTER & SEARCH BAR (COLLAPSIBLE ON MOBILE) ── */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          {/* Multi-field search + Mobile filter toggle */}
+          <div className="flex items-center gap-1.5 w-full sm:max-w-xs md:max-w-sm">
+            <div className="relative flex items-center flex-1">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search invoice #, UHID, patient, phone..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 sm:h-7 w-full pl-7 pr-6 text-xs bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600 text-slate-800 placeholder-slate-400 font-medium"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Filter Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters((prev) => !prev)}
+              className={`sm:hidden inline-flex items-center gap-1 h-8 px-2 rounded border text-xs font-bold transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
+                statusFilter !== 'ALL' || taxFilter !== 'ALL' || dateFilterPreset !== 'ALL' || showMobileFilters
+                  ? 'bg-purple-100 text-purple-900 border-purple-300'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+              title="Toggle Filters"
+            >
+              <Filter className="w-3.5 h-3.5 text-purple-700" />
+              <span>Filters</span>
+              {(statusFilter !== 'ALL' || taxFilter !== 'ALL' || dateFilterPreset !== 'ALL') && (
+                <span className="w-2 h-2 rounded-full bg-purple-700" />
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PAID">Paid In Full</option>
-              <option value="DUE">Outstanding Due</option>
-            </select>
+          {/* Desktop Filters (Always visible on sm: and above) */}
+          <div className="hidden sm:flex items-center gap-2 flex-wrap flex-1 justify-between">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PAID">Paid In Full</option>
+                <option value="DUE">Outstanding Due</option>
+              </select>
 
-            {/* Tax Classification Filter */}
-            <select
-              value={taxFilter}
-              onChange={(e) => {
-                setTaxFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none flex-1 sm:flex-initial"
-            >
-              <option value="ALL">All Tax Treatments</option>
-              <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt (Notification 12/2017)</option>
-              <option value="TAXABLE_GOODS">18% GST (Hearing Aids &amp; Accessories)</option>
-            </select>
+              {/* Tax Classification Filter */}
+              <select
+                value={taxFilter}
+                onChange={(e) => {
+                  setTaxFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              >
+                <option value="ALL">All Tax Treatments</option>
+                <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt (Notification 12/2017)</option>
+                <option value="TAXABLE_GOODS">18% GST (Hearing Aids &amp; Accessories)</option>
+              </select>
 
-            {/* Date Filter */}
-            <div className="flex items-center gap-1.5 flex-wrap flex-1 sm:flex-initial">
+              {/* Date Filter */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <select
+                  value={dateFilterPreset}
+                  onChange={(e) => {
+                    setDateFilterPreset(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                >
+                  <option value="ALL">📅 All Dates</option>
+                  <option value="TODAY">Today</option>
+                  <option value="LAST_7_DAYS">Last 7 Days</option>
+                  <option value="THIS_MONTH">This Month</option>
+                  <option value="LAST_30_DAYS">Last 30 Days</option>
+                  <option value="CUSTOM">Custom Range...</option>
+                </select>
+
+                {dateFilterPreset === 'CUSTOM' && (
+                  <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 h-7">
+                    <input
+                      type="date"
+                      value={startDateFilter}
+                      onChange={(e) => {
+                        setStartDateFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="text-[11px] text-slate-700 focus:outline-none"
+                    />
+                    <span className="text-[10px] text-slate-400">to</span>
+                    <input
+                      type="date"
+                      value={endDateFilter}
+                      onChange={(e) => {
+                        setEndDateFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="text-[11px] text-slate-700 focus:outline-none"
+                    />
+                    {(startDateFilter || endDateFilter) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStartDateFilter('');
+                          setEndDateFilter('');
+                          setPage(1);
+                        }}
+                        className="text-slate-400 hover:text-slate-600 text-xs px-0.5"
+                        title="Clear dates"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Rows per page selector on desktop */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span className="text-[11px] font-medium">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible Mobile Filter Details */}
+        {showMobileFilters && (
+          <div className="sm:hidden pt-2 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-7 w-full px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PAID">Paid In Full</option>
+                <option value="DUE">Outstanding Due</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Tax</label>
+              <select
+                value={taxFilter}
+                onChange={(e) => {
+                  setTaxFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-7 w-full px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+              >
+                <option value="ALL">All Tax Treatments</option>
+                <option value="HEALTHCARE_EXEMPT">0% Healthcare Exempt</option>
+                <option value="TAXABLE_GOODS">18% GST (Hearing Aids)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Date Range</label>
               <select
                 value={dateFilterPreset}
                 onChange={(e) => {
                   setDateFilterPreset(e.target.value);
                   setPage(1);
                 }}
-                className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
+                className="h-7 w-full px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
               >
-                <option value="ALL">📅 All Dates</option>
+                <option value="ALL">All Dates</option>
                 <option value="TODAY">Today</option>
                 <option value="LAST_7_DAYS">Last 7 Days</option>
                 <option value="THIS_MONTH">This Month</option>
                 <option value="LAST_30_DAYS">Last 30 Days</option>
                 <option value="CUSTOM">Custom Range...</option>
               </select>
-
-              {dateFilterPreset === 'CUSTOM' && (
-                <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 h-8 sm:h-7">
-                  <input
-                    type="date"
-                    value={startDateFilter}
-                    onChange={(e) => {
-                      setStartDateFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="text-[11px] text-slate-700 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400">to</span>
-                  <input
-                    type="date"
-                    value={endDateFilter}
-                    onChange={(e) => {
-                      setEndDateFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    className="text-[11px] text-slate-700 focus:outline-none"
-                  />
-                  {(startDateFilter || endDateFilter) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStartDateFilter('');
-                        setEndDateFilter('');
-                        setPage(1);
-                      }}
-                      className="text-slate-400 hover:text-slate-600 text-xs px-0.5"
-                      title="Clear dates"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
-          </div>
-        </div>
 
-        {/* Rows per page selector */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
-          <span className="text-[11px] font-medium">Rows:</span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setPage(1);
-            }}
-            className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-0.5">Rows</label>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-7 w-full px-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value={10}>10 rows</option>
+                <option value={25}>25 rows</option>
+                <option value={50}>50 rows</option>
+              </select>
+            </div>
+
+            {dateFilterPreset === 'CUSTOM' && (
+              <div className="col-span-2 flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 h-7">
+                <input
+                  type="date"
+                  value={startDateFilter}
+                  onChange={(e) => {
+                    setStartDateFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-[11px] text-slate-700 focus:outline-none flex-1"
+                />
+                <span className="text-[10px] text-slate-400">to</span>
+                <input
+                  type="date"
+                  value={endDateFilter}
+                  onChange={(e) => {
+                    setEndDateFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-[11px] text-slate-700 focus:outline-none flex-1"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── MOBILE TOUCH-OPTIMIZED CARD VIEW (Visible on mobile/tablet < md:) ── */}
-      <div className="md:hidden space-y-2.5">
+      {/* ── MOBILE TOUCH-OPTIMIZED CARD VIEW (COMPACT 3-ROW DENSITY) ── */}
+      <div className="md:hidden space-y-1.5">
         {paginatedInvoices.length === 0 ? (
-          <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
+          <div className="bg-white rounded-lg border border-slate-200 p-4 text-center text-xs text-slate-500 font-medium">
             No matching billing invoices found.
           </div>
         ) : (
           paginatedInvoices.map((inv) => (
             <div
               key={inv.id}
-              className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+              className="bg-white border border-slate-200 rounded-lg p-2 sm:p-2.5 shadow-2xs space-y-1 hover:border-purple-300 transition-colors"
             >
-              {/* Header: Invoice #, Date, Status */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+              {/* Row 1: Invoice # + Date + Payment Mode + Status */}
+              <div className="flex items-center justify-between gap-1 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-mono font-bold text-[11px] px-1.5 py-0.2 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
                     {inv.invoiceNo}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
                     {inv.date}
                   </span>
                 </div>
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap ${
-                    inv.status === 'PAID'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-rose-50 text-rose-700 border-rose-200'
-                  }`}
-                >
-                  {inv.status}
-                </span>
-              </div>
-
-              {/* Patient & UHID */}
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="font-bold text-sm text-slate-900">{inv.patientName}</div>
-                  <span className="text-[11px] font-mono font-bold text-purple-800">{inv.uhid}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-mono font-black text-slate-900 block">
-                    ₹{inv.totalAmount.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-[10px] font-mono font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700 inline-block">
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[9px] font-mono font-semibold px-1 py-0.2 rounded bg-slate-100 text-slate-600">
                     {inv.paymentMode}
                   </span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[9px] font-bold border whitespace-nowrap ${
+                      inv.status === 'PAID'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}
+                  >
+                    {inv.status}
+                  </span>
                 </div>
               </div>
 
-              {/* Service & Tax regime */}
-              <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs flex items-center justify-between gap-2">
-                <div className="truncate flex-1">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Service</span>
-                  <span className="font-medium text-slate-800 truncate block">{inv.service}</span>
+              {/* Row 2: Patient Name + UHID + Total Amount */}
+              <div className="flex items-center justify-between gap-1.5 text-xs">
+                <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
+                  <span className="font-bold text-xs text-slate-900 truncate">
+                    {inv.patientName}
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-purple-800 shrink-0">
+                    {inv.uhid}
+                  </span>
                 </div>
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold border flex-shrink-0 whitespace-nowrap ${
-                    inv.taxType === 'HEALTHCARE_EXEMPT'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}
-                >
-                  {inv.taxType === 'HEALTHCARE_EXEMPT' ? '0% Exempt' : '18% GST'}
+                <span className="text-xs font-mono font-black text-slate-900 shrink-0">
+                  ₹{inv.totalAmount.toLocaleString('en-IN')}
                 </span>
               </div>
 
-              {/* Direct Touch Action Buttons */}
-              <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => handleOpenInvoice(inv)}
-                  className="flex-1 inline-flex items-center justify-center gap-1 h-7.5 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+              {/* Row 3: Service Description + Compact Action Icons */}
+              <div className="pt-1 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                <span
+                  className="text-[10px] text-slate-600 truncate flex-1 font-medium bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100"
+                  title={inv.service}
                 >
-                  <Eye className="w-3.5 h-3.5 text-purple-200" />
-                  <span>View</span>
-                </button>
+                  {inv.service}
+                </span>
 
-                <button
-                  type="button"
-                  onClick={() => handleDownloadInvoice(inv)}
-                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors"
-                  title="Download / Print"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">PDF</span>
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenInvoice(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="View Invoice"
+                  >
+                    <Eye className="w-3 h-3 text-purple-700" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleOpenWhatsAppModal(inv)}
-                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
-                  title="Share WhatsApp"
-                >
-                  <WhatsAppIcon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">WhatsApp</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadInvoice(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Download / Print Invoice"
+                  >
+                    <Download className="w-3 h-3" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleOpenMailModal(inv)}
-                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
-                  title="Email Invoice"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Email</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenWhatsAppModal(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Send via WhatsApp"
+                  >
+                    <WhatsAppIcon className="w-3 h-3" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => openUpiForInvoice(inv)}
-                  className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
-                  title="Dynamic UPI QR"
-                >
-                  <QrCode className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">UPI</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenMailModal(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Send via Email"
+                  >
+                    <Mail className="w-3 h-3 text-blue-700" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleStartEditInvoice(inv)}
-                  className="p-1.5 rounded text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
-                  title="Edit Invoice"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => openUpiForInvoice(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Dynamic UPI QR"
+                  >
+                    <QrCode className="w-3 h-3" />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handlePromptDelete(inv)}
-                  className="p-1.5 rounded text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors"
-                  title="Delete Invoice"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartEditInvoice(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Edit Invoice"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePromptDelete(inv)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Delete Invoice"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -2469,41 +2581,45 @@ export const BillingPage = () => {
         footer={
           selectedInvoiceForView && (
             <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleDownloadInvoice(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-[#301444] hover:bg-purple-950 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-[#301444] hover:bg-purple-950 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Download / Print Invoice"
+                  aria-label="Download or Print Invoice"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download / Print</span>
+                  <Download className="w-4 h-4" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleOpenWhatsAppModal(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Send via WhatsApp"
+                  aria-label="Send via WhatsApp"
                 >
-                  <WhatsAppIcon className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
+                  <WhatsAppIcon className="w-4 h-4" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleOpenMailModal(selectedInvoiceForView)}
-                  className="h-7.5 px-2.5 sm:px-3 rounded text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-white bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-2xs transition-colors cursor-pointer shrink-0"
+                  title="Send via Email"
+                  aria-label="Send via Email"
                 >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Email</span>
+                  <Mail className="w-4 h-4" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleStartEditInvoice(selectedInvoiceForView)}
-                  className="h-7.5 w-7.5 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
+                  className="h-8 w-8 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 shadow-2xs transition-colors cursor-pointer"
                   title="Edit Invoice"
+                  aria-label="Edit Invoice"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
               </div>
 
