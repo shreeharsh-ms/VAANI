@@ -77,7 +77,7 @@ export const MobileCurvedNavBar = () => {
       actions: [
         {
           id: 'new-booking',
-          label: 'Schedule New Slot',
+          label: 'Schedule Slot',
           sublabel: 'Book consultation appointment',
           icon: CalendarPlus,
           color: 'text-purple-900 bg-purple-50 hover:bg-purple-100 border-purple-200',
@@ -91,8 +91,8 @@ export const MobileCurvedNavBar = () => {
         },
         {
           id: 'view-schedule',
-          label: 'View Appointments Roster',
-          sublabel: 'Today & upcoming scheduled slots',
+          label: 'View Appointments',
+          sublabel: 'Today & upcoming roster',
           icon: CalendarCheck,
           color: 'text-slate-800 bg-slate-50 hover:bg-slate-100 border-slate-200',
           onClick: () => navigate(ROUTES.DASHBOARD.APPOINTMENTS),
@@ -100,12 +100,12 @@ export const MobileCurvedNavBar = () => {
       ],
     },
     patients: {
-      title: 'Patient Management',
+      title: 'Patient Directory',
       actions: [
         {
           id: 'new-patient',
-          label: 'Register New Patient',
-          sublabel: 'Intake registration with auto UHID',
+          label: 'Register Patient',
+          sublabel: 'Intake with auto UHID',
           icon: UserPlus,
           color: 'text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border-emerald-200',
           onClick: () => {
@@ -118,8 +118,8 @@ export const MobileCurvedNavBar = () => {
         },
         {
           id: 'view-patients',
-          label: 'All Patients Directory',
-          sublabel: 'Browse patient clinical records',
+          label: 'Patient Directory',
+          sublabel: 'Browse clinical records',
           icon: Users,
           color: 'text-slate-800 bg-slate-50 hover:bg-slate-100 border-slate-200',
           onClick: () => navigate(ROUTES.DASHBOARD.PATIENTS),
@@ -131,16 +131,16 @@ export const MobileCurvedNavBar = () => {
       actions: [
         {
           id: 'new-report',
-          label: 'Create Clinical Report',
-          sublabel: 'Audiological, speech, voice or CBT',
+          label: 'Create Report',
+          sublabel: 'Audiology, speech, or CBT',
           icon: FilePlus,
           color: 'text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border-indigo-200',
           onClick: () => navigate('/dashboard/reports/create'),
         },
         {
           id: 'view-reports',
-          label: 'All Clinical Reports',
-          sublabel: 'Browse verified proformas & records',
+          label: 'All Reports',
+          sublabel: 'Browse verified records',
           icon: FileText,
           color: 'text-slate-800 bg-slate-50 hover:bg-slate-100 border-slate-200',
           onClick: () => navigate(ROUTES.DASHBOARD.REPORTS),
@@ -152,8 +152,8 @@ export const MobileCurvedNavBar = () => {
       actions: [
         {
           id: 'new-invoice',
-          label: 'Create New Invoice',
-          sublabel: 'Clinical consultations & therapy billing',
+          label: 'Create Invoice',
+          sublabel: 'Consultation & therapy fee',
           icon: PlusCircle,
           color: 'text-purple-900 bg-purple-50 hover:bg-purple-100 border-purple-200',
           onClick: () => {
@@ -166,8 +166,8 @@ export const MobileCurvedNavBar = () => {
         },
         {
           id: 'add-instrument',
-          label: 'Add Instrument / Hearing Aid',
-          sublabel: 'Dispense digital RIC/BTE with serial #',
+          label: 'Add Instrument / Aid',
+          sublabel: 'Dispense digital hearing aid',
           icon: Sparkles,
           color: 'text-amber-900 bg-amber-50 hover:bg-amber-100 border-amber-200',
           onClick: () => {
@@ -180,8 +180,8 @@ export const MobileCurvedNavBar = () => {
         },
         {
           id: 'view-billing',
-          label: 'Invoices & Receipts Ledger',
-          sublabel: 'Review settlements & payment receipts',
+          label: 'Invoices & Receipts',
+          sublabel: 'Review payment settlements',
           icon: IndianRupee,
           color: 'text-slate-800 bg-slate-50 hover:bg-slate-100 border-slate-200',
           onClick: () => navigate(ROUTES.DASHBOARD.BILLING),
@@ -193,16 +193,16 @@ export const MobileCurvedNavBar = () => {
       actions: [
         {
           id: 'dashboard',
-          label: 'Clinical Home Dashboard',
-          sublabel: 'Operational KPIs & daily roster',
+          label: 'Clinic Dashboard',
+          sublabel: 'Overview & key metrics',
           icon: Home,
           color: 'text-purple-900 bg-purple-50 hover:bg-purple-100 border-purple-200',
           onClick: () => navigate(ROUTES.DASHBOARD.HOME),
         },
         {
           id: 'live-queue',
-          label: 'Today’s Consultation Roster',
-          sublabel: 'Manage arrived and scheduled patients',
+          label: 'Today’s Roster',
+          sublabel: 'Consultation queue slots',
           icon: Clock,
           color: 'text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border-emerald-200',
           onClick: () => navigate(ROUTES.DASHBOARD.APPOINTMENTS),
@@ -267,35 +267,37 @@ export const MobileCurvedNavBar = () => {
         {/* ── QUICK ACTION POPUP CARD (Rendered directly above the tapped/held tab) ── */}
         {activeQuickMenu && tabQuickActions[activeQuickMenu] && (
           <div
-            className="absolute bottom-[72px] z-50 pointer-events-auto transition-all duration-200 ease-out"
+            className="absolute bottom-[68px] z-50 pointer-events-auto transition-all duration-200 ease-out"
             style={{
               left:
-                activeQuickMenu === 'home'
+                activeQuickMenu === 'home' || activeQuickMenu === 'schedule'
                   ? '6px'
-                  : activeQuickMenu === 'billing'
-                  ? 'auto'
-                  : `${(navItems.findIndex((n) => n.id === activeQuickMenu) * 20) + 10}%`,
-              right: activeQuickMenu === 'billing' ? '6px' : 'auto',
+                  : activeQuickMenu === 'patients'
+                  ? '50%'
+                  : 'auto',
+              right:
+                activeQuickMenu === 'records' || activeQuickMenu === 'billing'
+                  ? '6px'
+                  : 'auto',
               transform:
-                activeQuickMenu === 'home' || activeQuickMenu === 'billing'
-                  ? 'none'
-                  : 'translateX(-50%)',
-              maxWidth: 'calc(100vw - 28px)',
+                activeQuickMenu === 'patients' ? 'translateX(-50%)' : 'none',
+              maxWidth: 'calc(100vw - 20px)',
             }}
           >
-            <div className="w-[280px] bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_14px_45px_rgba(48,20,68,0.24)] border border-purple-200/90 p-2.5 space-y-1.5 animate-in fade-in zoom-in-95 duration-150 relative">
+            <div className="w-[218px] max-w-[calc(100vw-24px)] bg-white/95 backdrop-blur-md rounded-xl shadow-[0_12px_36px_rgba(48,20,68,0.22)] border border-purple-200/90 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150 relative">
               {/* Header */}
-              <div className="flex items-center justify-between px-1.5 pb-1 border-b border-slate-100">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-purple-700 animate-pulse" />
-                  <span className="text-[11px] font-bold text-slate-800 tracking-wide">
+              <div className="flex items-center justify-between px-1 pb-1 border-b border-slate-100">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-700 animate-pulse shrink-0" />
+                  <span className="text-[10.5px] font-bold text-slate-800 tracking-tight truncate">
                     {tabQuickActions[activeQuickMenu].title}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveQuickMenu(null)}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  className="p-0.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  aria-label="Close menu"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -313,18 +315,20 @@ export const MobileCurvedNavBar = () => {
                         setActiveQuickMenu(null);
                         act.onClick();
                       }}
-                      className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left border transition-all cursor-pointer active:scale-98 ${act.color}`}
+                      className={`w-full flex items-center gap-2 p-1.5 rounded-lg text-left border transition-all cursor-pointer active:scale-98 ${act.color}`}
                     >
-                      <div className="p-1.5 rounded-lg bg-white/90 shadow-2xs shrink-0">
-                        <ActIcon className="w-4 h-4" />
+                      <div className="p-1 rounded-md bg-white/90 shadow-2xs shrink-0">
+                        <ActIcon className="w-3.5 h-3.5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-bold leading-tight truncate">
+                        <div className="text-[11px] font-bold leading-tight truncate">
                           {act.label}
                         </div>
-                        <div className="text-[10px] opacity-75 truncate mt-0.5">
-                          {act.sublabel}
-                        </div>
+                        {act.sublabel && (
+                          <div className="text-[9px] opacity-75 truncate leading-tight mt-0.5">
+                            {act.sublabel}
+                          </div>
+                        )}
                       </div>
                     </button>
                   );
@@ -333,14 +337,22 @@ export const MobileCurvedNavBar = () => {
 
               {/* Downward Pointer Triangle */}
               <div
-                className="absolute -bottom-1.5 w-3 h-3 bg-white border-b border-r border-purple-200/90 rotate-45"
+                className="absolute -bottom-1.5 w-2.5 h-2.5 bg-white border-b border-r border-purple-200/90 rotate-45"
                 style={{
                   left:
                     activeQuickMenu === 'home'
-                      ? '32px'
+                      ? '26px'
+                      : activeQuickMenu === 'schedule'
+                      ? '92px'
+                      : activeQuickMenu === 'patients'
+                      ? 'calc(50% - 5px)'
+                      : 'auto',
+                  right:
+                    activeQuickMenu === 'records'
+                      ? '92px'
                       : activeQuickMenu === 'billing'
-                      ? 'calc(100% - 36px)'
-                      : 'calc(50% - 6px)',
+                      ? '26px'
+                      : 'auto',
                 }}
               />
             </div>
