@@ -31,6 +31,7 @@ export const ReportVerificationPage = () => {
   const [targetEmail, setTargetEmail] = useState('');
   const [patientName, setPatientName] = useState('');
   const [uhid, setUhid] = useState('');
+  const [matchedReport, setMatchedReport] = useState(null);
 
   // Automatically resolve patient's registered email behind the scenes (kept completely private)
   useEffect(() => {
@@ -62,37 +63,38 @@ export const ReportVerificationPage = () => {
         }
       }
 
-      if (!foundEmail) {
-        const allReports = getAllClinicalReports();
-        const match = allReports.find(
-          (r) =>
-            r.report_number?.toLowerCase() === reportNumber.toLowerCase() ||
-            r.id?.toLowerCase() === reportNumber.toLowerCase()
+      const allReports = getAllClinicalReports();
+      const match = allReports.find(
+        (r) =>
+          r.report_number?.toLowerCase() === reportNumber.toLowerCase() ||
+          r.id?.toLowerCase() === reportNumber.toLowerCase()
+      );
+
+      if (match) {
+        setMatchedReport(match);
+        if (match.email && !foundEmail) foundEmail = match.email;
+        if (match.patient_name && !foundName) foundName = match.patient_name;
+        if (match.uhid && !foundUhid) foundUhid = match.uhid;
+      }
+
+      if (!foundEmail && (match?.uhid || foundUhid)) {
+        const targetUhid = match?.uhid || foundUhid;
+        const storedPatients = (() => {
+          try {
+            const raw = localStorage.getItem('vaani_patients_v1');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) return [...parsed, ...SEED_PATIENTS];
+            }
+          } catch {}
+          return SEED_PATIENTS;
+        })();
+
+        const p = storedPatients.find(
+          (item) => item.uhid?.toLowerCase() === targetUhid.toLowerCase()
         );
-
-        if (match?.email) foundEmail = match.email;
-        if (match?.patient_name && !foundName) foundName = match.patient_name;
-        if (match?.uhid && !foundUhid) foundUhid = match.uhid;
-
-        if (!foundEmail && (match?.uhid || foundUhid)) {
-          const targetUhid = match?.uhid || foundUhid;
-          const storedPatients = (() => {
-            try {
-              const raw = localStorage.getItem('vaani_patients_v1');
-              if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return [...parsed, ...SEED_PATIENTS];
-              }
-            } catch {}
-            return SEED_PATIENTS;
-          })();
-
-          const p = storedPatients.find(
-            (item) => item.uhid?.toLowerCase() === targetUhid.toLowerCase()
-          );
-          if (p?.email) foundEmail = p.email;
-          if (p?.full_name && !foundName) foundName = p.full_name;
-        }
+        if (p?.email) foundEmail = p.email;
+        if (p?.full_name && !foundName) foundName = p.full_name;
       }
 
       setTargetEmail(foundEmail || 'info.shreeharshshivpuje@gmail.com');
@@ -130,6 +132,12 @@ export const ReportVerificationPage = () => {
       documentTitle: `Clinical_Report_${reportNumber}`,
       patientName: patientName || 'Patient',
       uhid: uhid || 'VH-2026-0012',
+      reportData: matchedReport || {
+        report_number: reportNumber,
+        reportNumber: reportNumber,
+        patient_name: patientName,
+        uhid: uhid,
+      },
       smtpConfig: {
         host: 'smtp.gmail.com',
         port: 587,
