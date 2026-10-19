@@ -78,10 +78,10 @@ export const SingleAudiogramGraph = ({
   }).filter(Boolean);
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div className={`flex flex-col items-center w-full min-w-0 ${className}`}>
       {/* Ear Header */}
       <span
-        className="text-xs sm:text-sm font-black uppercase tracking-wider mb-0.5"
+        className="text-[11px] sm:text-xs font-black uppercase tracking-wider mb-0.5"
         style={{ color: themeColor }}
       >
         {isRight ? 'Right' : 'Left'}
@@ -89,7 +89,7 @@ export const SingleAudiogramGraph = ({
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-auto overflow-visible select-none"
+        className="w-full h-auto overflow-visible select-none max-w-full"
         style={{ maxWidth: `${width}px` }}
       >
         {/* Top Intermediate Octave Labels: 750, 1500, 3000, 6000 */}
@@ -334,32 +334,37 @@ export const DualAudiogramSection = ({
   className = '',
 }) => {
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-2 border border-purple-200/90 rounded-lg p-2 bg-white/95 backdrop-blur-2xs shadow-2xs mx-auto ${className}`}>
-      {/* Right Ear Audiogram */}
-      <div className="flex-1 w-full max-w-[270px] sm:max-w-[250px] flex flex-col items-center justify-center mx-auto">
-        <SingleAudiogramGraph
-          ear="right"
-          acData={rightAC}
-          bcData={rightBC}
-          width={240}
-          height={165}
-        />
-      </div>
+    <div className={`border border-purple-200/90 rounded-lg p-1.5 sm:p-2 bg-white/95 backdrop-blur-2xs shadow-2xs mx-auto w-full print:break-inside-avoid print:page-break-inside-avoid ${className}`}>
+      <div className="flex flex-col md:flex-row print:flex-row items-center justify-center gap-2 md:gap-3 print:gap-3 w-full">
+        {/* Dual Graphs: ALWAYS strictly side-by-side on Android/mobile, desktop, and print */}
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2.5 w-full flex-1 min-w-0 max-w-[520px] print:grid-cols-2 print:max-w-[480px]">
+          {/* Right Ear Audiogram */}
+          <div className="w-full flex flex-col items-center justify-center min-w-0">
+            <SingleAudiogramGraph
+              ear="right"
+              acData={rightAC}
+              bcData={rightBC}
+              width={240}
+              height={165}
+            />
+          </div>
 
-      {/* Left Ear Audiogram */}
-      <div className="flex-1 w-full max-w-[270px] sm:max-w-[250px] flex flex-col items-center justify-center mx-auto">
-        <SingleAudiogramGraph
-          ear="left"
-          acData={leftAC}
-          bcData={leftBC}
-          width={240}
-          height={165}
-        />
-      </div>
+          {/* Left Ear Audiogram */}
+          <div className="w-full flex flex-col items-center justify-center min-w-0">
+            <SingleAudiogramGraph
+              ear="left"
+              acData={leftAC}
+              bcData={leftBC}
+              width={240}
+              height={165}
+            />
+          </div>
+        </div>
 
-      {/* Legend Matrix */}
-      <div className="w-full sm:w-auto shrink-0 flex items-center justify-center mx-auto">
-        <AudiogramLegendTable />
+        {/* Legend Matrix */}
+        <div className="w-auto shrink-0 flex items-center justify-center mx-auto print:shrink-0 pt-0.5 md:pt-0 print:pt-0">
+          <AudiogramLegendTable />
+        </div>
       </div>
     </div>
   );

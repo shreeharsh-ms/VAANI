@@ -957,6 +957,7 @@ export const OfficialClinicalDocument = ({
       <div className="relative z-10 mt-auto shrink-0 w-full">
         <OfficialReportFooter
           formData={formData}
+          patient={patient}
           service={service}
           isCBT={isCBT}
         />

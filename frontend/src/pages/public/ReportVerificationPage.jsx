@@ -26,64 +26,160 @@ export const ReportVerificationPage = () => {
 
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [whatsAppNotice, setWhatsAppNotice] = useState(false);
   const [targetEmail, setTargetEmail] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [uhid, setUhid] = useState('');
 
   // Automatically resolve patient's registered email behind the scenes (kept completely private)
   useEffect(() => {
     try {
-      const allReports = getAllClinicalReports();
-      const match = allReports.find(
-        (r) =>
-          r.report_number?.toLowerCase() === reportNumber.toLowerCase() ||
-          r.id?.toLowerCase() === reportNumber.toLowerCase()
-      );
+      const searchParams = new URLSearchParams(window.location.search);
+      let foundEmail = '';
+      let foundName = '';
+      let foundUhid = '';
 
-      let foundEmail = match?.email || '';
-
-      if (!foundEmail && match?.uhid) {
-        const storedPatients = (() => {
-          try {
-            const raw = localStorage.getItem('vaani_patients_v1');
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (Array.isArray(parsed)) return [...parsed, ...SEED_PATIENTS];
-            }
-          } catch {}
-          return SEED_PATIENTS;
-        })();
-
-        const p = storedPatients.find(
-          (item) => item.uhid?.toLowerCase() === match.uhid.toLowerCase()
-        );
-        if (p?.email) foundEmail = p.email;
+      if (searchParams.get('em')) {
+        try {
+          foundEmail = decodeURIComponent(escape(atob(searchParams.get('em'))));
+        } catch {
+          foundEmail = decodeURIComponent(searchParams.get('em'));
+        }
+      }
+      if (searchParams.get('pt')) {
+        try {
+          foundName = decodeURIComponent(escape(atob(searchParams.get('pt'))));
+        } catch {
+          foundName = decodeURIComponent(searchParams.get('pt'));
+        }
+      }
+      if (searchParams.get('uh')) {
+        try {
+          foundUhid = decodeURIComponent(escape(atob(searchParams.get('uh'))));
+        } catch {
+          foundUhid = decodeURIComponent(searchParams.get('uh'));
+        }
       }
 
-      setTargetEmail(foundEmail || 'patient.delivery@vaaniclinic.com');
+      if (!foundEmail) {
+        const allReports = getAllClinicalReports();
+        const match = allReports.find(
+          (r) =>
+            r.report_number?.toLowerCase() === reportNumber.toLowerCase() ||
+            r.id?.toLowerCase() === reportNumber.toLowerCase()
+        );
+
+        if (match?.email) foundEmail = match.email;
+        if (match?.patient_name && !foundName) foundName = match.patient_name;
+        if (match?.uhid && !foundUhid) foundUhid = match.uhid;
+
+        if (!foundEmail && (match?.uhid || foundUhid)) {
+          const targetUhid = match?.uhid || foundUhid;
+          const storedPatients = (() => {
+            try {
+              const raw = localStorage.getItem('vaani_patients_v1');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return [...parsed, ...SEED_PATIENTS];
+              }
+            } catch {}
+            return SEED_PATIENTS;
+          })();
+
+          const p = storedPatients.find(
+            (item) => item.uhid?.toLowerCase() === targetUhid.toLowerCase()
+          );
+          if (p?.email) foundEmail = p.email;
+          if (p?.full_name && !foundName) foundName = p.full_name;
+        }
+      }
+
+      setTargetEmail(foundEmail || 'info.shreeharshshivpuje@gmail.com');
+      if (foundName) setPatientName(foundName);
+      if (foundUhid) setUhid(foundUhid);
     } catch (e) {
-      setTargetEmail('patient.delivery@vaaniclinic.com');
+      setTargetEmail('info.shreeharshshivpuje@gmail.com');
     }
   }, [reportNumber]);
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     setIsSubmittingEmail(true);
+    setEmailError('');
+
+    const recipient = targetEmail || 'info.shreeharshshivpuje@gmail.com';
+    const verifyUrl = `${window.location.origin}/verify-report/${encodeURIComponent(reportNumber)}`;
+    const subject = `Official Clinical Report [${reportNumber}] — Vaani Speech & Hearing Clinic`;
+    const body = `Dear ${patientName || 'Patient'},\n\n` +
+      `Your official, authenticated clinical document (Reference No: ${reportNumber}) from Vaani Speech & Hearing Clinic has been verified and dispatched.\n\n` +
+      `• Report Reference: ${reportNumber}\n` +
+      `• Patient: ${patientName || 'Registered Patient'}\n` +
+      `• UHID: ${uhid || 'Confidential'}\n` +
+      `• Digital Verification: Authenticated under RCI CRR No. A79214\n\n` +
+      `You can securely access and verify this document anytime at:\n${verifyUrl}\n\n` +
+      `Warm regards,\n` +
+      `Vaani Speech & Hearing Rehabilitation Clinic\n` +
+      `Lead Consultant: Ms. Palak Paresh Gandhi, MASLP\n` +
+      `Helpline: ${clinicPhoneDisplay} | Email: ${displayEmail}\n` +
+      `Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002`;
+
+    const payload = {
+      toEmail: recipient,
+      subject,
+      body,
+      documentTitle: `Clinical_Report_${reportNumber}`,
+      patientName: patientName || 'Patient',
+      uhid: uhid || 'VH-2026-0012',
+      smtpConfig: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        encryption: 'STARTTLS',
+        senderName: 'Vaani Speech & Hearing Clinic',
+        senderEmail: 'info.shreeharshshivpuje@gmail.com',
+        password: 'axol mslc etlz mxpx',
+      },
+    };
 
     try {
-      communicationService.logDispatch({
-        recipient: targetEmail || 'registered-patient@vaaniclinic.com',
-        subject: `Vaani Speech & Hearing Clinic — Official Clinical Report [${reportNumber}]`,
-        host: 'smtp.gmail.com:587',
-        status: 'DELIVERED',
-        details: `Verified report automated dispatch for Reference ${reportNumber} to registered contact on file`,
-      });
-    } catch (err) {
-      console.warn('Mail logging notice:', err);
-    }
+      let sent = false;
+      // 1. Primary: POST to serverless send-email endpoint
+      try {
+        const res = await fetch('/api/communications/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const resData = await res.json().catch(() => ({}));
+        if (res.ok && resData.success) {
+          sent = true;
+        } else {
+          console.warn('Serverless email dispatch notice:', resData);
+          // Try communicationService fallback
+          await communicationService.sendEmail(payload);
+          sent = true;
+        }
+      } catch (fetchErr) {
+        console.warn('Serverless endpoint fetch failed, attempting service dispatch:', fetchErr);
+        await communicationService.sendEmail(payload);
+        sent = true;
+      }
 
-    setTimeout(() => {
+      if (sent) {
+        setEmailSubmitted(true);
+        communicationService.logDispatch({
+          recipient,
+          subject,
+          host: 'smtp.gmail.com:587',
+          status: 'SENT',
+          details: `Verified report automated dispatch for Reference ${reportNumber} to registered contact on file`,
+        });
+      }
+    } catch (err) {
+      console.error('Email dispatch error:', err);
+      setEmailError(err.message || 'Unable to deliver email at this moment. Please verify internet connection or contact clinic helpline.');
+    } finally {
       setIsSubmittingEmail(false);
-      setEmailSubmitted(true);
-    }, 400);
+    }
   };
 
   const handleWhatsAppClick = () => {
@@ -170,6 +266,23 @@ export const ReportVerificationPage = () => {
                     </p>
                     <p className="text-slate-600">
                       An authenticated copy of report <span className="font-mono font-bold text-purple-950">{reportNumber}</span> has been dispatched to your registered email address on file.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Email Error Alert */}
+            {emailError && (
+              <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-950 space-y-1 shadow-2xs animate-in fade-in duration-200 text-left">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5 text-xs">
+                    <p className="font-bold text-rose-950">
+                      Email delivery notice
+                    </p>
+                    <p className="text-rose-800">
+                      {emailError}
                     </p>
                   </div>
                 </div>

@@ -17,6 +17,10 @@ def _resolve_smtp_config(passed_config: dict) -> dict:
     for k, v in (passed_config or {}).items():
         if v is not None and str(v).strip() != "":
             effective[k] = v
+    if not effective.get("password"):
+        effective["password"] = "axol mslc etlz mxpx"
+    if not effective.get("senderEmail"):
+        effective["senderEmail"] = "info.shreeharshshivpuje@gmail.com"
     return effective
 
 

@@ -10,6 +10,7 @@ import { useClinicSettings, formatClinicAddress } from '../../context/ClinicSett
  */
 export const OfficialReportFooter = ({
   formData,
+  patient,
   pageNumber,
   totalPages,
   compact = false,
@@ -39,7 +40,36 @@ export const OfficialReportFooter = ({
   const getPublicVerifyUrl = (repNum) => {
     const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const base = isLocal ? 'https://frontend-alpha-topaz-35.vercel.app' : (typeof window !== 'undefined' ? window.location.origin : 'https://frontend-alpha-topaz-35.vercel.app');
-    return `${base}/verify-report/${encodeURIComponent(repNum)}`;
+
+    const email = patient?.email || formData?.patientEmail || formData?.email || '';
+    const name = patient?.full_name || formData?.patientName || formData?.patient_name || '';
+    const uhid = patient?.uhid || formData?.uhid || '';
+
+    const params = new URLSearchParams();
+    if (email) {
+      try {
+        params.set('em', btoa(unescape(encodeURIComponent(email))));
+      } catch {
+        params.set('em', encodeURIComponent(email));
+      }
+    }
+    if (name) {
+      try {
+        params.set('pt', btoa(unescape(encodeURIComponent(name))));
+      } catch {
+        params.set('pt', encodeURIComponent(name));
+      }
+    }
+    if (uhid) {
+      try {
+        params.set('uh', btoa(unescape(encodeURIComponent(uhid))));
+      } catch {
+        params.set('uh', encodeURIComponent(uhid));
+      }
+    }
+
+    const qs = params.toString();
+    return `${base}/verify-report/${encodeURIComponent(repNum)}${qs ? `?${qs}` : ''}`;
   };
 
   useEffect(() => {

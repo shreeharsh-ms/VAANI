@@ -105,11 +105,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Email subject is required.' });
     }
 
-    const host = (smtpConfig.host || 'smtp.gmail.com').trim();
-    const port = parseInt(smtpConfig.port || 587, 10);
-    const encryption = (smtpConfig.encryption || 'STARTTLS').toUpperCase();
-    const username = (smtpConfig.senderEmail || smtpConfig.username || '').trim();
-    let password = smtpConfig.password || '';
+    const DEFAULT_CLINIC_SMTP = {
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      encryption: process.env.SMTP_ENCRYPTION || 'STARTTLS',
+      senderName: process.env.SMTP_SENDER_NAME || 'Vaani Speech & Hearing Clinic',
+      senderEmail: process.env.SMTP_USER || process.env.SMTP_EMAIL || 'info.shreeharshshivpuje@gmail.com',
+      password: (process.env.SMTP_PASSWORD || process.env.SMTP_PASS || 'axol mslc etlz mxpx').replace(/\s+/g, ''),
+    };
+
+    const host = (smtpConfig.host || DEFAULT_CLINIC_SMTP.host).trim();
+    const port = parseInt(smtpConfig.port || DEFAULT_CLINIC_SMTP.port, 10);
+    const encryption = (smtpConfig.encryption || DEFAULT_CLINIC_SMTP.encryption).toUpperCase();
+    const username = (smtpConfig.senderEmail || smtpConfig.username || DEFAULT_CLINIC_SMTP.senderEmail).trim();
+    let password = smtpConfig.password || DEFAULT_CLINIC_SMTP.password || '';
     if (host.toLowerCase().includes('gmail')) {
       password = password.replace(/\s+/g, '');
     }

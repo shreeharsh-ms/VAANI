@@ -282,7 +282,12 @@ export const ReportViewPage = ({ isPublic = false }) => {
     }
   }, [reportData]);
 
-  const [fitToScreen, setFitToScreen] = useState(false);
+  const [fitToScreen, setFitToScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 794;
+    }
+    return false;
+  });
   const [scaleRatio, setScaleRatio] = useState(1);
 
   useEffect(() => {
