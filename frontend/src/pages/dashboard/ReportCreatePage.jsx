@@ -693,19 +693,11 @@ export const ReportCreatePage = () => {
   };
 
   return (
-    <div className="w-full space-y-2 pb-28 sm:pb-16 font-sans">
+    <div className="w-full space-y-2 pb-8 sm:pb-12 font-sans">
       
-      {/* ── TOP ACTION BAR (ULTRA COMPACT SINGLE LINE ON MOBILE) ── */}
-      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:px-4 sm:py-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
+      {/* ── TOP ACTION BAR (STICKY FULL-SCREEN WINDOW HEADER WITH CLOSE BUTTON) ── */}
+      <div className="sticky top-0 z-40 bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:px-4 sm:py-2.5 shadow-xs backdrop-blur-md flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/reports')}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded border border-slate-300 transition-colors cursor-pointer shrink-0 active:scale-95 touch-manipulation"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Back</span>
-          </button>
           <div className="min-w-0">
             <h1 className="text-xs sm:text-sm font-black text-slate-900 tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
               <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-700 shrink-0" />
@@ -721,7 +713,7 @@ export const ReportCreatePage = () => {
           </div>
         </div>
 
-        {/* Action Buttons: Compact icons on mobile, full buttons on desktop */}
+        {/* Action Buttons: Save, Preview, Print, and Clear Close (✕) Window Button */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
@@ -737,7 +729,7 @@ export const ReportCreatePage = () => {
           <button
             type="button"
             onClick={handleOpenPreviewInNewTab}
-            className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-2 sm:px-3 text-xs font-bold text-purple-900 bg-purple-100 hover:bg-purple-200 border border-purple-300 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Preview report in new tab"
           >
             <Eye className="w-3.5 h-3.5 text-purple-700 shrink-0" />
@@ -747,12 +739,23 @@ export const ReportCreatePage = () => {
           <button
             type="button"
             onClick={triggerPrint}
-            className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-2 sm:px-3 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-md sm:rounded shadow-2xs transition-all cursor-pointer touch-manipulation"
             title="Print Official Document (Ctrl/Cmd + P)"
           >
             <Printer className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden sm:inline truncate">Print</span>
             <kbd className="hidden lg:inline-block ml-1 px-1.5 py-0.2 bg-slate-700 text-[9px] rounded font-mono">⌘P</kbd>
+          </button>
+
+          {/* Close Window Button */}
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/reports')}
+            className="inline-flex items-center justify-center gap-1 h-8 px-2 sm:px-2.5 rounded-md sm:rounded text-xs font-bold text-slate-700 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 border border-slate-300 shadow-2xs transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+            title="Close Report Editor & Exit"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Close</span>
           </button>
         </div>
       </div>

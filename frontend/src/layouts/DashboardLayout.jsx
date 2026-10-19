@@ -11,6 +11,11 @@ export const DashboardLayout = () => {
   const location = useLocation();
 
   const isHome = location.pathname === '/dashboard' || location.pathname === '/dashboard/';
+  const isReportEditor =
+    location.pathname.includes('/reports/create') ||
+    location.pathname.includes('/reports/edit') ||
+    location.pathname.includes('/records/create') ||
+    location.pathname.includes('/records/edit');
 
   // Global Fast Navigation: Ctrl+1..9, Cmd+1..9, Alt+1..9, Ctrl+B, and direct 1..9
   useEffect(() => {
@@ -100,20 +105,20 @@ export const DashboardLayout = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/50 to-white/75 backdrop-blur-[0.5px]" />
         </div>
 
-        {/* ── TOP NAVBAR: Exact Home Page Santo Navbar with Logo Tab & Fillets ── */}
-        <div className="print:hidden">
+        {/* ── TOP NAVBAR: Exact Home Page Santo Navbar with Logo Tab & Fillets (Hidden on mobile editor for full-screen workspace) ── */}
+        <div className={`print:hidden ${isReportEditor ? 'hidden sm:block' : ''}`}>
           <Sidebar />
         </div>
 
         {/* ── MAIN CONTENT OUTLET ── */}
-        <main className={`relative z-10 flex-1 w-full ${isHome ? 'p-0 pb-20 lg:pb-0 flex flex-col justify-center' : 'p-2 sm:p-3.5 lg:p-4 pb-24 lg:pb-4'} print:p-0`}>
+        <main className={`relative z-10 flex-1 w-full ${isHome ? 'p-0 pb-20 lg:pb-0 flex flex-col justify-center' : isReportEditor ? 'p-1.5 sm:p-3.5 lg:p-4 pb-4' : 'p-2 sm:p-3.5 lg:p-4 pb-24 lg:pb-4'} print:p-0`}>
           <div className={`w-full mx-auto ${isHome ? '' : 'space-y-3'} print:space-y-0`}>
             <Outlet />
           </div>
         </main>
 
-        {/* ── CLINICAL INSTITUTIONAL FOOTER (Hidden on clean Admin Home Screen) ── */}
-        {!isHome && (
+        {/* ── CLINICAL INSTITUTIONAL FOOTER (Hidden on clean Admin Home Screen & Report Editor) ── */}
+        {!isHome && !isReportEditor && (
           <footer className="relative z-10 w-full py-4.5 mb-20 lg:mb-0 text-center bg-white/60 backdrop-blur-xs border-t border-purple-100/80 px-4 sm:px-8 print:hidden">
             <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
               <p className="text-xs text-purple-900/70 font-medium">
@@ -128,8 +133,8 @@ export const DashboardLayout = () => {
           </footer>
         )}
 
-        {/* ── MOBILE CURVED FLOATING BOTTOM NAVIGATION BAR (Exact Reference Image Design) ── */}
-        <MobileCurvedNavBar />
+        {/* ── MOBILE CURVED FLOATING BOTTOM NAVIGATION BAR (Hidden in Report Editor) ── */}
+        {!isReportEditor && <MobileCurvedNavBar />}
 
       </div>
 
