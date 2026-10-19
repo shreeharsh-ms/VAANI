@@ -41,21 +41,40 @@ export const ReportVerificationPage = () => {
       let foundName = '';
       let foundUhid = '';
 
-      if (searchParams.get('em')) {
+      let decodedPayload = null;
+      if (searchParams.get('d')) {
+        try {
+          decodedPayload = JSON.parse(decodeURIComponent(escape(atob(searchParams.get('d')))));
+        } catch {
+          try {
+            decodedPayload = JSON.parse(decodeURIComponent(searchParams.get('d')));
+          } catch (e) {
+            console.warn('Could not parse d parameter:', e);
+          }
+        }
+      }
+
+      if (decodedPayload) {
+        if (decodedPayload.email) foundEmail = decodedPayload.email;
+        if (decodedPayload.name) foundName = decodedPayload.name;
+        if (decodedPayload.uhid) foundUhid = decodedPayload.uhid;
+      }
+
+      if (searchParams.get('em') && !foundEmail) {
         try {
           foundEmail = decodeURIComponent(escape(atob(searchParams.get('em'))));
         } catch {
           foundEmail = decodeURIComponent(searchParams.get('em'));
         }
       }
-      if (searchParams.get('pt')) {
+      if (searchParams.get('pt') && !foundName) {
         try {
           foundName = decodeURIComponent(escape(atob(searchParams.get('pt'))));
         } catch {
           foundName = decodeURIComponent(searchParams.get('pt'));
         }
       }
-      if (searchParams.get('uh')) {
+      if (searchParams.get('uh') && !foundUhid) {
         try {
           foundUhid = decodeURIComponent(escape(atob(searchParams.get('uh'))));
         } catch {
@@ -70,7 +89,39 @@ export const ReportVerificationPage = () => {
           r.id?.toLowerCase() === reportNumber.toLowerCase()
       );
 
-      if (match) {
+      if (decodedPayload) {
+        const assembled = {
+          report_number: decodedPayload.num || reportNumber,
+          reportNumber: decodedPayload.num || reportNumber,
+          patient_name: decodedPayload.name || foundName,
+          patientName: decodedPayload.name || foundName,
+          uhid: decodedPayload.uhid || foundUhid,
+          patient_age_sex: decodedPayload.ageSex || '',
+          ageSex: decodedPayload.ageSex || '',
+          date: decodedPayload.date || '',
+          email: decodedPayload.email || foundEmail,
+          rci_number: decodedPayload.rci || 'A125560',
+          rciNumber: decodedPayload.rci || 'A125560',
+          examiner: decodedPayload.examiner || 'Ms. Palak Paresh Gandhi, BASLP, RCI',
+          parameters: {
+            ptaNo: decodedPayload.ptaNo,
+            audiometer: decodedPayload.audiometer,
+            responses: decodedPayload.responses,
+            rightEarAC: decodedPayload.rac,
+            rightEarBC: decodedPayload.rbc,
+            leftEarAC: decodedPayload.lac,
+            leftEarBC: decodedPayload.lbc,
+            provisionalDiagnosis: decodedPayload.diag,
+            recommendations: decodedPayload.rec,
+            ...(decodedPayload.summary || {}),
+          },
+          computed: decodedPayload.summary || {},
+          computedPTA: decodedPayload.summary || {},
+          diagnosis: decodedPayload.diag,
+          recommendations: decodedPayload.rec,
+        };
+        setMatchedReport(assembled);
+      } else if (match) {
         setMatchedReport(match);
         if (match.email && !foundEmail) foundEmail = match.email;
         if (match.patient_name && !foundName) foundName = match.patient_name;
@@ -112,16 +163,19 @@ export const ReportVerificationPage = () => {
     const recipient = targetEmail || 'info.shreeharshshivpuje@gmail.com';
     const verifyUrl = `${window.location.origin}/verify-report/${encodeURIComponent(reportNumber)}`;
     const subject = `Official Clinical Report [${reportNumber}] — Vaani Speech & Hearing Clinic`;
+    const docRci = matchedReport?.rci_number || 'A125560';
+    const docExaminer = matchedReport?.examiner || 'Ms. Palak Paresh Gandhi, BASLP, RCI';
+
     const body = `Dear ${patientName || 'Patient'},\n\n` +
       `Your official, authenticated clinical document (Reference No: ${reportNumber}) from Vaani Speech & Hearing Clinic has been verified and dispatched.\n\n` +
       `• Report Reference: ${reportNumber}\n` +
       `• Patient: ${patientName || 'Registered Patient'}\n` +
       `• UHID: ${uhid || 'Confidential'}\n` +
-      `• Digital Verification: Authenticated under RCI CRR No. A79214\n\n` +
+      `• Digital Verification: Authenticated under RCI CRR No. ${docRci}\n\n` +
       `You can securely access and verify this document anytime at:\n${verifyUrl}\n\n` +
       `Warm regards,\n` +
       `Vaani Speech & Hearing Rehabilitation Clinic\n` +
-      `Lead Consultant: Ms. Palak Paresh Gandhi, MASLP\n` +
+      `Lead Consultant: ${docExaminer}\n` +
       `Helpline: ${clinicPhoneDisplay} | Email: ${displayEmail}\n` +
       `Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002`;
 

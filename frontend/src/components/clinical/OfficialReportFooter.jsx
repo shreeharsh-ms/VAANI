@@ -68,6 +68,38 @@ export const OfficialReportFooter = ({
       }
     }
 
+    // Pack complete clinical payload
+    try {
+      const patientAgeSex = patient
+        ? `${patient.date_of_birth || ''}${patient.date_of_birth && patient.gender ? ' / ' : ''}${patient.gender === 'MALE' ? 'Male' : patient.gender === 'FEMALE' ? 'Female' : (patient.gender || '')}`
+        : (formData?.patient_age_sex || formData?.ageSex || '');
+
+      const payload = {
+        num: repNum,
+        name: name,
+        uhid: uhid,
+        ageSex: patientAgeSex,
+        date: formData?.reportDate || reportDate,
+        email: email,
+        ptaNo: formData?.parameters?.ptaNo || formData?.ptaNo || '64/2026',
+        audiometer: formData?.parameters?.audiometer || 'Proton SX5',
+        responses: formData?.parameters?.responses || 'Consistent',
+        rac: formData?.parameters?.rightEarAC || null,
+        rbc: formData?.parameters?.rightEarBC || null,
+        lac: formData?.parameters?.leftEarAC || null,
+        lbc: formData?.parameters?.leftEarBC || null,
+        summary: formData?.computed || formData?.computedPTA || formData?.parameters?.audiometricSummary || null,
+        diag: formData?.parameters?.provisionalDiagnosis || formData?.diagnosis || '',
+        rec: formData?.parameters?.recommendations || formData?.recommendations || '',
+        rci: rciNumber || 'A125560',
+        examiner: examinerName,
+      };
+
+      params.set('d', btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+    } catch (e) {
+      console.warn('Failed to encode full report payload into QR URL:', e);
+    }
+
     const qs = params.toString();
     return `${base}/verify-report/${encodeURIComponent(repNum)}${qs ? `?${qs}` : ''}`;
   };
@@ -97,7 +129,7 @@ export const OfficialReportFooter = ({
     return () => {
       isMounted = false;
     };
-  }, [reportNumber]);
+  }, [reportNumber, formData, patient, rciNumber, examinerName]);
 
   // Resolve examiner name dynamically (ignore stale hardcoded placeholders)
   let examinerRaw = formData?.examinerName;
