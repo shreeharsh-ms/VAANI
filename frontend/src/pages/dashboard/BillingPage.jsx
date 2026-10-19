@@ -2100,10 +2100,11 @@ export const BillingPage = () => {
               <button
                 type="button"
                 onClick={handleAddItemRow}
-                className="h-6.5 px-3 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors shadow-2xs"
+                className="h-7 w-7 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 flex items-center justify-center border border-purple-200 cursor-pointer transition-colors shadow-2xs"
+                title="Add Line Item"
+                aria-label="Add Line Item"
               >
-                <Plus className="w-3.5 h-3.5 text-purple-700" />
-                <span>Add Line Item</span>
+                <Plus className="w-4 h-4 text-purple-700" />
               </button>
             </div>
 
@@ -2750,10 +2751,11 @@ export const BillingPage = () => {
                 <button
                   type="button"
                   onClick={handleEditAddItemRow}
-                  className="h-6.5 px-3 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 font-bold text-[11px] flex items-center gap-1 border border-purple-200 cursor-pointer transition-colors shadow-2xs"
+                  className="h-7 w-7 rounded-md bg-purple-50 text-purple-900 hover:bg-purple-100 flex items-center justify-center border border-purple-200 cursor-pointer transition-colors shadow-2xs"
+                  title="Add Line Item"
+                  aria-label="Add Line Item"
                 >
-                  <Plus className="w-3.5 h-3.5 text-purple-700" />
-                  <span>Add Line Item</span>
+                  <Plus className="w-4 h-4 text-purple-700" />
                 </button>
               </div>
 

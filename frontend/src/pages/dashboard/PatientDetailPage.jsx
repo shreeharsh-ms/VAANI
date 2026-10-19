@@ -1095,7 +1095,7 @@ export const PatientDetailPage = () => {
     { id: 'hearingAids', label: '4. Hearing Aids & Devices', count: patientHearingAidsList.length > 0 ? `${patientHearingAidsList.length} Fitted` : (hearingAids?.dispensed ? 'Bilateral' : 'Screened') },
     { id: 'therapy', label: '5. Therapy Goals & SOAP', count: `${therapyPlans.length} Plans` },
     { id: 'billing', label: '6. Billing & Recalls', count: `${patientInvoices.length} Invoices` },
-    { id: 'retention', label: '7. Retention & Legal Audit', count: 'Statutory' },
+    { id: 'retention', label: '7. Retention & Legal Audit', count: 'Audit' },
   ];
 
   // Keyboard Shortcuts: Alt+B / Esc to go back, Alt+P to print, 1-7 for tabs
@@ -1155,10 +1155,7 @@ export const PatientDetailPage = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs flex-shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>RCI CRR {clinicRci} Certified</span>
-          </div>
+
         </div>
 
         {/* Action Buttons Row */}
@@ -1197,7 +1194,7 @@ export const PatientDetailPage = () => {
       </div>
 
       {/* ── PATIENT HERO CLINICAL BANNER (REFINED PROFESSIONAL LAVENDER THEME) ── */}
-      <div className="bg-gradient-to-r from-purple-50/90 via-white to-purple-50/60 text-slate-900 rounded-xl p-3.5 sm:p-4 shadow-xs border border-purple-200/90">
+      <div className="bg-white text-slate-900 rounded-xl p-3.5 sm:p-4 shadow-2xs border border-slate-200">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
@@ -1658,7 +1655,7 @@ export const PatientDetailPage = () => {
             {/* ── 3.0 EXCEL-STYLE CLINICAL REPORTS & DIAGNOSTIC RECORDS TABLE ── */}
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
               {/* Header Strip with Title, Search, Filter, Refresh & New Report Button */}
-              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div className="flex items-center justify-between sm:justify-start gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <FileText className="w-4 h-4 text-purple-900 flex-shrink-0" />
@@ -2122,7 +2119,7 @@ export const PatientDetailPage = () => {
             {/* ── 3.1 EARLY DEVELOPMENTAL HISTORY (EDH) OR PENDING PROMPT ── */}
             {edhReport ? (
               <div className="bg-white border border-purple-200 rounded-lg overflow-hidden shadow-2xs">
-                <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2">
+                <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <History className="w-4 h-4 text-purple-900" />
                     <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
@@ -2262,28 +2259,25 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'hearingAids' && (
           <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-            <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-purple-900" />
-                <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
-                  Hearing Aid Dispensing &amp; Device Register
-                </span>
-                <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                  {patientHearingAidsList.length} {patientHearingAidsList.length === 1 ? 'Device Fitted' : 'Devices Fitted'}
+            <div className="px-3 sm:px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Activity className="w-4 h-4 text-purple-800" />
+                <h3 className="font-bold text-xs sm:text-sm text-slate-900">
+                  Hearing Aid Dispensing Register
+                </h3>
+                <span className="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 border border-slate-200">
+                  {patientHearingAidsList.length} {patientHearingAidsList.length === 1 ? 'Device' : 'Devices'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-
-                <button
-                  type="button"
-                  onClick={() => setIsDispenseDeviceModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Dispense / Link Device</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsDispenseDeviceModalOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer self-start sm:self-auto"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Dispense / Link Device</span>
+              </button>
             </div>
 
             <div className="p-3.5 space-y-3.5 text-xs">
@@ -2379,24 +2373,24 @@ export const PatientDetailPage = () => {
             ══════════════════════════════════════════════════════════════════ */}
         {activeTab === 'therapy' && (
           <div className="space-y-4">
-            {/* 5.1 Active Clinical Rehabilitation Plans Header & Register */}
+            {/* Active Clinical Rehabilitation Plans Header & Register */}
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-              <div className="px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex items-center justify-between flex-wrap gap-2.5">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-purple-900" />
-                  <span className="font-bold text-xs text-purple-950 uppercase tracking-wider">
-                    Active Clinical Rehabilitation Plans &amp; SMART Objectives
-                  </span>
-                  <span className="bg-purple-900 text-white font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                    {therapyPlans.length} {therapyPlans.length === 1 ? 'Active Plan' : 'Active Plans'}
+              <div className="px-3 sm:px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Activity className="w-4 h-4 text-purple-800" />
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-900">
+                    Rehabilitation Plans &amp; SMART Goals
+                  </h3>
+                  <span className="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 border border-slate-200">
+                    {therapyPlans.length} {therapyPlans.length === 1 ? 'Plan' : 'Plans'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
                   <button
                     type="button"
                     onClick={() => setIsNewSoapModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs transition-colors cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5 text-purple-700" />
                     <span>Add SOAP Note</span>
@@ -2405,10 +2399,10 @@ export const PatientDetailPage = () => {
                   <button
                     type="button"
                     onClick={() => setIsNewPlanModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Create Rehabilitation Plan</span>
+                    <span>Create Plan</span>
                   </button>
                 </div>
               </div>
@@ -2547,26 +2541,26 @@ export const PatientDetailPage = () => {
               </div>
             </div>
 
-            {/* 5.2 Chronological Clinical SOAP Session Notes */}
+            {/* Chronological Clinical SOAP Session Notes */}
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-              <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-purple-700" />
-                  <span>5.2 Chronological Clinical SOAP Session Notes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    {soapNotes.length} Notes Logged
+              <div className="px-3 sm:px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <FileText className="w-4 h-4 text-purple-800" />
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-900">
+                    Clinical SOAP Session Notes
+                  </h3>
+                  <span className="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 border border-slate-200">
+                    {soapNotes.length} {soapNotes.length === 1 ? 'Note' : 'Notes'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsNewSoapModalOpen(true)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-900 text-white hover:bg-purple-950 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Log Note</span>
-                  </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setIsNewSoapModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#301444] text-white hover:bg-[#200b30] transition-colors cursor-pointer self-start sm:self-auto"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Log Note</span>
+                </button>
               </div>
 
               <div className="p-3.5 space-y-3">
@@ -2636,7 +2630,7 @@ export const PatientDetailPage = () => {
 
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
               {/* Header Strip */}
-              <div className="px-3 sm:px-3.5 py-2.5 bg-gradient-to-r from-purple-100/90 via-purple-50/70 to-purple-100/90 border-b border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="px-3 sm:px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="w-6 h-6 rounded-md bg-purple-900 text-white flex items-center justify-center shrink-0 shadow-2xs">
                     <IndianRupee className="w-3.5 h-3.5" />
@@ -3126,11 +3120,11 @@ export const PatientDetailPage = () => {
         )}
       </div>
 
-      {/* ── STICKY FOOTER NAVIGATION ── */}
-      <div className="sticky bottom-0 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-lg p-2.5 flex items-center justify-between text-xs text-slate-500 shadow-sm">
+      {/* ── FOOTER NAVIGATION (Desktop only) ── */}
+      <div className="hidden md:flex sticky bottom-0 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-lg p-2.5 items-center justify-between text-xs text-slate-500 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span className="font-medium text-[11px]">RCI CRR {clinicRci} • Vaani Speech &amp; Hearing Rehabilitation Center</span>
+          <span className="font-medium text-[11px]">Vaani Speech &amp; Hearing Rehabilitation Center</span>
         </div>
         <button
           type="button"
@@ -4596,14 +4590,14 @@ export const PatientDetailPage = () => {
       <Modal
         isOpen={isDispenseDeviceModalOpen}
         onClose={() => setIsDispenseDeviceModalOpen(false)}
-        title={`Dispense / Link Hearing Aid to ${demographics.fullName}`}
+        title="Dispense / Link Hearing Aid"
         size="md"
       >
         <form onSubmit={handleSaveDirectDispenseDevice} className="space-y-3 font-sans text-xs">
-          <div className="p-2.5 rounded bg-purple-50/70 border border-purple-200 text-purple-950 space-y-0.5">
-            <span className="font-bold text-xs">Patient Serial Registration</span>
-            <p className="text-[11px] text-purple-800">
-              UHID: <strong>{demographics.uhid}</strong> • Name: <strong>{demographics.fullName}</strong>
+          <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-slate-800 space-y-0.5">
+            <span className="font-bold text-xs text-slate-900">Patient Serial Registration</span>
+            <p className="text-[11px] text-slate-600 font-mono">
+              UHID: <strong className="text-slate-900">{demographics.uhid}</strong> • Name: <strong className="text-slate-900">{demographics.fullName}</strong>
             </p>
           </div>
 
