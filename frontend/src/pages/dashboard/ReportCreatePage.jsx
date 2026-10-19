@@ -763,16 +763,16 @@ export const ReportCreatePage = () => {
       {/* ── STEPPER PROGRESS BAR (Mobile & Desktop Phased Navigation) ── */}
       <div className="bg-white border border-slate-200 rounded-lg p-2 sm:p-2.5 shadow-2xs">
         <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wide shrink-0">
-              Phase {mobileStep} of 5:
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <span className="text-[10px] sm:text-[11px] font-black text-purple-700 uppercase tracking-wide bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 shrink-0">
+              Phase {mobileStep}/5
             </span>
-            <span className="text-xs font-extrabold text-purple-950 truncate">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
               {mobileStep === 1 && '1. Service & Reference'}
               {mobileStep === 2 && '2. Patient Context'}
               {mobileStep === 3 && `3. Test Values (${activeService.shortName})`}
-              {mobileStep === 4 && '4. Generated Audiogram Graphs'}
-              {mobileStep === 5 && '5. Diagnosis & Sign'}
+              {mobileStep === 4 && '4. Audiogram Graphs'}
+              {mobileStep === 5 && '5. Impression & Sign-Off'}
             </span>
           </div>
 
@@ -805,11 +805,11 @@ export const ReportCreatePage = () => {
         {/* 5 Step Pills / Buttons */}
         <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
           {[
-            { step: 1, label: '1. Service', full: '1. Service' },
-            { step: 2, label: '2. Patient', full: '2. Patient' },
-            { step: 3, label: '3. Values', full: '3. Values' },
-            { step: 4, label: '4. Graphs', full: '4. Graphs' },
-            { step: 5, label: '5. Sign-off', full: '5. Diagnosis' },
+            { step: 1, full: '1. Service' },
+            { step: 2, full: '2. Patient' },
+            { step: 3, full: '3. Values' },
+            { step: 4, full: '4. Graphs' },
+            { step: 5, full: '5. Sign-off' },
           ].map((s) => {
             const isActive = mobileStep === s.step;
             const isCompleted = mobileStep > s.step;
@@ -828,13 +828,12 @@ export const ReportCreatePage = () => {
               >
                 <div className="flex items-center justify-center gap-1 text-[10px] sm:text-xs">
                   {isCompleted ? (
-                    <Check className="w-3 h-3 text-purple-700 shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-purple-700 shrink-0" />
                   ) : (
-                    <span className={`w-3.5 h-3.5 rounded-full text-[9px] flex items-center justify-center font-mono ${isActive ? 'bg-purple-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                    <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold font-mono ${isActive ? 'bg-purple-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {s.step}
                     </span>
                   )}
-                  <span className="sm:hidden truncate">{s.label}</span>
                   <span className="hidden sm:inline truncate">{s.full}</span>
                 </div>
               </button>
@@ -929,10 +928,11 @@ export const ReportCreatePage = () => {
               setMobileStep(2);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
+            title="Next Step"
           >
-            <span>Next: Patient Context</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -1132,10 +1132,11 @@ export const ReportCreatePage = () => {
               setMobileStep(1);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
+            title="Previous Step"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Back: Service</span>
+            <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline ml-1">Back</span>
           </button>
           <button
             type="button"
@@ -1143,10 +1144,11 @@ export const ReportCreatePage = () => {
               setMobileStep(3);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
+            title="Next Step"
           >
-            <span>Next: Clinical Tests</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline mr-1">Next</span>
+            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -2285,10 +2287,11 @@ export const ReportCreatePage = () => {
               setMobileStep(2);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
+            title="Previous Step"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Back: Patient</span>
+            <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline ml-1">Back</span>
           </button>
           <button
             type="button"
@@ -2296,10 +2299,11 @@ export const ReportCreatePage = () => {
               setMobileStep(4);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
+            title="Next Step: Audiogram Graphs"
           >
-            <span>Next: View Graphs</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline mr-1">Next</span>
+            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -2382,10 +2386,11 @@ export const ReportCreatePage = () => {
               setMobileStep(3);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
+            title="Previous Step"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Back: Edit Values</span>
+            <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline ml-1">Back</span>
           </button>
           <button
             type="button"
@@ -2393,10 +2398,11 @@ export const ReportCreatePage = () => {
               setMobileStep(5);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation"
+            className="inline-flex items-center justify-center gap-1 h-8.5 w-10 sm:w-auto sm:px-3.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 active:scale-95 transition-all cursor-pointer shadow-2xs touch-manipulation ml-auto shrink-0"
+            title="Next Step: Impression & Sign-Off"
           >
-            <span>Next: Diagnosis &amp; Sign</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline mr-1">Next</span>
+            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -2508,10 +2514,11 @@ export const ReportCreatePage = () => {
                 setMobileStep(4);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="inline-flex items-center gap-1 h-9 px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation"
+              className="inline-flex items-center justify-center gap-1 h-9 w-10 sm:w-auto sm:px-3 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 active:scale-95 transition-all cursor-pointer touch-manipulation shrink-0"
+              title="Previous Step: Graphs"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Back: Graphs</span>
+              <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-1">Back</span>
             </button>
 
             <button
