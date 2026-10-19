@@ -110,7 +110,7 @@ export const OfficialClinicalDocument = ({
   return (
     <div
       id="official-report-a4-page"
-      className="relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full min-h-[297mm] h-[297mm] print:h-[297mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none"
+      className="relative bg-[#faf7fd] text-slate-900 font-sans p-0 max-w-[210mm] w-full h-[294mm] max-h-[294mm] print:h-[294mm] print:max-h-[294mm] mx-auto flex flex-col justify-between print:p-0 print:m-0 print:max-w-none print:w-full leading-tight border border-purple-200/60 shadow-xs rounded-xl overflow-hidden print:rounded-none print:border-none print:shadow-none print:break-inside-avoid print:page-break-after-avoid"
     >
       {/* ── BACKGROUND LAYER: BOTANICAL LAVENDER WATERCOLOR FLOWER (From Overview Page) ── */}
       <ClinicalReportBackground />

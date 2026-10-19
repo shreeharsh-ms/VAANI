@@ -373,7 +373,7 @@ export const ReportViewPage = () => {
       {/* ── A4 CLINICAL DOCUMENT PAPER CANVAS ── */}
       <main className="py-3 px-2 sm:py-6 sm:px-4 print:p-0 print:m-0 flex flex-col items-center">
         {/* Mobile View Toggle Bar */}
-        <div className="sm:hidden w-full max-w-sm mb-2.5 bg-white border border-purple-200 rounded-lg p-2 flex items-center justify-between text-xs shadow-2xs">
+        <div className="sm:hidden w-full max-w-sm mb-2.5 bg-white border border-purple-200 rounded-lg p-2 flex items-center justify-between text-xs shadow-2xs print:hidden">
           <div className="flex items-center gap-1.5 text-purple-950 font-semibold text-[11px]">
             <span>📄 Official A4 Proforma</span>
           </div>
@@ -386,7 +386,7 @@ export const ReportViewPage = () => {
           </button>
         </div>
 
-        <div className="w-full overflow-x-auto pb-10 flex justify-start md:justify-center scrollbar-thin print:overflow-visible print:p-0 print:m-0">
+        <div className="w-full overflow-x-auto pb-10 flex justify-start md:justify-center scrollbar-thin print:overflow-visible print:p-0 print:m-0 print:pb-0">
           <div
             style={
               fitToScreen && !isPrinting

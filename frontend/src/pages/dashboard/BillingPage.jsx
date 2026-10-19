@@ -2526,51 +2526,53 @@ export const BillingPage = () => {
               <div className="h-1 bg-gradient-to-r from-[#301444] via-purple-700 to-[#301444]" />
 
               {/* Compact Letterhead */}
-              <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-slate-300 bg-white gap-3">
-                <div className="flex items-center gap-3">
+              <div className="px-3 sm:px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-300 bg-white gap-2 sm:gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <img
                     src={clinicLogo}
                     alt={clinicName}
-                    className="h-9 w-auto object-contain shrink-0"
+                    className="h-8 sm:h-9 w-auto object-contain shrink-0"
                     onError={(e) => { e.target.src = '/vaani-logo.png'; }}
                   />
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-extrabold text-sm tracking-tight text-[#301444]">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-extrabold text-xs sm:text-sm tracking-tight text-[#301444] truncate">
                         {clinicName}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium border-l border-slate-300 pl-2">
-                        RCI CRR No. <strong className="text-slate-800 font-mono">{clinicRci}</strong> • ISO 9001:2015 Practice
+                      <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-medium">
+                        • RCI CRR No. <strong className="text-slate-800 font-mono">{clinicRci}</strong>
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                    <p className="text-[9.5px] sm:text-[10px] text-slate-500 mt-0.5 leading-tight truncate">
                       {clinicAddress} • {clinicHelpline}
                     </p>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="text-[9.5px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 block mb-0.5">
-                    GST SAC: {selectedInvoiceForView.hsnSac || clinicSac}{clinicGstin ? ` • GSTIN: ${clinicGstin}` : ''}
+                <div className="text-left sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-1">
+                  <span className="text-[9px] sm:text-[9.5px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                    GST SAC: {selectedInvoiceForView.hsnSac || clinicSac}
                   </span>
-                  <span className="font-mono text-xs font-extrabold text-slate-900 block">
-                    {selectedInvoiceForView.invoiceNo}
-                  </span>
-                  <span className="text-[9.5px] font-mono text-slate-500">
-                    Date: {selectedInvoiceForView.date}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-extrabold text-slate-900">
+                      {selectedInvoiceForView.invoiceNo}
+                    </span>
+                    <span className="text-[9.5px] font-mono text-slate-500">
+                      • {selectedInvoiceForView.date}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Sub-header Bar: Document Title & Payment Status */}
-              <div className="px-3.5 py-1.5 bg-slate-50 border-b border-slate-300 flex items-center justify-between text-[11px]">
-                <div>
-                  <span className="font-extrabold text-[#301444] uppercase tracking-wider text-[11px]">
+              <div className="px-3 sm:px-3.5 py-1.5 bg-slate-50 border-b border-slate-300 flex items-center justify-between text-[11px] gap-2">
+                <div className="truncate">
+                  <span className="font-extrabold text-[#301444] uppercase tracking-wider text-[10px] sm:text-[11px]">
                     TAX INVOICE &amp; CLINICAL PAYMENT RECEIPT
                   </span>
-                  <span className="text-slate-500 text-[10px]"> • Original for Recipient</span>
+                  <span className="text-slate-500 text-[10px] hidden sm:inline"> • Original for Recipient</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold border ${
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9.5px] font-bold border ${
                     selectedInvoiceForView.status === 'PAID'
                       ? 'bg-slate-50 text-slate-900 border-slate-300'
                       : 'bg-rose-50 text-rose-700 border-rose-300'
@@ -2578,30 +2580,30 @@ export const BillingPage = () => {
                     {selectedInvoiceForView.status === 'PAID' ? (
                       <>
                         <span className="text-emerald-600 font-extrabold text-xs">✓</span>
-                        <span>PAYMENT RECEIVED</span>
+                        <span>PAID</span>
                       </>
                     ) : (
                       <>
                         <span className="text-rose-600">●</span>
-                        <span>PAYMENT DUE</span>
+                        <span>DUE</span>
                       </>
                     )}
                   </span>
-                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 font-bold">
+                  <span className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-700 font-bold">
                     {selectedInvoiceForView.paymentMode}
                   </span>
                 </div>
               </div>
 
-              {/* Two-Column Metadata Box */}
-              <div className="grid grid-cols-2 divide-x divide-slate-300 border-b border-slate-300 bg-white">
-                <div className="p-2.5">
-                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+              {/* Two-Column Metadata Box: Responsive Stacking */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-300 border-b border-slate-300 bg-white">
+                <div className="p-2 sm:p-2.5">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">
                     Billed To (Patient Information)
                   </span>
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-bold text-slate-900 text-xs">{selectedInvoiceForView.patientName}</span>
-                    <span className="font-mono text-[10px] font-bold text-purple-900">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-900 text-xs truncate">{selectedInvoiceForView.patientName}</span>
+                    <span className="font-mono text-[10px] font-bold text-purple-900 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 whitespace-nowrap">
                       UHID: {selectedInvoiceForView.uhid || 'Outpatient'}
                     </span>
                   </div>
@@ -2611,98 +2613,100 @@ export const BillingPage = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-50/50">
-                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">
+                <div className="p-2 sm:p-2.5 bg-slate-50/50">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">
                     Fiscal &amp; Invoice Particulars
                   </span>
-                  <div className="flex items-baseline justify-between text-[10px]">
+                  <div className="flex items-center justify-between text-[10px]">
                     <span className="text-slate-500">Invoice Reference:</span>
-                    <span className="font-mono font-extrabold text-slate-900">{selectedInvoiceForView.invoiceNo}</span>
+                    <span className="font-mono font-extrabold text-slate-900 whitespace-nowrap">{selectedInvoiceForView.invoiceNo}</span>
                   </div>
-                  <div className="flex items-baseline justify-between text-[10px] mt-0.5">
+                  <div className="flex items-center justify-between text-[10px] mt-0.5">
                     <span className="text-slate-500">Receipt Ref:</span>
-                    <span className="font-mono text-slate-700">{selectedInvoiceForView.receiptNo || 'REC-' + selectedInvoiceForView.invoiceNo.replace('INV-', '')}</span>
+                    <span className="font-mono text-slate-700 whitespace-nowrap">{selectedInvoiceForView.receiptNo || 'REC-' + selectedInvoiceForView.invoiceNo.replace('INV-', '')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Itemized Charges Master Grid (Excel Table) */}
-              <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-[#301444] text-white text-[9.5px] font-bold uppercase tracking-wider">
-                  <tr>
-                    <th className="py-1.5 px-2 text-center w-8 border-r border-purple-800">#</th>
-                    <th className="py-1.5 px-2.5 border-r border-purple-800">Clinical Investigation / Health Care Service</th>
-                    <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">SAC / HSN</th>
-                    <th className="py-1.5 px-2 text-center w-24 border-r border-purple-800">Discipline</th>
-                    <th className="py-1.5 px-2.5 text-right w-24 border-r border-purple-800">Base Fee (₹)</th>
-                    <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">GST Rate</th>
-                    <th className="py-1.5 px-2.5 text-right w-24">Total (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(Array.isArray(selectedInvoiceForView.items) && selectedInvoiceForView.items.length > 0
-                    ? selectedInvoiceForView.items
-                    : [
-                        {
-                          service: selectedInvoiceForView.service,
-                          serviceCode: selectedInvoiceForView.serviceCode || 'SVC-CLINICAL',
-                          hsnSac: selectedInvoiceForView.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312'),
-                          discipline: selectedInvoiceForView.service?.includes('Audiometry') || selectedInvoiceForView.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language',
-                          amount: selectedInvoiceForView.amount,
-                          taxRate: selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST',
-                          totalAmount: selectedInvoiceForView.totalAmount,
-                        }
-                      ]
-                  ).map((it, idx) => (
-                    <tr key={idx} className="border-b border-slate-300 bg-white">
-                      <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-300">
-                        {String(idx + 1).padStart(2, '0')}
-                      </td>
-                      <td className="py-2 px-2.5 border-r border-slate-300">
-                        <span className="font-bold text-slate-900 block text-xs">{it.service}</span>
-                        <span className="text-[9.5px] font-mono text-purple-800">
-                          Code: {it.serviceCode || 'SVC-CLINICAL'} {it.qty && it.qty > 1 ? `• Qty: ${it.qty}` : ''} • ANSI / ISO Protocol
-                        </span>
-                      </td>
-                      <td className="py-2 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
-                        {it.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312')}
-                      </td>
-                      <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-300 text-[10px]">
-                        {it.discipline || (it.service?.includes('Audiometry') || it.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language')}
-                      </td>
-                      <td className="py-2 px-2.5 text-right font-mono font-semibold text-slate-800 border-r border-slate-300">
-                        ₹{Number(it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-2 px-2 text-center border-r border-slate-300 text-[10px]">
-                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-700">
-                          {it.taxRate || (selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST')}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
-                        ₹{Number(it.totalAmount || it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-xs text-left border-collapse min-w-[500px]">
+                  <thead className="bg-[#301444] text-white text-[9.5px] font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="py-1.5 px-2 text-center w-8 border-r border-purple-800">#</th>
+                      <th className="py-1.5 px-2.5 border-r border-purple-800">Clinical Investigation / Health Care Service</th>
+                      <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">SAC / HSN</th>
+                      <th className="py-1.5 px-2 text-center w-24 border-r border-purple-800">Discipline</th>
+                      <th className="py-1.5 px-2.5 text-right w-24 border-r border-purple-800">Base Fee (₹)</th>
+                      <th className="py-1.5 px-2 text-center w-20 border-r border-purple-800">GST Rate</th>
+                      <th className="py-1.5 px-2.5 text-right w-24">Total (₹)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {(Array.isArray(selectedInvoiceForView.items) && selectedInvoiceForView.items.length > 0
+                      ? selectedInvoiceForView.items
+                      : [
+                          {
+                            service: selectedInvoiceForView.service,
+                            serviceCode: selectedInvoiceForView.serviceCode || 'SVC-CLINICAL',
+                            hsnSac: selectedInvoiceForView.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312'),
+                            discipline: selectedInvoiceForView.service?.includes('Audiometry') || selectedInvoiceForView.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language',
+                            amount: selectedInvoiceForView.amount,
+                            taxRate: selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST',
+                            totalAmount: selectedInvoiceForView.totalAmount,
+                          }
+                        ]
+                    ).map((it, idx) => (
+                      <tr key={idx} className="border-b border-slate-300 bg-white">
+                        <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-300">
+                          {String(idx + 1).padStart(2, '0')}
+                        </td>
+                        <td className="py-2 px-2.5 border-r border-slate-300">
+                          <span className="font-bold text-slate-900 block text-xs">{it.service}</span>
+                          <span className="text-[9.5px] font-mono text-purple-800">
+                            Code: {it.serviceCode || 'SVC-CLINICAL'} {it.qty && it.qty > 1 ? `• Qty: ${it.qty}` : ''} • ANSI / ISO Protocol
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-mono text-slate-600 border-r border-slate-300">
+                          {it.hsnSac || (selectedInvoiceForView.taxType === 'TAXABLE_GOODS' ? '9021' : '999312')}
+                        </td>
+                        <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-300 text-[10px]">
+                          {it.discipline || (it.service?.includes('Audiometry') || it.service?.includes('Hearing') ? 'Audiology' : 'Speech-Language')}
+                        </td>
+                        <td className="py-2 px-2.5 text-right font-mono font-semibold text-slate-800 border-r border-slate-300">
+                          ₹{Number(it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2 px-2 text-center border-r border-slate-300 text-[10px]">
+                          <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-slate-100 text-slate-700">
+                            {it.taxRate || (selectedInvoiceForView.taxType === 'HEALTHCARE_EXEMPT' ? '0% (Exempt)' : '18% GST')}
+                          </span>
+                        </td>
+                        <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900">
+                          ₹{Number(it.totalAmount || it.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Subtotal & Amount in Words Grid Row */}
-              <div className="grid grid-cols-12 border-t border-slate-300 divide-x divide-slate-300 bg-white">
-                <div className="col-span-7 p-2.5 bg-slate-50 flex flex-col justify-between">
+              <div className="grid grid-cols-1 sm:grid-cols-12 border-t border-slate-300 divide-y sm:divide-y-0 sm:divide-x divide-slate-300 bg-white">
+                <div className="col-span-1 sm:col-span-7 p-2.5 bg-slate-50 flex flex-col justify-between">
                   <div>
                     <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block">AMOUNT IN WORDS:</span>
                     <p className="text-xs font-extrabold text-slate-800 italic mt-0.5">
                       {numberToWordsINR(selectedInvoiceForView.totalAmount)}
                     </p>
                   </div>
-                  <p className="text-[9.5px] text-slate-500 border-t border-dashed border-slate-200 pt-1.5 mt-1.5 leading-tight">
+                  <p className="text-[9.5px] text-slate-500 border-t border-dashed border-slate-200 pt-1 mt-1 leading-tight">
                     {selectedInvoiceForView.taxType === 'TAXABLE_GOODS'
-                      ? `*Taxable supply of hearing aid / orthopedic appliance under HSN Code ${clinicHsn} (CGST 9% + SGST 9% = 18%).`
-                      : `*Statutorily exempt from Goods & Services Tax (GST) under Notification No. 12/2017-Central Tax (Rate), Heading ${clinicSac} (Health Care Services by Clinical Establishment).`}
+                      ? `*Taxable supply of hearing aid under HSN Code ${clinicHsn} (18% GST).`
+                      : `*Statutorily exempt from GST under Notification No. 12/2017-Central Tax (Rate), Heading ${clinicSac} (Health Care Services).`}
                     {clinicGstin && <span className="block mt-0.5 text-slate-600 font-medium">Clinic GSTIN: <strong>{clinicGstin}</strong></span>}
                   </p>
                 </div>
-                <div className="col-span-5 bg-white divide-y divide-slate-100 flex flex-col justify-center">
+                <div className="col-span-1 sm:col-span-5 bg-white divide-y divide-slate-100 flex flex-col justify-center">
                   <div className="flex justify-between items-center py-1 px-3 text-[10.5px] text-slate-600">
                     <span>Base Assessment Fee:</span>
                     <span className="font-mono font-semibold">₹{Number(selectedInvoiceForView.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -2719,7 +2723,7 @@ export const BillingPage = () => {
               </div>
 
               {/* Settlement & Clinician Authorization Row */}
-              <div className="grid grid-cols-2 divide-x divide-slate-300 border-t border-slate-300 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-300 border-t border-slate-300 bg-white">
                 <div className="flex items-center gap-2.5 p-2 bg-purple-50/20">
                   <div className="w-10 h-10 bg-white p-0.5 rounded border border-purple-200 flex items-center justify-center shrink-0">
                     <QrCode className="w-9 h-9 text-[#301444]" />
@@ -2731,7 +2735,7 @@ export const BillingPage = () => {
                   </div>
                 </div>
 
-                <div className="p-2 text-right flex flex-col justify-center">
+                <div className="p-2 text-left sm:text-right flex flex-col justify-center">
                   <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
                   <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
                   <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>

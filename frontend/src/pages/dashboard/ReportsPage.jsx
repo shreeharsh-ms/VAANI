@@ -325,7 +325,7 @@ export const ReportsPage = () => {
           {CLINICAL_SERVICES.map((srv) => (
             <div
               key={srv.code}
-              className="shrink-0 w-60 sm:w-auto p-2.5 rounded border border-slate-200 bg-slate-50/60 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col justify-between"
+              className="shrink-0 w-36 sm:w-auto p-2 sm:p-2.5 rounded border border-slate-200 bg-slate-50/60 hover:bg-purple-50/40 hover:border-purple-300 transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -337,19 +337,20 @@ export const ReportsPage = () => {
                 <h3 className="text-xs font-bold text-slate-900 leading-snug line-clamp-1" title={srv.title}>
                   {srv.shortName}
                 </h3>
-                <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                <p className="hidden sm:block text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
                   {srv.description}
                 </p>
               </div>
 
-              <div className="pt-2 mt-2 border-t border-slate-200/80">
+              <div className="pt-1.5 sm:pt-2 mt-1.5 sm:mt-2 border-t border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => navigate(`/dashboard/reports/create?type=${srv.code}`)}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 text-[11px] font-bold text-purple-700 hover:text-white bg-purple-50 hover:bg-purple-700 border border-purple-200 rounded transition-colors cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-1 h-7 sm:h-auto px-2 py-1 text-xs font-bold text-purple-700 hover:text-white bg-purple-50 hover:bg-purple-700 border border-purple-200 rounded transition-colors cursor-pointer"
+                  title={`Create ${srv.shortName}`}
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>Create Report</span>
+                  <Plus className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Create Report</span>
                 </button>
               </div>
             </div>
@@ -401,7 +402,7 @@ export const ReportsPage = () => {
         </div>
 
         {/* ── MOBILE REPORT CARDS (Visible on mobile/tablet < md:) ── */}
-        <div className="md:hidden p-2.5 space-y-2.5 bg-slate-50/50">
+        <div className="md:hidden p-2 sm:p-2.5 space-y-2 bg-slate-50/50">
           {paginatedReports.length === 0 ? (
             <div className="bg-white rounded-lg border border-slate-200 p-6 text-center text-xs text-slate-500 font-medium">
               No clinical reports found matching criteria.
@@ -410,54 +411,54 @@ export const ReportsPage = () => {
             paginatedReports.map((rep) => (
               <div
                 key={rep.id || rep.report_number}
-                className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs space-y-2 hover:border-purple-300 transition-colors"
+                className="bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-2xs space-y-1.5 sm:space-y-2 hover:border-purple-300 transition-colors"
               >
                 {/* Header: Report # & Status */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <span className="font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
                       {rep.report_number}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
                       {rep.date}
                     </span>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                     {rep.status || 'FINAL'}
                   </span>
                 </div>
 
                 {/* Report Title */}
                 <div>
-                  <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                  <div className="font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
                     <span className="truncate">{rep.title}</span>
                   </div>
-                  <div className="text-[10px] text-purple-800 font-semibold mt-0.5">
+                  <div className="text-[9.5px] sm:text-[10px] text-purple-800 font-semibold">
                     {rep.service_code} • {rep.discipline}
                   </div>
                 </div>
 
                 {/* Patient & UHID */}
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
-                  <span className="font-bold text-slate-800 truncate">{rep.patient_name}</span>
-                  <span className="text-[11px] font-mono font-bold text-purple-700 whitespace-nowrap">{rep.uhid}</span>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                  <span className="font-bold text-slate-800 text-[11px] sm:text-xs truncate">{rep.patient_name}</span>
+                  <span className="text-[10.5px] font-mono font-bold text-purple-700 whitespace-nowrap">{rep.uhid}</span>
                 </div>
 
                 {/* Clinical Impression Box */}
                 {rep.diagnosis && (
-                  <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-xs">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Clinical Impression</span>
-                    <span className="font-medium text-slate-700 line-clamp-2">{rep.diagnosis}</span>
+                  <div className="bg-slate-50 px-2 py-1 sm:p-2 rounded border border-slate-100 text-[10.5px]">
+                    <span className="text-[9px] text-slate-400 uppercase font-bold block">Clinical Impression</span>
+                    <span className="font-medium text-slate-700 line-clamp-1 sm:line-clamp-2">{rep.diagnosis}</span>
                   </div>
                 )}
 
                 {/* Action Buttons Row */}
-                <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
+                <div className="pt-1.5 sm:pt-2 border-t border-slate-100 flex items-center gap-1 sm:gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleInspectInNewTab(rep)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 h-7.5 px-2.5 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-purple-200" />
                     <span>View</span>
@@ -466,7 +467,7 @@ export const ReportsPage = () => {
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(rep)}
-                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors"
+                    className="h-7 px-2 rounded text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors inline-flex items-center justify-center gap-1 cursor-pointer"
                     title="Edit Report"
                   >
                     <Edit className="w-3.5 h-3.5" />
@@ -476,7 +477,7 @@ export const ReportsPage = () => {
                   <button
                     type="button"
                     onClick={() => handleShareWhatsApp(rep)}
-                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                    className="h-7 px-2 rounded text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors inline-flex items-center justify-center gap-1 cursor-pointer"
                     title="Send via WhatsApp"
                   >
                     <Share2 className="w-3.5 h-3.5" />
@@ -486,7 +487,7 @@ export const ReportsPage = () => {
                   <button
                     type="button"
                     onClick={() => handleShareEmail(rep)}
-                    className="inline-flex items-center justify-center gap-1 h-7.5 px-2 rounded text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+                    className="h-7 px-2 rounded text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors inline-flex items-center justify-center gap-1 cursor-pointer"
                     title="Send via Email"
                   >
                     <Mail className="w-3.5 h-3.5" />
@@ -496,7 +497,7 @@ export const ReportsPage = () => {
                   <button
                     type="button"
                     onClick={() => handlePromptDelete(rep)}
-                    className="p-1.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
+                    className="h-7 w-7 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors inline-flex items-center justify-center shrink-0 cursor-pointer"
                     title="Delete Report"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

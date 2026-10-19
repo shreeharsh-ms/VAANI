@@ -102,7 +102,7 @@ export function printClinicalInvoice(invoice) {
   <style>
     @page {
       size: A4 portrait;
-      margin: 8mm 10mm 8mm 10mm;
+      margin: 6mm 8mm 6mm 8mm;
     }
     * {
       box-sizing: border-box;
@@ -120,12 +120,12 @@ export function printClinicalInvoice(invoice) {
       print-color-adjust: exact;
     }
     
-    /* A4 outer page container: Height exactly 281mm (297mm - 16mm margins) */
+    /* A4 outer page container: Height 274mm to ensure zero spillover to page 2 */
     .invoice-wrapper {
       width: 100%;
-      max-width: 190mm;
-      height: 281mm;
-      max-height: 281mm;
+      max-width: 194mm;
+      height: 274mm;
+      max-height: 274mm;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
@@ -133,6 +133,8 @@ export function printClinicalInvoice(invoice) {
       border-radius: 4px;
       background: #ffffff;
       overflow: hidden;
+      page-break-after: avoid;
+      break-after: avoid;
     }
 
     /* Top Decorative Strip */
@@ -743,36 +745,41 @@ export function printClinicalInvoice(invoice) {
       </div>
     </div>
   </div>
-
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        window.focus();
-        window.print();
-      }, 350);
-    });
-  </script>
 </body>
 </html>`;
 
-  // Create clean isolated iframe to guarantee no UI chrome or modals interfere
-  let printFrame = document.getElementById('vaani-print-invoice-frame');
-  if (printFrame) {
-    document.body.removeChild(printFrame);
+  // Remove any previous invoice print element
+  const oldDom = document.getElementById('vaani-print-invoice-dom');
+  if (oldDom) {
+    oldDom.remove();
   }
 
-  printFrame = document.createElement('iframe');
-  printFrame.id = 'vaani-print-invoice-frame';
-  printFrame.style.position = 'fixed';
-  printFrame.style.right = '0';
-  printFrame.style.bottom = '0';
-  printFrame.style.width = '0';
-  printFrame.style.height = '0';
-  printFrame.style.border = '0';
-  document.body.appendChild(printFrame);
+  // Extract styles and body content
+  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  const invoiceStyles = styleMatch ? styleMatch[1] : '';
+  const invoiceBody = bodyMatch ? bodyMatch[1] : html;
 
-  const frameDoc = printFrame.contentWindow || printFrame.contentDocument.document || printFrame.contentDocument;
-  frameDoc.document.open();
-  frameDoc.document.write(html);
-  frameDoc.document.close();
+  const printDom = document.createElement('div');
+  printDom.id = 'vaani-print-invoice-dom';
+  printDom.innerHTML = `<style>${invoiceStyles}</style>${invoiceBody}`;
+  document.body.appendChild(printDom);
+
+  document.body.classList.add('is-printing-invoice');
+
+  const cleanup = () => {
+    document.body.classList.remove('is-printing-invoice');
+    const el = document.getElementById('vaani-print-invoice-dom');
+    if (el) el.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+
+  window.addEventListener('afterprint', cleanup);
+
+  // Short delay to let fonts and images mount
+  setTimeout(() => {
+    window.focus();
+    window.print();
+    setTimeout(cleanup, 2500);
+  }, 150);
 }

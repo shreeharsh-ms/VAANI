@@ -510,15 +510,24 @@ export const PatientsPage = () => {
           paginated.map((p) => (
             <div
               key={p.id}
-              className="bg-white border border-slate-200/90 rounded-lg p-2.5 shadow-2xs space-y-1.5 hover:border-purple-300 transition-colors"
+              className="bg-white border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs space-y-1 hover:border-purple-300 transition-colors"
             >
-              {/* Top Row: UHID Badge & Clinical Discipline */}
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="font-mono font-bold text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap">
-                  {p.uhid || 'VN-26-0001'}
-                </span>
+              {/* Top Row: UHID + Full Name + Discipline */}
+              <div className="flex items-center justify-between gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <span className="font-mono font-bold text-[9.5px] px-1.5 py-0.2 rounded bg-purple-50 text-purple-950 border border-purple-200 whitespace-nowrap shrink-0">
+                    {p.uhid || 'VN-26-0001'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
+                    className="text-left font-bold text-xs text-slate-900 hover:text-purple-700 transition-colors truncate leading-tight cursor-pointer"
+                  >
+                    {p.full_name}
+                  </button>
+                </div>
                 <span
-                  className={`px-1.5 py-0.2 rounded text-[9.5px] font-bold border flex-shrink-0 whitespace-nowrap ${
+                  className={`px-1.5 py-0.2 rounded text-[9px] font-bold border shrink-0 whitespace-nowrap ${
                     p.service_line === 'SPEECH_LANGUAGE'
                       ? 'bg-purple-50 text-purple-700 border-purple-200'
                       : p.service_line === 'AUDIOLOGY'
@@ -538,67 +547,47 @@ export const PatientsPage = () => {
                 </span>
               </div>
 
-              {/* Patient Name, Demographics & Phone */}
-              <div className="flex items-start justify-between gap-1.5">
-                <div className="min-w-0 flex-1">
+              {/* Middle Row: Demographics & Phone */}
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                <span className="truncate">
+                  {p.gender ? (p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : p.gender) : 'Patient'}
+                  {p.date_of_birth ? ` • ${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()} yrs` : ''}
+                  {p.city ? ` • ${p.city}` : ''}
+                </span>
+                <a
+                  href={`tel:${p.phone}`}
+                  className="inline-flex items-center gap-1 text-slate-700 hover:text-purple-700 font-mono text-[10px] font-semibold shrink-0 ml-2"
+                >
+                  <Phone className="w-2.5 h-2.5 text-purple-600 shrink-0" />
+                  <span>{p.phone}</span>
+                </a>
+              </div>
+
+              {/* Bottom Row: Diagnosis + View Dossier Button + Delete */}
+              <div className="pt-1 border-t border-slate-100 flex items-center justify-between gap-1.5">
+                <span className="text-[10px] text-slate-600 truncate flex-1 font-medium bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                  {p.diagnosis || 'Clinical evaluation in progress'}
+                </span>
+
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
-                    className="text-left font-bold text-xs text-slate-900 hover:text-purple-700 transition-colors block w-full truncate leading-tight"
+                    className="inline-flex items-center justify-center gap-1 h-6 px-2 rounded text-[10px] font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
                   >
-                    {p.full_name}
+                    <Eye className="w-2.5 h-2.5 text-purple-200" />
+                    <span>Dossier</span>
                   </button>
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 font-medium">
-                    <span>
-                      {p.gender ? (p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : p.gender) : 'Patient'}
-                      {p.date_of_birth ? ` • ${new Date().getFullYear() - new Date(p.date_of_birth).getFullYear()} yrs` : ''}
-                      {p.city ? ` • ${p.city}` : ''}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="text-right flex-shrink-0">
-                  <a
-                    href={`tel:${p.phone}`}
-                    className="inline-flex items-center gap-1 text-slate-700 hover:text-purple-700 font-mono text-[10px] font-semibold"
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p.id)}
+                    className="h-6 w-6 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                    title="Delete patient record"
                   >
-                    <Phone className="w-2.5 h-2.5 text-purple-600 flex-shrink-0" />
-                    <span>{p.phone}</span>
-                  </a>
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
                 </div>
-              </div>
-
-              {/* Clinical Diagnosis Single-Line Bar */}
-              <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100 text-[11px] flex items-center justify-between gap-1.5">
-                <span className="font-medium text-slate-700 truncate block">
-                  {p.diagnosis || 'Clinical evaluation in progress'}
-                </span>
-                {p.guardian_name && p.guardian_name !== 'Self' && (
-                  <span className="text-[10px] text-slate-400 truncate max-w-[110px] flex-shrink-0">
-                    G: {p.guardian_name}
-                  </span>
-                )}
-              </div>
-
-              {/* Direct Actions Row */}
-              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/dashboard/patients/${p.uhid || p.id}`)}
-                  className="flex-1 inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-md text-[11px] font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
-                >
-                  <Eye className="w-3 h-3 text-purple-200" />
-                  <span>View Dossier &amp; EMR</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(p.id)}
-                  className="h-7 w-7 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-md transition-colors cursor-pointer active:scale-95 touch-manipulation flex-shrink-0"
-                  title="Delete patient record"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
               </div>
             </div>
           ))
