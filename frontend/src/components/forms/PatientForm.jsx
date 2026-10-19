@@ -246,38 +246,42 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
 
       {/* ── ALREADY REGISTERED PATIENT NOTICE (e.g. Aarav Sachin Shinde) ── */}
       {existingPatientMatch && (
-        <div className="p-3 rounded-lg bg-amber-50/90 border border-amber-300 text-amber-950 space-y-2 animate-in fade-in duration-150">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
+        <div className="p-2.5 sm:p-3 rounded-lg bg-amber-50/90 border border-amber-300 text-amber-950 space-y-1.5 sm:space-y-2 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="font-bold text-xs">
+              <span className="font-bold text-xs hidden sm:inline">
                 Patient Already Exists in Registry:
               </span>
+              <span className="font-bold text-xs sm:hidden">
+                Already Registered:
+              </span>
               <strong className="text-xs text-slate-900">{existingPatientMatch.full_name}</strong>
-              <span className="font-mono text-[10px] font-black bg-purple-900 text-white px-2 py-0.5 rounded shadow-2xs">
+              <span className="font-mono text-[10px] font-black bg-purple-900 text-white px-1.5 py-0.5 rounded shadow-2xs">
                 {existingPatientMatch.uhid}
               </span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-              Active Patient Dossier
-            </span>
           </div>
 
-          <p className="text-[11px] text-amber-900 leading-relaxed">
+          <p className="text-[11px] text-amber-900 leading-snug sm:hidden">
+            Already registered. Submitting updates existing file.
+          </p>
+          <p className="hidden sm:block text-[11px] text-amber-900 leading-relaxed">
             <strong>{existingPatientMatch.full_name}</strong> is already registered under <strong>{existingPatientMatch.uhid}</strong>. Submitting will update their existing clinical file without generating duplicates. You can also jump straight to Early Dev History or view their complete dossier.
           </p>
 
-          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-amber-200">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-1 border-t border-amber-200">
             <button
               type="button"
               onClick={() => {
                 if (onCancel) onCancel();
                 navigate(`/dashboard/reports/create?type=RP-CLN-EDH&patient=${existingPatientMatch.uhid || existingPatientMatch.id}`);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 rounded text-xs font-bold bg-purple-900 hover:bg-purple-950 text-white shadow-2xs transition-colors cursor-pointer"
             >
-              <FileText className="w-3.5 h-3.5 text-purple-200" />
-              <span>Proceed to Early Dev History (EDH)</span>
+              <FileText className="w-3.5 h-3.5 text-purple-200 shrink-0" />
+              <span className="hidden sm:inline">Proceed to Early Dev History (EDH)</span>
+              <span className="sm:hidden">Proceed to EDH</span>
             </button>
 
             <button
@@ -286,11 +290,12 @@ export const PatientForm = ({ onSuccess, onCancel }) => {
                 if (onCancel) onCancel();
                 navigate(`/dashboard/patients/${existingPatientMatch.uhid || existingPatientMatch.id}`);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-bold bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 rounded text-xs font-bold bg-white hover:bg-amber-100 text-amber-950 border border-amber-300 transition-colors cursor-pointer"
             >
-              <User className="w-3.5 h-3.5 text-purple-800" />
-              <span>Open Patient Dossier [{existingPatientMatch.uhid}]</span>
-              <ExternalLink className="w-3 h-3 text-slate-400" />
+              <User className="w-3.5 h-3.5 text-purple-800 shrink-0" />
+              <span className="hidden sm:inline">Open Patient Dossier [{existingPatientMatch.uhid}]</span>
+              <span className="sm:hidden">Open Dossier</span>
+              <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
           </div>
         </div>
