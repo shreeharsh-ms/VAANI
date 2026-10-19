@@ -56,8 +56,9 @@ export const Navbar = () => {
   const isAbout = location.pathname === ROUTES.ABOUT;
   const isContact = location.pathname === ROUTES.CONTACT || location.pathname.startsWith('/contact');
   const isBlogs = location.pathname === ROUTES.BLOGS || location.pathname.startsWith('/blogs');
-  const isSantoNavbar = isContact || isBlogs;
-  const santoBg = isContact ? 'bg-white' : 'bg-[#f7f6f4]';
+  const isVerify = location.pathname.startsWith('/verify');
+  const isSantoNavbar = isContact || isBlogs || isVerify;
+  const santoBg = isContact || isVerify ? 'bg-white' : 'bg-[#f7f6f4]';
 
   return (
     <header
@@ -152,10 +153,10 @@ export const Navbar = () => {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-xl text-gray-700 hover:bg-purple-50 border border-purple-200"
+                className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-[#301444] bg-white hover:bg-purple-50 border border-purple-200/90 shadow-2xs transition-all cursor-pointer"
                 aria-label="Toggle mobile menu"
               >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 text-[#301444]" />}
               </button>
             </div>
           </div>
