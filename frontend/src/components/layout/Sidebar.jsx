@@ -183,7 +183,7 @@ export const Sidebar = () => {
 
         {/* Mobile Navigation Drawer Modal */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-[#faf8fc] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="fixed inset-0 z-[70] lg:hidden flex flex-col bg-[#faf8fc] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
             {/* Header inside drawer */}
             <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-purple-100 bg-[#301444] text-white shadow-sm flex-shrink-0">
               <Link to={ROUTES.DASHBOARD.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
@@ -191,7 +191,7 @@ export const Sidebar = () => {
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+                className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all cursor-pointer active:scale-95 touch-manipulation"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
@@ -199,7 +199,7 @@ export const Sidebar = () => {
             </div>
 
             {/* Nav Links inside drawer */}
-            <div className="relative z-10 flex-1 px-4 py-4 overflow-y-auto space-y-2 font-sans">
+            <div className="relative z-10 flex-1 px-4 py-4 pb-36 overflow-y-auto space-y-2 font-sans overscroll-contain">
               <div className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2">
                 Clinical ERP Navigation
               </div>
@@ -211,35 +211,35 @@ export const Sidebar = () => {
                   end={item.path === ROUTES.DASHBOARD.HOME || item.path === ROUTES.DASHBOARD.OVERVIEW}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-xs shadow-2xs transition-all ${
+                    `w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs shadow-2xs transition-all active:scale-[0.99] touch-manipulation cursor-pointer min-h-[44px] ${
                       isActive
                         ? 'bg-[#301444] text-white'
                         : 'bg-white text-slate-800 border border-slate-200 hover:bg-purple-50'
                     }`
                   }
                 >
-                  <div className="flex items-center gap-2">
-                    <item.icon className="w-4 h-4" />
+                  <div className="flex items-center gap-2.5">
+                    <item.icon className="w-4 h-4 shrink-0" />
                     <span>{item.label}</span>
                   </div>
                 </NavLink>
               ))}
 
-              <div className="pt-3 border-t border-slate-200 space-y-2">
+              <div className="pt-3 border-t border-slate-200 space-y-2.5">
                 <Link
                   to={ROUTES.HOME}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl font-bold text-xs bg-purple-100 text-[#301444] border border-purple-200"
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl font-bold text-xs bg-purple-100 hover:bg-purple-200 active:scale-98 text-[#301444] border border-purple-200 transition-all shadow-2xs touch-manipulation cursor-pointer"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4 text-purple-800 shrink-0" />
                   <span>Return to Public Website</span>
                 </Link>
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl font-bold text-xs bg-rose-50 text-rose-700 border border-rose-200"
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl font-bold text-xs bg-rose-50 hover:bg-rose-100 active:scale-98 text-rose-700 border border-rose-200 transition-all shadow-2xs touch-manipulation cursor-pointer"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 text-rose-600 shrink-0" />
                   <span>Log Out ({user?.name || 'Dr. Palak Gandhi'})</span>
                 </button>
               </div>

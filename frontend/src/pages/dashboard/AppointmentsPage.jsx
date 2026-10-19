@@ -62,6 +62,7 @@ export const AppointmentsPage = () => {
   const [serviceFilter, setServiceFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('ALL'); // 'ALL' | 'TODAY' | 'TOMORROW' | 'THIS_WEEK' | 'CUSTOM'
   const [customDate, setCustomDate] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Sorting
   const [sortField, setSortField] = useState('appointment_date');
@@ -520,11 +521,11 @@ Kindly reply *CONFIRM* to acknowledge.`;
         </div>
       </div>
 
-      {/* ── FILTER & SEARCH BAR WITH COMPREHENSIVE DATE FILTERS ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 space-y-2.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      {/* ── FILTER & SEARCH BAR (Collapsible on mobile like shopping apps) ── */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 space-y-2">
+        <div className="flex items-center justify-between gap-2">
           {/* Multi-field search */}
-          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
+          <div className="relative flex items-center flex-1 sm:max-w-xs md:max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
@@ -540,15 +541,32 @@ Kindly reply *CONFIRM* to acknowledge.`;
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1"
+                className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer"
               >
                 ×
               </button>
             )}
           </div>
 
-          {/* Quick Date Presets */}
-          <div className="flex items-center gap-1 flex-wrap text-xs">
+          {/* Mobile Filter Toggle Button (like shopping apps) */}
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters((prev) => !prev)}
+            className={`sm:hidden inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-bold transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0 ${
+              statusFilter !== 'ALL' || serviceFilter !== 'ALL' || dateFilter !== 'ALL' || customDate || showMobileFilters
+                ? 'bg-purple-100 text-purple-900 border-purple-300'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5 text-purple-700" />
+            <span>Filters</span>
+            {(statusFilter !== 'ALL' || serviceFilter !== 'ALL' || dateFilter !== 'ALL' || customDate) && (
+              <span className="w-2 h-2 rounded-full bg-purple-700 animate-pulse" />
+            )}
+          </button>
+
+          {/* Quick Date Presets (Desktop view) */}
+          <div className="hidden sm:flex items-center gap-1 flex-wrap text-xs">
             <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
               <CalendarDays className="w-3 h-3 text-purple-700" /> Date:
             </span>
@@ -642,7 +660,7 @@ Kindly reply *CONFIRM* to acknowledge.`;
             </div>
           </div>
 
-          {/* Rows selector */}
+          {/* Rows selector (Desktop view) */}
           <div className="hidden sm:flex items-center justify-end gap-1.5 text-xs text-slate-600 w-auto">
             <span className="text-[11px] font-medium">Rows:</span>
             <select
@@ -660,80 +678,163 @@ Kindly reply *CONFIRM* to acknowledge.`;
           </div>
         </div>
 
-        {/* Secondary Filter Row: Status & Clinical Category (Compact 2-col on mobile) */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 pt-1 border-t border-slate-200 text-xs w-full">
-          {/* Status Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="CHECKED_IN">Waiting</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="NO_SHOW">No Show</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+        {/* Collapsible Mobile Filters / Secondary Filter Row */}
+        <div className={`${showMobileFilters ? 'block' : 'hidden'} sm:block space-y-2.5 pt-2 border-t border-slate-200 animate-in fade-in duration-150`}>
+          {/* Mobile Date Presets (Expanded on Mobile) */}
+          <div className="sm:hidden space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <CalendarDays className="w-3 h-3 text-purple-700" /> Date Preset:
+            </span>
+            <div className="flex items-center gap-1 flex-wrap text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFilter('ALL');
+                  setPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
+                  dateFilter === 'ALL'
+                    ? 'bg-[#301444] text-white border-[#301444]'
+                    : 'bg-white text-slate-700 border-slate-300'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFilter('TODAY');
+                  setPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
+                  dateFilter === 'TODAY'
+                    ? 'bg-[#301444] text-white border-[#301444]'
+                    : 'bg-white text-slate-700 border-slate-300'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFilter('TOMORROW');
+                  setPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
+                  dateFilter === 'TOMORROW'
+                    ? 'bg-[#301444] text-white border-[#301444]'
+                    : 'bg-white text-slate-700 border-slate-300'
+                }`}
+              >
+                Tomorrow
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDateFilter('THIS_WEEK');
+                  setPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold border transition-colors cursor-pointer ${
+                  dateFilter === 'THIS_WEEK'
+                    ? 'bg-[#301444] text-white border-[#301444]'
+                    : 'bg-white text-slate-700 border-slate-300'
+                }`}
+              >
+                Next 7D
+              </button>
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => {
+                  setCustomDate(e.target.value);
+                  setDateFilter('CUSTOM');
+                  setPage(1);
+                }}
+                className={`h-8 px-2 text-xs font-mono font-medium rounded-md border ${
+                  dateFilter === 'CUSTOM'
+                    ? 'border-purple-600 bg-purple-50 text-purple-950 ring-1 ring-purple-600'
+                    : 'border-slate-300 bg-white text-slate-700'
+                }`}
+                title="Select specific date"
+              />
+            </div>
           </div>
 
-          {/* Service Line Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
-            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Category:</span>
-            <select
-              value={serviceFilter}
-              onChange={(e) => {
-                setServiceFilter(e.target.value);
-                setPage(1);
-              }}
-              className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
-            >
-              <option value="ALL">All Categories</option>
-              <option value="SPEECH_LANGUAGE">Speech Therapy</option>
-              <option value="AUDIOLOGY">Audiology</option>
-              <option value="VOICE">Voice Therapy</option>
-              <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
-            </select>
+          {/* Secondary Filter Row: Status & Clinical Category */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 text-xs w-full">
+            {/* Status Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="CHECKED_IN">Waiting</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="NO_SHOW">No Show</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+
+            {/* Service Line Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 whitespace-nowrap">Category:</span>
+              <select
+                value={serviceFilter}
+                onChange={(e) => {
+                  setServiceFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 sm:h-6 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto truncate"
+              >
+                <option value="ALL">All Categories</option>
+                <option value="SPEECH_LANGUAGE">Speech Therapy</option>
+                <option value="AUDIOLOGY">Audiology</option>
+                <option value="VOICE">Voice Therapy</option>
+                <option value="CBT_PSYCHOLOGY">CBT Counseling</option>
+              </select>
+            </div>
+
+            {/* Quick Shortcut: Pending Approval Chip */}
+            {pendingCount > 0 && statusFilter !== 'PENDING' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('PENDING');
+                  setPage(1);
+                }}
+                className="px-2 py-1 sm:py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer flex items-center justify-center gap-1 w-full sm:w-auto"
+              >
+                <AlertCircle className="w-3 h-3 text-amber-700 flex-shrink-0" />
+                <span>Show {pendingCount} Pending</span>
+              </button>
+            )}
+
+            {/* Clear Filters Reset */}
+            {(search || statusFilter !== 'ALL' || serviceFilter !== 'ALL' || dateFilter !== 'ALL' || customDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('ALL');
+                  setServiceFilter('ALL');
+                  setDateFilter('ALL');
+                  setCustomDate('');
+                  setPage(1);
+                }}
+                className="col-span-2 sm:col-span-1 sm:ml-auto text-xs text-purple-700 hover:text-purple-900 font-semibold underline cursor-pointer text-center sm:text-right py-1"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
-
-          {/* Quick Shortcut: Pending Approval Chip */}
-          {pendingCount > 0 && statusFilter !== 'PENDING' && (
-            <button
-              type="button"
-              onClick={() => {
-                setStatusFilter('PENDING');
-                setPage(1);
-              }}
-              className="px-2 py-1 sm:py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition-colors cursor-pointer flex items-center justify-center gap-1 w-full sm:w-auto"
-            >
-              <AlertCircle className="w-3 h-3 text-amber-700 flex-shrink-0" />
-              <span>Show {pendingCount} Pending Approvals</span>
-            </button>
-          )}
-
-          {/* Clear Filters Reset */}
-          {(search || statusFilter !== 'ALL' || serviceFilter !== 'ALL' || dateFilter !== 'ALL') && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch('');
-                setStatusFilter('ALL');
-                setServiceFilter('ALL');
-                setDateFilter('ALL');
-                setCustomDate('');
-                setPage(1);
-              }}
-              className="sm:ml-auto text-xs text-purple-700 hover:text-purple-900 font-semibold underline cursor-pointer text-center sm:text-right py-1"
-            >
-              Reset Filters
-            </button>
-          )}
         </div>
       </div>
 

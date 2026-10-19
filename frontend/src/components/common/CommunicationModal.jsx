@@ -16,6 +16,7 @@ import {
   User,
   Phone,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { Modal } from './Modal';
 import { useNotification } from '../../context/NotificationContext';
@@ -295,10 +296,6 @@ export const WhatsAppDispatchModal = ({
                 </p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-emerald-800 border border-emerald-200 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-              <span>QR Verified PDF</span>
-            </span>
           </div>
         )}
 
@@ -328,20 +325,23 @@ export const WhatsAppDispatchModal = ({
         </div>
 
         {/* Modal Actions */}
-        <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+        <div className="pt-2 border-t border-slate-200 grid grid-cols-2 sm:flex sm:items-center sm:justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3 rounded-lg sm:rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer active:scale-95 touch-manipulation"
+            title="Cancel and close dialog"
           >
-            Cancel
+            <X className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">Cancel</span>
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 rounded text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-4 rounded-lg sm:rounded-md text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation"
+            title="Open WhatsApp & Send message"
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Open WhatsApp &amp; Send</span>
+            <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">Open WhatsApp &amp; Send</span>
           </button>
         </div>
       </form>
@@ -775,41 +775,44 @@ export const EmailDispatchModal = ({
         </div>
 
         {/* Modal Actions */}
-        <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+        <div className="pt-2 border-t border-slate-200 grid grid-cols-3 sm:flex sm:items-center sm:justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
             disabled={isSending}
-            className="px-3 py-1.5 rounded text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3 rounded-lg sm:rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
+            title="Cancel and close dialog"
           >
-            Cancel
+            <X className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">Cancel</span>
           </button>
 
           <button
             type="button"
             onClick={handleSendViaClient}
             disabled={isSending}
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            title="Open default email application (Apple Mail, Outlook, Gmail web)"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3 rounded-lg sm:rounded-md text-xs font-semibold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
+            title="Send via Mail App (Apple Mail, Outlook, default webmail)"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Send via Mail App</span>
+            <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-purple-700" />
+            <span className="hidden sm:inline">Send via Mail App</span>
           </button>
 
           <button
             type="submit"
             disabled={isSending}
-            className="px-4 py-1.5 rounded text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-4 rounded-lg sm:rounded-md text-xs font-bold text-white bg-[#301444] hover:bg-[#200b30] shadow-2xs transition-all cursor-pointer disabled:opacity-50 active:scale-95 touch-manipulation"
+            title="Send directly via Clinic SMTP"
           >
             {isSending ? (
               <>
-                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Sending via SMTP...</span>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="hidden sm:inline">Sending via SMTP...</span>
               </>
             ) : (
               <>
-                <Send className="w-3.5 h-3.5" />
-                <span>Send via Clinic SMTP</span>
+                <Send className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Send via Clinic SMTP</span>
               </>
             )}
           </button>

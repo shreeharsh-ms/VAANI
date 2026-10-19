@@ -170,6 +170,7 @@ export const PatientsPage = () => {
   // Search & Filter State
   const [search, setSearch] = useState('');
   const [selectedService, setSelectedService] = useState('ALL');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Sorting State
   const [sortField, setSortField] = useState('created_at');
@@ -347,24 +348,14 @@ export const PatientsPage = () => {
       <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
         
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
-            <User className="w-3.5 h-3.5 text-purple-700" />
-            <span>Master Patient Index (MPI)</span>
-          </div>
-
-          <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Registered:</span>
-            <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
-              {patients.length} Patients
-            </span>
-
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200 hidden sm:inline">
-              DPDP Act 2023 Consent Compliant
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <h1 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <User className="w-4 h-4 text-purple-700" />
+            <span>Patients</span>
+          </h1>
+          <span className="text-xs font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono">
+            {patients.length} Registered
+          </span>
         </div>
 
         {/* Right: Actions with Shortcut Badges */}
@@ -393,11 +384,11 @@ export const PatientsPage = () => {
         </div>
       </div>
 
-      {/* ── FILTER & SEARCH BAR ── */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 w-full sm:w-auto">
+      {/* ── FILTER & SEARCH BAR (Collapsible on mobile like shopping apps) ── */}
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5 space-y-2">
+        <div className="flex items-center justify-between gap-2">
           {/* Multi-field search */}
-          <div className="relative flex items-center w-full sm:max-w-xs md:max-w-sm">
+          <div className="relative flex items-center flex-1 sm:max-w-xs md:max-w-sm">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2 pointer-events-none" />
             <input
               type="text"
@@ -413,46 +404,101 @@ export const PatientsPage = () => {
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1"
+                className="absolute right-1.5 text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer"
               >
                 ×
               </button>
             )}
           </div>
 
-          {/* Service Line Filter */}
-          <select
-            value={selectedService}
-            onChange={(e) => {
-              setSelectedService(e.target.value);
-              setPage(1);
-            }}
-            className="h-8 sm:h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full sm:w-auto"
+          {/* Mobile Filter Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowMobileFilters((prev) => !prev)}
+            className={`sm:hidden inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-bold transition-all cursor-pointer touch-manipulation active:scale-95 ${
+              selectedService !== 'ALL' || showMobileFilters
+                ? 'bg-purple-100 text-purple-900 border-purple-300'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+            }`}
           >
-            <option value="ALL">All Clinical Service Lines</option>
-            <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
-            <option value="AUDIOLOGY">Audiology &amp; Hearing Health</option>
-            <option value="VOICE">Voice Therapy &amp; Diagnostics</option>
-            <option value="CBT_PSYCHOLOGY">CBT &amp; Psychological Counseling</option>
-          </select>
+            <Filter className="w-3.5 h-3.5 text-purple-700" />
+            <span>Filters</span>
+            {selectedService !== 'ALL' && (
+              <span className="w-2 h-2 rounded-full bg-purple-700" />
+            )}
+          </button>
+
+          {/* Desktop Service Line Filter & Rows */}
+          <div className="hidden sm:flex items-center gap-2 flex-1 justify-between">
+            <select
+              value={selectedService}
+              onChange={(e) => {
+                setSelectedService(e.target.value);
+                setPage(1);
+              }}
+              className="h-7 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+            >
+              <option value="ALL">All Clinical Service Lines</option>
+              <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
+              <option value="AUDIOLOGY">Audiology &amp; Hearing Health</option>
+              <option value="VOICE">Voice Therapy &amp; Diagnostics</option>
+              <option value="CBT_PSYCHOLOGY">CBT &amp; Psychological Counseling</option>
+            </select>
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span className="text-[11px] font-medium">Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* Rows selector */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 text-xs text-slate-600 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200">
-          <span className="text-[11px] font-medium">Rows:</span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setPage(1);
-            }}
-            className="h-7 sm:h-6 px-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600"
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
+        {/* Collapsible Mobile Filter Details */}
+        {showMobileFilters && (
+          <div className="sm:hidden pt-2 border-t border-slate-200 flex flex-col gap-2 text-xs animate-in fade-in duration-150">
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Clinical Service Line:
+              </span>
+              <select
+                value={selectedService}
+                onChange={(e) => {
+                  setSelectedService(e.target.value);
+                  setPage(1);
+                }}
+                className="h-8 px-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none w-full"
+              >
+                <option value="ALL">All Clinical Service Lines</option>
+                <option value="SPEECH_LANGUAGE">Speech-Language Pathology</option>
+                <option value="AUDIOLOGY">Audiology &amp; Hearing Health</option>
+                <option value="VOICE">Voice Therapy &amp; Diagnostics</option>
+                <option value="CBT_PSYCHOLOGY">CBT &amp; Psychological Counseling</option>
+              </select>
+            </div>
+            {selectedService !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedService('ALL');
+                  setPage(1);
+                }}
+                className="text-left text-[11px] font-bold text-rose-600 hover:text-rose-700 py-1"
+              >
+                Clear Service Filter
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── MOBILE TOUCH-OPTIMIZED CARD VIEW (Visible on mobile/tablet < md:) ── */}
