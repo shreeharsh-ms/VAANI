@@ -223,12 +223,25 @@ export const ReportViewPage = () => {
     };
   }, [id]);
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = () => {
+    setIsPrinting(true);
+    // Give browser 80ms to remove any inline transform/scale from DOM before opening system print dialog
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        setIsPrinting(false);
+      }, 500);
+    }, 80);
+  };
+
   // Keyboard shortcut for print (Cmd/Ctrl + P)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        window.print();
+        handlePrint();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -242,7 +255,7 @@ export const ReportViewPage = () => {
       const searchParams = new URLSearchParams(window.location.search);
       if (searchParams.get('print') === '1') {
         const timer = setTimeout(() => {
-          window.print();
+          handlePrint();
         }, 400);
         return () => clearTimeout(timer);
       }
@@ -331,7 +344,7 @@ export const ReportViewPage = () => {
 
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-purple-900 hover:bg-purple-950 rounded shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5 shrink-0" />
@@ -367,10 +380,10 @@ export const ReportViewPage = () => {
           </button>
         </div>
 
-        <div className="w-full overflow-x-auto pb-10 flex justify-start md:justify-center scrollbar-thin">
+        <div className="w-full overflow-x-auto pb-10 flex justify-start md:justify-center scrollbar-thin print:overflow-visible print:p-0 print:m-0">
           <div
             style={
-              fitToScreen
+              fitToScreen && !isPrinting
                 ? {
                     transform: `scale(${scaleRatio})`,
                     transformOrigin: 'top left',
@@ -383,7 +396,7 @@ export const ReportViewPage = () => {
                     minWidth: '210mm',
                   }
             }
-            className="bg-white border border-slate-300 rounded shadow-xl print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none shrink-0 transition-all duration-200"
+            className="print-page-wrapper bg-white border border-slate-300 rounded shadow-xl print:border-none print:shadow-none print:max-w-none print:w-[210mm] print:min-w-[210mm] print:rounded-none shrink-0 transition-all duration-200 print:transform-none print:m-0 print:p-0"
           >
             <OfficialClinicalDocument
               service={reportData.service}

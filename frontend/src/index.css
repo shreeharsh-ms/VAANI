@@ -160,10 +160,32 @@ html, body {
     margin: 0 !important;
     padding: 0 !important;
     width: 210mm !important;
-    height: auto !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Universal reset for print wrappers: cancel any zoom, transform, padding, margins, or overflow */
+  #root,
+  #root > div,
+  main,
+  main > div,
+  main > div > div,
+  .print-page-wrapper {
+    transform: none !important;
+    transform-origin: top left !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+    height: auto !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   /* Ensure all UI chrome, navbars, and buttons are hidden from print */
@@ -194,12 +216,18 @@ html, body {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    transform-origin: top left !important;
     width: 210mm !important;
+    min-width: 210mm !important;
     max-width: 210mm !important;
-    min-height: 297mm !important;
     height: 297mm !important;
+    min-height: 297mm !important;
     max-height: 297mm !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
     background: #faf7fd !important;
@@ -209,15 +237,19 @@ html, body {
     border-radius: 0 !important;
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
+    break-after: avoid !important;
     overflow: hidden !important;
   }
 
   /* Multi-page documents container (e.g. EDH) */
   #official-report-a4-page.multi-page-doc {
-    width: 100% !important;
-    max-width: 100% !important;
+    position: static !important;
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
     height: auto !important;
     min-height: auto !important;
+    transform: none !important;
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
@@ -230,11 +262,12 @@ html, body {
   /* Multi-page individual A4 sheets: strict A4 page sizing with safe padding */
   .a4-print-page {
     width: 210mm !important;
+    min-width: 210mm !important;
     max-width: 210mm !important;
     min-height: 297mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
     display: flex !important;
@@ -246,6 +279,7 @@ html, body {
     overflow: hidden !important;
     background: #faf7fd !important;
     background-color: #faf7fd !important;
+    transform: none !important;
   }
 
   .a4-print-page:last-child {
