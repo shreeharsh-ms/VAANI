@@ -346,11 +346,11 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   <span className="font-bold text-xs text-emerald-950">
-                    DPDP Act 2023 Statutory Consent Register &amp; Cryptographic Audit Trail
+                    DPDP Act 2023 Consent Register &amp; Cryptographic Audit Trail
                   </span>
                 </div>
                 <span className="text-[11px] font-bold text-emerald-800 font-mono bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                  7 Statutory Consents Registered
+                  7 Consents Registered
                 </span>
               </div>
 
@@ -712,7 +712,7 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
               {/* Invoices Table */}
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                 <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>Statutory GST Tax Invoices &amp; Receipts</span>
+                  <span>GST Tax Invoices &amp; Receipts</span>
                   <span className="text-[10px] text-slate-500 font-medium">Healthcare 0% Exempt</span>
                 </div>
 
@@ -785,7 +785,7 @@ export const PatientProfileModal = ({ patient, isOpen, onClose }) => {
             <div className="space-y-3">
               <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                 <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                  <span>Statutory Record Retention Horizons &amp; Legal Mandate (Section 4.5 &amp; BR-061)</span>
+                  <span>Record Retention Horizons &amp; Legal Mandate</span>
                   <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded font-mono font-bold border border-emerald-200">
                     Compliant
                   </span>

@@ -1563,10 +1563,10 @@ export const PatientDetailPage = () => {
             <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>DPDP Act 2023 Statutory Consent Register &amp; Cryptographic Audit Trail</span>
+                <span>DPDP Act 2023 Consent Register &amp; Cryptographic Audit Trail</span>
               </div>
               <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold border border-emerald-200">
-                {consents?.length || 0} Statutory Consents Registered
+                {consents?.length || 0} Consents Registered
               </span>
             </div>
 
@@ -2274,9 +2274,7 @@ export const PatientDetailPage = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="hidden sm:inline font-mono text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-                  DPDP Act Compliant Serial Registry
-                </span>
+
                 <button
                   type="button"
                   onClick={() => setIsDispenseDeviceModalOpen(true)}
@@ -3086,10 +3084,8 @@ export const PatientDetailPage = () => {
           <div className="space-y-3">
             <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
               <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 font-bold text-[11px] text-[#301444] uppercase tracking-wider flex items-center justify-between">
-                <span>Statutory Record Retention Horizons &amp; Legal Mandate</span>
-                <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded font-mono font-bold border border-emerald-200">
-                  Compliant
-                </span>
+                <span>Record Retention Horizons &amp; Legal Mandate</span>
+
               </div>
 
               <div className="p-3.5 space-y-3 text-xs">

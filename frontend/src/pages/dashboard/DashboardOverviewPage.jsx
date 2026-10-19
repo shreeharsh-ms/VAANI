@@ -453,9 +453,7 @@ export const DashboardOverviewPage = () => {
                 <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                   Today&apos;s Live Patient Queue &amp; Consultations
                 </span>
-                <span className="text-[10px] font-mono text-purple-700 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                  Live Queue
-                </span>
+
               </div>
               <button
                 type="button"

@@ -1301,22 +1301,254 @@ export const SettingsPage = () => {
       {activeTab === 'booking' && (
         <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
           {/* Table Header Banner */}
-          <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
-                Appointment Request &amp; Slot Hold Governance Sheet
-              </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
-                Policy Protocol
-              </span>
-            </div>
+          <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
+              Appointment &amp; Slot Hold Policy
+            </span>
             <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-              9 Governance Policies • High-Density ERP View
+              9 Configured Rules
             </span>
           </div>
 
-          {/* Excel-like Compact Data Table */}
-          <div className="overflow-x-auto">
+          {/* Mobile Card Feed (md:hidden) */}
+          <div className="md:hidden divide-y divide-slate-100 p-2 space-y-2.5">
+            {/* Rule 1 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Minimum Advance Notice</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Enforced
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Prevents uncoordinated same-day walk-ins; allows clinician preparation.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    step="15"
+                    value={settings.bookingPolicy.minNoticeMin}
+                    onChange={(e) => handleChange('bookingPolicy', 'minNoticeMin', parseInt(e.target.value) || 0)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Min</span>
+                  <span className="text-[10px] text-slate-400">({settings.bookingPolicy.minNoticeMin / 60} hrs)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 2 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Maximum Advance Horizon</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Enforced
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Limits future booking visibility window on public calendar.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={settings.bookingPolicy.maxAdvanceDays}
+                    onChange={(e) => handleChange('bookingPolicy', 'maxAdvanceDays', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Days</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 3 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Slot Hold Expiration</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                  Auto-Expire
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Duration tentative requested slot is reserved before releasing back to queue.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    value={settings.bookingPolicy.holdHours}
+                    onChange={(e) => handleChange('bookingPolicy', 'holdHours', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Hours</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 4 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Cancellation Cut-off Window</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Enforced
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Penalty-free cancellation cut-off before scheduled consultation time.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    value={settings.bookingPolicy.cancelWindowHours}
+                    onChange={(e) => handleChange('bookingPolicy', 'cancelWindowHours', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Hours</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 5 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Maximum Reschedule Limit</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                  Capped
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Maximum patient self-reschedules permitted per appointment reference.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={settings.bookingPolicy.rescheduleLimit}
+                    onChange={(e) => handleChange('bookingPolicy', 'rescheduleLimit', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Times</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 6 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">No-Show Grace Period</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Standard
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Elapsed buffer time after slot commencement before clinician marks NO_SHOW.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={settings.bookingPolicy.graceNoShowMin}
+                    onChange={(e) => handleChange('bookingPolicy', 'graceNoShowMin', parseInt(e.target.value) || 0)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Minutes</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 7 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Daily Pure Tone Audiometry Cap</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Fatigue Guard
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Limits high-fatigue sound booth diagnostic audiometry evaluations per day.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={settings.bookingPolicy.ptaDailyCap}
+                    onChange={(e) => handleChange('bookingPolicy', 'ptaDailyCap', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Tests / Day</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 8 */}
+            <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-slate-900">Daily Speech Therapy Cap</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Fatigue Guard
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                Limits pediatric / neuro rehabilitation sessions to prevent therapist burnout.
+              </p>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                <span className="text-[11px] font-medium text-slate-500">Configured Value:</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="25"
+                    value={settings.bookingPolicy.speechTherapyDailyCap}
+                    onChange={(e) => handleChange('bookingPolicy', 'speechTherapyDailyCap', parseInt(e.target.value) || 1)}
+                    className="h-7 w-20 px-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
+                  />
+                  <span className="text-xs font-semibold text-slate-600">Sessions / Day</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule 9 */}
+            <div className="p-3 rounded-lg bg-purple-50/40 border border-purple-200 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-purple-950">Auto-Confirm Public Requests</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.bookingPolicy.autoConfirm}
+                    onChange={(e) => handleChange('bookingPolicy', 'autoConfirm', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4.5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-purple-700"></div>
+                </label>
+              </div>
+              <p className="text-[11px] text-slate-600">
+                If OFF: Slots held in PENDING triage state for front-desk confirmation. If ON: Confirmed instantly.
+              </p>
+            </div>
+          </div>
+
+          {/* Excel-like Compact Data Table (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="bg-slate-100/75 border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
@@ -1335,8 +1567,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">01</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Minimum Advance Notice</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-001</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Prevents uncoordinated same-day walk-ins; allows clinician preparation.
                   </td>
@@ -1367,8 +1598,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">02</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Maximum Advance Horizon</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-002</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Limits future booking visibility window on public calendar.
                   </td>
@@ -1399,8 +1629,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">03</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Slot Hold Expiration</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-003</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Duration tentative requested slot is reserved before releasing back to queue.
                   </td>
@@ -1429,8 +1658,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">04</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Cancellation Cut-off Window</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-004</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Penalty-free cancellation cut-off before scheduled consultation time.
                   </td>
@@ -1459,8 +1687,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">05</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Maximum Reschedule Limit</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-005</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Maximum patient self-reschedules permitted per appointment reference.
                   </td>
@@ -1490,8 +1717,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">06</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">No-Show Grace Period</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-006</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Elapsed buffer time after slot commencement before clinician marks NO_SHOW.
                   </td>
@@ -1521,8 +1747,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">07</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Daily Pure Tone Audiometry Cap</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-007</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Limits high-fatigue sound booth diagnostic audiometry evaluations per day.
                   </td>
@@ -1552,8 +1777,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">08</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Daily Speech Therapy Cap</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-008</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     Limits pediatric / neuro rehabilitation sessions to prevent therapist burnout.
                   </td>
@@ -1583,8 +1807,7 @@ export const SettingsPage = () => {
                   <td className="py-1.5 px-2.5 text-center font-mono text-slate-400">09</td>
                   <td className="py-1.5 px-3">
                     <span className="font-bold text-slate-800 block">Auto-Confirm Public Requests</span>
-                    <span className="text-[10px] font-mono text-purple-700 font-medium">SET-BP-009</span>
-                  </td>
+                    </td>
                   <td className="py-1.5 px-3 text-slate-600">
                     If OFF: Slots held in PENDING triage state for front-desk confirmation. If ON: Confirmed instantly.
                   </td>
@@ -1631,9 +1854,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 RCI Credential Verification &amp; Clinical Title Gates
               </span>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                Statutory Compliance Verified
-              </span>
+
             </div>
 
             <div className="overflow-x-auto">
@@ -2048,9 +2269,7 @@ export const SettingsPage = () => {
                 <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                   Maharashtra Gazetted Holidays &amp; Blockouts ({holidays.length})
                 </span>
-                <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
-                  State Calendar
-                </span>
+
               </div>
 
               <button
@@ -2117,9 +2336,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Automated Sequence Prefixes &amp; Statutory GST Configuration
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
-                GST &amp; Fiscal Compliance
-              </span>
+
             </div>
 
             <div className="overflow-x-auto">
@@ -2279,9 +2496,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 NPCI Dynamic UPI QR Engine &amp; Direct Settlement Bank Account
               </span>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                Direct Clinic Settlement
-              </span>
+
             </div>
 
             <div className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
@@ -2362,9 +2577,7 @@ export const SettingsPage = () => {
                 <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                   Clinical Services Tariff Schedule &amp; Statutory Fee Master
                 </span>
-                <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                  FR-SET-009 • Live EMR &amp; Billing Sync
-                </span>
+
               </div>
               
               <div className="flex items-center gap-2 flex-wrap">
@@ -2525,9 +2738,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Automated Messaging Rules &amp; Statutory Quiet Hours
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                TRAI &amp; DPDP Enforced
-              </span>
+
             </div>
 
             <div className="overflow-x-auto">
@@ -2621,9 +2832,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Digital Personal Data Protection (DPDP) Act 2023 Statutory Grievance Desk
               </span>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                Statutory Grievance Officer
-              </span>
+
             </div>
 
             <div className="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -3095,9 +3304,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Practice Module Activation Matrix
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                Live Dynamic Toggles
-              </span>
+
             </div>
 
             <div className="overflow-x-auto">
@@ -3161,9 +3368,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Workstation Session Security &amp; 2FA Status
               </span>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                ISO 27001 Grade
-              </span>
+
             </div>
 
             <div className="p-3 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
@@ -3211,9 +3416,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Practice Identity &amp; Approved Brand Assets
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-mono font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                Bilingual English &amp; Marathi
-              </span>
+
             </div>
 
             <div className="p-3 space-y-2.5">
@@ -3499,9 +3702,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Official Social Media Channels (Live Website Sync)
               </span>
-              <span className="text-[10px] text-emerald-700 bg-emerald-50 font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-                Footer &amp; About Page Bound
-              </span>
+
             </div>
 
             <div className="p-3 space-y-2">
@@ -3566,9 +3767,7 @@ export const SettingsPage = () => {
               <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                 Public Operating Timings &amp; Lead Practitioner
               </span>
-              <span className="text-[10px] text-purple-700 bg-purple-50 font-bold px-1.5 py-0.5 rounded border border-purple-200">
-                Controls Public Website &amp; Reports
-              </span>
+
             </div>
 
             <div className="p-3 space-y-2">
@@ -3628,9 +3827,7 @@ export const SettingsPage = () => {
             <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
               Tamper-Evident SHA-256 Cryptographic Audit Ledger ({auditLogs.length} Records)
             </span>
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 font-mono font-bold px-1.5 py-0.5 rounded border border-emerald-200">
-              Chain Integrity Verified
-            </span>
+
           </div>
 
           <div className="overflow-x-auto">
@@ -3800,9 +3997,7 @@ export const SettingsPage = () => {
                 <span className="font-bold text-xs text-[#301444] uppercase tracking-wider">
                   Clinic Data Inventory &amp; Protection Ledger
                 </span>
-                <span className="text-[10px] text-purple-700 bg-purple-50 font-medium px-1.5 py-0.5 rounded border border-purple-200">
-                  14 Key Vaults
-                </span>
+
               </div>
               <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
                 Users &amp; Firm Profile Protected • Transactional Records Purgeable
