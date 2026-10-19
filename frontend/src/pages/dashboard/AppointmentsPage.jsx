@@ -465,58 +465,65 @@ Kindly reply *CONFIRM* to acknowledge.`;
   return (
     <div className="w-full space-y-2.5 font-sans pb-28 md:pb-8">
       {/* ── TOP ACTION BAR ── */}
-      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
             <CalendarCheck className="w-3.5 h-3.5 text-purple-700" />
             <span>Appointment Scheduling &amp; Consultation Roster</span>
           </div>
 
+          <h1 className="sm:hidden text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+            <CalendarCheck className="w-4 h-4 text-purple-700 shrink-0" />
+            <span>Appointments</span>
+          </h1>
+
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-slate-500">Scheduled:</span>
-            <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
-              {appointments.length} Slots
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-xs font-bold text-purple-900 bg-purple-50 sm:bg-slate-100 sm:text-slate-900 px-2 py-0.5 rounded border border-purple-200 sm:border-slate-300 font-mono shrink-0">
+              {appointments.length} <span className="hidden sm:inline">Slots</span>
             </span>
 
             {pendingCount > 0 && (
-              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300 font-mono flex items-center gap-1">
+              <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300 font-mono flex items-center gap-1 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                {pendingCount} Pending Approval
+                <span>{pendingCount}</span>
+                <span className="hidden sm:inline">Pending</span>
               </span>
             )}
 
-            <span className="text-xs font-semibold text-slate-500">In Queue:</span>
-            <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono">
-              {checkedInCount} Arrived
+            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+              In Queue:
+              <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono">
+                {checkedInCount} Arrived
+              </span>
             </span>
           </div>
         </div>
 
-        {/* Right: Actions with Shortcut Badges */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* Right: Actions (Compact icon buttons on mobile in corner) */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="h-8 sm:h-7 px-2 sm:px-2.5 rounded-lg sm:rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
             title="Export appointments to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
-            <span>Export CSV</span>
-            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
+            <Download className="w-4 h-4 sm:w-3 sm:h-3 text-slate-600" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E]</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="h-8 sm:h-7 px-2.5 sm:px-3 rounded-lg sm:rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
             title="Schedule consultation slot (Alt + N / ⌥N)"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Schedule Slot</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
+            <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">Schedule Slot</span>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
           </button>
         </div>
       </div>

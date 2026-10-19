@@ -307,45 +307,50 @@ export const RecallsPage = () => {
     <div className="w-full space-y-2.5 font-sans">
       
       {/* ── TOP ACTION BAR (COMPACT EXCEL DENSITY) ── */}
-      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
-        
+      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
         {/* Left: Title & Quick Counts */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200 self-start sm:self-auto">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 px-2 py-1 sm:py-0.5 rounded text-xs sm:text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200 shrink-0">
             <RotateCcw className="w-3.5 h-3.5 text-purple-700" />
-            <span>Follow-up &amp; Recall Management Engine</span>
+            <span className="sm:hidden font-extrabold">Recalls</span>
+            <span className="hidden sm:inline">Follow-up &amp; Recall Management Engine</span>
           </div>
 
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
           {/* Responsive Stat Chips */}
-          <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto text-xs">
-            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
-              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Active Tasks:</span>
-              <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono">
+          <div className="hidden sm:flex sm:items-center gap-1.5 sm:gap-2 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-500 text-[11px]">Tasks:</span>
+              <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300 font-mono text-[11px]">
                 {recalls.length} Total
               </span>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 sm:bg-transparent p-1.5 sm:p-0 rounded border sm:border-0 border-slate-200">
-              <span className="font-semibold text-slate-500 text-[11px] sm:text-xs">Due Today / Urgent:</span>
-              <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-500 text-[11px]">Due Today / Urgent:</span>
+              <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 font-mono text-[11px]">
                 {recalls.filter(r => r.status === 'DUE').length} Due
               </span>
             </div>
           </div>
+
+          {/* Mobile compact count pill */}
+          <span className="sm:hidden font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 truncate">
+            {recalls.filter(r => r.status === 'DUE').length} Due
+          </span>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 sm:px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation"
             title="Schedule clinical recall task (Alt + N)"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Schedule Recall</span>
+            <span className="hidden sm:inline">Schedule Recall</span>
             <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
           </button>
         </div>

@@ -275,25 +275,29 @@ export const ReportsPage = () => {
   return (
     <div className="space-y-4 pb-32 sm:pb-16">
       {/* ── PAGE HEADER & PRIMARY CREATE ACTION ── */}
-      <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg p-3 sm:p-4 shadow-2xs">
-        <div className="min-w-0">
-          <h1 className="text-sm sm:text-base font-black text-slate-900 tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
-            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700 shrink-0" />
-            <span className="truncate">Clinical Assessment Reports</span>
-          </h1>
-          <p className="hidden sm:block text-xs text-slate-500 mt-0.5">
-            Single-page RCI CRR No. A79214 proformas with tamper-evident QR verification and DPDP Act compliance.
-          </p>
+      <div className="flex items-center justify-between gap-2 bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs backdrop-blur-xs">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 px-2 py-1 sm:py-0.5 rounded text-xs sm:text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200 shrink-0">
+            <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+            <span className="sm:hidden font-extrabold">Reports</span>
+            <span className="hidden sm:inline font-bold">Clinical Assessment Reports</span>
+          </div>
+          <span className="hidden sm:inline text-xs text-slate-500 truncate">
+            — RCI proformas with QR verification
+          </span>
+          <span className="sm:hidden font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100/80 text-purple-900 border border-purple-200 truncate">
+            {allReports.length} Total
+          </span>
         </div>
 
         <button
           type="button"
           onClick={() => navigate('/dashboard/reports/create')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-md shadow-2xs transition-colors cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 sm:px-3 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-md shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95 touch-manipulation"
+          title="Create New Clinical Report (Alt + R)"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Create New Clinical Report</span>
-          <span className="sm:hidden">New Report</span>
           <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 bg-purple-800 text-[10px] rounded font-mono">
             ⌥R
           </kbd>

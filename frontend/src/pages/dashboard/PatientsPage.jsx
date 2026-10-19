@@ -344,42 +344,41 @@ export const PatientsPage = () => {
   return (
     <div className="w-full space-y-2.5 font-sans">
       
-      {/* ── TOP ACTION BAR (COMPACT EXCEL DENSITY) ── */}
-      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
-        
+      {/* ── TOP ACTION BAR (COMPACT DENSITY) ── */}
+      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
         {/* Left: Title & Quick Counts */}
-        <div className="flex items-center gap-2">
-          <h1 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-            <User className="w-4 h-4 text-purple-700" />
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+            <User className="w-4 h-4 text-purple-700 shrink-0" />
             <span>Patients</span>
           </h1>
-          <span className="text-xs font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono">
-            {patients.length} Registered
+          <span className="text-xs font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono shrink-0">
+            {patients.length} <span className="hidden sm:inline">Registered</span>
           </span>
         </div>
 
-        {/* Right: Actions with Shortcut Badges */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* Right: Actions (Compact icon buttons on mobile in corner) */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
-            title="Export master patient index to CSV (Alt + E / ⌥E)"
+            className="h-8 sm:h-7 px-2 sm:px-2.5 rounded-lg sm:rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
+            title="Export patient records to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
-            <span>Export CSV</span>
-            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
+            <Download className="w-4 h-4 sm:w-3 sm:h-3 text-slate-600" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E]</kbd>
           </button>
 
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
-            title="Register new patient with auto UHID (Alt + N / ⌥N)"
+            className="h-8 sm:h-7 px-2.5 sm:px-3 rounded-lg sm:rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
+            title="Register new patient (Alt + N / ⌥N)"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Patient</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
+            <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">New Patient</span>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
           </button>
         </div>
       </div>

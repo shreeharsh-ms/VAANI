@@ -1421,57 +1421,57 @@ export const BillingPage = () => {
   return (
     <div className="w-full space-y-2.5 font-sans">
       
-      {/* ── TOP ACTION & STAT BAR (COMPACT EXCEL DENSITY) ── */}
-      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2.5 shadow-2xs backdrop-blur-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
-        
+      {/* ── TOP ACTION & STAT BAR (COMPACT DENSITY) ── */}
+      <div className="bg-white/95 border border-slate-200/90 rounded-lg p-2 sm:p-2.5 shadow-2xs backdrop-blur-xs flex items-center justify-between gap-2">
         {/* Left: Module Title & Revenue Pills */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-900 border border-purple-200">
             <IndianRupee className="w-3.5 h-3.5 text-purple-700" />
             <span>Billing, Invoices &amp; Tax Ledger</span>
           </div>
 
+          <h1 className="sm:hidden text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+            <IndianRupee className="w-4 h-4 text-purple-700 shrink-0" />
+            <span>Billing</span>
+          </h1>
+
           <div className="h-3.5 w-px bg-slate-200 hidden sm:block" />
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">Collected:</span>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono shrink-0">
               ₹{totalRevenue.toLocaleString('en-IN')}
             </span>
 
             {totalPending > 0 && (
-              <>
-                <span className="text-xs font-semibold text-slate-500">Due:</span>
-                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono">
-                  ₹{totalPending.toLocaleString('en-IN')}
-                </span>
-              </>
+              <span className="hidden sm:inline-flex text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-mono shrink-0">
+                Due: ₹{totalPending.toLocaleString('en-IN')}
+              </span>
             )}
           </div>
         </div>
 
-        {/* Right: Actions with Keyboard Shortcut Badges */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* Right: Actions (Compact icon buttons on mobile in corner) */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-2.5 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+            className="h-8 sm:h-7 px-2 sm:px-2.5 rounded-lg sm:rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer shadow-2xs active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
             title="Export filtered records to CSV (Alt + E / ⌥E)"
           >
-            <Download className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-500" />
-            <span>Export CSV</span>
-            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E / ⌥E]</kbd>
+            <Download className="w-4 h-4 sm:w-3 sm:h-3 text-slate-600" />
+            <span className="hidden sm:inline">Export CSV</span>
+            <kbd className="text-[10px] text-slate-500 font-mono hidden sm:inline">[Alt+E]</kbd>
           </button>
 
           <button
             type="button"
             onClick={handleOpenNewInvoiceModal}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-8 sm:h-7 px-3 rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer"
+            className="h-8 sm:h-7 px-2.5 sm:px-3 rounded-lg sm:rounded text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
             title="Create new GST tax invoice (Alt + N / ⌥N)"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Invoice</span>
-            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N / ⌥N]</kbd>
+            <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">New Invoice</span>
+            <kbd className="text-[10px] text-purple-200 font-mono hidden sm:inline">[Alt+N]</kbd>
           </button>
         </div>
       </div>
