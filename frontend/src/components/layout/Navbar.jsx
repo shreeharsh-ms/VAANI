@@ -58,7 +58,7 @@ export const Navbar = () => {
   const isBlogs = location.pathname === ROUTES.BLOGS || location.pathname.startsWith('/blogs');
   const isVerify = location.pathname.startsWith('/verify');
   const isSantoNavbar = isContact || isBlogs || isVerify;
-  const santoBg = isContact || isVerify ? 'bg-white' : 'bg-[#f7f6f4]';
+  const santoBg = isVerify ? 'bg-transparent' : isContact ? 'bg-white' : 'bg-[#f7f6f4]';
 
   return (
     <header
@@ -75,12 +75,12 @@ export const Navbar = () => {
         <div className={`w-full ${santoBg} select-none border-none shadow-none`}>
           <div className="w-full flex items-center justify-between">
             {/* Top-Left: Logo inside Dark Tab with Fillets */}
-            <div className="relative bg-[#301444] text-white px-5 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-4.5 rounded-br-[28px] sm:rounded-br-[38px] flex items-center self-start flex-shrink-0">
+            <div className="relative bg-[#301444] text-white px-4 sm:px-8 lg:px-10 py-2.5 sm:py-4 lg:py-4.5 rounded-br-[24px] sm:rounded-br-[38px] flex items-center self-start shrink-0">
               <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
                 <img
                   src={displayWhiteLogo}
                   alt={clinicName}
-                  className="h-11 sm:h-13 lg:h-15 xl:h-[68px] w-auto object-contain transition-transform duration-200 group-hover:scale-105 drop-shadow-md"
+                  className="h-9 sm:h-13 lg:h-15 xl:h-[68px] w-auto object-contain transition-transform duration-200 group-hover:scale-105 drop-shadow-md"
                 />
               </Link>
 
@@ -131,7 +131,7 @@ export const Navbar = () => {
             </nav>
 
             {/* Right: Prominent Book an Appointment Button + Mobile Hamburger */}
-            <div className="flex items-center gap-3 py-3 sm:py-4 px-4 sm:px-8 lg:px-10 xl:px-12 self-center">
+            <div className="flex items-center gap-2 sm:gap-3 py-2 sm:py-4 pr-3.5 sm:px-8 lg:px-10 xl:px-12 self-center shrink-0">
               <Link
                 to="/#booking-section"
                 onClick={(e) => {

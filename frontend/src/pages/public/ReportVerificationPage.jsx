@@ -108,54 +108,44 @@ export const ReportVerificationPage = () => {
         backgroundColor: '#faf8fc',
       }}
     >
-      {/* Universal Public Site Navbar with Santo-style header */}
+      {/* Universal Public Site Navbar with transparent background seamlessly blending into lavender */}
       <Navbar />
 
       {/* Main Centered Content */}
-      <main className="relative z-10 flex-1 flex flex-col justify-center items-center max-w-md w-full mx-auto px-4 py-8 sm:py-12 my-auto space-y-5">
-        {/* Captivating, Interesting Header with Premium Styling */}
-        <div className="text-center space-y-2">
-          {/* Subtle floral flourish accent */}
-          <div className="flex items-center justify-center gap-2 text-purple-400">
-            <div className="h-px w-8 bg-gradient-to-r from-transparent to-purple-400" />
-            <span className="text-[10px] text-purple-700 font-serif">✦ ❖ ✦</span>
-            <div className="h-px w-8 bg-gradient-to-l from-transparent to-purple-400" />
+      <main className="relative z-10 flex-1 flex flex-col justify-center items-center max-w-md w-full mx-auto px-4 py-8 sm:py-12 my-auto space-y-6">
+        {/* Header matching the exact font and style of "Protect little ears, help your child speak with confidence" */}
+        <div className="text-center space-y-1.5">
+          {/* Eyebrow Label */}
+          <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-[#6e468e] tracking-wide mb-1">
+            <span className="w-2 h-2 rounded-full bg-[#6e468e] animate-pulse" />
+            <span>Clinical Document Authentication</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-slate-900 leading-tight">
-            Welcome to{' '}
-            <span className="bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-900 bg-clip-text text-transparent italic">
-              Vaani Clinic
-            </span>
+          {/* Headline matching exact Hero font: font-bold text-[#2d0b43] leading-[1.12] tracking-tight */}
+          <h1 className="text-3xl sm:text-4xl md:text-[42px] font-bold text-[#2d0b43] leading-[1.12] tracking-tight">
+            Welcome to Vaani Clinic
           </h1>
 
-          <p className="text-xs sm:text-[13px] text-slate-600 max-w-xs mx-auto leading-relaxed font-medium">
+          <p className="text-xs sm:text-[13px] text-[#462064]/75 max-w-xs mx-auto leading-relaxed font-medium pt-0.5">
             Official clinical document authentication &amp; secure delivery portal.
           </p>
         </div>
 
-        {/* Crisp, Sharp Document Card with Reduced Border Radius (rounded-xl) */}
-        <div className="w-full bg-white/95 backdrop-blur-md rounded-xl border border-purple-200/90 shadow-md p-5 sm:p-6 space-y-4">
-          {/* Card Top: Crisp Report ID & Status */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-purple-100 gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-purple-100/70 border border-purple-200/90 flex items-center justify-center text-purple-900 shadow-2xs">
-                <FileText className="w-4 h-4 text-purple-800" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900/70 block">
-                  Report Reference ID
-                </span>
-                <span className="font-mono font-bold text-base sm:text-lg text-slate-900 tracking-wide">
-                  {reportNumber}
-                </span>
-              </div>
+        {/* Crisp Document Card with reduced border radius (rounded-xl) and NO "Verified & Signed" badge */}
+        <div className="w-full bg-white/92 backdrop-blur-md rounded-xl border border-purple-200/80 shadow-md p-5 sm:p-6 space-y-4">
+          {/* Card Top: Report Reference ID only (No Verified & Signed badge) */}
+          <div className="flex items-center gap-3 pb-3.5 border-b border-purple-100/90">
+            <div className="w-9 h-9 rounded-lg bg-purple-100/70 border border-purple-200/90 flex items-center justify-center text-purple-900 shadow-2xs shrink-0">
+              <FileText className="w-4.5 h-4.5 text-purple-800" />
             </div>
-
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold shrink-0">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              Verified &amp; Signed
-            </span>
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-900/60 block">
+                Report Reference ID
+              </span>
+              <span className="font-mono font-bold text-lg sm:text-xl text-slate-900 tracking-wide">
+                {reportNumber}
+              </span>
+            </div>
           </div>
 
           {/* Action Section */}
