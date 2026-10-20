@@ -47,3 +47,12 @@ htmlcov/
 scratch/
 instance/
 *.db
+
+# Mobile Native Builds & APKs
+*.apk
+*.aab
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/ios/DerivedData/
+frontend/ios/build/

@@ -1,0 +1,9 @@
+{
+  "appId": "com.vaaniclinic.admin",
+  "appName": "Vaani Clinic",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
