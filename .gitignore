@@ -48,9 +48,10 @@ scratch/
 instance/
 *.db
 
-# Mobile Native Builds & APKs
+# Mobile Native Builds & APKs/IPAs
 *.apk
 *.aab
+*.ipa
 frontend/android/.gradle/
 frontend/android/app/build/
 frontend/android/build/
