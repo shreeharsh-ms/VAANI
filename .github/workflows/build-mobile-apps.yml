@@ -1,0 +1,116 @@
+name: Build Mobile Apps (iOS & Android)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Sync Capacitor Android
+        run: |
+          cd frontend
+          npx cap sync android
+
+      - name: Build Android APK
+        run: |
+          cd frontend/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vaani-Clinic-Android-APK
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+
+  build-ios:
+    name: Build iOS App (.ipa & .app)
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Sync Capacitor iOS
+        run: |
+          cd frontend
+          npx cap sync ios
+
+      - name: Build iOS App with Xcode
+        run: |
+          cd frontend/ios/App
+          xcodebuild clean build \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CONFIGURATION_BUILD_DIR=build/Release-iphoneos
+
+      - name: Package into IPA and ZIP
+        run: |
+          cd frontend/ios/App/build/Release-iphoneos
+          mkdir -p Payload
+          cp -r App.app Payload/
+          zip -r Vaani_Clinic_iOS_App.ipa Payload
+          zip -r Vaani_Clinic_iOS_App.zip App.app
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vaani-Clinic-iOS-IPA
+          path: frontend/ios/App/build/Release-iphoneos/Vaani_Clinic_iOS_App.ipa
+
+      - name: Upload iOS App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vaani-Clinic-iOS-App-Bundle
+          path: frontend/ios/App/build/Release-iphoneos/Vaani_Clinic_iOS_App.zip
