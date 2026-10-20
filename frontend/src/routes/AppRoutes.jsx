@@ -32,19 +32,28 @@ import BlogEditorPage from '../pages/dashboard/BlogEditorPage';
 import SettingsPage from '../pages/dashboard/SettingsPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
+import { Capacitor } from '@capacitor/core';
+
 export const AppRoutes = () => {
+  const isNativeApp = Capacitor.isNativePlatform();
+
   return (
     <Routes>
-      {/* Public Facing Routes */}
-      <Route element={<MainLayout />}>
-        <Route path={ROUTES.HOME} element={<HomePage />} />
-        <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
-        <Route path={ROUTES.ABOUT} element={<AboutPage />} />
-        <Route path={ROUTES.BLOGS} element={<BlogsPage />} />
-        <Route path="/blogs/:slug" element={<ArticleDetailPage />} />
-        <Route path={ROUTES.BOOKING} element={<BookingPage />} />
-        <Route path={ROUTES.CONTACT} element={<ContactPage />} />
-      </Route>
+      {/* If running inside Native Mobile App (iOS / Android), direct straight to Admin Flow */}
+      {isNativeApp ? (
+        <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD.HOME} replace />} />
+      ) : (
+        /* Public Facing Routes (Web only) */
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.SERVICES} element={<ServicesPage />} />
+          <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+          <Route path={ROUTES.BLOGS} element={<BlogsPage />} />
+          <Route path="/blogs/:slug" element={<ArticleDetailPage />} />
+          <Route path={ROUTES.BOOKING} element={<BookingPage />} />
+          <Route path={ROUTES.CONTACT} element={<ContactPage />} />
+        </Route>
+      )}
 
       {/* Public Clinical Report Cryptographic Verification & Dispatch Portal */}
       <Route path="/verify-report/:reportNumber" element={<ReportVerificationPage />} />
@@ -108,7 +117,7 @@ export const AppRoutes = () => {
 
       {/* 404 Route */}
       <Route element={<MainLayout />}>
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="*" element={isNativeApp ? <Navigate to={ROUTES.DASHBOARD.HOME} replace /> : <NotFoundPage />} />
       </Route>
     </Routes>
   );

@@ -86,7 +86,7 @@ export const DashboardLayout = () => {
   }, [navigate]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#301444] print:bg-white p-0 sm:p-3 lg:p-4 print:p-0 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
+    <div className="relative min-h-screen w-full bg-[#301444] print:bg-white p-0 pt-[max(env(safe-area-inset-top),20px)] sm:pt-3 sm:p-3 lg:p-4 print:p-0 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
       
       {/* ── MAIN INNER CARD: Exact Home Page Santo Frame with Rounded Corners on Desktop, Edge-to-Edge on Mobile ── */}
       <div className="relative w-full flex-1 bg-white rounded-none sm:rounded-tr-[28px] sm:rounded-br-[28px] sm:rounded-bl-[28px] lg:rounded-tr-[32px] lg:rounded-br-[32px] lg:rounded-bl-[32px] rounded-tl-none overflow-hidden shadow-2xl print:shadow-none print:rounded-none flex flex-col justify-between">

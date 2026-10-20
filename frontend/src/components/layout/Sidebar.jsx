@@ -18,6 +18,7 @@ import {
   Command,
   BookOpen,
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { ROUTES } from '../../constants';
 import { useAuth } from '../../context/AuthContext';
 import { useClinicSettings } from '../../context/ClinicSettingsContext';
@@ -25,6 +26,7 @@ import GlobalSearchModal from '../common/GlobalSearchModal';
 import { isKey, isAlt, isCmdOrCtrl } from '../../utils/keyboard';
 
 export const Sidebar = () => {
+  const isNativeApp = Capacitor.isNativePlatform();
   const { user, logout } = useAuth();
   const { logoUrl, clinicName } = useClinicSettings();
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
@@ -63,7 +65,7 @@ export const Sidebar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate(ROUTES.HOME);
+    navigate(isNativeApp ? ROUTES.LOGIN : ROUTES.HOME);
   };
 
   return (
@@ -139,14 +141,16 @@ export const Sidebar = () => {
             </kbd>
           </button>
 
-          {/* Public Website Button */}
-          <Link
-            to={ROUTES.HOME}
-            className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white transition-all shadow-2xs cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-purple-200" />
-            <span>Public Site</span>
-          </Link>
+          {/* Public Website Button (Hidden on Mobile App) */}
+          {!isNativeApp && (
+            <Link
+              to={ROUTES.HOME}
+              className="hidden md:inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-bold bg-[#301444] hover:bg-[#200b30] text-white transition-all shadow-2xs cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-purple-200" />
+              <span>Public Site</span>
+            </Link>
+          )}
 
           {/* Staff Profile and Logout Button */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
@@ -185,7 +189,7 @@ export const Sidebar = () => {
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-[70] lg:hidden flex flex-col bg-[#faf8fc] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
             {/* Header inside drawer */}
-            <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-purple-100 bg-[#301444] text-white shadow-sm flex-shrink-0">
+            <div className="relative z-10 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-3 border-b border-purple-100 bg-[#301444] text-white shadow-sm flex-shrink-0">
               <Link to={ROUTES.DASHBOARD.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
                 <img src={displayLogo} alt={clinicName} className="h-8 w-auto object-contain" />
               </Link>
@@ -226,14 +230,16 @@ export const Sidebar = () => {
               ))}
 
               <div className="pt-3 border-t border-slate-200 space-y-2.5">
-                <Link
-                  to={ROUTES.HOME}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl font-bold text-xs bg-purple-100 hover:bg-purple-200 active:scale-98 text-[#301444] border border-purple-200 transition-all shadow-2xs touch-manipulation cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4 text-purple-800 shrink-0" />
-                  <span>Return to Public Website</span>
-                </Link>
+                {!isNativeApp && (
+                  <Link
+                    to={ROUTES.HOME}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 h-11 rounded-xl font-bold text-xs bg-purple-100 hover:bg-purple-200 active:scale-98 text-[#301444] border border-purple-200 transition-all shadow-2xs touch-manipulation cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-purple-800 shrink-0" />
+                    <span>Return to Public Website</span>
+                  </Link>
+                )}
 
                 <button
                   onClick={handleLogout}

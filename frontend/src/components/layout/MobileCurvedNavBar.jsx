@@ -262,7 +262,7 @@ export const MobileCurvedNavBar = () => {
 
       <nav
         aria-label="Clinical Mobile Navigation"
-        className="lg:hidden fixed bottom-2 left-2 right-2 max-w-md mx-auto z-40 print:hidden pointer-events-none"
+        className="lg:hidden fixed bottom-[max(env(safe-area-inset-bottom),0.5rem)] left-2 right-2 max-w-md mx-auto z-40 print:hidden pointer-events-none"
       >
         {/* ── QUICK ACTION POPUP CARD (Rendered directly above the tapped/held tab) ── */}
         {activeQuickMenu && tabQuickActions[activeQuickMenu] && (
