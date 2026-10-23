@@ -26,7 +26,8 @@ class BaseConfig:
         if origin.strip()
     ]
     
-    DATABASE_URI = os.getenv("DATABASE_URI", "mongodb://localhost:27017/vaani_db")
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://graham:aGUi9njxs%40b6F5v@cluster0.ccjkejl.mongodb.net/ba_mc_erp?appName=Cluster0")
+    DATABASE_URI = os.getenv("MONGO_URI") or os.getenv("DATABASE_URI", "mongodb://localhost:27017/vaani_db")
     DEBUG = False
     TESTING = False
 

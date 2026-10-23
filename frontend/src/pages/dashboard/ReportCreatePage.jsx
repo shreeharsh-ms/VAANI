@@ -717,6 +717,15 @@ export const ReportCreatePage = () => {
 
       localStorage.setItem('vaani_clinical_reports_v1', JSON.stringify(updated));
 
+      // Persist to MongoDB Atlas via serverless API
+      try {
+        fetch('/api/reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newReportRecord),
+        }).catch((err) => console.warn('MongoDB report sync warning:', err));
+      } catch (e) {}
+
       // Also sync preview cache with the latest saved data
       const previewPayload = {
         reportNumber: newReportRecord.report_number,

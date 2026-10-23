@@ -15,7 +15,7 @@ export const APP_CONFIG = {
 };
 
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api/v1',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 10000,
 };
 

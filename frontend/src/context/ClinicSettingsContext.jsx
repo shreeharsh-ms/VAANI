@@ -190,13 +190,13 @@ export function saveClinicSettings(newSettings) {
     localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent(CLINIC_SETTINGS_EVENT, { detail: merged }));
 
-    // Sync with backend database in the background
-    fetch('/api/v1/settings', {
+    // Sync with MongoDB Atlas via serverless API in background
+    fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(merged),
     }).catch((err) => {
-      console.warn('Backend database sync deferred:', err?.message);
+      console.warn('MongoDB database sync deferred:', err?.message);
     });
 
     return merged;
@@ -275,10 +275,10 @@ export const ClinicSettingsProvider = ({ children }) => {
     setSettings(getClinicSettings());
   }, []);
 
-  // Fetch verified settings from SQLite database on mount
+  // Fetch verified settings from MongoDB Atlas on mount
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/v1/settings')
+    fetch('/api/settings')
       .then((res) => (res.ok ? res.json() : null))
       .then((res) => {
         if (isMounted && res?.data) {
