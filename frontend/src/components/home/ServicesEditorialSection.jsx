@@ -55,14 +55,24 @@ const servicesData = [
     category: 'Clinical Rehabilitation',
   },
   {
-    id: 'cochlear-implant',
+    id: 'articulation',
     number: '06',
-    title: 'Cochlear Implant Habilitation',
-    subTags: ['Post-Surgical Mapping', 'Auditory-Verbal Therapy', 'Neural Speech Decoding'],
+    title: 'Articulation Therapy',
+    subTags: ['Phonological Clarity', 'Motor Speech Precision', 'Sound Production'],
     description:
-      'Structured auditory-verbal habilitation empowering pediatric and adult implant recipients to decode acoustic signals into fluent, spontaneous speech.',
-    image: '/services/cochlear-implant.jpg',
-    category: 'Neuro-Audiology',
+      'Targeted motor speech intervention correcting sound substitutions, omissions, and lisping for clear, confident articulation across all age groups.',
+    image: '/pediatric-therapy-session.jpg',
+    category: 'Speech Pathology',
+  },
+  {
+    id: 'neuro-rehab',
+    number: '07',
+    title: 'Neuro Rehabilitation',
+    subTags: ['Post-Stroke Aphasia', 'Cognitive Communication', 'Neurological Recovery'],
+    description:
+      'Comprehensive neuro-rehabilitative therapy restoring speech fluency, cognitive-linguistic processing, and communicative autonomy following neurological injury.',
+    image: '/clinical-care.jpg',
+    category: 'Neurological Care',
   },
 ];
 

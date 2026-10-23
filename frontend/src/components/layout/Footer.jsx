@@ -27,9 +27,10 @@ export const Footer = () => {
     workingHours,
     sundayHours,
     social,
+    primaryPhone,
   } = useClinicSettings();
   const clinicAddress = formatClinicAddress(settings) || 'Sadashiv Peth, Near Powai Naka, Satara, Maharashtra 415002';
-  const clinicPhone = settings?.contact?.primaryPhone || '+91 98220 12345';
+  const clinicPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
   const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
   const displayLogo = logoUrl || '/vaani-logo.png';
   const [flowerHovered, setFlowerHovered] = useState(false);
@@ -259,6 +260,22 @@ export const Footer = () => {
                     className="hover:text-[#9333ea] transition-colors inline-flex items-center gap-1 group"
                   >
                     <span className="group-hover:translate-x-1 transition-transform">Fluency, Voice & Stuttering</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/services#articulation"
+                    className="hover:text-[#9333ea] transition-colors inline-flex items-center gap-1 group"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform">Articulation Therapy</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/services#neuro"
+                    className="hover:text-[#9333ea] transition-colors inline-flex items-center gap-1 group"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform">Neuro Rehabilitation</span>
                   </Link>
                 </li>
               </ul>

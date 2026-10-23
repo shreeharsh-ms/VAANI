@@ -24,7 +24,8 @@ const GoogleMapsIcon = ({ className = "w-4.5 h-4.5" }) => (
 );
 
 export const Navbar = () => {
-  const { logoUrl, clinicName } = useClinicSettings();
+  const { logoUrl, clinicName, primaryPhone, settings } = useClinicSettings();
+  const contactPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
   const displayWhiteLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const displayDarkLogo = isCustomLogo ? logoUrl : '/vaani-logo.png';
@@ -409,10 +410,10 @@ export const Navbar = () => {
                   <span>Sadashiv Peth, Satara • Mon-Sat 9:30 AM – 6:30 PM</span>
                 </div>
                 <a
-                  href="tel:+919822012345"
+                  href={`tel:${contactPhone.replace(/\s+/g, '')}`}
                   className="flex items-center gap-2 font-bold text-[#301444] hover:text-purple-700 transition-colors"
                 >
-                  <span>📞 Direct Consultation: +91 98220 12345</span>
+                  <span>📞 Direct Consultation: {contactPhone}</span>
                 </a>
               </div>
             </div>

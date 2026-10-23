@@ -43,7 +43,7 @@ const MARQUEE_ITEMS = [
   { text: 'CERTIFIED SPEECH & LANGUAGE THERAPY', highlight: false },
   { text: 'FREE DIGITAL HEARING AID TRIAL & FITTING', highlight: true },
   { text: 'NEWBORN BERA & OAE SCREENING IN SATARA', highlight: false },
-  { text: 'CHILD SPEECH DELAY & STAMMERING CLINIC', highlight: true },
+  { text: 'CHILD SPEECH DELAY & STUTTERING CLINIC', highlight: true },
   { text: 'SOUNDPROOF PURE TONE AUDIOMETRY (PTA)', highlight: false },
   { text: 'RCI REGISTERED AUDIOLOGY SPECIALISTS', highlight: true },
   { text: 'BOOK CONSULTATION IN SATARA: +91 98220 12345', highlight: false },
@@ -100,7 +100,18 @@ const CuteChatbotIcon = ({ className = "w-7 h-7 sm:w-8 sm:h-8" }) => (
 );
 
 export const HeroSantoStyle = () => {
-  const { logoUrl, clinicName } = useClinicSettings();
+  const { logoUrl, clinicName, primaryPhone, settings } = useClinicSettings();
+  const contactPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
+  const marqueeItems = [
+    { text: 'GET DIAGNOSTIC HEARING TEST IN SATARA', highlight: true },
+    { text: 'CERTIFIED SPEECH & LANGUAGE THERAPY', highlight: false },
+    { text: 'FREE DIGITAL HEARING AID TRIAL & FITTING', highlight: true },
+    { text: 'NEWBORN BERA & OAE SCREENING IN SATARA', highlight: false },
+    { text: 'CHILD SPEECH DELAY & STUTTERING CLINIC', highlight: true },
+    { text: 'SOUNDPROOF PURE TONE AUDIOMETRY (PTA)', highlight: false },
+    { text: 'RCI REGISTERED AUDIOLOGY SPECIALISTS', highlight: true },
+    { text: `BOOK CONSULTATION IN SATARA: ${contactPhone}`, highlight: false },
+  ];
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
   const displayWhiteLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const [lang, setLang] = useState('KZ');
@@ -141,7 +152,7 @@ export const HeroSantoStyle = () => {
     if (query.includes('Hearing Test')) {
       response = 'We conduct comprehensive Pure Tone Audiometry (PTA) in a soundproof acoustic chamber, plus Tympanometry, BERA, and OAE testing at our Satara center.';
     } else if (query.includes('Speech Delay')) {
-      response = 'Our RCI-certified speech therapists specialize in childhood speech delay, stammering/stuttering therapy, articulation disorders, and autism communication.';
+      response = 'Our RCI-certified speech therapists specialize in childhood speech delay, stuttering therapy, articulation disorders, and autism communication.';
     } else if (query.includes('Hearing Aid')) {
       response = 'We offer live free digital hearing aid trials with top global brands (Signia, Phonak, Widex) with computerized fitting and lifetime aftercare in Satara.';
     } else {
@@ -338,10 +349,10 @@ export const HeroSantoStyle = () => {
                     <span>Sadashiv Peth, Satara • Mon-Sat 9:30 AM – 6:30 PM</span>
                   </div>
                   <a
-                    href="tel:+919822012345"
+                    href={`tel:${contactPhone.replace(/\s+/g, '')}`}
                     className="flex items-center gap-2 font-bold text-[#301444] hover:text-purple-700 transition-colors"
                   >
-                    <span>📞 Direct Consultation: +91 98220 12345</span>
+                    <span>📞 Direct Consultation: {contactPhone}</span>
                   </a>
                 </div>
               </div>
@@ -492,7 +503,7 @@ export const HeroSantoStyle = () => {
                   </div>
                 </div>
                 <p className="text-xs font-medium text-[#4a2864] leading-relaxed">
-                  Pediatric speech delay, stammering &amp; stuttering therapy.<br />
+                  Pediatric speech delay &amp; stuttering therapy.<br />
                   Articulation, voice rehabilitation &amp; communication training.
                 </p>
               </Link>
@@ -578,7 +589,7 @@ export const HeroSantoStyle = () => {
               <Link to={ROUTES.BOOKING} className="animate-marquee-ltr flex items-center whitespace-nowrap">
                 {/* Half 1 */}
                 <div className="flex items-center gap-7 sm:gap-9 shrink-0 pr-7 sm:pr-9">
-                  {MARQUEE_ITEMS.map((item, idx) => (
+                  {marqueeItems.map((item, idx) => (
                     <div key={`m1-${idx}`} className="flex items-center gap-2.5 text-xs sm:text-[13.5px] font-medium text-[#301444]">
                       {item.highlight ? (
                         <span className="bg-[#301444] text-white font-bold px-3 py-1 rounded-full text-[11px] sm:text-xs tracking-wide shadow-xs flex items-center gap-1.5">
@@ -597,7 +608,7 @@ export const HeroSantoStyle = () => {
 
                 {/* Half 2 (Exact duplicate for 100% seamless infinite loop) */}
                 <div className="flex items-center gap-7 sm:gap-9 shrink-0 pr-7 sm:pr-9" aria-hidden="true">
-                  {MARQUEE_ITEMS.map((item, idx) => (
+                  {marqueeItems.map((item, idx) => (
                     <div key={`m2-${idx}`} className="flex items-center gap-2.5 text-xs sm:text-[13.5px] font-medium text-[#301444]">
                       {item.highlight ? (
                         <span className="bg-[#301444] text-white font-bold px-3 py-1 rounded-full text-[11px] sm:text-xs tracking-wide shadow-xs flex items-center gap-1.5">

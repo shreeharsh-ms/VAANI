@@ -41,9 +41,12 @@ export const ClinicalPreventionSection = () => {
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {[
                 'Pure Tone Audiometry (PTA)',
-                'Otoacoustic Emissions (OAE)',
-                'Speech-Language Pathology',
-                'Auditory Brainstem Response',
+                'Newborn OAE & BERA Screening',
+                'Speech-Language Therapy',
+                'Digital Hearing Aid Trial & Fitting',
+                'Voice & Fluency Therapy',
+                'Articulation Therapy',
+                'Neuro Rehabilitation',
               ].map((tag) => (
                 <span
                   key={tag}

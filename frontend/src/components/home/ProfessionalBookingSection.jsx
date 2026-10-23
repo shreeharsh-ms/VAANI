@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
+import { useClinicSettings } from '../../context/ClinicSettingsContext';
 import { normalizeSlotTime, normalizeDate, CLINICAL_TIME_SLOTS } from '../../utils/formatters';
 
 const serviceOptions = [
@@ -37,7 +38,7 @@ const serviceOptions = [
   {
     id: 'speech',
     name: 'Speech & Language Therapy Session',
-    desc: 'Individualized therapy for speech delay, stammering, or articulation',
+    desc: 'Individualized therapy for speech delay, stuttering, or articulation',
     icon: MessageSquare,
   },
   {
@@ -85,6 +86,8 @@ const testimonials = [
 
 export const ProfessionalBookingSection = () => {
   const { notify } = useNotification();
+  const { primaryPhone, settings } = useClinicSettings();
+  const contactPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
   const [currentStep, setCurrentStep] = useState(1);
   const [activeSlide, setActiveSlide] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -684,7 +687,9 @@ export const ProfessionalBookingSection = () => {
                 <ShieldCheck className="w-4 h-4 text-purple-600" />
                 <span>RCI Certified Clinical Protocol</span>
               </span>
-              <span>Need help? +91 98220 12345</span>
+              <a href={`tel:${contactPhone.replace(/\s+/g, '')}`} className="hover:text-purple-700 transition-colors">
+                Need help? {contactPhone}
+              </a>
             </div>
 
           </div>

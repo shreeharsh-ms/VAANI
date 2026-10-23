@@ -61,7 +61,9 @@ const CuteChatbotIcon = ({ className = "w-6 h-6 sm:w-7 sm:h-7" }) => (
 );
 
 export const ServicesPage = () => {
-  const { logoUrl, clinicName, settings } = useClinicSettings();
+  const { logoUrl, clinicName, settings, primaryPhone, social } = useClinicSettings();
+  const contactPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
+  const whatsappNumber = (social?.whatsappPhone || primaryPhone || '8857830151').replace(/\D/g, '');
   const leadPractitioner = settings?.credentials?.leadPractitioner || 'Palak Gandhi';
   const leadDegree = settings?.credentials?.leadDegree || 'MASLP';
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
@@ -76,7 +78,7 @@ export const ServicesPage = () => {
     if (query.includes('Hearing Test')) {
       response = 'We conduct comprehensive Pure Tone Audiometry (PTA) in a soundproof acoustic chamber, plus Tympanometry, BERA, and OAE testing at our Satara center.';
     } else if (query.includes('Speech Delay')) {
-      response = 'Our RCI-certified speech therapists specialize in childhood speech delay, stammering/stuttering therapy, articulation disorders, and autism communication.';
+      response = 'Our RCI-certified speech therapists specialize in childhood speech delay, stuttering therapy, articulation disorders, and autism communication.';
     } else if (query.includes('Hearing Aid')) {
       response = 'We offer live free digital hearing aid trials with top global brands (Signia, Phonak, Widex) with computerized fitting and lifetime aftercare in Satara.';
     } else {
@@ -286,10 +288,10 @@ export const ServicesPage = () => {
                     <span>Sadashiv Peth, Satara • Mon-Sat 9:30 AM – 6:30 PM</span>
                   </div>
                   <a
-                    href="tel:+919822012345"
+                    href={`tel:${contactPhone.replace(/\s+/g, '')}`}
                     className="flex items-center gap-2 font-bold text-[#301444] hover:text-purple-700 transition-colors"
                   >
-                    <span>📞 Direct Consultation: +91 98220 12345</span>
+                    <span>📞 Direct Consultation: {contactPhone}</span>
                   </a>
                 </div>
               </div>
@@ -299,7 +301,7 @@ export const ServicesPage = () => {
             <div className="relative z-10 px-5 pt-3 pb-6 sm:pb-8 border-t border-purple-100/90 bg-white/92 backdrop-blur-md flex flex-col gap-2.5 shadow-[0_-8px_30px_rgba(48,20,68,0.08)] flex-shrink-0">
               <div className="grid grid-cols-2 gap-2.5">
                 <a
-                  href="https://wa.me/919876543210?text=Hello%20Vaani%20Clinic%20Satara%2C%20I%20would%20like%20to%20enquire%20about%20hearing%20and%20speech%20services."
+                  href={`https://wa.me/${whatsappNumber.startsWith('91') ? whatsappNumber : '91' + whatsappNumber}?text=Hello%20Vaani%20Clinic%20Satara%2C%20I%20would%20like%20to%20enquire%20about%20hearing%20and%20speech%20services.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/90 font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
