@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ROUTES, APP_CONFIG } from '../../constants';
 import { useClinicSettings } from '../../context/ClinicSettingsContext';
+import { handleNavbarNavigation } from '../../utils/scrollUtils';
 import WatchLearnGrowSection from '../../components/home/WatchLearnGrowSection';
 import ScrollRevealCaseStudy from '../../components/home/ScrollRevealCaseStudy';
 
@@ -130,7 +131,12 @@ export const ServicesPage = () => {
           
           {/* Top-Left: Logo inside Dark Tab with Fillets */}
           <div className="relative bg-[#301444] text-white px-4 sm:px-8 lg:px-10 py-2.5 sm:py-4 lg:py-4.5 rounded-br-[22px] sm:rounded-br-[38px] flex items-center self-start flex-shrink-0">
-            <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
+            <Link
+              to={ROUTES.HOME}
+              onClick={(e) => handleNavbarNavigation(e, ROUTES.HOME, window.location.pathname)}
+              className="flex items-center group py-0.5"
+              title={clinicName}
+            >
               <img
                 src={displayWhiteLogo}
                 alt={clinicName}
@@ -172,6 +178,7 @@ export const ServicesPage = () => {
                 <Link
                   key={item.label}
                   to={item.path}
+                  onClick={(e) => handleNavbarNavigation(e, item.path, window.location.pathname)}
                   className={`px-4.5 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm md:text-[14.5px] font-bold transition-all duration-150 hover:scale-105 active:scale-95 ${
                     isCurrent
                       ? 'bg-[#301444] text-white shadow-md'
@@ -249,7 +256,10 @@ export const ServicesPage = () => {
                   <Link
                     key={item.label}
                     to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false);
+                      handleNavbarNavigation(e, item.path, window.location.pathname);
+                    }}
                     className={`flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all group backdrop-blur-xs ${
                       isCurrent
                         ? 'bg-purple-100/90 border-purple-300 shadow-sm'

@@ -26,41 +26,31 @@ const serviceOptions = [
     id: 'pta',
     name: 'Pure Tone Audiometry (PTA)',
     desc: 'Comprehensive diagnostic hearing threshold evaluation in acoustic chamber',
-    duration: '45 mins',
     icon: Headphones,
-    fee: '₹800',
   },
   {
     id: 'pediatric',
     name: 'Newborn OAE & BERA Screening',
     desc: 'Automated electrophysiological hearing screening for infants and toddlers',
-    duration: '60 mins',
     icon: Activity,
-    fee: '₹1,500',
   },
   {
     id: 'speech',
     name: 'Speech & Language Therapy Session',
     desc: 'Individualized therapy for speech delay, stammering, or articulation',
-    duration: '45 mins',
     icon: MessageSquare,
-    fee: '₹900',
   },
   {
     id: 'hearing-aid',
     name: 'Hearing Aid Trial & Real-Ear Fitting',
     desc: 'Computerized multi-channel digital trial with acoustic verification',
-    duration: '60 mins',
     icon: ShieldCheck,
-    fee: '₹1,200',
   },
   {
     id: 'voice',
     name: 'Voice & Fluency Therapy',
     desc: 'Clinical acoustic assessment and vocal hygiene rehabilitation',
-    duration: '45 mins',
     icon: Heart,
-    fee: '₹900',
   },
 ];
 
@@ -472,11 +462,14 @@ export const ProfessionalBookingSection = () => {
                                 </div>
                               </div>
 
-                              <div className="text-right flex-shrink-0">
-                                <span className="text-xs font-bold text-[#8b2fc9]">
-                                  {srv.fee}
-                                </span>
-                                <div className="text-[10px] text-gray-400">{srv.duration}</div>
+                              <div className="flex-shrink-0">
+                                {isSelected ? (
+                                  <div className="w-6 h-6 rounded-full bg-[#8b2fc9] text-white flex items-center justify-center shadow-xs">
+                                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                  </div>
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                                )}
                               </div>
                             </div>
                           );

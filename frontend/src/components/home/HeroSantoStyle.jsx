@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '../../constants';
 import { useClinicSettings } from '../../context/ClinicSettingsContext';
+import { handleNavbarNavigation } from '../../utils/scrollUtils';
 
 const HERO_SLIDES = [
   {
@@ -189,7 +190,12 @@ export const HeroSantoStyle = () => {
           
           {/* Top-Left: Big Logo inside the Dark Lavender/Purple Tab connected to the top-left with smooth curved fillets */}
           <div className="relative bg-[#301444] text-white px-4 sm:px-8 lg:px-10 py-2.5 sm:py-4 lg:py-4.5 rounded-br-[22px] sm:rounded-br-[38px] flex items-center self-start flex-shrink-0">
-            <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
+            <Link
+              to={ROUTES.HOME}
+              onClick={(e) => handleNavbarNavigation(e, ROUTES.HOME, window.location.pathname)}
+              className="flex items-center group py-0.5"
+              title={clinicName}
+            >
               <img
                 src={displayWhiteLogo}
                 alt={clinicName}
@@ -229,6 +235,7 @@ export const HeroSantoStyle = () => {
               <Link
                 key={item.label}
                 to={item.path}
+                onClick={(e) => handleNavbarNavigation(e, item.path, window.location.pathname)}
                 className="px-4.5 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm md:text-[14.5px] font-bold bg-white hover:bg-purple-50 text-[#301444] border border-gray-200/90 shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
               >
                 {item.label}
@@ -279,7 +286,14 @@ export const HeroSantoStyle = () => {
 
             {/* Header inside drawer */}
             <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-purple-100/80 bg-[#301444] text-white shadow-sm flex-shrink-0">
-              <Link to={ROUTES.HOME} onClick={() => setMobileMenuOpen(false)} className="flex items-center">
+              <Link
+                to={ROUTES.HOME}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavbarNavigation(e, ROUTES.HOME, window.location.pathname);
+                }}
+                className="flex items-center"
+              >
                 <img src={displayWhiteLogo} alt={clinicName} className="h-9 w-auto object-contain" />
               </Link>
               <button
@@ -302,7 +316,10 @@ export const HeroSantoStyle = () => {
                 <Link
                   key={item.label}
                   to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    handleNavbarNavigation(e, item.path, window.location.pathname);
+                  }}
                   className="flex items-center justify-between p-3.5 rounded-2xl bg-white/85 hover:bg-white/95 border border-purple-100/90 shadow-xs hover:shadow-md transition-all group backdrop-blur-xs"
                 >
                   <div>

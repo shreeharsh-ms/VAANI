@@ -19,8 +19,8 @@ const SERVICES_DATA = [
     titleLine1: 'Pure Tone',
     titleLine2: 'Audiometry',
     headline: 'Pure Tone Audiometry.',
-    badgeNumber: '45',
-    badgeLabel: 'MINS',
+    badgeNumber: 'PTA',
+    badgeLabel: 'CLINICAL',
     image: '/services/service-audiology-pta.jpg',
     duration: '45 mins session',
     protocol: 'ISO / RCI Standards',
@@ -441,10 +441,6 @@ export const WatchLearnGrowSection = () => {
 
                 {/* Metadata Badges (Fluid scaling) */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-[clamp(10px,1.8vh,22px)]">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-[clamp(11px,1.3vw,13px)] font-bold shadow-xs">
-                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-700" />
-                    {activeService.duration}
-                  </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-gray-50 border border-gray-200 text-gray-800 text-[clamp(11px,1.3vw,13px)] font-bold shadow-xs">
                     <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
                     {activeService.protocol}

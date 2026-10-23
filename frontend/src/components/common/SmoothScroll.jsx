@@ -64,29 +64,47 @@ export const SmoothScroll = ({ children }) => {
     };
   }, [location.pathname, isDashboardOrAdmin]);
 
-  // When route changes, reset scroll smoothly to top or jump to hash
+  // When route changes, guarantee scroll resets to the hero section (top) or jumps to hash
   useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     if (isDashboardOrAdmin) {
       window.scrollTo(0, 0);
       return;
     }
 
+    if (location.hash) {
+      const id = location.hash.slice(1);
+      const element = document.getElementById(id);
+      if (element) {
+        const timer = setTimeout(() => {
+          if (window.lenis) {
+            window.lenis.scrollTo(element, { offset: -20, duration: 1.2 });
+          } else {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 120);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    // Always reset to top (hero section) on route transition
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (window.lenis) {
-      if (location.hash) {
-        const id = location.hash.slice(1);
-        const element = document.getElementById(id);
-        if (element) {
-          const timer = setTimeout(() => {
-            window.lenis?.scrollTo(element, { offset: -20, duration: 1.3 });
-          }, 100);
-          return () => clearTimeout(timer);
-        }
-      } else {
+      window.lenis.scrollTo(0, { immediate: true });
+    }
+
+    // Secondary tick to ensure dynamic layout/fonts don't shift scroll
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (window.lenis) {
         window.lenis.scrollTo(0, { immediate: true });
       }
-    } else {
-      window.scrollTo(0, 0);
-    }
+    }, 60);
+
+    return () => clearTimeout(timer);
   }, [location.pathname, location.hash, isDashboardOrAdmin]);
 
   return <>{children}</>;

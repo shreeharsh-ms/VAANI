@@ -5,6 +5,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useClinicSettings } from '../../context/ClinicSettingsContext';
 import { ROUTES } from '../../constants';
+import { handleNavbarNavigation } from '../../utils/scrollUtils';
 
 const WhatsAppIcon = ({ className = "w-4.5 h-4.5" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="#25D366">
@@ -76,7 +77,12 @@ export const Navbar = () => {
           <div className="w-full flex items-center justify-between">
             {/* Top-Left: Logo inside Dark Tab with Fillets */}
             <div className="relative bg-[#301444] text-white px-4 sm:px-8 lg:px-10 py-2.5 sm:py-4 lg:py-4.5 rounded-br-[24px] sm:rounded-br-[38px] flex items-center self-start shrink-0">
-              <Link to={ROUTES.HOME} className="flex items-center group py-0.5" title={clinicName}>
+              <Link
+                to={ROUTES.HOME}
+                onClick={(e) => handleNavbarNavigation(e, ROUTES.HOME, location.pathname)}
+                className="flex items-center group py-0.5"
+                title={clinicName}
+              >
                 <img
                   src={displayWhiteLogo}
                   alt={clinicName}
@@ -118,6 +124,7 @@ export const Navbar = () => {
                   <Link
                     key={item.label}
                     to={item.path}
+                    onClick={(e) => handleNavbarNavigation(e, item.path, location.pathname)}
                     className={`px-4.5 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-[13px] xl:text-[14px] font-bold whitespace-nowrap transition-all duration-150 hover:scale-105 active:scale-95 ${
                       isCurrent
                         ? 'bg-[#301444] text-white shadow-md'
@@ -180,7 +187,12 @@ export const Navbar = () => {
           <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
             <div className="flex items-center justify-between h-[76px] sm:h-[88px] lg:h-[96px] xl:h-[104px]">
           {/* Brand Logo (Matching Home Page Scale) */}
-          <Link to={ROUTES.HOME} className="flex items-center group py-1 flex-shrink-0" title={clinicName}>
+          <Link
+            to={ROUTES.HOME}
+            onClick={(e) => handleNavbarNavigation(e, ROUTES.HOME, location.pathname)}
+            className="flex items-center group py-1 flex-shrink-0"
+            title={clinicName}
+          >
             <img
               src={displayDarkLogo}
               alt={clinicName}
@@ -205,6 +217,7 @@ export const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={(e) => handleNavbarNavigation(e, link.path, location.pathname)}
                   className={`transition-all duration-200 ${
                     isAbout
                       ? active
@@ -366,7 +379,10 @@ export const Navbar = () => {
                 <Link
                   key={item.label}
                   to={item.path}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    handleNavbarNavigation(e, item.path, location.pathname);
+                  }}
                   className={`flex items-center justify-between p-3.5 rounded-2xl border shadow-xs transition-all group backdrop-blur-xs ${
                     active
                       ? 'bg-purple-100/90 border-purple-300 shadow-sm'
