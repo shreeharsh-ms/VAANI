@@ -26,9 +26,12 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const existing = await collection.findOne({ key: 'clinic_profile' });
+      const mergedValue = existing?.value ? { ...existing.value, ...body } : body;
+
       const settingsPayload = {
         key: 'clinic_profile',
-        value: body,
+        value: mergedValue,
         updated_at: new Date().toISOString(),
       };
 
@@ -41,7 +44,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: 'Clinic settings updated in MongoDB',
-        data: body,
+        data: mergedValue,
       });
     }
 

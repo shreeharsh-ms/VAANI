@@ -195,8 +195,14 @@ export function saveClinicSettings(newSettings) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(merged),
-    }).catch((err) => {
-      console.warn('MongoDB database sync deferred:', err?.message);
+    }).catch(() => {
+      fetch('/api/v1/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(merged),
+      }).catch((err) => {
+        console.warn('MongoDB database sync deferred:', err?.message);
+      });
     });
 
     return merged;
@@ -282,9 +288,29 @@ export const ClinicSettingsProvider = ({ children }) => {
       .then((res) => (res.ok ? res.json() : null))
       .then((res) => {
         if (isMounted && res?.data) {
-          const merged = deepMerge(DEFAULT_CLINIC_SETTINGS, res.data);
-          setSettings(merged);
-          localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          if (res.data.identity || res.data.contact) {
+            const merged = deepMerge(DEFAULT_CLINIC_SETTINGS, res.data);
+            setSettings(merged);
+            localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          } else {
+            const local = getClinicSettings();
+            const adapted = {
+              ...local,
+              identity: {
+                ...local.identity,
+                legalName: res.data.clinicName || local.identity?.legalName,
+                taglineEn: res.data.tagline || local.identity?.taglineEn,
+              },
+              contact: {
+                ...local.contact,
+                primaryPhone: res.data.phone || local.contact?.primaryPhone,
+                officialEmail: res.data.email || local.contact?.officialEmail,
+              },
+            };
+            const merged = deepMerge(DEFAULT_CLINIC_SETTINGS, adapted);
+            setSettings(merged);
+            localStorage.setItem(CLINIC_SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          }
         }
       })
       .catch((err) => {

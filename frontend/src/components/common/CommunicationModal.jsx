@@ -462,11 +462,17 @@ export const EmailDispatchModal = ({
           };
           localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(parsed));
           window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: parsed }));
-          fetch('/api/v1/settings', {
+          fetch('/api/settings', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(parsed),
-          }).catch(() => {});
+          }).catch(() => {
+            fetch('/api/v1/settings', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(parsed),
+            }).catch(() => {});
+          });
         }
       } catch {}
     }

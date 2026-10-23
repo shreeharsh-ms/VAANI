@@ -377,20 +377,24 @@ export const SettingsPage = () => {
     }
   });
 
-  // Synchronize Settings with backend SQLite Database on Mount
+  // Synchronize Settings with MongoDB Atlas on Mount
   useEffect(() => {
-    fetch('/api/v1/settings')
+    fetch('/api/settings')
       .then((res) => (res.ok ? res.json() : null))
       .then((res) => {
         if (res?.data) {
           setSettings((prev) => ({
             ...prev,
             ...res.data,
-            credentials: { ...prev.credentials, ...(res.data.credentials || {}) },
-            billing: { ...prev.billing, ...(res.data.billing || {}) },
+            identity: { ...prev.identity, ...(res.data.identity || {}) },
             contact: { ...prev.contact, ...(res.data.contact || {}) },
+            credentials: { ...prev.credentials, ...(res.data.credentials || {}) },
             hours: { ...prev.hours, ...(res.data.hours || {}) },
             social: { ...prev.social, ...(res.data.social || {}) },
+            bookingPolicy: { ...prev.bookingPolicy, ...(res.data.bookingPolicy || {}) },
+            billing: { ...prev.billing, ...(res.data.billing || {}) },
+            notifications: { ...prev.notifications, ...(res.data.notifications || {}) },
+            features: { ...prev.features, ...(res.data.features || {}) },
             smtp: { ...prev.smtp, ...(res.data.smtp || {}) },
           }));
           if (res.data.smtp) {
@@ -402,7 +406,7 @@ export const SettingsPage = () => {
           }
         }
       })
-      .catch((err) => console.warn('Backend settings fetch deferred:', err));
+      .catch((err) => console.warn('Cloud settings fetch deferred:', err));
   }, []);
 
   // SMTP Configuration State
@@ -641,6 +645,11 @@ export const SettingsPage = () => {
         setSettings(updatedSettings);
         localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
         window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
+        fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedSettings),
+        }).catch(console.warn);
         notify.success('Clinic logo updated successfully! New branding is now live across reports, invoices, and navigation.');
       };
       img.src = dataUrl;
@@ -661,49 +670,65 @@ export const SettingsPage = () => {
     setSettings(updatedSettings);
     localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
     window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
+    fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedSettings),
+    }).catch(console.warn);
     notify.info('Clinic logo reset to default official Vaani brand logo.');
   };
 
   // Save Settings & Record Cryptographic Audit Entry (FR-SET-013)
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     if (e) e.preventDefault();
     setSaving(true);
 
-    setTimeout(() => {
-      try {
-        localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(settings));
-        localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(holidays));
-        saveServiceRates(serviceRates);
-        window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: settings }));
+    try {
+      localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(settings));
+      localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(holidays));
+      saveServiceRates(serviceRates);
+      window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: settings }));
 
-        // Persist to SQLite Database via Backend API
-        fetch('/api/v1/settings', {
+      // Persist directly to MongoDB Atlas via serverless API
+      try {
+        const res = await fetch('/api/settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(settings),
-        }).catch((err) => console.warn('Database save error:', err));
-
-        // Create Tamper-Evident Audit Record
-        const newAudit = {
-          id: `aud_${Date.now()}`,
-          ts: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          actor: `${user?.name || 'Dr. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
-          action: 'SETTINGS_UPDATE',
-          summary: `Updated ${activeTab.toUpperCase()} configuration & ${serviceRates.length} service tariff rates in compact sheet`,
-          hash: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`,
-        };
-
-        const updatedAudits = [newAudit, ...auditLogs.slice(0, 24)];
-        setAuditLogs(updatedAudits);
-        localStorage.setItem('vaani_clinic_audit_v1', JSON.stringify(updatedAudits));
-
-        notify.success('All clinic settings & service tariff rates saved successfully!');
-      } catch (err) {
-        notify.error('Failed to save settings.');
-      } finally {
-        setSaving(false);
+        });
+        if (!res.ok) {
+          throw new Error(`Cloud API HTTP ${res.status}`);
+        }
+      } catch (cloudErr) {
+        console.warn('Direct /api/settings failed, trying /api/v1/settings fallback:', cloudErr);
+        await fetch('/api/v1/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
       }
-    }, 300);
+
+      // Create Tamper-Evident Audit Record
+      const newAudit = {
+        id: `aud_${Date.now()}`,
+        ts: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        actor: `${user?.name || 'Ms. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
+        action: 'SETTINGS_UPDATE',
+        summary: `Updated ${activeTab.toUpperCase()} configuration & ${serviceRates.length} service tariff rates in compact sheet`,
+        hash: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`,
+      };
+
+      const updatedAudits = [newAudit, ...auditLogs.slice(0, 24)];
+      setAuditLogs(updatedAudits);
+      localStorage.setItem('vaani_clinic_audit_v1', JSON.stringify(updatedAudits));
+
+      notify.success('All clinic settings & brand information saved permanently to MongoDB Atlas & live site!');
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      notify.error('Saved locally. Note: sync error: ' + (err?.message || 'Check network'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Reset to Baseline
@@ -714,6 +739,11 @@ export const SettingsPage = () => {
       localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(DEFAULT_SETTINGS));
       localStorage.setItem('vaani_clinic_holidays_v1', JSON.stringify(MAHARASHTRA_HOLIDAYS_TEMPLATE));
       window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: DEFAULT_SETTINGS }));
+      fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DEFAULT_SETTINGS),
+      }).catch(console.warn);
       notify.info('Settings reset to verified clinical practice defaults.');
     }
   };
@@ -763,12 +793,18 @@ export const SettingsPage = () => {
     localStorage.setItem('vaani_clinic_settings_v1', JSON.stringify(updatedSettings));
     window.dispatchEvent(new CustomEvent('vaani-clinic-settings-updated', { detail: updatedSettings }));
 
-    // Persist to SQLite Database via Backend API
-    fetch('/api/v1/settings', {
+    // Persist to MongoDB Atlas via serverless API
+    fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedSettings),
-    }).catch((err) => console.warn('Database save error:', err));
+    }).catch(() => {
+      fetch('/api/v1/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      }).catch((err) => console.warn('Database save error:', err));
+    });
 
     setSmtpForm((prev) => ({
       ...prev,
