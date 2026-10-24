@@ -69,7 +69,7 @@ export const whatsappService = {
   /**
    * Send Meta-approved WhatsApp template (appointment confirmation / reminder).
    */
-  async sendTemplate({ to, templateName, parameters, headerMediaUrl, buttonParams }) {
+  async sendTemplate({ to, templateName, parameters, headerMediaUrl, buttonParams, language }) {
     try {
       const res = await fetch(`${BASE_URL}/send-template`, {
         method: 'POST',
@@ -80,6 +80,7 @@ export const whatsappService = {
           parameters,
           headerMediaUrl,
           buttonParams,
+          language,
         }),
       });
       if (res.ok) {

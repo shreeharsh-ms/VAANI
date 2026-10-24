@@ -497,7 +497,7 @@ export const SettingsPage = () => {
     }
   };
 
-  const [waSelectedTemplate, setWaSelectedTemplate] = useState('vaani_appointment_confirmation');
+  const [waSelectedTemplate, setWaSelectedTemplate] = useState('hello_world');
   const [waSaving, setWaSaving] = useState(false);
 
   const handleSaveWaConfig = async () => {
@@ -520,7 +520,11 @@ export const SettingsPage = () => {
     setWaSendingTestMsg(true);
     try {
       let params = ['Test Patient', 'Today at 10:30 AM', 'Ms. Palak Paresh Gandhi', 'Sadashiv Peth, Satara'];
-      if (waSelectedTemplate === 'vaani_previsit_reminder') {
+      let language = 'en';
+      if (waSelectedTemplate === 'hello_world') {
+        params = [];
+        language = 'en_US';
+      } else if (waSelectedTemplate === 'vaani_previsit_reminder') {
         params = ['Test Patient', 'Tomorrow at 10:00 AM', 'Pure Tone Audiometry (PTA)', 'Sadashiv Peth, Satara'];
       } else if (waSelectedTemplate === 'vaani_diagnostic_report_v1') {
         params = ['Test Patient', 'Pure Tone Audiometry (PTA)', 'Ms. Palak Paresh Gandhi'];
@@ -529,11 +533,16 @@ export const SettingsPage = () => {
         to: waTestPhone,
         templateName: waSelectedTemplate,
         parameters: params,
+        language,
       });
-      notify.success(`Template ${waSelectedTemplate} dispatched! Message ID: ${res.data?.messageId || 'wamid.mock_sent'}`);
+      if (res.success) {
+        notify.success(`Template ${waSelectedTemplate} dispatched! Message ID: ${res.data?.messageId || 'wamid.sent'}`);
+      } else {
+        notify.error(res.message || 'Template dispatch failed');
+      }
       whatsappService.getLogs(30).then((l) => setWaLogs(l));
-    } catch {
-      notify.error('Failed to dispatch test message');
+    } catch (err) {
+      notify.error(err.message || 'Failed to dispatch test message');
     } finally {
       setWaSendingTestMsg(false);
     }
@@ -3953,6 +3962,7 @@ export const SettingsPage = () => {
                       onChange={(e) => setWaSelectedTemplate(e.target.value)}
                       className="w-full h-8 text-xs font-medium px-2 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none cursor-pointer"
                     >
+                      <option value="hello_world">hello_world (Meta Official Pre-Approved Default)</option>
                       <option value="vaani_appointment_confirmation">vaani_appointment_confirmation (Slot Booking)</option>
                       <option value="vaani_previsit_reminder">vaani_previsit_reminder (2h Diagnostic Reminder)</option>
                       <option value="vaani_diagnostic_report_v1">vaani_diagnostic_report_v1 (Audiogram Report PDF)</option>
