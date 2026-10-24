@@ -3,6 +3,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/v1/settings",
+      "destination": "/api/settings"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
