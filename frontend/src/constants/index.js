@@ -19,6 +19,8 @@ export const API_CONFIG = {
   timeout: 10000,
 };
 
+export const API_BASE_URL = API_CONFIG.baseUrl;
+
 export const ROUTES = {
   HOME: '/',
   SERVICES: '/services',

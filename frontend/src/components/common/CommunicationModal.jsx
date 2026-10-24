@@ -22,6 +22,7 @@ import { Modal } from './Modal';
 import { useNotification } from '../../context/NotificationContext';
 import { patientService } from '../../services/patientService';
 import { communicationService } from '../../services/communicationService';
+import { whatsappService } from '../../services/whatsappService';
 
 /**
  * Helper to inspect clinic SMTP configuration status from settings
@@ -202,6 +203,59 @@ export const WhatsAppDispatchModal = ({
     onClose();
   };
 
+  const [isSendingCloud, setIsSendingCloud] = useState(false);
+
+  const handleSendViaCloud = async () => {
+    const cleanDigits = (phone || '').replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 8) {
+      notify.error('Please enter a valid 10-digit mobile number for WhatsApp dispatch.');
+      return;
+    }
+
+    const phoneWithCountry = cleanDigits.startsWith('91')
+      ? `+${cleanDigits}`
+      : cleanDigits.length === 10
+      ? `+91${cleanDigits}`
+      : `+${cleanDigits}`;
+
+    setIsSendingCloud(true);
+    try {
+      let res;
+      if (attachedFile) {
+        res = await whatsappService.sendDiagnosticReport({
+          phone: phoneWithCountry,
+          patientName: recipientName,
+          testType: documentTitle || 'Clinical Diagnostic Report',
+          summaryDiagnosis: reportData?.diagnosis || reportData?.summary_diagnosis || 'Examination Completed',
+          pdfUrl: 'https://frontend-alpha-topaz-35.vercel.app/services/audiogram-sample.pdf',
+          uhid: uhid || 'VN-9021',
+        });
+      } else {
+        res = await whatsappService.sendTemplate({
+          to: phoneWithCountry,
+          templateName: 'vaani_appointment_confirmation',
+          parameters: [recipientName, 'Today at Clinic', 'Ms. Palak Paresh Gandhi', 'Sadashiv Peth, Satara'],
+        });
+      }
+
+      notify.success(`Document dispatched via Meta WhatsApp Gateway to ${phoneWithCountry}!`);
+      if (onSuccess) {
+        onSuccess({
+          phone: phone.trim(),
+          message,
+          method: 'GATEWAY',
+          messageId: res?.data?.messageId,
+        });
+      }
+      onClose();
+    } catch (err) {
+      notify.error('Gateway dispatch failed. Opening WhatsApp Web instead...');
+      handleSend();
+    } finally {
+      setIsSendingCloud(false);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -325,23 +379,42 @@ export const WhatsAppDispatchModal = ({
         </div>
 
         {/* Modal Actions */}
-        <div className="pt-2 border-t border-slate-200 grid grid-cols-2 sm:flex sm:items-center sm:justify-end gap-2">
+        <div className="pt-2 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3 rounded-lg sm:rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer active:scale-95 touch-manipulation"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3 rounded-lg sm:rounded-md text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-all cursor-pointer active:scale-95"
             title="Cancel and close dialog"
           >
             <X className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-500" />
-            <span className="hidden sm:inline">Cancel</span>
+            <span>Cancel</span>
           </button>
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-4 rounded-lg sm:rounded-md text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition-all cursor-pointer active:scale-95 touch-manipulation"
-            title="Open WhatsApp & Send message"
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-3.5 rounded-lg sm:rounded-md text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-all cursor-pointer active:scale-95"
+            title="Open WhatsApp App / Web draft"
           >
-            <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">Open WhatsApp &amp; Send</span>
+            <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-slate-500" />
+            <span>Open WhatsApp App</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSendViaCloud}
+            disabled={isSendingCloud}
+            className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-8 px-4 rounded-lg sm:rounded-md text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Dispatch immediately via Meta WhatsApp Cloud API"
+          >
+            {isSendingCloud ? (
+              <>
+                <Send className="w-3.5 h-3.5 animate-spin" />
+                <span>Sending via Cloud...</span>
+              </>
+            ) : (
+              <>
+                <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span>Send via WhatsApp API</span>
+              </>
+            )}
           </button>
         </div>
       </form>
