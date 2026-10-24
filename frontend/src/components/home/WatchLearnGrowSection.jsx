@@ -15,7 +15,7 @@ const SERVICES_DATA = [
   {
     id: 'svc-001',
     category: 'Audiology & Hearing Sciences',
-    shortTitle: 'Audiology (PTA)',
+    shortTitle: 'PTA Audiology',
     titleLine1: 'Pure Tone',
     titleLine2: 'Audiometry',
     headline: 'Pure Tone Audiometry.',
@@ -35,11 +35,11 @@ const SERVICES_DATA = [
   {
     id: 'svc-002',
     category: 'Pediatric & Electrophysiology',
-    shortTitle: 'Newborn OAE & BERA',
+    shortTitle: 'OAE & BERA',
     titleLine1: 'Newborn OAE &',
     titleLine2: 'BERA Screening',
     headline: 'Newborn OAE & BERA Screening.',
-    badgeNumber: 'OAE/BERA',
+    badgeNumber: 'OAE',
     badgeLabel: 'PEDIATRIC',
     image: '/services/pediatric-audiology.jpg',
     duration: '40 mins session',
@@ -115,11 +115,11 @@ const SERVICES_DATA = [
   {
     id: 'svc-006',
     category: 'Speech Pathology & Motor Control',
-    shortTitle: 'Articulation Therapy',
+    shortTitle: 'Articulation',
     titleLine1: 'Articulation &',
     titleLine2: 'Phonology',
     headline: 'Articulation Therapy.',
-    badgeNumber: 'CLARITY',
+    badgeNumber: 'CLEAR',
     badgeLabel: 'PRECISION',
     image: '/pediatric-therapy-session.jpg',
     duration: '45 mins session',
@@ -549,9 +549,9 @@ export const WatchLearnGrowSection = () => {
               </div>
 
               {/* Bottom Info & Stats */}
-              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex items-end justify-between text-white pointer-events-none">
-                <div>
-                  <span className="text-[10px] font-black tracking-widest uppercase text-emerald-300 block">
+              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex items-end justify-between text-white pointer-events-none gap-2">
+                <div className="min-w-0 flex-1 pr-1">
+                  <span className="text-[10px] font-black tracking-widest uppercase text-emerald-300 block truncate">
                     {activeService.category}
                   </span>
                   <h3 className="text-sm sm:text-base font-black leading-tight text-white drop-shadow-xs">
@@ -559,11 +559,11 @@ export const WatchLearnGrowSection = () => {
                   </h3>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-xl sm:text-2xl font-black block leading-none">
+                <div className="flex-shrink-0 text-right bg-black/50 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/20">
+                  <span className="text-base sm:text-lg font-black block leading-none">
                     {activeService.badgeNumber}
                   </span>
-                  <span className="text-[9px] font-bold tracking-wider uppercase text-white/80 block mt-0.5">
+                  <span className="text-[8px] font-bold tracking-wider uppercase text-emerald-300 block mt-0.5">
                     {activeService.badgeLabel}
                   </span>
                 </div>
@@ -572,7 +572,7 @@ export const WatchLearnGrowSection = () => {
           </div>
 
           {/* ── RIGHT COLUMN: STRICT COL-SPAN-7 WITH REDUCED BORDER RADIUS (Desktop Only) ── */}
-          <div className="hidden lg:flex w-full lg:col-span-7 items-center justify-end gap-2.5 sm:gap-3.5 h-[480px] sm:h-[560px] lg:h-[620px] xl:h-[660px] min-w-0 z-10 overflow-hidden">
+          <div className="hidden lg:flex w-full lg:col-span-7 items-center justify-end gap-1.5 sm:gap-2 lg:gap-2.5 h-[480px] sm:h-[560px] lg:h-[620px] xl:h-[660px] min-w-0 z-10 overflow-hidden">
             {SERVICES_DATA.map((card, idx) => {
               const isActive = activeIndex === idx;
 
@@ -582,8 +582,8 @@ export const WatchLearnGrowSection = () => {
                   onClick={() => handleSelectCard(idx)}
                   className={`h-full rounded-2xl sm:rounded-[22px] overflow-hidden relative cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group shadow-lg hover:shadow-2xl ${
                     isActive
-                      ? 'flex-1 min-w-[240px] sm:min-w-[320px] lg:min-w-[360px] xl:min-w-[420px] max-w-[560px]'
-                      : 'w-[68px] sm:w-[78px] lg:w-[86px] xl:w-[96px] flex-shrink-0'
+                      ? 'flex-1 min-w-[240px] sm:min-w-[280px] lg:min-w-[320px] xl:min-w-[380px]'
+                      : 'w-[44px] sm:w-[50px] lg:w-[56px] xl:w-[64px] flex-shrink-0'
                   }`}
                 >
                   {/* High-Resolution Clinical Photo */}
@@ -610,22 +610,22 @@ export const WatchLearnGrowSection = () => {
                       </div>
 
                       {/* Bottom Title & Stats Badge */}
-                      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 flex items-end justify-between text-white pointer-events-none animate-fadeIn">
-                        <div>
-                          <span className="text-xs sm:text-sm font-black tracking-widest uppercase text-emerald-300 block mb-1">
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 lg:p-7 flex items-end justify-between text-white pointer-events-none animate-fadeIn gap-3">
+                        <div className="min-w-0 flex-1 pr-2">
+                          <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-emerald-300 block mb-1 truncate">
                             {card.category}
                           </span>
-                          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">
+                          <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black leading-tight text-white drop-shadow-md">
                             {card.titleLine1}<br />
                             {card.titleLine2}
                           </h3>
                         </div>
 
-                        <div className="text-right">
-                          <span className="text-3xl sm:text-4xl lg:text-5xl font-black block leading-none tracking-tight">
+                        <div className="flex-shrink-0 text-right bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/20 shadow-lg">
+                          <span className="text-xl sm:text-2xl lg:text-3xl font-black block leading-none tracking-tight text-white">
                             {card.badgeNumber}
                           </span>
-                          <span className="text-[10px] sm:text-xs font-black tracking-widest uppercase text-white/80 block mt-1.5">
+                          <span className="text-[9px] sm:text-[10px] font-black tracking-widest uppercase text-emerald-300 block mt-1">
                             {card.badgeLabel}
                           </span>
                         </div>
@@ -635,10 +635,10 @@ export const WatchLearnGrowSection = () => {
 
                   {/* ── COLLAPSED VERTICAL PILL TAG ── */}
                   {!isActive && (
-                    <div className="absolute inset-0 bg-black/25 flex flex-col justify-end p-2 sm:p-2.5 pointer-events-none">
-                      <div className="w-full bg-[#160424]/92 backdrop-blur-md py-4 sm:py-5 px-1 sm:px-1.5 rounded-xl border border-white/10 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
+                    <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-end p-1.5 sm:p-2 pointer-events-none">
+                      <div className="w-full bg-[#160424]/95 backdrop-blur-md py-3.5 sm:py-4 px-1 rounded-xl sm:rounded-2xl border border-white/15 flex items-center justify-center shadow-xl transition-transform duration-300 group-hover:scale-105">
                         <span
-                          className="text-white text-xs sm:text-sm font-extrabold tracking-wide whitespace-nowrap"
+                          className="text-white text-[10px] sm:text-[11px] font-black tracking-wider uppercase whitespace-nowrap select-none"
                           style={{
                             writingMode: 'vertical-rl',
                             transform: 'rotate(180deg)',
