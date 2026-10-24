@@ -62,10 +62,10 @@ const CuteChatbotIcon = ({ className = "w-6 h-6 sm:w-7 sm:h-7" }) => (
 
 export const ServicesPage = () => {
   const { logoUrl, clinicName, settings, primaryPhone, social } = useClinicSettings();
-  const contactPhone = primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
-  const whatsappNumber = (social?.whatsappPhone || primaryPhone || '8857830151').replace(/\D/g, '');
-  const leadPractitioner = settings?.credentials?.leadPractitioner || 'Palak Gandhi';
-  const leadDegree = settings?.credentials?.leadDegree || 'MASLP';
+  const rawLead = settings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
+  const leadPractitioner = rawLead.replace(/^Ms\.\s*/i, 'ASLP ').trim();
+  const rawDegree = settings?.credentials?.leadDegree || 'BASLP, RCI';
+  const leadDegree = rawDegree.replace(/MASLP/g, 'BASLP').trim();
   const isCustomLogo = logoUrl && logoUrl !== '/vaani-logo.png' && logoUrl !== '/vaani-logo-white.png';
   const displayWhiteLogo = isCustomLogo ? logoUrl : '/vaani-logo-white.png';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

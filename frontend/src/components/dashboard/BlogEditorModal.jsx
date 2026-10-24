@@ -56,9 +56,9 @@ export const BlogEditorModal = ({ isOpen, onClose, article, onSaveSuccess }) => 
     category: 'Pediatric Speech',
     readTime: '6 min read',
     publishDate: '',
-    authorName: 'Ms. Palak Paresh Gandhi',
-    authorCredentials: 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
-    authorAvatar: '/practitioner-palak-real.png',
+    authorName: 'ASLP Palak Paresh Gandhi',
+    authorCredentials: 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+    authorAvatar: '/practitioner-headshot.png',
     heroImage: '/patient-pexels.jpg',
     secondaryImage: '',
     secondaryCaption: '',
@@ -102,9 +102,9 @@ export const BlogEditorModal = ({ isOpen, onClose, article, onSaveSuccess }) => 
         category: article.category || 'Pediatric Speech',
         readTime: article.readTime || article.read_time || '5 min read',
         publishDate: article.publishDate || article.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        authorName: article.authorName || article.author || 'Ms. Palak Paresh Gandhi',
-        authorCredentials: article.authorCredentials || 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
-        authorAvatar: article.authorAvatar || '/practitioner-palak-real.png',
+        authorName: article.authorName || article.author || 'ASLP Palak Paresh Gandhi',
+        authorCredentials: article.authorCredentials || 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+        authorAvatar: article.authorAvatar || '/practitioner-headshot.png',
         heroImage: article.heroImage || '/patient-pexels.jpg',
         secondaryImage: article.secondaryImage || '',
         secondaryCaption: article.secondaryCaption || '',
@@ -129,9 +129,9 @@ export const BlogEditorModal = ({ isOpen, onClose, article, onSaveSuccess }) => 
         category: 'Pediatric Speech',
         readTime: '5 min read',
         publishDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        authorName: 'Ms. Palak Paresh Gandhi',
-        authorCredentials: 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
-        authorAvatar: '/practitioner-palak-real.png',
+        authorName: 'ASLP Palak Paresh Gandhi',
+        authorCredentials: 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+        authorAvatar: '/practitioner-headshot.png',
         heroImage: '/patient-pexels.jpg',
         secondaryImage: '',
         secondaryCaption: '',
@@ -962,7 +962,7 @@ export const BlogEditorModal = ({ isOpen, onClose, article, onSaveSuccess }) => 
                       type="text"
                       value={formData.authorName}
                       onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
-                      placeholder="Ms. Palak Paresh Gandhi"
+                      placeholder="ASLP Palak Paresh Gandhi"
                       className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-lg"
                     />
                   </div>
@@ -974,7 +974,7 @@ export const BlogEditorModal = ({ isOpen, onClose, article, onSaveSuccess }) => 
                       type="text"
                       value={formData.authorCredentials}
                       onChange={(e) => setFormData({ ...formData, authorCredentials: e.target.value })}
-                      placeholder="MASLP, RCI Registered Audiologist & Speech-Language Pathologist"
+                      placeholder="BASLP, RCI Registered Audiologist & Speech-Language Pathologist"
                       className="w-full px-3 py-1.5 text-xs text-slate-800 bg-white border border-slate-300 rounded-lg"
                     />
                   </div>

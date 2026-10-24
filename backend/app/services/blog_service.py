@@ -15,8 +15,8 @@ INITIAL_SEED_ARTICLES = [
         "category": "Pediatric Speech",
         "read_time": "6 min read",
         "publish_date": "Oct 12, 2026",
-        "author_name": "Ms. Palak Paresh Gandhi",
-        "author_credentials": "MASLP, RCI Registered Audiologist & Speech-Language Pathologist",
+        "author_name": "ASLP Palak Paresh Gandhi",
+        "author_credentials": "BASLP, RCI Registered Audiologist & Speech-Language Pathologist",
         "author_avatar": "/practitioner-palak-real.png",
         "hero_image": "/patient-pexels.jpg",
         "secondary_image": "/services/service-speech-therapy.jpg",
@@ -100,8 +100,8 @@ INITIAL_SEED_ARTICLES = [
         "category": "Audiology & Hearing",
         "read_time": "7 min read",
         "publish_date": "Sep 28, 2026",
-        "author_name": "Ms. Palak Paresh Gandhi",
-        "author_credentials": "MASLP, RCI Registered Audiologist & Speech-Language Pathologist",
+        "author_name": "ASLP Palak Paresh Gandhi",
+        "author_credentials": "BASLP, RCI Registered Audiologist & Speech-Language Pathologist",
         "author_avatar": "/practitioner-palak-real.png",
         "hero_image": "/services/service-audiology-pta.jpg",
         "secondary_image": "/clinical-care.jpg",
@@ -171,8 +171,8 @@ INITIAL_SEED_ARTICLES = [
         "category": "Hearing Technology",
         "read_time": "5 min read",
         "publish_date": "Sep 15, 2026",
-        "author_name": "Ms. Palak Paresh Gandhi",
-        "author_credentials": "MASLP, RCI Registered Audiologist & Speech-Language Pathologist",
+        "author_name": "ASLP Palak Paresh Gandhi",
+        "author_credentials": "BASLP, RCI Registered Audiologist & Speech-Language Pathologist",
         "author_avatar": "/practitioner-palak-real.png",
         "hero_image": "/services/hearing-aid.jpg",
         "secondary_image": "/services/service-hearing-aid.jpg",
@@ -230,8 +230,8 @@ INITIAL_SEED_ARTICLES = [
         "category": "Voice & Fluency",
         "read_time": "6 min read",
         "publish_date": "Aug 30, 2026",
-        "author_name": "Ms. Palak Paresh Gandhi",
-        "author_credentials": "MASLP, RCI Registered Audiologist & Speech-Language Pathologist",
+        "author_name": "ASLP Palak Paresh Gandhi",
+        "author_credentials": "BASLP, RCI Registered Audiologist & Speech-Language Pathologist",
         "author_avatar": "/practitioner-palak-real.png",
         "hero_image": "/services/service-voice-therapy.jpg",
         "secondary_image": "/doc_avatars_group.png",
@@ -331,8 +331,8 @@ class BlogService:
                         category TEXT NOT NULL,
                         read_time TEXT DEFAULT '5 min read',
                         publish_date TEXT NOT NULL,
-                        author_name TEXT DEFAULT 'Ms. Palak Paresh Gandhi',
-                        author_credentials TEXT DEFAULT 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+                        author_name TEXT DEFAULT 'ASLP Palak Paresh Gandhi',
+                        author_credentials TEXT DEFAULT 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
                         author_avatar TEXT DEFAULT '/practitioner-palak-real.png',
                         hero_image TEXT NOT NULL,
                         secondary_image TEXT,
@@ -382,8 +382,8 @@ class BlogService:
                     art["category"],
                     art.get("read_time", "5 min read"),
                     art.get("publish_date", "Today"),
-                    art.get("author_name", "Ms. Palak Paresh Gandhi"),
-                    art.get("author_credentials", "MASLP, RCI Registered"),
+                    art.get("author_name", "ASLP Palak Paresh Gandhi"),
+                    art.get("author_credentials", "BASLP, RCI Registered"),
                     art.get("author_avatar", "/practitioner-palak-real.png"),
                     art["hero_image"],
                     art.get("secondary_image", ""),
@@ -531,8 +531,8 @@ class BlogService:
         category = data.get("category", "General Clinical")
         read_time = data.get("readTime") or data.get("read_time") or "5 min read"
         publish_date = data.get("publishDate") or data.get("date") or time.strftime("%b %d, %Y")
-        author_name = data.get("author") or data.get("authorName") or "Ms. Palak Paresh Gandhi"
-        author_credentials = data.get("authorCredentials") or "MASLP, RCI Registered Audiologist & Speech-Language Pathologist"
+        author_name = data.get("author") or data.get("authorName") or "ASLP Palak Paresh Gandhi"
+        author_credentials = data.get("authorCredentials") or "BASLP, RCI Registered Audiologist & Speech-Language Pathologist"
         author_avatar = data.get("authorAvatar") or "/practitioner-palak-real.png"
         hero_image = data.get("heroImage") or data.get("hero_image") or "/services/service-speech-therapy.jpg"
         secondary_image = data.get("secondaryImage") or data.get("secondary_image") or ""

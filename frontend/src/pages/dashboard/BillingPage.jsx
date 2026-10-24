@@ -265,7 +265,7 @@ export const BillingPage = () => {
   const clinicAddress = formatClinicAddress(clinicSettings) || 'Sadashiv Peth, Near Powai Naka, Satara - 415002';
   const clinicHelpline = formatClinicHelpline(clinicSettings);
   const clinicHelplinePhone = clinic.primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
-  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'ASLP Palak Paresh Gandhi';
   const leadDegree = clinicSettings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
   const clinicRci = clinicSettings?.credentials?.rciNumber || 'A79214';
   const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''} (RCI CRR No. ${clinicRci})`;
@@ -2853,8 +2853,8 @@ export const BillingPage = () => {
 
                 <div className="p-2 text-left sm:text-right flex flex-col justify-center">
                   <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
-                  <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
-                  <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
+                  <div className="font-extrabold text-slate-900 text-[11px] leading-tight">{leadPractitioner || 'ASLP Palak Paresh Gandhi'}</div>
+                  <div className="text-[9.5px] text-slate-500 leading-tight">{leadDegree || 'BASLP, RCI'} • Consultant Audiologist &amp; Speech Pathologist</div>
                   <div className="text-[9.5px] font-mono text-slate-700">RCI Registration: CRR No. <strong>{clinicRci}</strong></div>
                 </div>
               </div>

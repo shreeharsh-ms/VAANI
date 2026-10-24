@@ -98,9 +98,9 @@ export const BlogEditorPage = () => {
     category: 'Pediatric Speech',
     readTime: '6 min read',
     publishDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    authorName: 'Ms. Palak Paresh Gandhi',
-    authorCredentials: 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
-    authorAvatar: '/practitioner-palak-real.png',
+    authorName: 'ASLP Palak Paresh Gandhi',
+    authorCredentials: 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+    authorAvatar: '/practitioner-headshot.png',
     heroImage: '/patient-pexels.jpg',
     secondaryImage: '',
     secondaryCaption: '',
@@ -173,9 +173,9 @@ export const BlogEditorPage = () => {
             category: d.category || 'Pediatric Speech',
             readTime: d.readTime || d.read_time || '5 min read',
             publishDate: d.publishDate || d.date || '',
-            authorName: d.authorName || d.author || 'Ms. Palak Paresh Gandhi',
-            authorCredentials: d.authorCredentials || 'MASLP, RCI Registered Audiologist & Speech-Language Pathologist',
-            authorAvatar: d.authorAvatar || '/practitioner-palak-real.png',
+            authorName: d.authorName || d.author || 'ASLP Palak Paresh Gandhi',
+            authorCredentials: d.authorCredentials || 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
+            authorAvatar: d.authorAvatar || '/practitioner-headshot.png',
             heroImage: d.heroImage || '/patient-pexels.jpg',
             secondaryImage: d.secondaryImage || '',
             secondaryCaption: d.secondaryCaption || '',
@@ -1694,7 +1694,7 @@ export const BlogEditorPage = () => {
                         type="text"
                         value={formData.authorName}
                         onChange={(e) => setFormData({ ...formData, authorName: e.target.value })}
-                        placeholder="Ms. Palak Paresh Gandhi"
+                        placeholder="ASLP Palak Paresh Gandhi"
                         className="w-full px-3.5 py-2 text-xs font-bold text-slate-900 bg-white border border-slate-300 rounded-xl"
                       />
                     </div>
@@ -1706,7 +1706,7 @@ export const BlogEditorPage = () => {
                         type="text"
                         value={formData.authorCredentials}
                         onChange={(e) => setFormData({ ...formData, authorCredentials: e.target.value })}
-                        placeholder="MASLP, RCI Registered Audiologist & Speech-Language Pathologist"
+                        placeholder="BASLP, RCI Registered Audiologist & Speech-Language Pathologist"
                         className="w-full px-3.5 py-2 text-xs text-slate-800 bg-white border border-slate-300 rounded-xl"
                       />
                     </div>
@@ -1809,7 +1809,7 @@ export const BlogEditorPage = () => {
                       />
                       <div>
                         <h4 className="text-sm font-bold text-[#301444]">
-                          {formData.authorName || 'Ms. Palak Paresh Gandhi'}
+                          {formData.authorName || 'ASLP Palak Paresh Gandhi'}
                         </h4>
                         <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
                           {formData.authorCredentials}

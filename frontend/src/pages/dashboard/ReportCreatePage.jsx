@@ -280,8 +280,8 @@ export const ReportCreatePage = () => {
   const [formData, setFormData] = useState(() => {
     const s = CLINICAL_SERVICES.find((srv) => srv.code === initialTypeCode) || CLINICAL_SERVICES[0];
     const initSettings = getClinicSettings();
-    const initLead = initSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-    const initDegree = initSettings?.credentials?.leadDegree || 'MASLP, RCI';
+    const initLead = initSettings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
+    const initDegree = initSettings?.credentials?.leadDegree || 'BASLP, RCI';
     const initExaminer = `${initLead}${initDegree ? `, ${initDegree}` : ''}`;
     const initRci = initSettings?.credentials?.rciNumber || 'A79214';
 

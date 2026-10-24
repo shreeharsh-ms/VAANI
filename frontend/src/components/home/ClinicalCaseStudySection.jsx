@@ -436,7 +436,7 @@ export const ClinicalCaseStudySection = () => {
               </h2>
 
               <p className="text-base sm:text-lg text-purple-200 max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
-                Take the decisive step toward auditory clarity and confident speech. Book a consultation with Ms. Palak Gandhi at VAANI Clinic, Satara.
+                Take the decisive step toward auditory clarity and confident speech. Book a consultation with ASLP Palak Gandhi at VAANI Clinic, Satara.
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5">

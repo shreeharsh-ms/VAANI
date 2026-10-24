@@ -238,16 +238,16 @@ export const BlogsPage = () => {
                 <div className="pt-6 border-t border-gray-100 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src={featuredArticle.authorAvatar || '/practitioner-palak-real.png'}
+                      src={featuredArticle.authorAvatar || '/practitioner-headshot.png'}
                       alt={featuredArticle.author}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-[#301444]/20"
+                      className="w-10 h-10 rounded-full object-cover object-top ring-2 ring-[#301444]/20"
                     />
                     <div>
                       <p className="text-xs font-bold text-[#16382b] leading-tight">
-                        {featuredArticle.author}
+                        {featuredArticle.author?.replace(/^Ms\.\s*/i, 'ASLP ')}
                       </p>
                       <p className="text-[10.5px] text-gray-500">
-                        MASLP, RCI Registered
+                        BASLP, RCI Registered
                       </p>
                     </div>
                   </div>
@@ -377,12 +377,12 @@ export const BlogsPage = () => {
                   <div className="p-6 sm:p-7 pt-0 border-t border-gray-100 mt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <img
-                        src={post.authorAvatar || '/practitioner-palak-real.png'}
+                        src={post.authorAvatar || '/practitioner-headshot.png'}
                         alt={post.author}
-                        className="w-7 h-7 rounded-full object-cover ring-1 ring-gray-200"
+                        className="w-7 h-7 rounded-full object-cover object-top ring-1 ring-gray-200"
                       />
                       <span className="text-xs font-semibold text-gray-700 truncate max-w-[150px]">
-                        {post.author}
+                        {post.author?.replace(/^Ms\.\s*/i, 'ASLP ')}
                       </span>
                     </div>
 
@@ -423,9 +423,9 @@ export const BlogsPage = () => {
             <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-[#faf9f8] border border-purple-100 shadow-xs flex-shrink-0 self-start lg:self-auto">
               <div className="relative">
                 <img
-                  src="/practitioner-palak-real.png"
-                  alt="Ms. Palak Gandhi"
-                  className="w-13 h-13 rounded-full object-cover ring-2 ring-[#301444]/20 shadow-xs"
+                  src="/practitioner-headshot.png"
+                  alt="ASLP Palak Gandhi"
+                  className="w-13 h-13 rounded-full object-cover object-top ring-2 ring-[#301444]/20 shadow-xs"
                 />
                 <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-[9px] text-white font-bold">
                   ✓
@@ -433,7 +433,7 @@ export const BlogsPage = () => {
               </div>
               <div className="leading-tight">
                 <p className="text-xs font-bold text-[#16382b]">
-                  Ms. Palak Gandhi, MASLP
+                  ASLP Palak Gandhi, BASLP
                 </p>
                 <p className="text-[11px] text-purple-900 font-semibold mt-0.5">
                   RCI Registered Audiologist &amp; SLP
@@ -540,7 +540,7 @@ export const BlogsPage = () => {
                   Direct Clinic Pathway
                 </h4>
                 <p className="text-xs sm:text-[13px] leading-relaxed text-[#4a5550]">
-                  Articles connect directly to in-person diagnostic sessions with Ms. Palak Gandhi at Sadashiv Peth, Satara.
+                  Articles connect directly to in-person diagnostic sessions with ASLP Palak Gandhi at Sadashiv Peth, Satara.
                 </p>
               </div>
               <div className="pt-3 border-t border-gray-100">
@@ -583,7 +583,7 @@ export const BlogsPage = () => {
               Have Specific Speech or Hearing Questions?
             </h3>
             <p className="text-xs sm:text-sm text-purple-200/90 leading-relaxed">
-              Schedule a personalized 1-on-1 diagnostic consultation or PTA hearing assessment with Ms. Palak Gandhi (MASLP, RCI Registered) at our Sadashiv Peth clinic.
+              Schedule a personalized 1-on-1 diagnostic consultation or PTA hearing assessment with ASLP Palak Gandhi (BASLP, RCI Registered) at our Sadashiv Peth clinic.
             </p>
           </div>
 

@@ -26,10 +26,10 @@ export const authService = {
     const mockUser = isOwner
       ? {
           id: 'user_mock_palak',
-          name: 'Ms. Palak Paresh Gandhi',
+          name: 'ASLP Palak Paresh Gandhi',
           email: email.includes('@') ? email : 'palak@vaaniclinic.com',
           role: 'OWNER',
-          qualification: 'BASLP, MASLP (Gold Medalist)',
+          qualification: 'BASLP, RCI Registered Audiologist & Speech-Language Pathologist',
           rci_number: 'A79214',
           center: 'Satara Main Clinic',
         }

@@ -476,7 +476,7 @@ class WhatsAppGatewayService:
             parameters=[
                 patient_name,
                 f"{appointment_time} ({service_name})",
-                "Ms. Palak Paresh Gandhi (MASLP, RCI)",
+                "ASLP Palak Paresh Gandhi (BASLP, RCI)",
                 "Sadashiv Peth, Opp. Zilla Parishad, Satara",
             ],
             button_params=[booking_ref],
@@ -504,7 +504,7 @@ class WhatsAppGatewayService:
                 patient_name,
                 patient_name,
                 test_type,
-                "Ms. Palak Paresh Gandhi",
+                "ASLP Palak Paresh Gandhi",
                 summary_diagnosis or "Assessment Completed - Official Report Attached",
             ],
             button_params=[f"view_{uhid[-6:]}"],
@@ -557,12 +557,12 @@ class WhatsAppGatewayService:
             "sendWhatsApp": True,
             "customReviewMessage": (
                 "Hi {name}, thank you for choosing Vaani Speech & Hearing Clinic, Satara! "
-                "Ms. Palak and our team hope you had a caring clinical experience. "
+                "ASLP Palak and our team hope you had a caring clinical experience. "
                 "Could you take 30 seconds to share your feedback on Google? Tap here: {url}"
             ),
             "metadata": {
                 "uhid": visit_data.get("uhid"),
-                "doctor": "Ms. Palak Paresh Gandhi",
+                "doctor": "ASLP Palak Paresh Gandhi",
             },
         }
 

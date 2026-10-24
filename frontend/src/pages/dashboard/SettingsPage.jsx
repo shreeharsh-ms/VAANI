@@ -86,7 +86,7 @@ const DEFAULT_SETTINGS = {
     rciVerified: true,
     rciValidUntil: '2031-10-15',
     titlePermitted: true, // Permits "Dr." prefix
-    leadPractitioner: 'Ms. Palak Paresh Gandhi',
+    leadPractitioner: 'ASLP Palak Paresh Gandhi',
     leadDegree: 'BASLP, RCI',
     cbtQualificationVerified: true, // BR-042
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
@@ -153,7 +153,7 @@ const DEFAULT_SETTINGS = {
     reminderOffset2Hours: 2,
     senderEmail: 'appointments@vaaniclinic.com',
     senderDisplayName: 'Vaani Speech & Hearing Clinic',
-    grievanceOfficerName: 'Ms. Palak Paresh Gandhi',
+    grievanceOfficerName: 'ASLP Palak Paresh Gandhi',
     grievanceEmail: 'grievance@vaaniclinic.com',
     grievancePhone: '+91 98220 12345',
     adultRetentionYears: 7,
@@ -519,7 +519,7 @@ export const SettingsPage = () => {
     }
     setWaSendingTestMsg(true);
     try {
-      let params = ['Test Patient', 'Today at 10:30 AM', 'Ms. Palak Paresh Gandhi', 'Sadashiv Peth, Satara'];
+      let params = ['Test Patient', 'Today at 10:30 AM', 'ASLP Palak Paresh Gandhi', 'Sadashiv Peth, Satara'];
       let language = 'en';
       if (waSelectedTemplate === 'hello_world') {
         params = [];
@@ -527,7 +527,7 @@ export const SettingsPage = () => {
       } else if (waSelectedTemplate === 'vaani_previsit_reminder') {
         params = ['Test Patient', 'Tomorrow at 10:00 AM', 'Pure Tone Audiometry (PTA)', 'Sadashiv Peth, Satara'];
       } else if (waSelectedTemplate === 'vaani_diagnostic_report_v1') {
-        params = ['Test Patient', 'Pure Tone Audiometry (PTA)', 'Ms. Palak Paresh Gandhi'];
+        params = ['Test Patient', 'Pure Tone Audiometry (PTA)', 'ASLP Palak Paresh Gandhi'];
       }
       const res = await whatsappService.sendTemplate({
         to: waTestPhone,
@@ -832,7 +832,7 @@ export const SettingsPage = () => {
       const newAudit = {
         id: `aud_${Date.now()}`,
         ts: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        actor: `${user?.name || 'Ms. Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
+        actor: `${user?.name || 'ASLP Palak Paresh Gandhi'} (${user?.role || 'OWNER'})`,
         action: 'SETTINGS_UPDATE',
         summary: `Updated ${activeTab.toUpperCase()} configuration & ${serviceRates.length} service tariff rates in compact sheet`,
         hash: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}...${Math.random().toString(16).substring(2, 6)}`,
@@ -2068,7 +2068,7 @@ export const SettingsPage = () => {
                             type="text"
                             value={settings.credentials.leadPractitioner || ''}
                             onChange={(e) => handleChange('credentials', 'leadPractitioner', e.target.value)}
-                            placeholder="Ms. Palak Paresh Gandhi"
+                            placeholder="ASLP Palak Paresh Gandhi"
                             className="w-full px-2 py-1 text-xs font-bold text-purple-950 bg-white border border-slate-300 rounded focus:border-purple-600 focus:ring-1 focus:ring-purple-100 focus:outline-none"
                           />
                         </div>
@@ -2080,7 +2080,7 @@ export const SettingsPage = () => {
                             type="text"
                             value={settings.credentials.leadDegree || ''}
                             onChange={(e) => handleChange('credentials', 'leadDegree', e.target.value)}
-                            placeholder="MASLP, RCI"
+                            placeholder="BASLP, RCI"
                             className="w-full px-2 py-1 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:ring-1 focus:ring-purple-100 focus:outline-none"
                           />
                         </div>
@@ -2108,10 +2108,10 @@ export const SettingsPage = () => {
                         <span className="font-mono font-bold text-xs text-[#301444] block">
                           {settings.credentials.titlePermitted
                             ? `Dr. ${settings.credentials.leadPractitioner?.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '') || 'Palak Paresh Gandhi'}`
-                            : `${settings.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi'} (Audiologist)`}
+                            : `${settings.credentials.leadPractitioner || 'ASLP Palak Paresh Gandhi'} (Audiologist)`}
                         </span>
                         <span className="text-[10px] text-purple-800/80 font-medium">
-                          {settings.credentials.leadDegree || 'MASLP, RCI'} • RCI CRR: {settings.credentials.rciNumber || 'A79214'}
+                          {settings.credentials.leadDegree || 'BASLP, RCI'} • RCI CRR: {settings.credentials.rciNumber || 'A79214'}
                         </span>
                       </div>
                     </td>
@@ -4647,7 +4647,7 @@ export const SettingsPage = () => {
                     value={settings.credentials?.leadPractitioner || ''}
                     onChange={(e) => handleChange('credentials', 'leadPractitioner', e.target.value)}
                     className="h-7 w-full px-2 text-xs font-bold text-purple-950 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                    placeholder="Ms. Palak Paresh Gandhi"
+                    placeholder="ASLP Palak Paresh Gandhi"
                   />
                 </div>
                 <div>
@@ -4657,7 +4657,7 @@ export const SettingsPage = () => {
                     value={settings.credentials?.leadDegree || ''}
                     onChange={(e) => handleChange('credentials', 'leadDegree', e.target.value)}
                     className="h-7 w-full px-2 text-xs font-semibold text-slate-800 bg-white border border-slate-300 rounded focus:border-purple-600 focus:outline-none"
-                    placeholder="MASLP, RCI"
+                    placeholder="BASLP, RCI"
                   />
                 </div>
               </div>

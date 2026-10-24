@@ -39,7 +39,7 @@ export const DEFAULT_CLINIC_SETTINGS = {
     rciVerified: true,
     rciValidUntil: '2031-10-15',
     titlePermitted: true,
-    leadPractitioner: 'Ms. Palak Paresh Gandhi',
+    leadPractitioner: 'ASLP Palak Paresh Gandhi',
     leadDegree: 'BASLP, RCI',
     cbtQualificationVerified: true,
     cbtDegree: 'Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)',
@@ -106,7 +106,7 @@ export const DEFAULT_CLINIC_SETTINGS = {
     reminderOffset2Hours: 2,
     senderEmail: 'appointments@vaaniclinic.com',
     senderDisplayName: 'Vaani Speech & Hearing Clinic',
-    grievanceOfficerName: 'Ms. Palak Paresh Gandhi',
+    grievanceOfficerName: 'ASLP Palak Paresh Gandhi',
     grievanceEmail: 'grievance@vaaniclinic.com',
     grievancePhone: '+91 98220 12345',
     adultRetentionYears: 7,
@@ -245,8 +245,10 @@ export function formatClinicAddress(settings) {
 export function getClinicDoctorDetails(settings) {
   const s = settings || getClinicSettings();
   const creds = s?.credentials || {};
-  const doctorName = creds.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-  const degree = creds.leadDegree || 'BASLP, RCI';
+  const rawDoctor = creds.leadPractitioner || 'ASLP Palak Paresh Gandhi';
+  const doctorName = rawDoctor.replace(/^Ms\.\s*/i, 'ASLP ').trim();
+  const rawDegree = creds.leadDegree || 'BASLP, RCI';
+  const degree = rawDegree.replace(/MASLP/g, 'BASLP').trim();
   const rci = creds.rciNumber || 'A79214';
   const fullExaminer = degree ? `${doctorName}, ${degree}` : doctorName;
   const examinerWithRci = rci ? `${fullExaminer} (RCI No. ${rci})` : fullExaminer;
@@ -410,8 +412,8 @@ export const ClinicSettingsProvider = ({ children }) => {
     gstin: settings.credentials.gstin || '27AAAAA0000A1Z5',
     sacCode: settings.billing.sacCode || '999312',
     hsnCode: settings.billing.hsnCode || '9021',
-    leadPractitioner: settings.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
-    leadDegree: settings.credentials.leadDegree || 'BASLP, RCI',
+    leadPractitioner: (settings.credentials.leadPractitioner || 'ASLP Palak Paresh Gandhi').replace(/^Ms\.\s*/i, 'ASLP ').trim(),
+    leadDegree: (settings.credentials.leadDegree || 'BASLP, RCI').replace(/MASLP/g, 'BASLP').trim(),
     workingHours: settings.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
     sundayHours: settings.hours.sundayHoursText || 'Sundays: By Prior Appointment',
     social: {
@@ -467,8 +469,8 @@ export const useClinicSettings = () => {
       gstin: s.credentials.gstin || '27AAAAA0000A1Z5',
       sacCode: s.billing.sacCode || '999312',
       hsnCode: s.billing.hsnCode || '9021',
-      leadPractitioner: s.credentials.leadPractitioner || 'Ms. Palak Paresh Gandhi',
-      leadDegree: s.credentials.leadDegree || 'BASLP, RCI',
+      leadPractitioner: (s.credentials.leadPractitioner || 'ASLP Palak Paresh Gandhi').replace(/^Ms\.\s*/i, 'ASLP ').trim(),
+      leadDegree: (s.credentials.leadDegree || 'BASLP, RCI').replace(/MASLP/g, 'BASLP').trim(),
       workingHours: s.hours.workingHoursText || 'Mon – Sat: 9:30 AM – 7:30 PM',
       sundayHours: s.hours.sundayHoursText || 'Sundays: By Prior Appointment',
       social: {

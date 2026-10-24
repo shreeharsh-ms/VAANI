@@ -36,7 +36,7 @@ export const OfficialReportHeader = ({
   const clinicEmail = settings?.contact?.officialEmail || 'info@vaaniclinic.com';
   const clinicLogo = clinic.logoUrl || '/vaani-logo.png';
   const clinicName = settings?.identity?.legalName || 'VAANI SPEECH & HEARING CLINIC';
-  const leadPractitioner = clinic.leadPractitioner || settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadPractitioner = clinic.leadPractitioner || settings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
   const tagline = settings?.identity?.taglineEn || 'SPEAK • HEAR • CONNECT';
 
   const isCustomLogo = clinicLogo && clinicLogo !== '/vaani-logo.png' && clinicLogo !== '/vaani-logo-white.png';

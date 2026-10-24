@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         service_id: body.service_id || '',
         service_name: body.service_name || body.service || '',
         service_line: body.service_line || 'SPEECH_LANGUAGE',
-        practitioner: body.practitioner || 'Ms. Palak Paresh Gandhi',
+        practitioner: body.practitioner || 'ASLP Palak Paresh Gandhi',
         date: body.date || new Date().toISOString().split('T')[0],
         time: body.time || '10:00 AM',
         duration_minutes: body.duration_minutes || 45,

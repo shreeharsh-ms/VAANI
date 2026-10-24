@@ -146,8 +146,8 @@ export const Footer = () => {
                   Lead Audiologist &amp; Speech-Language Pathologist
                 </p>
                 <p className="text-xs sm:text-sm font-semibold text-[#7c3aed]">
-                  {leadPractitioner || 'Ms. Palak Paresh Gandhi'}{' '}
-                  <span className="text-[#301444]/70 font-normal">({leadDegree || 'MASLP, RCI'})</span>
+                  {leadPractitioner || 'ASLP Palak Paresh Gandhi'}{' '}
+                  <span className="text-[#301444]/70 font-normal">({leadDegree || 'BASLP, RCI'})</span>
                 </p>
               </div>
 

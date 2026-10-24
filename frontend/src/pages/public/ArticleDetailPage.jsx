@@ -166,9 +166,9 @@ export const ArticleDetailPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-200/80">
             <div className="flex items-center gap-3">
               <img
-                src={article.authorAvatar || '/practitioner-palak-real.png'}
+                src={article.authorAvatar || '/practitioner-headshot.png'}
                 alt={article.author}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#301444]/20 shadow-sm"
+                className="w-12 h-12 rounded-full object-cover object-top ring-2 ring-[#301444]/20 shadow-sm"
               />
               <div>
                 <strong className="block text-xs sm:text-sm font-bold text-gray-900">
@@ -397,9 +397,9 @@ export const ArticleDetailPage = () => {
             <div className="bg-white rounded-[28px] p-6 sm:p-7 border border-gray-200/90 shadow-xs space-y-4">
               <div className="flex items-center gap-3.5">
                 <img
-                  src={article.authorAvatar || '/practitioner-palak-real.png'}
+                  src={article.authorAvatar || '/practitioner-headshot.png'}
                   alt={article.author}
-                  className="w-16 h-16 rounded-full object-cover ring-3 ring-purple-100 shadow-sm flex-shrink-0"
+                  className="w-16 h-16 rounded-full object-cover object-top ring-3 ring-purple-100 shadow-sm flex-shrink-0"
                 />
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -510,7 +510,7 @@ export const ArticleDetailPage = () => {
               Schedule an Evaluation at VAANI Satara
             </h3>
             <p className="text-xs sm:text-sm text-purple-200 max-w-xl">
-              Get in-depth Pure Tone Audiometry reports or 1-on-1 speech therapy evaluations with Ms. Palak Gandhi at Sadashiv Peth.
+              Get in-depth Pure Tone Audiometry reports or 1-on-1 speech therapy evaluations with ASLP Palak Gandhi at Sadashiv Peth.
             </p>
           </div>
 

@@ -146,7 +146,7 @@ export default async function handler(req, res) {
                 Vaani Speech &amp; Hearing Rehabilitation Clinic
               </div>
               <div style="color: #6b21a8; line-height: 1.5; margin-bottom: 8px;">
-                <strong>Consultant:</strong> Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) • <strong>RCI CRR:</strong> A79214<br/>
+                <strong>Consultant:</strong> ASLP Palak Paresh Gandhi, BASLP • <strong>RCI CRR:</strong> A79214<br/>
                 <strong>📍 Address:</strong> Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002<br/>
                 <strong>📞 Phone:</strong> +91 98220 12345 / +91 94230 99887 • <strong>✉️ Email:</strong> info@vaaniclinic.com
               </div>
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
       from: `"${senderName}" <${username}>`,
       to: recipient,
       subject: 'Vaani Clinic ERP - SMTP Diagnostic Verification Test Dispatch',
-      text: `VAANI SPEECH & HEARING CLINIC\nSMTP Diagnostic Verification Test Dispatch\n\nStatus: 250 2.0.0 OK Handshake Verified\nTimestamp: ${nowStr}\nHost: ${host}:${port}\nSecurity: ${encryption}\nAuthenticated Sender: ${username}\nRecipient: ${recipient}\n\nClinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002\nPhone: +91 98220 12345 / +91 94230 99887\nChief Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) | RCI CRR No. A79214`,
+      text: `VAANI SPEECH & HEARING CLINIC\nSMTP Diagnostic Verification Test Dispatch\n\nStatus: 250 2.0.0 OK Handshake Verified\nTimestamp: ${nowStr}\nHost: ${host}:${port}\nSecurity: ${encryption}\nAuthenticated Sender: ${username}\nRecipient: ${recipient}\n\nClinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Zilla Parishad Gate, Sadashiv Peth, Satara - 415002\nPhone: +91 98220 12345 / +91 94230 99887\nChief Consultant: ASLP Palak Paresh Gandhi, BASLP | RCI CRR No. A79214`,
       html: htmlBody,
       attachments,
     });

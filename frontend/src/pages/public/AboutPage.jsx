@@ -280,7 +280,7 @@ export const AboutPage = () => {
             <div className="relative w-full max-w-[310px] sm:max-w-[380px] lg:max-w-[520px] xl:max-w-[640px] mx-auto overflow-hidden lg:overflow-visible z-10 group">
               <img
                 src="/practitioner-palak-real.png"
-                alt="Ms. Palak Paresh Gandhi - Lead Audiologist & Speech Pathologist"
+                alt="ASLP Palak Paresh Gandhi - Lead Audiologist & Speech Pathologist"
                 className="w-full h-auto max-h-[440px] sm:max-h-[560px] lg:max-h-[880px] xl:max-h-[940px] object-contain mx-auto drop-shadow-xl transition-transform duration-500 scale-100 sm:scale-105 lg:scale-[1.06] origin-top"
               />
 
@@ -781,7 +781,7 @@ export const AboutPage = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-xl sm:text-2xl lg:text-[26px] font-bold text-white tracking-tight">
-                Schedule a Clinical Assessment with {settings?.credentials?.leadPractitioner || 'Ms. Palak Gandhi'}
+                Schedule a Clinical Assessment with {settings?.credentials?.leadPractitioner || 'ASLP Palak Gandhi'}
               </h3>
               <p className="text-xs sm:text-sm text-purple-200/90 max-w-xl font-normal">
                 Dedicated soundproof testing, compassionate speech sessions, and transparent clinical guidance in Satara.

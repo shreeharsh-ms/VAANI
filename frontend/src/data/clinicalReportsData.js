@@ -17,7 +17,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Sunita Dattatray More',
     patient_age_sex: 'Female, 63 Yrs',
     date: '2026-03-28',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Bilateral moderate-to-severe sensorineural hearing loss, sloping contour.',
     recommendations: 'Bilateral Receiver-in-Canal (RIC) digital hearing aid fitting with annual audiometry.',
@@ -33,7 +33,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Aarav Sachin Shinde',
     patient_age_sex: 'Male, 34 Months',
     date: '2026-03-25',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Expressive language delay (14-month delay) with mild phonological articulation substitutions.',
     recommendations: 'Bi-weekly speech-language stimulation therapy focusing on multi-word lexical expansion.',
@@ -49,7 +49,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Dhananjay Ramchandra Jadhav',
     patient_age_sex: 'Male, 6 Months',
     date: '2026-03-22',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'TEOAE screening completed: Bilateral PASS across 1000 Hz to 4000 Hz with SNR > 6 dB.',
     recommendations: 'Cochlear outer hair cell function intact. Monitor auditory developmental milestones.',
@@ -65,7 +65,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Kavita Suresh Bhosale',
     patient_age_sex: 'Female, 41 Yrs',
     date: '2026-03-18',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Hyperfunctional dysphonia with bilateral vocal cord nodules. CAPE-V Overall: 48/100.',
     recommendations: 'Resonant Voice Therapy (RVT), vocal hygiene protocol, hydration ≥ 2.5L/day.',
@@ -81,7 +81,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Ananya Rahul Patil',
     patient_age_sex: 'Female, 4.5 Yrs',
     date: '2026-03-15',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Childhood-onset fluency disorder: 9.3% syllables stuttered (%SS), moderate severity.',
     recommendations: 'Lidcombe Program direct behavioral intervention, parental fluency modification counseling.',
@@ -97,7 +97,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Vijay Narayan Kadam',
     patient_age_sex: 'Male, 70 Yrs',
     date: '2026-03-10',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Successfully verified and fitted with Oticon Real 3 miniRITE instruments.',
     recommendations: 'NAL-NL2 target match verified within ±2 dB. Acclimatization 4 hrs/day initial wear.',
@@ -113,7 +113,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Ramesh Balasaheb Deshmukh',
     patient_age_sex: 'Male, 56 Yrs',
     date: '2026-03-12',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Severe Chronic Subjective Tinnitus with High Perceived Stress (PSS-10: 24/40, THI: 68/100).',
     recommendations: '12 weekly CBT sessions targeting cognitive restructuring, sleep hygiene, and sound enrichment.',
@@ -129,7 +129,7 @@ export const DEFAULT_ASSESSMENTS = [
     patient_name: 'Pooja Nitin Kulkarni',
     patient_age_sex: 'Female, 34 Yrs',
     date: '2026-10-02',
-    examiner: 'Ms. Palak Paresh Gandhi, MASLP',
+    examiner: 'ASLP Palak Paresh Gandhi, BASLP, RCI',
     rci_number: 'A79214',
     diagnosis: 'Muscle Tension Dysphonia (MTD Type 1) with visible supraglottic laryngeal constriction.',
     recommendations: 'Manual Laryngeal Musculoskeletal Therapy, Resonant Voice Therapy (RVT), and hydration protocol.',
@@ -143,8 +143,8 @@ export const DEFAULT_ASSESSMENTS = [
 export const getAllClinicalReports = () => {
   const settings = getClinicSettings();
   const currentRci = settings?.credentials?.rciNumber || 'A79214';
-  const leadPractitioner = settings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-  const leadDegree = settings?.credentials?.leadDegree || 'MASLP, RCI';
+  const leadPractitioner = settings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
+  const leadDegree = settings?.credentials?.leadDegree || 'BASLP, RCI';
   const defaultExaminer = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
 
   const syncReport = (r) => ({

@@ -119,7 +119,7 @@ export const RecallsPage = () => {
   const clinicAddress = formattedAddress || formatClinicAddress(clinicSettings);
   const clinicPhone = primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
   const clinicTitle = clinicSettings?.identity?.letterheadTitle || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Rehabilitation Clinic';
-  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
   const leadDegree = clinicSettings?.credentials?.leadDegree || 'BASLP, RCI';
   const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? ` (${leadDegree})` : ''}`;
 

@@ -79,8 +79,8 @@ export const PatientDetailPage = () => {
   const clinicSac = clinicSettings?.billing?.sacCode || '999312';
   const clinicHsn = clinicSettings?.billing?.hsnCode || '9021';
   const clinicUpiId = clinicSettings?.billing?.upiId || 'vaaniclinic@okaxis';
-  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
-  const leadDegree = clinicSettings?.credentials?.leadDegree || clinic.leadDegree || 'MASLP, RCI';
+  const leadPractitioner = clinicSettings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'ASLP Palak Paresh Gandhi';
+  const leadDegree = clinicSettings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
   const fullLeadPractitioner = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
   const clinicPayee = clinicSettings?.billing?.upiName || clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
   const clinicBankName = clinicSettings?.billing?.bankName || 'HDFC Bank Ltd, Sadashiv Peth Branch, Satara';
@@ -814,7 +814,7 @@ export const PatientDetailPage = () => {
   const [isNewPlanModalOpen, setIsNewPlanModalOpen] = useState(false);
   const [newPlanForm, setNewPlanForm] = useState({
     title: 'Comprehensive Rehabilitation & Therapy Protocol',
-    clinician: 'Ms. Palak Paresh Gandhi, MASLP (RCI A79214)',
+    clinician: 'ASLP Palak Paresh Gandhi, BASLP (RCI A79214)',
     schedule: '2 Sessions / Week',
     reviewDate: '2026-11-15',
     longTermGoal: 'Improve communication effectiveness, functional speech fluency, and reduce communicative effort.',
@@ -4179,8 +4179,8 @@ export const PatientDetailPage = () => {
 
                 <div className="p-2 text-left sm:text-right flex flex-col justify-center">
                   <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</span>
-                  <div className="font-extrabold text-slate-900 text-[11px] leading-tight">Ms. Palak Paresh Gandhi</div>
-                  <div className="text-[9.5px] text-slate-500 leading-tight">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
+                  <div className="font-extrabold text-slate-900 text-[11px] leading-tight">{leadPractitioner || 'ASLP Palak Paresh Gandhi'}</div>
+                  <div className="text-[9.5px] text-slate-500 leading-tight">{leadDegree || 'BASLP, RCI'} • Consultant Audiologist &amp; Speech Pathologist</div>
                   <div className="text-[9.5px] font-mono text-slate-700">RCI Registration: CRR No. <strong>{clinicRci}</strong></div>
                 </div>
               </div>

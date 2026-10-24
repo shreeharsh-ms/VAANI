@@ -36,7 +36,7 @@ export default async function webhookRouter(req, res) {
         appointment: {
           slot: 'Tomorrow at 10:30 AM',
           service: 'Pure Tone Audiometry (PTA)',
-          practitioner: 'Ms. Palak Paresh Gandhi',
+          practitioner: 'ASLP Palak Paresh Gandhi',
         },
       });
 

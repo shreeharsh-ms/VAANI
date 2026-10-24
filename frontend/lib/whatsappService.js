@@ -21,7 +21,7 @@ const DEFAULT_LOGS = [
     phone: '+91 8857830151',
     messageId: 'wamid.HBgLMjg4NTc4MzAxNTFA',
     status: 'DELIVERED',
-    details: 'Slot confirmed for Ms. Palak Paresh Gandhi',
+    details: 'Slot confirmed for ASLP Palak Paresh Gandhi',
     latency: '42ms',
   },
   {

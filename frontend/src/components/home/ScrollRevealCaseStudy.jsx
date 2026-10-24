@@ -427,7 +427,7 @@ export const ScrollRevealCaseStudy = () => {
 
             {/* Clear Informative Subtitle Connected to 60% Preventable / Timely Intervention */}
             <p className="text-sm sm:text-base lg:text-lg text-purple-200/90 leading-relaxed max-w-xl">
-              60% of disabling hearing cases and developmental speech delays are preventable with timely intervention. Take the decisive step before setbacks become permanent — consult with <strong>Ms. Palak Gandhi</strong> in Satara.
+              60% of disabling hearing cases and developmental speech delays are preventable with timely intervention. Take the decisive step before setbacks become permanent — consult with <strong>ASLP Palak Gandhi</strong> in Satara.
             </p>
 
             {/* Action Buttons */}

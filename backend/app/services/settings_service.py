@@ -40,7 +40,7 @@ DEFAULT_SETTINGS = {
         "rciVerified": True,
         "rciValidUntil": "2031-10-15",
         "titlePermitted": True,
-        "leadPractitioner": "Ms. Palak Paresh Gandhi",
+        "leadPractitioner": "ASLP Palak Paresh Gandhi",
         "leadDegree": "BASLP, RCI",
         "cbtQualificationVerified": True,
         "cbtDegree": "Postgraduate Cognitive Behavioural Interventions (SASLP / BVDU)",

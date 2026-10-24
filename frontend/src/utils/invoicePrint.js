@@ -731,8 +731,8 @@ export function printClinicalInvoice(invoice) {
         </div>
         <div class="sign-cell">
           <div class="sign-title">DIGITALLY SIGNED &amp; AUTHORIZED CLINICIAN</div>
-          <div class="sign-doctor">Ms. Palak Paresh Gandhi</div>
-          <div class="sign-creds">BASLP, MASLP (Gold Medalist) • Consultant Audiologist</div>
+          <div class="sign-doctor">ASLP Palak Paresh Gandhi</div>
+          <div class="sign-creds">BASLP, RCI • Consultant Audiologist &amp; Speech-Language Pathologist</div>
           <div class="sign-rci">RCI Registration: CRR No. ${rciNo}</div>
           <div class="sign-lic">Practice License Valid for Outpatient Practice</div>
         </div>

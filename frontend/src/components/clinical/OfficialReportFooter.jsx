@@ -21,7 +21,7 @@ export const OfficialReportFooter = ({
   const { leadPractitioner, leadDegree, rciNumber: contextRci, settings, formattedAddress, primaryPhone } = useClinicSettings();
 
   const creds = settings?.credentials || {};
-  const currentLeadPractitioner = creds.leadPractitioner || leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const currentLeadPractitioner = creds.leadPractitioner || leadPractitioner || 'ASLP Palak Paresh Gandhi';
   const currentLeadDegree = creds.leadDegree || leadDegree || 'BASLP, RCI';
   const currentRciNumber = creds.rciNumber || contextRci || 'A79214';
 
@@ -45,13 +45,13 @@ export const OfficialReportFooter = ({
   const examinerName = examinerRaw.includes('MASLP') || examinerRaw.includes('BASLP')
     ? (examinerRaw.includes('Palak Paresh Gandhi') && currentLeadDegree && !examinerRaw.includes(currentLeadDegree)
         ? `${currentLeadPractitioner}, ${currentLeadDegree}`
-        : examinerRaw)
+        : examinerRaw.replace(/MASLP/g, 'BASLP'))
     : currentLeadDegree
       ? `${examinerRaw}, ${currentLeadDegree}`
       : examinerRaw;
 
   // Cursive signature display (e.g. "Palak Paresh Gandhi")
-  const signatureName = examinerRaw.replace(/^(Dr\.|Ms\.|Mr\.)\s*/i, '').split(',')[0].trim();
+  const signatureName = examinerRaw.replace(/^(Dr\.|Ms\.|Mr\.|ASLP)\s*/i, '').split(',')[0].trim();
 
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 

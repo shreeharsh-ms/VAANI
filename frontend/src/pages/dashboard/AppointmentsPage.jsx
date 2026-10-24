@@ -48,7 +48,7 @@ export const AppointmentsPage = () => {
   const clinicAddress = formattedAddress || formatClinicAddress(clinicSettings);
   const clinicHelpline = primaryPhone || clinicSettings?.contact?.primaryPhone || '+91 8857830151';
   const clinicTitle = clinicSettings?.identity?.legalName || 'Vaani Speech & Hearing Clinic';
-  const doctorName = clinicSettings?.credentials?.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+  const doctorName = clinicSettings?.credentials?.leadPractitioner || 'ASLP Palak Paresh Gandhi';
   const doctorDegree = clinicSettings?.credentials?.leadDegree || 'BASLP, RCI';
   const doctorRci = clinicSettings?.credentials?.rciNumber || 'A79214';
   const fullExaminer = `${doctorName} (${doctorDegree}, RCI CRR No. ${doctorRci})`;

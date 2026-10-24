@@ -75,8 +75,8 @@ const testimonials = [
     image: '/pediatric-therapy-session.jpg',
     quote:
       '“Evidence-based speech and audiology care, essential for preserving communication, developmental clarity, and the sensory health of your family.”',
-    author: 'Ms. Palak Paresh Gandhi',
-    role: 'Lead Audiologist & Speech Pathologist (MASLP, RCI)',
+    author: 'ASLP Palak Paresh Gandhi',
+    role: 'Lead Audiologist & Speech Pathologist (BASLP, RCI)',
     tag: 'Clinical Excellence',
   },
   {

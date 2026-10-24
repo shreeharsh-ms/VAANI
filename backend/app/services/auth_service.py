@@ -7,7 +7,7 @@ from ..utils.security import generate_jwt_token
 SEED_USERS = [
     User.create_new(
         id="usr-001",
-        name="Ms. Palak Gandhi",
+        name="ASLP Palak Gandhi",
         email="palak@vaaniclinic.com",
         plain_password="password123",
         role="OWNER",

@@ -234,7 +234,7 @@ export const WhatsAppDispatchModal = ({
         res = await whatsappService.sendTemplate({
           to: phoneWithCountry,
           templateName: 'vaani_appointment_confirmation',
-          parameters: [recipientName, 'Today at Clinic', 'Ms. Palak Paresh Gandhi', 'Sadashiv Peth, Satara'],
+          parameters: [recipientName, 'Today at Clinic', 'ASLP Palak Paresh Gandhi', 'Sadashiv Peth, Satara'],
         });
       }
 

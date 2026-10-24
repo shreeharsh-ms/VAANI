@@ -154,7 +154,7 @@ export const ReportViewPage = ({ isPublic = false }) => {
             };
           }
 
-          const leadPractitioner = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+          const leadPractitioner = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'ASLP Palak Paresh Gandhi';
           const leadDegree = settings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
           const defaultExaminer = `${leadPractitioner}${leadDegree ? `, ${leadDegree}` : ''}`;
           const defaultRci = settings?.credentials?.rciNumber || clinic.rciNumber || 'A79214';
@@ -190,7 +190,7 @@ export const ReportViewPage = ({ isPublic = false }) => {
     // 4. Ultimate fallback: Default PTA proforma
     const srv = CLINICAL_SERVICES[0];
     const patient = SEED_PATIENTS[0];
-    const fallbackLead = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'Ms. Palak Paresh Gandhi';
+    const fallbackLead = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || 'ASLP Palak Paresh Gandhi';
     const fallbackDegree = settings?.credentials?.leadDegree || clinic.leadDegree || 'BASLP, RCI';
     const fallbackExaminer = `${fallbackLead}${fallbackDegree ? `, ${fallbackDegree}` : ''}`;
     const fallbackRci = settings?.credentials?.rciNumber || clinic.rciNumber || 'A79214';
@@ -440,7 +440,7 @@ export const ReportViewPage = ({ isPublic = false }) => {
         const clinicHelpline = clinic.primaryPhone || settings?.contact?.primaryPhone || '+91 8857830151';
         const clinicTitle = settings?.identity?.letterheadTitle || settings?.identity?.legalName || 'Vaani Speech & Hearing Rehabilitation Clinic';
         const docDetails = clinic.doctorDetails || {};
-        const doctorName = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || docDetails.doctorName || 'Ms. Palak Paresh Gandhi';
+        const doctorName = settings?.credentials?.leadPractitioner || clinic.leadPractitioner || docDetails.doctorName || 'ASLP Palak Paresh Gandhi';
         const doctorDegree = settings?.credentials?.leadDegree || clinic.leadDegree || docDetails.degree || 'BASLP, RCI';
         const doctorRci = settings?.credentials?.rciNumber || clinic.rciNumber || docDetails.rci || 'A79214';
 

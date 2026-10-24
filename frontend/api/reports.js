@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         patient_id: body.patient_id || body.patient?.id || '',
         uhid: body.uhid || body.patient?.uhid || '',
         patient_name: body.patient_name || body.patient?.full_name || '',
-        examiner: body.examiner || body.examinerName || 'Ms. Palak Paresh Gandhi, MASLP, RCI',
+        examiner: body.examiner || body.examinerName || 'ASLP Palak Paresh Gandhi, BASLP, RCI',
         rci_number: body.rci_number || body.rciNumber || 'A79214',
         patient: body.patient || null,
         patientDossier: body.patientDossier || null,

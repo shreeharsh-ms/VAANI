@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         excerpt: body.excerpt || '',
         content: body.content || '',
         category: body.category || 'Audiology',
-        author: body.author || 'Ms. Palak Paresh Gandhi',
+        author: body.author || 'ASLP Palak Paresh Gandhi',
         status: body.status || 'PUBLISHED',
         published_at: body.published_at || new Date().toISOString(),
         created_at: body.created_at || new Date().toISOString(),

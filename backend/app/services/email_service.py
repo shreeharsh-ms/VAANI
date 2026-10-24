@@ -45,12 +45,12 @@ class OfficialFooterBanner(Flowable):
         try:
             settings = SettingsService.get_settings()
             creds = settings.get("credentials", {})
-            lead_name = creds.get("leadPractitioner") or "Ms. Palak Paresh Gandhi"
-            lead_degree = creds.get("leadDegree") or "MASLP, RCI"
+            lead_name = creds.get("leadPractitioner") or "ASLP Palak Paresh Gandhi"
+            lead_degree = creds.get("leadDegree") or "BASLP, RCI"
             default_examiner = f"{lead_name}, {lead_degree}"
             default_rci = creds.get("rciNumber") or "A79214"
         except Exception:
-            default_examiner = "Ms. Palak Paresh Gandhi, MASLP"
+            default_examiner = "ASLP Palak Paresh Gandhi, BASLP, RCI"
             default_rci = "A79214"
 
         self.examiner_name = examiner_name if (examiner_name and "Shreeharsh" not in examiner_name) else default_examiner
@@ -361,12 +361,12 @@ class EmailService:
         try:
             settings = SettingsService.get_settings()
             creds = settings.get("credentials", {})
-            lead_name = creds.get("leadPractitioner") or "Ms. Palak Paresh Gandhi"
-            lead_degree = creds.get("leadDegree") or "MASLP, RCI"
+            lead_name = creds.get("leadPractitioner") or "ASLP Palak Paresh Gandhi"
+            lead_degree = creds.get("leadDegree") or "BASLP, RCI"
             default_examiner = f"{lead_name}, {lead_degree}"
             default_rci = creds.get("rciNumber") or "A79214"
         except Exception:
-            default_examiner = "Ms. Palak Paresh Gandhi, MASLP"
+            default_examiner = "ASLP Palak Paresh Gandhi, BASLP, RCI"
             default_rci = "A79214"
 
         raw_examiner = rep.get("examiner") or params.get("examiner")
@@ -655,7 +655,7 @@ class EmailService:
                 f"Recipient: {test_recipient}\n\n"
                 f"Clinic Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002\n"
                 f"Phone: +91 98220 12345 • Mob: +91 94230 99887\n"
-                f"Chief Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) | RCI CRR No. A79214\n"
+                f"Chief Consultant: ASLP Palak Paresh Gandhi, BASLP | RCI CRR No. A79214\n"
             )
 
             html_body = f"""
@@ -722,7 +722,7 @@ class EmailService:
                       Vaani Speech &amp; Hearing Rehabilitation Clinic
                     </div>
                     <div style="color: #6b21a8; line-height: 1.5; margin-bottom: 8px;">
-                      <strong>Consultant:</strong> Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) • <strong>RCI CRR:</strong> A79214<br/>
+                      <strong>Consultant:</strong> ASLP Palak Paresh Gandhi, BASLP • <strong>RCI CRR:</strong> A79214<br/>
                       <strong>📍 Address:</strong> Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002<br/>
                       <strong>📞 Phone:</strong> +91 98220 12345 • Mob: +91 94230 99887 • <strong>✉️ Email:</strong> info@vaaniclinic.com
                     </div>
@@ -830,7 +830,7 @@ class EmailService:
                 f"Clinic: Vaani Speech & Hearing Clinic\n"
                 f"Address: Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002\n"
                 f"Phone: +91 98220 12345 • Mob: +91 94230 99887\n"
-                f"Chief Consultant: Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) | RCI CRR No. A79214\n"
+                f"Chief Consultant: ASLP Palak Paresh Gandhi, BASLP | RCI CRR No. A79214\n"
             )
 
             attachment_box_html = f"""
@@ -917,7 +917,7 @@ class EmailService:
                       Vaani Speech &amp; Hearing Rehabilitation Clinic
                     </div>
                     <div style="color: #6b21a8; line-height: 1.5; margin-bottom: 8px;">
-                      <strong>Consultant:</strong> Ms. Palak Paresh Gandhi, MASLP (Gold Medalist) • <strong>RCI CRR:</strong> A79214<br/>
+                      <strong>Consultant:</strong> ASLP Palak Paresh Gandhi, BASLP • <strong>RCI CRR:</strong> A79214<br/>
                       <strong>📍 Address:</strong> Shop No. 4, Ground Floor, Sadashiv Arcade, Opp. Satara Zilla Parishad, Sadashiv Peth, Satara - 415002<br/>
                       <strong>📞 Phone:</strong> +91 98220 12345 • Mob: +91 94230 99887 • <strong>✉️ Email:</strong> info@vaaniclinic.com
                     </div>

@@ -102,7 +102,7 @@ export const ReportVerificationPage = () => {
           email: decodedPayload.email || foundEmail,
           rci_number: decodedPayload.rci || 'A125560',
           rciNumber: decodedPayload.rci || 'A125560',
-          examiner: decodedPayload.examiner || 'Ms. Palak Paresh Gandhi, BASLP, RCI',
+          examiner: decodedPayload.examiner || 'ASLP Palak Paresh Gandhi, BASLP, RCI',
           parameters: {
             ptaNo: decodedPayload.ptaNo,
             audiometer: decodedPayload.audiometer,
@@ -164,7 +164,7 @@ export const ReportVerificationPage = () => {
     const verifyUrl = `${window.location.origin}/verify-report/${encodeURIComponent(reportNumber)}`;
     const subject = `Official Clinical Report [${reportNumber}] — Vaani Speech & Hearing Clinic`;
     const docRci = matchedReport?.rci_number || 'A125560';
-    const docExaminer = matchedReport?.examiner || 'Ms. Palak Paresh Gandhi, BASLP, RCI';
+    const docExaminer = matchedReport?.examiner || 'ASLP Palak Paresh Gandhi, BASLP, RCI';
 
     const body = `Dear ${patientName || 'Patient'},\n\n` +
       `Your official, authenticated clinical document (Reference No: ${reportNumber}) from Vaani Speech & Hearing Clinic has been verified and dispatched.\n\n` +
