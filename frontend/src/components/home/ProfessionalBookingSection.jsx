@@ -16,6 +16,7 @@ import {
   Heart,
   Headphones,
   MessageSquare,
+  Brain,
 } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
 import { useNotification } from '../../context/NotificationContext';
@@ -37,21 +38,33 @@ const serviceOptions = [
   },
   {
     id: 'speech',
-    name: 'Speech & Language Therapy Session',
-    desc: 'Individualized therapy for speech delay, stuttering, or articulation',
+    name: 'Speech-Language Therapy',
+    desc: 'Individualized therapy for pediatric speech delay, language development & communication',
     icon: MessageSquare,
   },
   {
     id: 'hearing-aid',
-    name: 'Hearing Aid Trial & Real-Ear Fitting',
-    desc: 'Computerized multi-channel digital trial with acoustic verification',
+    name: 'Digital Hearing Aid Trial & Fitting',
+    desc: 'Computerized multi-channel digital hearing aid trial with real-ear verification',
     icon: ShieldCheck,
   },
   {
     id: 'voice',
-    name: 'Voice & Fluency Therapy',
-    desc: 'Clinical acoustic assessment and vocal hygiene rehabilitation',
+    name: 'Fluency, Voice & Stuttering',
+    desc: 'Clinical acoustic assessment, voice rehabilitation, and stuttering therapy',
     icon: Heart,
+  },
+  {
+    id: 'articulation',
+    name: 'Articulation Therapy',
+    desc: 'Evidence-based speech clarity training and phonetic sound correction',
+    icon: Sparkles,
+  },
+  {
+    id: 'neuro',
+    name: 'Neuro Rehabilitation',
+    desc: 'Cognitive-communication therapy and post-stroke neurological rehabilitation',
+    icon: Brain,
   },
 ];
 
@@ -428,7 +441,7 @@ export const ProfessionalBookingSection = () => {
                         </p>
                       </div>
 
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                      <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1.5 scrollbar-thin">
                         {serviceOptions.map((srv) => {
                           const isSelected = formData.service_name === srv.name;
                           const Icon = srv.icon;

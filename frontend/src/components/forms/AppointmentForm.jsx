@@ -419,12 +419,13 @@ export const AppointmentForm = ({ onSuccess, initialService = '', onCancel }) =>
           onChange={handleChange}
           required
           options={[
-            { value: 'Pure Tone Audiometry (PTA)', label: 'Pure Tone Audiometry (Hearing Test)' },
-            { value: 'Speech & Language Therapy Session', label: 'Speech & Language Therapy' },
-            { value: 'Stuttering & Fluency Evaluation', label: 'Fluency / Stuttering Assessment' },
-            { value: 'Otoacoustic Emissions (OAE) Screening', label: 'Newborn OAE Hearing Screening' },
-            { value: 'Voice Assessment & Vocal Hygiene', label: 'Voice Assessment (GRBAS)' },
-            { value: 'Hearing Aid Evaluation & Digital Trial', label: 'Hearing Aid Trial & Fitting' },
+            { value: 'Pure Tone Audiometry (PTA)', label: 'Pure Tone Audiometry (PTA)' },
+            { value: 'Newborn OAE & BERA Screening', label: 'Newborn OAE & BERA Screening' },
+            { value: 'Speech-Language Therapy', label: 'Speech-Language Therapy' },
+            { value: 'Digital Hearing Aid Trial & Fitting', label: 'Digital Hearing Aid Trial & Fitting' },
+            { value: 'Fluency, Voice & Stuttering', label: 'Fluency, Voice & Stuttering' },
+            { value: 'Articulation Therapy', label: 'Articulation Therapy' },
+            { value: 'Neuro Rehabilitation', label: 'Neuro Rehabilitation' },
           ]}
         />
       </div>
